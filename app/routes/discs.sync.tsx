@@ -1,4 +1,4 @@
-import {ActionArgs, json} from "@remix-run/node";
+import {ActionArgs, json, LoaderArgs, redirect} from "@remix-run/node";
 
 
 import {fetchClubs} from "~/models/clubs.server";
@@ -9,7 +9,20 @@ import {ClubDTO} from "~/types";
 
 import {syncAllDiscs, syncNewDiscs} from "~/models/syncDiscs.server";
 
-export const loader = async () => {
+
+import {getUserData, isAuthenticated} from "~/auth";
+
+import {isUserLoggedIn} from "~/models/utils";
+
+export const loader = async ({request}: LoaderArgs) => {
+
+
+  const isLoggedIn = await isUserLoggedIn(request);
+
+  if (!isLoggedIn) {
+    return redirect("/sign-in");
+  }
+
   const data = await fetchClubs();
   return json({data})
 }

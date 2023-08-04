@@ -1,14 +1,58 @@
+import {useMemo, useState} from "react";
+
 import "react-data-grid/lib/styles.css";
 
 import styled from "@emotion/styled";
 
 import DataGrid from "react-data-grid";
 
+import {Column, SortColumn} from "react-data-grid";
+
 import { DiscDTO } from "~/types";
 
 type DiscTableProps = {
   discs: DiscDTO[];
 };
+
+interface Row {
+  id: string,
+  discName: string,
+  discColour: string,
+  owner: string,
+  ownerPhoneNumber: string,
+  addedAt: number
+}
+
+type Comparator = (a: Row, b: Row) => number;
+
+function getComparator(sortColumn: string): Comparator {
+  switch (sortColumn) {
+    case 'id': {
+      return (a, b) => {
+        return a[sortColumn] - b[sortColumn];
+
+        // .getTime()
+      };
+    }
+    case 'discName':
+    case 'discColour':
+    case 'owner':
+    case 'ownerPhoneNumber':
+    {
+      return (a, b) => {
+        return a[sortColumn].localeCompare(b[sortColumn]);
+      };
+    }
+    case 'addedAt': {
+      return (a, b) => {
+        return new Date(a[sortColumn]).getTime() - new Date(b[sortColumn]).getTime();
+      }
+    }
+    default: {
+      throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+    }
+  }
+}
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) {
@@ -70,10 +114,29 @@ function mapToDataRows(discs: DiscDTO[]): any {
 export default function DiscTable({
   discs,
 }: DiscTableProps): JSX.Element | null {
-  if (!discs?.length) {
-    return null;
-  }
+  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+
 
   const rows = mapToDataRows(discs);
-  return <StyledDataGrid className="fill-grid" rows={rows} columns={columns} />;
+
+  const sortedRows = useMemo((): readonly Row[] => {
+    if (sortColumns.length === 0) return rows;
+
+    return [...rows].sort((a, b) => {
+      for (const sort of sortColumns) {
+        const comparator = getComparator(sort.columnKey);
+        const compResult = comparator(a, b);
+        if (compResult !== 0) {
+          return sort.direction === 'ASC' ? compResult : -compResult;
+        }
+      }
+      return 0;
+    });
+  }, [rows, sortColumns]);
+
+  return <StyledDataGrid className="fill-grid"       defaultColumnOptions={{
+    sortable: true,
+    resizable: true
+  }} rows={sortedRows} columns={columns} sortColumns={sortColumns}
+                         onSortColumnsChange={setSortColumns} />;
 }
