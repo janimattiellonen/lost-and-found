@@ -10,7 +10,7 @@ export default function DiscSelector({
 }: DiscSelectorProps): JSX.Element {
   return (
     <select onChange={onChange}>
-      <option value="-1">Select...</option>
+      <option value="-1">Valitse...</option>
       {discNames &&
         discNames.map((discName: string, index: number) => {
           return (

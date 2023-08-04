@@ -76,12 +76,12 @@ const StyledDataGrid = styled(DataGrid)`
 
 const columns = [
   { key: "id", name: "#" },
-  { key: "discName", name: "Disc name" },
-  { key: "discColour", name: "Disc colour" },
-  { key: "owner", name: "Owner" },
+  { key: "discName", name: "Kiekko" },
+  { key: "discColour", name: "Väri" },
+  { key: "owner", name: "Omistaja" },
   {
     key: "ownerPhoneNumber",
-    name: "Owner phone number",
+    name: "Puhelinnumero",
     renderCell(props: any) {
       return props.row.ownerPhoneNumber
         ? `****${props.row.ownerPhoneNumber}`
@@ -90,7 +90,7 @@ const columns = [
   },
   {
     key: "addedAt",
-    name: "Added at",
+    name: "Lisäyspäivämäärä",
     renderCell(props: any) {
       return formatDate(props.row.addedAt);
     },
