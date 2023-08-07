@@ -31,7 +31,7 @@ export async function action({ request }: ActionArgs) {
       typeof email !== "string" ||
       email.length === 0
     ) {
-      errors.email = "Username is required";
+      errors.email = "Käyttäjätunnus on pakollinen";
     }
 
 
@@ -39,15 +39,13 @@ export async function action({ request }: ActionArgs) {
       typeof password !== "string" ||
       password.length === 0
     ) {
-      errors.password = "Password is required";
+      errors.password = "Salasana on pakollinen";
     }
 
     const result = await supabase.auth.signInWithPassword({
       email: email.toString(),
       password: password.toString()
     })
-
-    console.log(`RESULT: ${JSON.stringify(result,null,2)}`)
 
     if (result?.error) {
       errors.invalidLogin = true;
@@ -93,13 +91,13 @@ export default function SignInPage(): JSX.Element {
           className="text-gray-700 text-sm font-bold mb-2"
           htmlFor="email"
         >
-          Email
+          Sähköpostiosoite
         </label>
         <input
           id="email"
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           type="email"
-          placeholder="Your email"
+          placeholder="Sähköpostiosoite"
           name="email"
         />
 
@@ -114,7 +112,7 @@ export default function SignInPage(): JSX.Element {
           className="text-gray-700 text-sm font-bold mb-2"
           htmlFor="password"
         >
-          Password
+          Salasana
         </label>
         <input
           id="password"
@@ -134,13 +132,13 @@ export default function SignInPage(): JSX.Element {
       <div className="mb-2">
         {errors?.invalidLogin ? (
           <p className="text-red-500 text-xs italic">
-            Invalid username or password
+            Virheellinen käyttäjätunnus tai salasana
           </p>
         ) : null}
       </div>
 
 
-      <button type="submit">Login</button>
+      <button type="submit">Kirjaudu sisään</button>
     </Form>
   </div>
 }
