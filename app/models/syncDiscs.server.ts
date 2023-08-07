@@ -43,7 +43,7 @@ export async function syncAllDiscs(clubId: number, request: Request) {
   const { error: error } = await supabase
     .from('discs')
     .delete()
-    .eq('club_id', 1)
+    .eq('club_id', clubId)
 
   addDiscs(clubId, discs, request);
 
