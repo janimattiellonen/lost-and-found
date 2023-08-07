@@ -6,7 +6,7 @@ import styled from "@emotion/styled";
 
 import DataGrid from "react-data-grid";
 
-import {Column, SortColumn} from "react-data-grid";
+import { SortColumn} from "react-data-grid";
 
 import { DiscDTO } from "~/types";
 

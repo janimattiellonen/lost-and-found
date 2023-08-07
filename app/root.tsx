@@ -56,7 +56,10 @@ export async function loader({request}: LoaderArgs){
 export default function App() {
   const { env, session } = useLoaderData()
   const { revalidate } = useRevalidator()
-  const [supabase] = useState(() => createBrowserClient(env.SUPABASE_URL, env.SUPABASE_KEY))
+  const [supabase] = useState(() => createBrowserClient(
+    env.SUPABASE_URL,
+    env.SUPABASE_KEY)
+  );
 
   const serverAccessToken = session?.access_token
 

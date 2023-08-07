@@ -47,9 +47,16 @@ export async function importDiscData(): Promise<DiscDTO[]> {
     CAN_BE_SOLD_OR_DONATED,
   } = indexes;
 
-  // format(parse(discDTO.addedAt ? discDTO.addedAt  : "", "d.M.y", new Date()), "y-MM-dd") : null
+  const filteredValues = data.values
+    .slice(1)
+    .filter(
+      (item: any) =>
+        item[INTERNAL_DISC_ID] !== "" &&
+        !isEmpty(item[DISC_NAME]) &&
+        !isEmpty(item[ADDED_AT])
+    );
 
-  const discs: DiscDTO[] = data.values.slice(1).map((item: any) => {
+  const discs: DiscDTO[] = filteredValues.map((item: any) => {
     return {
       internalDiscId: item[INTERNAL_DISC_ID],
       discName: item[DISC_NAME],
@@ -72,6 +79,8 @@ export async function importDiscData(): Promise<DiscDTO[]> {
       clubId: TALIN_TALLAAJAT_ID,
     };
   });
+
+ // console.log(`TT filtered discs: ${JSON.stringify(discs,null,2)}`)
 
   return discs;
 }

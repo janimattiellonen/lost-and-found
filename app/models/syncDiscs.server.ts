@@ -5,10 +5,12 @@ import{getDiscs} from "~/models/discs.server";
 import {importDiscData as importTaliDiscData} from "~/import/TalinTallaajatImporter";
 import {importDiscData as importPuskasoturitDiscData} from "~/import/PuskaSoturitImporter";
 
-import{createConnection} from "~/models/utils";
+import{createConnection, createSupabaseServerClient} from "~/models/utils";
+
+
 
 import{fromDto} from "~/models/DiscMapper";
-import {DiscDTO} from "~/types";
+import {DbDiscType, DiscDTO} from "~/types";
 
 
 export const PUSKASOTURIT: number = 1;
@@ -29,22 +31,28 @@ function getImporter(clubId: number): () => Promise<DiscDTO[]> {
  *
  * @param clubId
  */
-export async function syncAllDiscs(clubId: number) {
+export async function syncAllDiscs(clubId: number, request: Request) {
   const importDiscData = getImporter(clubId);
   const discs = await importDiscData();
 
-  const supabase = createConnection();
+  const supabase = createSupabaseServerClient(request);
+  const session = await supabase.auth.getSession();
 
-  await supabase
+  console.log(`SUPA SESSION: ${JSON.stringify(session,null,2)}`);
+
+  const { error: error } = await supabase
     .from('discs')
     .delete()
-    .eq('club_id', clubId)
+    .eq('club_id', 1)
 
-  addDiscs(clubId, discs);
+  addDiscs(clubId, discs, request);
+
+  console.log(`SYNC DELETE, CLUB ID: ${clubId}`);
+  console.log(`SYNC DELETE ERROR: ${JSON.stringify(error,null,2)}`);
 }
 
-async function addDiscs(clubId: number, discs: DiscDTO[]): Promise<void> {
-  const supabase = createConnection();
+async function addDiscs(clubId: number, discs: DiscDTO[],request: Request): Promise<void> {
+  const supabase = createSupabaseServerClient(request);
 
   const mappedData = discs.map((item) => {
     const foo = fromDto(item);
@@ -54,12 +62,25 @@ async function addDiscs(clubId: number, discs: DiscDTO[]): Promise<void> {
     return foo
   })
 
-  const { error: error } = await supabase
-    .from('discs')
-    .insert(mappedData )
+
+  mappedData.map( async (data: DbDiscType) => {
+    console.log(JSON.stringify(data,null,2));
+
+    const { error: error } = await supabase
+      .from('discs')
+      .insert(data )
+
+    console.log(`DATA (ROW) TO BE SYNCED: ${JSON.stringify(data,null,2)}`);
+
+    console.log(`SYNC ERROR: ${JSON.stringify(error,null,2)}`);
+
+    return data;
+  });
+
+
 }
 
-export async function syncNewDiscs(clubId: number) {
+export async function syncNewDiscs(clubId: number,  request: Request) {
   const importDiscData = getImporter(clubId);
   const discs = await importDiscData();
 
@@ -73,7 +94,7 @@ export async function syncNewDiscs(clubId: number) {
 
   console.info(`New Discs: ${JSON.stringify(newDiscs, null,2)}`);
 
-  addDiscs(clubId, newDiscs);
+  addDiscs(clubId, newDiscs, request);
 }
 
 export async function getLatestInternalDiscId(clubId: number): Promise<number | null> {

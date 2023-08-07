@@ -30,7 +30,7 @@ export async function importDiscData(): Promise<DiscDTO[]> {
 
   const data = await res.json();
 
-  console.info(`Puskasoturit, DATA: ${JSON.stringify(data.values, null, 2)}`);
+ //  console.info(`Puskasoturit, DATA: ${JSON.stringify(data.values, null, 2)}`);
 
   const {
     DISC_NAME,
@@ -56,14 +56,6 @@ export async function importDiscData(): Promise<DiscDTO[]> {
     );
 
   const discs: DiscDTO[] = filteredValues.map((item: any) => {
-    console.log(`DATE IS: ${item[ADDED_AT]}`);
-    const f = item[ADDED_AT]
-      ? format(
-          parse(item[ADDED_AT] ? item[ADDED_AT] : "", "dd/MM/y", new Date()),
-          "y-MM-dd"
-        )
-      : null;
-
     return {
       discName: item[DISC_NAME],
       discManufacturer: item[DISC_MANUFACTURER],

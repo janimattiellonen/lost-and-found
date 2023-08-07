@@ -36,12 +36,12 @@ export async function action({ request }: ActionArgs) {
   const allData = body.get('all');
   const newData = body.get('new');
 
-  console.info(`all: ${allData}, new: ${newData}`);
+  // console.info(`all: ${allData}, new: ${newData}`);
 
   if (allData) {
-    await syncAllDiscs(parseInt(clubId ? clubId.toString() : '', 10));
+    await syncAllDiscs(parseInt(clubId ? clubId.toString() : '', 10), request);
   } else if (newData) {
-    await syncNewDiscs(parseInt(clubId ? clubId.toString() : '', 10));
+    await syncNewDiscs(parseInt(clubId ? clubId.toString() : '', 10), request);
   }
 
   return null;
@@ -50,13 +50,13 @@ export async function action({ request }: ActionArgs) {
 export default function SyncPage(): JSX.Element {
   const {data} = useLoaderData()
 
-  console.info(`data: ${JSON.stringify(data,null,2)}`)
+  // console.info(`data: ${JSON.stringify(data,null,2)}`)
 
-  return <form method="post" action="/discs/sync">
-    <div>
+  return (
+    <div className="mt-4">
     {data.map( (club: ClubDTO) => {
-      return <SyncItem key={club.id} club={club} />
+      return <form key={club.id} method="post" action="/discs/sync"><SyncItem club={club} /></form>
     })}
-    </div>
-  </form>
+    </div>)
+
 }

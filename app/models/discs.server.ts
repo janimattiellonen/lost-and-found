@@ -8,6 +8,8 @@ import { toDTO } from "~/models/DiscMapper";
 export async function getDiscs(): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
 
+  console.log(`CLUB ID: ${clubId}`);
+
   const supabase = createConnection();
 
   let { data, error } = await supabase
@@ -19,6 +21,10 @@ export async function getDiscs(): Promise<DiscDTO[]> {
     .eq("is_returned_to_owner", false)
     .eq("can_be_sold_or_donated", false)
     .eq("club_id", clubId);
+
+
+  //console.log(`ERROR: ${JSON.stringify(error, null,2)}`);
+  //console.log(`DATA: ${JSON.stringify(data,null,2)}`);
 
   return data.map((row: any) => {
     if (row["owner_phone_number"]) {
@@ -39,8 +45,8 @@ export async function getDiscNames() {
     .eq("club_id", 1)
     .order("disc_name", { ascending: true });
 
-  console.info(`ERROR: ${JSON.stringify(error, null, 2)}`);
-  console.info(`DATA: ${JSON.stringify(data, null, 2)}`);
+  //console.info(`ERROR: ${JSON.stringify(error, null, 2)}`);
+  //console.info(`DATA: ${JSON.stringify(data, null, 2)}`);
 }
 
 export async function getDiscColours() {

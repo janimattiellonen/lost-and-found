@@ -1,6 +1,7 @@
 import {createClient, SupabaseClient} from "@supabase/supabase-js";
 import { Database } from "../../schema";
 import {createServerClient} from "@supabase/auth-helpers-remix";
+import {request} from "websocket";
 
 export function createConnection() {
   const supabaseUrl = process.env.SUPABASE_URL!;
@@ -28,13 +29,13 @@ export function createSupabaseServerClient(request: Request) : SupabaseClient {
 
   return createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
     request,
-    response,
+    response
   })
 
 }
 
 
-export async function isUserLoggedIn(request): Promise<boolean> {
+export async function isUserLoggedIn(request: request): Promise<boolean> {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
