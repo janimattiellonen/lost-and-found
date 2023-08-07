@@ -78,8 +78,6 @@ export default function App() {
     }
   }, [serverAccessToken, supabase, revalidate])
 
-
-  console.log(`session: ${JSON.stringify(session,null,2)}`)
   return (
     <html lang="en">
       <head>

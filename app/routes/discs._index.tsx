@@ -13,12 +13,6 @@ import DiscSelector from "~/routes/DiscSelector";
 
 import DiscTable from "~/routes/DiscTable";
 
-const H1 = styled.h1`
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-`;
-
 export const loader = async () => {
   const data = await getDiscs();
 
@@ -36,8 +30,7 @@ export default function DiscsPage(): JSX.Element {
   }, [data]);
 
   return (
-    <div>
-      <H1>Discs</H1>
+    <div className="mt-8">
       <DiscSelector
         discNames={distinctDiscNames}
         onChange={(e) => {
@@ -45,9 +38,6 @@ export default function DiscsPage(): JSX.Element {
             setDiscs(data);
             return;
           }
-
-          console.log(e.target.value);
-          console.log(`LENGTH: ${discs.length}`);
 
           const filtered = data.filter(
             (disc: DiscDTO) => disc.discName === e.target.value

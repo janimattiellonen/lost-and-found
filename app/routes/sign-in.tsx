@@ -57,7 +57,6 @@ export async function action({ request }: ActionArgs) {
 
     return json({ok: true});
   } catch (error) {
-    console.log(`ERROR: ${JSON.stringify(error, null,2)}`)
   }
 }
 export default function SignInPage(): JSX.Element {
