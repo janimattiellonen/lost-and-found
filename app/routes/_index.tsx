@@ -33,7 +33,6 @@ export default function IndexPage(): JSX.Element {
       <DiscSelector
         discNames={distinctDiscNames}
         onChange={(selectedItem: string | null) => {
-          console.log(`DD: ${JSON.stringify(selectedItem,null,2)}`)
           if (selectedItem == null) {
             setDiscs(data);
             return;

@@ -30,7 +30,6 @@ export async function loader({request}: LoaderArgs){
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
   }
 
-
   const response = new Response()
 
   const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
@@ -67,7 +66,6 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('onAuthStateChange');
       if (session?.access_token !== serverAccessToken) {
         // server and client are out of sync.
         revalidate()

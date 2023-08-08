@@ -32,17 +32,12 @@ export async function syncAllDiscs(clubId: number, request: Request) {
   const supabase = createSupabaseServerClient(request);
   const session = await supabase.auth.getSession();
 
-  console.log(`SUPA SESSION: ${JSON.stringify(session,null,2)}`);
-
   const { error: error } = await supabase
     .from('discs')
     .delete()
     .eq('club_id', clubId)
 
   addDiscs(clubId, discs, request);
-
-  console.log(`SYNC DELETE, CLUB ID: ${clubId}`);
-  console.log(`SYNC DELETE ERROR: ${JSON.stringify(error,null,2)}`);
 }
 
 async function addDiscs(clubId: number, discs: DiscDTO[],request: Request): Promise<void> {
@@ -56,18 +51,13 @@ async function addDiscs(clubId: number, discs: DiscDTO[],request: Request): Prom
     return foo
   })
 
-
   mappedData.map( async (data: DbDiscType) => {
-    console.log(JSON.stringify(data,null,2));
-
     const { error: error } = await supabase
       .from('discs')
       .insert(data )
 
     return data;
   });
-
-
 }
 
 export async function syncNewDiscs(clubId: number,  request: Request) {

@@ -4,12 +4,9 @@ import {
   useOutletContext
 } from "@remix-run/react";
 
-import {ActionArgs, json} from "@remix-run/node";
+import {ActionArgs, json, redirect} from "@remix-run/node";
 
 import {createServerClient} from "@supabase/auth-helpers-remix";
-
-
-import {createSupabaseServerClient} from "~/models/utils";
 
 type LoginErrors = {
   password?: string | null | undefined
@@ -19,13 +16,22 @@ type LoginErrors = {
 export async function action({ request }: ActionArgs) {
   const errors: LoginErrors = {};
 
-  const supabase = createSupabaseServerClient(request)
+  const env = {
+    SUPABASE_URL: process.env.SUPABASE_URL!,
+    SUPABASE_KEY: process.env.SUPABASE_KEY!,
+  }
+
+  const response = new Response()
+
+  const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
+    request,
+    response
+  })
 
   try {
     const form = await request.formData();
     const email = form.get("email")!;
     const password = form.get("password")!;
-
 
     if (
       typeof email !== "string" ||
@@ -33,7 +39,6 @@ export async function action({ request }: ActionArgs) {
     ) {
       errors.email = "Käyttäjätunnus on pakollinen";
     }
-
 
     if (
       typeof password !== "string" ||
@@ -47,8 +52,6 @@ export async function action({ request }: ActionArgs) {
       password: password.toString()
     })
 
-    console.log(`LOGIN: ${JSON.stringify(result,null,2)}`)
-
     if (result?.error) {
       errors.invalidLogin = true;
     }
@@ -57,7 +60,13 @@ export async function action({ request }: ActionArgs) {
       return json(errors, { status: 422 });
     }
 
-    return json({ok: true});
+    return redirect(
+      '/',
+      {
+        status: 302,
+        headers: response.headers
+      }
+    )
   } catch (error) {
     console.log(`ERROR in the house: ${JSON.stringify(error,null,2)}`);
   }
@@ -65,13 +74,6 @@ export async function action({ request }: ActionArgs) {
 export default function SignInPage(): JSX.Element {
   const errors = useActionData();
   const { supabase } = useOutletContext()
-
-  const handleEmailLogin = async () => {
-
-    const result = await supabase.auth.updateUser({ password: '' })
-
-    console.log(`Updated user password: ${JSON.stringify(result,null,2)}`);
-  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -81,9 +83,7 @@ export default function SignInPage(): JSX.Element {
 
     <h1>Kirjaudu sisään</h1>
 
-    <p><button onClick={handleEmailLogin}>Email Login</button></p>
-    <p><button onClick={handleLogout}>Logout</button></p>
-
+    <p><button onClick={handleLogout}>Kirjaudu ulos</button></p>
 
     <Form method="post">
 
