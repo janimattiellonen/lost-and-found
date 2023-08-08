@@ -1,6 +1,13 @@
 import {useEffect, useState} from "react";
 import { cssBundleHref } from "@remix-run/css-bundle";
-import type {LinksFunction, LoaderArgs} from "@remix-run/node";
+import type {LinksFunction, LoaderArgs, V2_MetaFunction} from "@remix-run/node";
+
+import { metaV1 } from "@remix-run/v1-meta";
+
+
+import { json} from "@remix-run/node";
+
+
 import {
   Links,
   LiveReload,
@@ -8,26 +15,27 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData, useRevalidator,
-
+  useLoaderData,
+  useRevalidator,
 } from "@remix-run/react";
-
-import {json} from "@remix-run/node";
 
 import{createBrowserClient, createServerClient} from "@supabase/auth-helpers-remix";
 
 import AdminMenu from "~/routes/AdminMenu";
-
+import Header from "~/routes/Header";
 import appStyles from "../app.css";
 
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }, { rel: "stylesheet", href: appStyles }] : [{ rel: "stylesheet", href: appStyles }]),
 ];
 
+
+
 export async function loader({request}: LoaderArgs){
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
+    CLUB_NAME: process.env.APP_CLUB_NAME!
   }
 
   const response = new Response()
@@ -51,6 +59,20 @@ export async function loader({request}: LoaderArgs){
     }
   )
 }
+
+export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
+  return [
+    { title: `Löytökiekot | ${data?.env.CLUB_NAME}` },
+    {
+      property: "og:title",
+      content: "Löytökiekot",
+    },
+    {
+      name: "description",
+      content: "Seuran löytökiekot",
+    },
+  ];
+};
 
 export default function App() {
   const { env, session } = useLoaderData()
@@ -87,7 +109,7 @@ export default function App() {
       </head>
       <body>
         <AdminMenu supabase={supabase} user={session?.user}/>
-
+        <Header clubName={env.CLUB_NAME}/>
         <Outlet context={{supabase}}/>
         <ScrollRestoration />
         <Scripts />
