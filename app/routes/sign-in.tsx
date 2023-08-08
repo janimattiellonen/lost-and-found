@@ -8,6 +8,8 @@ import {ActionArgs, json, redirect} from "@remix-run/node";
 
 import {createServerClient} from "@supabase/auth-helpers-remix";
 
+import {Button} from "@mui/material";
+
 type LoginErrors = {
   password?: string | null | undefined
   email?: string | null | undefined
@@ -71,7 +73,11 @@ export async function action({ request }: ActionArgs) {
     console.log(`ERROR in the house: ${JSON.stringify(error,null,2)}`);
   }
 }
-export default function SignInPage(): JSX.Element {
+type SignInPageProps = {
+  user?: object | null
+}
+
+export default function SignInPage({user}: SignInPageProps): JSX.Element {
   const errors = useActionData();
   const { supabase } = useOutletContext()
 
@@ -81,9 +87,9 @@ export default function SignInPage(): JSX.Element {
 
   return <div>
 
-    <h1>Kirjaudu sisään</h1>
+    <h2 className="mb-4 font-bold text-xl">Kirjaudu sisään</h2>
 
-    <p><button onClick={handleLogout}>Kirjaudu ulos</button></p>
+    {user?.email && <p><button onClick={handleLogout}>Kirjaudu ulos</button></p>}
 
     <Form method="post">
 
@@ -120,7 +126,7 @@ export default function SignInPage(): JSX.Element {
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           type="password"
           name="password"
-          placeholder="Your password"
+          placeholder="Salasana"
         />
 
         {errors?.password ? (
@@ -139,7 +145,7 @@ export default function SignInPage(): JSX.Element {
       </div>
 
 
-      <button type="submit">Kirjaudu sisään</button>
+      <Button variant="contained" type="submit">Kirjaudu sisään</Button>
     </Form>
   </div>
 }
