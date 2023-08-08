@@ -67,6 +67,7 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('onAuthStateChange');
       if (session?.access_token !== serverAccessToken) {
         // server and client are out of sync.
         revalidate()

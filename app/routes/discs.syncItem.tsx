@@ -1,11 +1,6 @@
-import { format, parse } from "date-fns";
-
 import Button from '@mui/material/Button';
 
 import { ClubDTO } from "~/types";
-import { ActionArgs } from "@remix-run/node";
-
-
 
 type SyncItemProps = {
   club: ClubDTO;
@@ -22,9 +17,7 @@ function formatDate(dateStr: string | undefined): string {
 
   return formattedDate;
 }
-// 2023-06-19T11:28:40.744772+00:00
-//
-// parse("19.6.2023", "d.M.y", new Date())
+
 export default function SyncItem({ club }: SyncItemProps): JSX.Element {
   return (
     <div className="mb-4 flex justify-start gap-4 items-center">

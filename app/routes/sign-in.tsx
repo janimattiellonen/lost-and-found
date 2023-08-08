@@ -47,6 +47,8 @@ export async function action({ request }: ActionArgs) {
       password: password.toString()
     })
 
+    console.log(`LOGIN: ${JSON.stringify(result,null,2)}`)
+
     if (result?.error) {
       errors.invalidLogin = true;
     }
@@ -57,6 +59,7 @@ export async function action({ request }: ActionArgs) {
 
     return json({ok: true});
   } catch (error) {
+    console.log(`ERROR in the house: ${JSON.stringify(error,null,2)}`);
   }
 }
 export default function SignInPage(): JSX.Element {
@@ -64,10 +67,10 @@ export default function SignInPage(): JSX.Element {
   const { supabase } = useOutletContext()
 
   const handleEmailLogin = async () => {
-    await supabase.auth.signInWithPassword({
-      email: 'janimatti.ellonen@gmail.com',
-      password: 'Kissa_45#&Hoopla',
-    })
+
+    const result = await supabase.auth.updateUser({ password: '' })
+
+    console.log(`Updated user password: ${JSON.stringify(result,null,2)}`);
   }
 
   const handleLogout = async () => {
@@ -76,11 +79,10 @@ export default function SignInPage(): JSX.Element {
 
   return <div>
 
-    <h1>Sign in</h1>
+    <h1>Kirjaudu sisään</h1>
 
     <p><button onClick={handleEmailLogin}>Email Login</button></p>
-
-    <p>      <button onClick={handleLogout}>Logout</button></p>
+    <p><button onClick={handleLogout}>Logout</button></p>
 
 
     <Form method="post">

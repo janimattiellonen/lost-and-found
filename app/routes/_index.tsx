@@ -1,39 +1,53 @@
-import type { V2_MetaFunction } from "@remix-run/node";
+import { useEffect, useState } from "react";
 
-export const meta: V2_MetaFunction = () => {
-  return [{ title: "New Remix App" }];
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+
+import { DiscDTO } from "~/types";
+
+import { getDiscs } from "~/models/discs.server";
+import { getDistinctDiscNames } from "~/routes/utils";
+
+import DiscSelector from "~/routes/DiscSelector";
+
+import DiscTable from "~/routes/DiscTable";
+
+export const loader = async () => {
+  const data = await getDiscs();
+
+  const distinctDiscNames = getDistinctDiscNames(data);
+
+  return json({ data, distinctDiscNames });
 };
+export default function IndexPage(): JSX.Element {
+  const { data, distinctDiscNames } = useLoaderData();
 
-export default function Index() {
+  const [discs, setDiscs] = useState<DiscDTO[]>([]);
+
+  useEffect(() => {
+    setDiscs(data);
+  }, [data]);
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div className="mt-8">
+      <DiscSelector
+        discNames={distinctDiscNames}
+        onChange={(selectedItem: string | null) => {
+          console.log(`DD: ${JSON.stringify(selectedItem,null,2)}`)
+          if (selectedItem == null) {
+            setDiscs(data);
+            return;
+          }
+
+          const filtered = data.filter(
+            (disc: DiscDTO) => disc.discName === selectedItem
+          );
+
+          setDiscs(filtered);
+        }}
+      />
+
+      <DiscTable discs={discs} />
     </div>
   );
 }

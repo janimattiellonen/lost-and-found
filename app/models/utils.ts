@@ -35,7 +35,7 @@ export function createSupabaseServerClient(request: Request) : SupabaseClient {
 }
 
 
-export async function isUserLoggedIn(request: request): Promise<boolean> {
+export async function isUserLoggedIn(request: Request): Promise<boolean> {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,

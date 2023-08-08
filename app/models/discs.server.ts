@@ -22,9 +22,7 @@ export async function getDiscs(): Promise<DiscDTO[]> {
     .eq("can_be_sold_or_donated", false)
     .eq("club_id", clubId);
 
-
-  //console.log(`ERROR: ${JSON.stringify(error, null,2)}`);
-  //console.log(`DATA: ${JSON.stringify(data,null,2)}`);
+  console.log(`DATA: ${JSON.stringify(data,null,2)}`)
 
   return data.map((row: any) => {
     if (row["owner_phone_number"]) {
@@ -32,34 +30,4 @@ export async function getDiscs(): Promise<DiscDTO[]> {
     }
     return toDTO(row);
   });
-}
-
-export async function getDiscNames() {
-  const clubId = process.env.APP_CLUB_ID;
-
-  const supabase = createConnection();
-
-  let { data, error } = await supabase
-    .from("distinct_disc_names")
-    .select()
-    .eq("club_id", 1)
-    .order("disc_name", { ascending: true });
-
-  //console.info(`ERROR: ${JSON.stringify(error, null, 2)}`);
-  //console.info(`DATA: ${JSON.stringify(data, null, 2)}`);
-}
-
-export async function getDiscColours() {
-  const clubId = process.env.APP_CLUB_ID;
-
-  const supabase = createConnection();
-
-  let { data, error } = await supabase
-    .from("distinct_disc_colours")
-    .select()
-    .eq("club_id", 1)
-    .order("disc_colour", { ascending: true });
-
-  console.info(`ERROR: ${JSON.stringify(error, null, 2)}`);
-  console.info(`DATA: ${JSON.stringify(data, null, 2)}`);
 }

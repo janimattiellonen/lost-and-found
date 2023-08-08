@@ -1,17 +1,11 @@
 
-
-import{getDiscs} from "~/models/discs.server";
-
 import {importDiscData as importTaliDiscData} from "~/import/TalinTallaajatImporter";
 import {importDiscData as importPuskasoturitDiscData} from "~/import/PuskaSoturitImporter";
 
 import{createConnection, createSupabaseServerClient} from "~/models/utils";
 
-
-
 import{fromDto} from "~/models/DiscMapper";
 import {DbDiscType, DiscDTO} from "~/types";
-
 
 export const PUSKASOTURIT: number = 1;
 export const TALIN_TALLAAJAT: number = 2;
@@ -70,10 +64,6 @@ async function addDiscs(clubId: number, discs: DiscDTO[],request: Request): Prom
       .from('discs')
       .insert(data )
 
-    console.log(`DATA (ROW) TO BE SYNCED: ${JSON.stringify(data,null,2)}`);
-
-    console.log(`SYNC ERROR: ${JSON.stringify(error,null,2)}`);
-
     return data;
   });
 
@@ -91,8 +81,6 @@ export async function syncNewDiscs(clubId: number,  request: Request) {
   }
 
   const newDiscs = discs.filter( (disc: DiscDTO) => disc.internalDiscId > latestInternalDiscId);
-
-  console.info(`New Discs: ${JSON.stringify(newDiscs, null,2)}`);
 
   addDiscs(clubId, newDiscs, request);
 }

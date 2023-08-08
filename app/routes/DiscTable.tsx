@@ -30,8 +30,6 @@ function getComparator(sortColumn: string): Comparator {
     case 'id': {
       return (a, b) => {
         return a[sortColumn] - b[sortColumn];
-
-        // .getTime()
       };
     }
     case 'discName':
@@ -72,6 +70,7 @@ const Th = styled.th`
 
 const StyledDataGrid = styled(DataGrid)`
   block-size: auto;
+  margin-top: 1rem;
 `;
 
 const columns = [
@@ -116,7 +115,6 @@ export default function DiscTable({
 }: DiscTableProps): JSX.Element | null {
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
 
-
   const rows = mapToDataRows(discs);
 
   const sortedRows = useMemo((): readonly Row[] => {
@@ -134,7 +132,7 @@ export default function DiscTable({
     });
   }, [rows, sortColumns]);
 
-  return <StyledDataGrid className="fill-grid"       defaultColumnOptions={{
+  return <StyledDataGrid defaultColumnOptions={{
     sortable: true,
     resizable: true
   }} rows={sortedRows} columns={columns} sortColumns={sortColumns}
