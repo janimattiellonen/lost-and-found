@@ -35,7 +35,8 @@ export async function loader({request}: LoaderArgs){
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
-    CLUB_NAME: process.env.APP_CLUB_NAME!
+    CLUB_NAME: process.env.APP_CLUB_NAME!,
+    CLUB_ID: process.env.APP_CLUB_ID!,
   }
 
   const response = new Response()
@@ -109,7 +110,7 @@ export default function App() {
       </head>
       <body>
         <AdminMenu supabase={supabase} user={session?.user}/>
-        <Header clubName={env.CLUB_NAME}/>
+        <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME}/>
         <Outlet context={{supabase}}/>
         <ScrollRestoration />
         <Scripts />
