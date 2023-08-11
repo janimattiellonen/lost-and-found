@@ -5,11 +5,18 @@ export type clubType = {
   name: string;
 };
 
+export type SyncLogType = {
+  id: number;
+  clubId: number;
+  updatedAt: string;
+};
+
 export type ClubDTO = {
   id: number;
   createdAt: string;
   updatedAt: string;
   name: string;
+  syncLog?: SyncLogType
 };
 
 export type dbClubType = {

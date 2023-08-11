@@ -6,11 +6,13 @@ export async function fetchClubs() {
 
   let { data, error } = await supabase
     .from("clubs")
-    .select("id, created_at, updated_at, name");
+    .select("id, created_at, updated_at, name, sync_log(id, club_id, updated_at)");
 
   if (error) {
     throw new Error("Failed to retrieve clubs");
   }
+
+  console.log(`fetchClubs(), data: ${JSON.stringify(data,null,2)}`)
 
   const mapped = data && data.map((item) => toDTO(item));
 

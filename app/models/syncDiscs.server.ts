@@ -38,6 +38,8 @@ export async function syncAllDiscs(clubId: number, request: Request) {
     .eq('club_id', clubId)
 
   addDiscs(clubId, discs, request);
+
+  saveSyncTime(clubId, request)
 }
 
 async function addDiscs(clubId: number, discs: DiscDTO[],request: Request): Promise<void> {
@@ -87,4 +89,22 @@ export async function getLatestInternalDiscId(clubId: number): Promise<number | 
     .single();
 
   return data ? data['internal_disc_id'] : null;
+}
+
+async function saveSyncTime(clubId: number, request: Request) {
+  const supabase = createSupabaseServerClient(request);
+
+  await supabase
+    .from('sync_log')
+    .upsert(
+      {
+        id: clubId,
+        updated_at: 'now()',
+        club_id: clubId
+      },
+      {
+        onConflict: 'club_id',
+        ignoreDuplicates: false
+      })
+    .select()
 }

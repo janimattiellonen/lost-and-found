@@ -20,10 +20,10 @@ export async function getDiscs(): Promise<DiscDTO[]> {
     .eq("can_be_sold_or_donated", false)
     .eq("club_id", clubId);
 
-  return data.map((row: any) => {
+  return data ? data.map((row: any) => {
     if (row["owner_phone_number"]) {
       row["owner_phone_number"] = row["owner_phone_number"].slice(-4);
     }
     return toDTO(row);
-  });
+  }) : [];
 }
