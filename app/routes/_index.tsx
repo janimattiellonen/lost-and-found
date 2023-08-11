@@ -29,6 +29,15 @@ export default function IndexPage(): JSX.Element {
   }, [data]);
 
   return (
+    <>
+    <div className="mt-8 max-w-4xl">
+      <p>Tällä sivulla luetellaan vain palauttamattomat kiekot, jotka ovat edelleen seuran hallussa. Kiekon tila (onko palautettu/myyty/lahjoitettu) saattaa olla virheellinen, jolloin listalla voi näkyä kiekko, joka ei enää ole seuralla.</p>
+
+      <p>Jos kiekosta löytyy selkeästi luettava puhelinnumero, lähetetään siihen viestiä kiekon löytymisestä.</p>
+
+      <p>Tarkemmat tiedot seuran <a href="https://www.tallaajat.org/loytokiekot/">löytökiekoista</a>.</p>
+    </div>
+
     <div className="mt-8">
       <DiscSelector
         discNames={distinctDiscNames}
@@ -48,5 +57,6 @@ export default function IndexPage(): JSX.Element {
 
       <DiscTable discs={discs} />
     </div>
+    </>
   );
 }

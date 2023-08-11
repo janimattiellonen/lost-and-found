@@ -74,7 +74,7 @@ const StyledDataGrid = styled(DataGrid)`
 `;
 
 const columns = [
-  { key: "id", name: "#" },
+  { key: "id", name: "#", width: 'max-content' },
   { key: "discName", name: "Kiekko" },
   { key: "discColour", name: "Väri" },
   { key: "owner", name: "Omistaja" },
