@@ -4,6 +4,17 @@
 
 
 body {
-   margin: 2rem;
+   margin: 1rem;
+}
 
+p {
+   margin-bottom: 1rem;
+}
+
+a {
+   text-decoration: underline;
+}
+
+a:hover {
+   text-decoration: none;
 }
