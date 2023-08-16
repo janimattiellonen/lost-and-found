@@ -26,6 +26,7 @@ export default function AdminMenu({supabase, user}: any): JSX.Element | null {
       <Li>Kirjautuneena: {user?.email}</Li>
       <Li><Link to="/">Kiekot</Link></Li>
       <Li><Link to="/discs/sync">Päivitä kiekkodata</Link></Li>
+      <Li><Link to="/emptying-log">Tyhjennysloki</Link></Li>
       <Li><Link to={''} onClick={handleLogout}>Kirjaudu ulos</Link></Li>
     </ul>
   </div>

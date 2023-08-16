@@ -9,6 +9,17 @@ import {ClubDTO} from "~/types";
 import {syncAllDiscs, syncNewDiscs} from "~/models/syncDiscs.server";
 
 import {isUserLoggedIn} from "~/models/utils";
+import styled from "@emotion/styled";
+
+const H2 = styled.h2`
+  font-weight: bold;
+
+  font-size: 1.25rem;
+
+  @media (min-width: 600px) {
+    font-size: 1.75rem;
+  }
+`;
 
 export const loader = async ({request}: LoaderArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
@@ -43,9 +54,12 @@ export default function SyncPage(): JSX.Element {
   const {data} = useLoaderData()
 
   return (
-    <div className="mt-4">
-    {data.map( (club: ClubDTO) => {
-      return <form key={club.id} method="post" action="/discs/sync"><SyncItem club={club} /></form>
-    })}
+    <div>
+
+      <H2 className="mt-8 mb-8">Päivitä kiekkotiedot</H2>
+
+      {data.map( (club: ClubDTO) => {
+        return <form key={club.id} method="post" action="/discs/sync"><SyncItem club={club} /></form>
+      })}
     </div>)
 }

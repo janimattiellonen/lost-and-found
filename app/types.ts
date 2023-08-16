@@ -11,19 +11,20 @@ export type SyncLogType = {
   updatedAt: string;
 };
 
+export type EmptyingLogDTO = {
+  id: number;
+  createdAt: string;
+  clubId: number;
+  courseName: string;
+  emptiedAt?: string | null;
+}
+
 export type ClubDTO = {
   id: number;
   createdAt: string;
   updatedAt: string;
   name: string;
   syncLog?: SyncLogType
-};
-
-export type dbClubType = {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
 };
 
 export type DiscDTO = {

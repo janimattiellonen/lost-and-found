@@ -1,7 +1,6 @@
 import {createClient, SupabaseClient} from "@supabase/supabase-js";
 import { Database } from "../../schema";
 import {createServerClient} from "@supabase/auth-helpers-remix";
-import {request} from "websocket";
 
 export function createConnection() {
   const supabaseUrl = process.env.SUPABASE_URL!;

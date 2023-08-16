@@ -1,12 +1,12 @@
 import styled from "@emotion/styled";
 
-
 type HeaderProps = {
   clubId: number
   clubName: string
 }
 
 const Logo = styled.img`
+  font-weight: bold;
   width: 50px;
 
   @media (min-width: 600px) {
@@ -15,7 +15,7 @@ const Logo = styled.img`
 `
 
 const H1 = styled.h1`
-  font-size: 1rem;
+  font-size: 1.5rem;
 
   @media (min-width: 600px) {
     font-size: 2.25rem;
@@ -30,5 +30,5 @@ function getClubLogo(clubId: number ): string | undefined {
   return undefined;
 }
 export default function Header({clubId, clubName}: HeaderProps): JSX.Element {
-  return <div className="flex items-center"><Logo className="mr-4" src={getClubLogo(clubId)} alt={""}/><H1 className="font-bold">Löytökiekot - {clubName}</H1></div>
+  return <div className="flex items-center"><Logo className="mr-4" src={getClubLogo(clubId)} alt={""}/><H1>Löytökiekot - {clubName}</H1></div>
 }
