@@ -70,6 +70,11 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
         puhelinnumerosta, jonka 4 viimeistä numeroa ovat 3904. Tällöin voimme poistaa kiekkosi listalta, eikä se näy
         siellä enää virheellisesti.
       </p>
+
+      <p className="font-bold text-lg">
+        Tiedustelut sähköpostitse osoitteeseen{' '}
+        <a href="mailto:janimatti.ellonen@gmail.com">janimatti.ellonen@gmail.com</a>.
+      </p>
     </div>
   );
 }
