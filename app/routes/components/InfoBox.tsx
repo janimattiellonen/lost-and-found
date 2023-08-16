@@ -71,6 +71,11 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
         siellä enää virheellisesti.
       </p>
 
+      <p>
+        Emme julkaise tällä sivustolla omistajan koko nimeä, koko puhelinnumeroa, PDGA-numeroa, tai muita omistajaa
+        yksilöiviä tietoja, emmekä myöskään spessu-kiekon yksityiskohtia.
+      </p>
+
       <p className="font-bold text-lg">
         Tiedustelut sähköpostitse osoitteeseen{' '}
         <a href="mailto:janimatti.ellonen@gmail.com">janimatti.ellonen@gmail.com</a>.
