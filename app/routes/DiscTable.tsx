@@ -1,26 +1,26 @@
-import {useMemo, useState} from "react";
+import { useMemo, useState } from 'react';
 
-import "react-data-grid/lib/styles.css";
+import 'react-data-grid/lib/styles.css';
 
-import styled from "@emotion/styled";
+import styled from '@emotion/styled';
 
-import DataGrid from "react-data-grid";
+import DataGrid from 'react-data-grid';
 
-import { SortColumn} from "react-data-grid";
+import { SortColumn } from 'react-data-grid';
 
-import { DiscDTO } from "~/types";
+import { DiscDTO } from '~/types';
 
 type DiscTableProps = {
   discs: DiscDTO[];
 };
 
 interface Row {
-  id: string,
-  discName: string,
-  discColour: string,
-  owner: string,
-  ownerPhoneNumber: string,
-  addedAt: number
+  id: string;
+  discName: string;
+  discColour: string;
+  owner: string;
+  ownerPhoneNumber: string;
+  addedAt: number;
 }
 
 type Comparator = (a: Row, b: Row) => number;
@@ -35,8 +35,7 @@ function getComparator(sortColumn: string): Comparator {
     case 'discName':
     case 'discColour':
     case 'owner':
-    case 'ownerPhoneNumber':
-    {
+    case 'ownerPhoneNumber': {
       return (a, b) => {
         return a[sortColumn].localeCompare(b[sortColumn]);
       };
@@ -44,7 +43,7 @@ function getComparator(sortColumn: string): Comparator {
     case 'addedAt': {
       return (a, b) => {
         return new Date(a[sortColumn]).getTime() - new Date(b[sortColumn]).getTime();
-      }
+      };
     }
     default: {
       throw new Error(`unsupported sortColumn: "${sortColumn}"`);
@@ -54,42 +53,37 @@ function getComparator(sortColumn: string): Comparator {
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) {
-    return "";
+    return '';
   }
 
-  const formattedDate = new Intl.DateTimeFormat("fi-FI").format(
-    new Date(dateStr)
-  );
+  const formattedDate = new Intl.DateTimeFormat('fi-FI').format(new Date(dateStr));
 
   return formattedDate;
 }
-
-const Th = styled.th`
-  text-align: left;
-`;
-
 const StyledDataGrid = styled(DataGrid)`
   block-size: auto;
   margin-top: 1rem;
+
+  & .rdg-row-even {
+    background: rgb(63, 60, 60);
+  }
 `;
 
 const columns = [
-  { key: "id", name: "#", width: 'max-content' },
-  { key: "discName", name: "Kiekko" },
-  { key: "discColour", name: "Väri" },
-  { key: "owner", name: "Omistaja" },
+  { key: 'id', name: '#', width: 'max-content' },
+  { key: 'discName', name: 'Kiekko' },
+  { key: 'discColour', name: 'Väri' },
+  { key: 'owner', name: 'Omistaja' },
   {
-    key: "ownerPhoneNumber",
-    name: "Puhelinnumero",
+    key: 'ownerPhoneNumber',
+    name: 'Puhelinnumero',
     renderCell(props: any) {
-      return props.row.ownerPhoneNumber
-        ? `****${props.row.ownerPhoneNumber}`
-        : "";
+      return props.row.ownerPhoneNumber ? `****${props.row.ownerPhoneNumber}` : '';
     },
   },
   {
-    key: "addedAt",
-    name: "Lisäyspäivämäärä",
+    key: 'addedAt',
+    name: 'Lisätty',
     renderCell(props: any) {
       return formatDate(props.row.addedAt);
     },
@@ -110,9 +104,7 @@ function mapToDataRows(discs: DiscDTO[]): any {
   });
 }
 
-export default function DiscTable({
-  discs,
-}: DiscTableProps): JSX.Element | null {
+export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
 
   const rows = mapToDataRows(discs);
@@ -132,9 +124,16 @@ export default function DiscTable({
     });
   }, [rows, sortColumns]);
 
-  return <StyledDataGrid defaultColumnOptions={{
-    sortable: true,
-    resizable: true
-  }} rows={sortedRows} columns={columns} sortColumns={sortColumns}
-                         onSortColumnsChange={setSortColumns} />;
+  return (
+    <StyledDataGrid
+      defaultColumnOptions={{
+        sortable: true,
+        resizable: true,
+      }}
+      rows={sortedRows}
+      columns={columns}
+      sortColumns={sortColumns}
+      onSortColumnsChange={setSortColumns}
+    />
+  );
 }
