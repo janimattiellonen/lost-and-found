@@ -2,17 +2,22 @@ import { useMemo, useState } from 'react';
 
 import 'react-data-grid/lib/styles.css';
 
+import { add, isAfter } from 'date-fns';
+
 import styled from '@emotion/styled';
+import WarningIcon from '@mui/icons-material/Warning';
 
-import DataGrid from 'react-data-grid';
-
-import { SortColumn } from 'react-data-grid';
+import DataGrid, { SortColumn } from 'react-data-grid';
 
 import { DiscDTO } from '~/types';
 
 type DiscTableProps = {
   discs: DiscDTO[];
 };
+
+const StyledWarningIcon = styled(WarningIcon)`
+  color: red;
+`;
 
 interface Row {
   id: string;
@@ -69,6 +74,13 @@ const StyledDataGrid = styled(DataGrid)`
   }
 `;
 
+const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
+  const date = add(new Date(dateStr), { months: 6 });
+  const now = new Date();
+
+  return !isAfter(date, now);
+};
+
 const columns = [
   { key: 'id', name: '#', width: 'max-content' },
   { key: 'discName', name: 'Kiekko' },
@@ -85,7 +97,16 @@ const columns = [
     key: 'addedAt',
     name: 'Lisätty',
     renderCell(props: any) {
-      return formatDate(props.row.addedAt);
+      return (
+        <div className="flex gap-4 items-center">
+          {formatDate(props.row.addedAt)}
+          {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
+            <StyledWarningIcon
+              titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
+            />
+          )}
+        </div>
+      );
     },
   },
 ];
