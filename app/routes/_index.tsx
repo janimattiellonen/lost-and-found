@@ -6,6 +6,7 @@ import styled from '@emotion/styled';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Collapse from '@mui/material/Collapse';
+import WarningIcon from '@mui/icons-material/Warning';
 
 import { json, LoaderArgs } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
@@ -32,6 +33,11 @@ const H2 = styled.h2`
   @media (min-width: 600px) {
     font-size: 1.75rem;
   }
+`;
+
+const StyledWarningIcon = styled(WarningIcon)`
+  color: red;
+  margin-right: 0.5rem;
 `;
 
 export const loader = async ({ request }: LoaderArgs) => {
@@ -111,6 +117,14 @@ export default function IndexPage(): JSX.Element {
           </p>
 
           <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
+
+          <p>
+            <StyledWarningIcon
+              titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
+            />
+            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 6kk ja se saatetaan
+            pian myydä tai lahjoittaa.
+          </p>
         </div>
       )}
 
