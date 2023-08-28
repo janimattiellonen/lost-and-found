@@ -27,3 +27,24 @@ export async function getDiscs(): Promise<DiscDTO[]> {
       })
     : [];
 }
+
+export async function getDiscsForStats(): Promise<DiscDTO[]> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  const supabase = createConnection();
+
+  let { data, error } = await supabase
+    .from('discs')
+    .select('can_be_sold_or_donated, is_returned_to_owner, added_at')
+    .order('added_at', { ascending: true })
+    .eq('club_id', clubId);
+
+  return data
+    ? data.map((row: any) => {
+        if (row['owner_phone_number']) {
+          row['owner_phone_number'] = row['owner_phone_number'].slice(-4);
+        }
+        return toDTO(row);
+      })
+    : [];
+}

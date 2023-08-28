@@ -1,4 +1,6 @@
-import { DiscDTO } from "~/types";
+import { format, getMonth as getMonthNumber, getYear as getYearFromDate } from 'date-fns';
+
+import { DiscDTO } from '~/types';
 
 export function getDistinctDiscNames(discs: DiscDTO[]): string[] {
   const set = new Set<string>();
@@ -33,12 +35,38 @@ export function groupByInitialCharacter(data: string[]) {
 
 export function formatDate(dateStr: string | undefined): string {
   if (!dateStr) {
-    return "";
+    return '';
   }
 
-  const formattedDate = new Intl.DateTimeFormat("fi-FI").format(
-    new Date(dateStr)
-  );
+  const formattedDate = new Intl.DateTimeFormat('fi-FI').format(new Date(dateStr));
 
   return formattedDate;
+}
+
+export function getMonth(date: Date): number {
+  return getMonthNumber(date);
+}
+
+export function getDayOfMonth(date: Date): number {
+  return parseInt(format(date, 'd'), 10);
+}
+
+export function getMonthName(date?: Date, mode: string = 'short'): string {
+  if (!date) {
+    return '';
+  }
+
+  return date.toLocaleString('fi-FI', { month: mode });
+}
+
+export function getWeekdayName(date?: Date): string {
+  if (!date) {
+    return '';
+  }
+
+  return date.toLocaleString('fi-FI', { day: 'numeric', month: 'numeric' }) + 'ss';
+}
+
+export function getYear(date: date): number {
+  return getYearFromDate(date);
 }
