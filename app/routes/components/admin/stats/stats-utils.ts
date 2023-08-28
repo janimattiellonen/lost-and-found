@@ -113,3 +113,11 @@ export function getAddedDiscCountByDaysInMonth(
 
   return sortMappedData(mapped);
 }
+
+export function getDonatedOrSoldDiscCount(data: DiscDTO[]): number {
+  return data.filter((item) => item.canBeSoldOrDonated).length;
+}
+
+export function getReturnedDiscCount(data: DiscDTO[]): number {
+  return data.filter((item) => item.isReturnedToOwner).length;
+}
