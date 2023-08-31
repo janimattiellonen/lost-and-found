@@ -22,7 +22,7 @@ export default function LostDiscs({ data }: LostDiscsProps): JSX.Element {
         className="[max-width:1200px] mb-8 [border:solid_1px_red] p-4"
         data={mapBarData(mapped)}
         legendItems={getLegendItems(mapped)}
-        title="Palautettujen kiekkojen määrä, kuukausittain"
+        title="Seuralle palautettujen kiekkojen määrä, kuukausittain"
         onBarClick={(value) => {
           if (value) {
             setSelectedMonth(value);
@@ -35,7 +35,9 @@ export default function LostDiscs({ data }: LostDiscsProps): JSX.Element {
           className="[max-width:1200px] [border:solid_1px_red] p-4"
           data={mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth))}
           legendItems={getLegendItems2(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth))}
-          title={`Palautettujen kiekkojen määrä, ${getMonthName(selectedMonth, 'long')}, ${getYear(selectedMonth)}`}
+          title={`Seuralle palautettujen kiekkojen määrä, ${getMonthName(selectedMonth, 'long')}, ${getYear(
+            selectedMonth,
+          )}`}
         />
       )}
     </div>
