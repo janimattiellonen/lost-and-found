@@ -34,7 +34,7 @@ export default function StatsPage(): JSX.Element {
 
         <p>{getDonatedOrSoldDiscCount(data)}</p>
 
-        <H3>Seuralle palautettujen kiekkojen määrä</H3>
+        <H3>Omistajille palautettujen kiekkojen määrä</H3>
 
         <p>{getReturnedDiscCount(data)}</p>
       </div>
