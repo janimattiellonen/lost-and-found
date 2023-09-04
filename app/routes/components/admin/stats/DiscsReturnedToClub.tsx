@@ -10,11 +10,20 @@ import {
   getLegendItems,
   getLegendItems2,
 } from '~/routes/components/admin/stats/stats-utils';
+import { DiscDTO } from '~/types';
 
-export default function LostDiscs({ data }: LostDiscsProps): JSX.Element {
+function getMonthFromData(data: DiscDTO): Date | null {
+  if (!data.addedAt) {
+    return null;
+  }
+
+  return new Date(data.addedAt);
+}
+
+export default function DiscsReturnedToClub({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
 
-  const mapped = getAddedDiscCountByMonth(data, getMonth);
+  const mapped = getAddedDiscCountByMonth(data, getMonth, getMonthFromData);
 
   return (
     <div>
@@ -33,8 +42,10 @@ export default function LostDiscs({ data }: LostDiscsProps): JSX.Element {
       {selectedMonth && (
         <BarChart
           className="[max-width:1200px] [border:solid_1px_red] p-4"
-          data={mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth))}
-          legendItems={getLegendItems2(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth))}
+          data={mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getMonthFromData))}
+          legendItems={getLegendItems2(
+            getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getMonthFromData),
+          )}
           title={`Seuralle palautettujen kiekkojen määrä, ${getMonthName(selectedMonth, 'long')}, ${getYear(
             selectedMonth,
           )}`}

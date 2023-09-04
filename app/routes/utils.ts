@@ -67,6 +67,6 @@ export function getWeekdayName(date?: Date): string {
   return date.toLocaleString('fi-FI', { day: 'numeric', month: 'numeric' }) + 'ss';
 }
 
-export function getYear(date: date): number {
+export function getYear(date: Date): number {
   return getYearFromDate(date);
 }
