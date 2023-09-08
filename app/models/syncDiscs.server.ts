@@ -53,7 +53,7 @@ export async function syncAllDiscs(clubId: number, request: Request) {
 async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Promise<void> {
   const supabase = createSupabaseServerClient(request);
 
-  const chunked = spliceIntoChunks(discs, 2);
+  const chunked = spliceIntoChunks(discs, 100);
 
   chunked.map(async (chunk: DiscDTO[], index: number) => {
     const mappedData = chunk.map((item) => {
