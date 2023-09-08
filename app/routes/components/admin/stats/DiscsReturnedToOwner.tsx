@@ -22,7 +22,7 @@ function hasDate(str?: string | null | undefined): boolean {
   const pattern = /^\d+\.\d+\.\d+/;
 
   const ret = str.match(pattern);
-  console.log(`ret: ${JSON.stringify(ret, null, 2)}`);
+
   return ret?.length === 1;
 }
 
@@ -51,26 +51,6 @@ export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Elem
   const filtered = filter(data);
   const mapped = getAddedDiscCountByMonth(filtered, getMonth, getMonthFromData);
 
-  console.log(
-    `Filtered is now: ${JSON.stringify(
-      filtered.map((item) => item.returnedToOwnerText),
-      null,
-      2,
-    )}`,
-  );
-  console.log(`Mapped is now: ${JSON.stringify(mapped, null, 2)}`);
-
-  console.log(`mapBarData(mapped): ${JSON.stringify(mapBarData(mapped), null, 2)}`);
-
-  if (selectedMonth) {
-    console.log(
-      `UUGA: ${JSON.stringify(
-        mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getMonthFromData)),
-        null,
-        2,
-      )}`,
-    );
-  }
   return (
     <div>
       <BarChart

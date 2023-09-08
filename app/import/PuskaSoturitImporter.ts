@@ -1,6 +1,6 @@
-import { DiscDTO } from "~/types";
-import { format, parse } from "date-fns";
-import process from "process";
+import { DiscDTO } from '~/types';
+import { format, parse } from 'date-fns';
+import process from 'process';
 
 function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;
@@ -30,8 +30,6 @@ export async function importDiscData(): Promise<DiscDTO[]> {
 
   const data = await res.json();
 
- //  console.info(`Puskasoturit, DATA: ${JSON.stringify(data.values, null, 2)}`);
-
   const {
     DISC_NAME,
     DISC_MANUFACTURER,
@@ -48,12 +46,7 @@ export async function importDiscData(): Promise<DiscDTO[]> {
 
   const filteredValues = data.values
     .slice(1)
-    .filter(
-      (item: any) =>
-        item[INTERNAL_DISC_ID] !== "" &&
-        !isEmpty(item[DISC_NAME]) &&
-        !isEmpty(item[ADDED_AT])
-    );
+    .filter((item: any) => item[INTERNAL_DISC_ID] !== '' && !isEmpty(item[DISC_NAME]) && !isEmpty(item[ADDED_AT]));
 
   const discs: DiscDTO[] = filteredValues.map((item: any) => {
     return {
@@ -65,10 +58,7 @@ export async function importDiscData(): Promise<DiscDTO[]> {
       additionalInfo: item[ADDITIONAL_INFO],
       //addedAt: '2023-02-023',
       addedAt: item[ADDED_AT]
-        ? format(
-            parse(item[ADDED_AT] ? item[ADDED_AT] : "", "dd/MM/y", new Date()),
-            "y-MM-dd"
-          )
+        ? format(parse(item[ADDED_AT] ? item[ADDED_AT] : '', 'dd/MM/y', new Date()), 'y-MM-dd')
         : null,
       isReturnedToOwner: !isEmpty(item[IS_RETURNED_TO_OWNER]) ? true : false,
       returnedToOwnerText: item[IS_RETURNED_TO_OWNER],

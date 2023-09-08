@@ -12,6 +12,8 @@ import { getReturnedDiscCount, getDonatedOrSoldDiscCount } from '~/routes/compon
 
 import H3 from '~/routes/components/H3';
 
+import MostLostByDiscName from '~/routes/components/admin/stats/MostLostByDiscName';
+
 export const loader = async ({ request }: LoaderArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
@@ -39,12 +41,14 @@ export default function StatsPage(): JSX.Element {
         <p>{getReturnedDiscCount(data)}</p>
       </div>
 
-      <H2>Seuralle palautetut kiekot</H2>
+      <H2 className="mt-4 mb-2">Seuralle palautetut kiekot</H2>
       <DiscsReturnedToClub data={data} />
 
-      <H2>Omistajille palautetut kiekot</H2>
+      <H2 className="mt-4 mb-2">Omistajille palautetut kiekot</H2>
 
       <DiscsReturnedToOwner data={data} />
+
+      <MostLostByDiscName data={data} />
     </div>
   );
 }

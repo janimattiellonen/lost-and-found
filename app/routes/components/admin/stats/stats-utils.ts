@@ -14,7 +14,6 @@ export type AddedDiscCountByMonthType = {
 };
 
 export const mapBarData = (data: AddedDiscCountByMonthType[]): BarValueType[] => {
-  console.log(`mapBarData(), data: ${JSON.stringify(data, null, 2)} `);
   return data.map((item) => {
     return {
       label: '',
@@ -42,9 +41,7 @@ export function mapBySeparator(
   data.map((item: DiscDTO) => {
     // const date = new Date(item.addedAt);
     const date = getMonthData(item);
-    console.log(`mapBySeparator(), date: ${JSON.stringify(date, null, 2)}`);
     const separator = date ? getSeparator(date) : null;
-    console.log(`mapBySeparator(), separator: ${JSON.stringify(separator, null, 2)}`);
 
     if (!separator) {
       return null;
@@ -64,7 +61,6 @@ export function mapBySeparator(
 
 export function sortMappedData(mapped: { [key: number]: { value: number; date?: Date } }): AddedDiscCountByMonthType[] {
   const keys = Object.keys(mapped);
-  console.log(`sortMappedData(), keys: ${JSON.stringify(keys, null, 2)}`);
   const res: AddedDiscCountByMonthType[] = keys.map((key) => {
     return {
       dataTopic: parseInt(key, 10) + 1,
@@ -108,9 +104,6 @@ export function getAddedDiscCountByDaysInMonth(
 ): AddedDiscCountByMonthType[] {
   const firstDay: Date | null = date ? new Date(format(date, 'yyyy-MM-01')) : null;
   const lastDay: Date | null = date ? lastDayOfMonth(date) : null;
-
-  console.log(`getAddedDiscCountByDaysInMonth(), firstDay: ${JSON.stringify(firstDay, null, 2)}`);
-  console.log(`getAddedDiscCountByDaysInMonth(), lastDay: ${JSON.stringify(lastDay, null, 2)}`);
 
   const filtered = data.filter((item) => {
     if (firstDay === null || lastDay === null) {

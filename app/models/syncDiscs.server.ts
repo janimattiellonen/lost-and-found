@@ -1,11 +1,10 @@
+import { importDiscData as importTaliDiscData } from '~/import/TalinTallaajatImporter';
+import { importDiscData as importPuskasoturitDiscData } from '~/import/PuskaSoturitImporter';
 
-import {importDiscData as importTaliDiscData} from "~/import/TalinTallaajatImporter";
-import {importDiscData as importPuskasoturitDiscData} from "~/import/PuskaSoturitImporter";
+import { createConnection, createSupabaseServerClient } from '~/models/utils';
 
-import{createConnection, createSupabaseServerClient} from "~/models/utils";
-
-import{fromDto} from "~/models/DiscMapper";
-import {DbDiscType, DiscDTO} from "~/types";
+import { fromDto } from '~/models/DiscMapper';
+import { DbDiscType, DiscDTO } from '~/types';
 
 export const PUSKASOTURIT: number = 1;
 export const TALIN_TALLAAJAT: number = 2;
@@ -20,6 +19,18 @@ function getImporter(clubId: number): () => Promise<DiscDTO[]> {
   throw Error(`Unrecognized club id: ${clubId}`);
 }
 
+function spliceIntoChunks(arr: DiscDTO[], chunkSize: number): Array<DiscDTO[]> {
+  const res = [];
+
+  const cloned = [...arr];
+
+  while (cloned.length > 0) {
+    const chunk = cloned.splice(0, chunkSize);
+    res.push(chunk);
+  }
+  return res;
+}
+
 /**
  * Removes ALL discs for given club and inserts discs.
  *
@@ -32,47 +43,42 @@ export async function syncAllDiscs(clubId: number, request: Request) {
   const supabase = createSupabaseServerClient(request);
   const session = await supabase.auth.getSession();
 
-  const { error: error } = await supabase
-    .from('discs')
-    .delete()
-    .eq('club_id', clubId)
+  const { error: error } = await supabase.from('discs').delete().eq('club_id', clubId);
 
   addDiscs(clubId, discs, request);
 
-  saveSyncTime(clubId, request)
+  saveSyncTime(clubId, request);
 }
 
-async function addDiscs(clubId: number, discs: DiscDTO[],request: Request): Promise<void> {
+async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Promise<void> {
   const supabase = createSupabaseServerClient(request);
 
-  const mappedData = discs.map((item) => {
-    const foo = fromDto(item);
-    delete foo['id']
-    delete foo['created_at']
-    delete foo['updated_at']
-    return foo
-  })
+  const chunked = spliceIntoChunks(discs, 2);
 
-  mappedData.map( async (data: DbDiscType) => {
-    const { error: error } = await supabase
-      .from('discs')
-      .insert(data )
+  chunked.map(async (chunk: DiscDTO[], index: number) => {
+    const mappedData = chunk.map((item) => {
+      const foo = fromDto(item);
+      delete foo['id'];
+      delete foo['created_at'];
+      delete foo['updated_at'];
+      return foo;
+    });
 
-    return data;
+    const { error: error } = await supabase.from('discs').insert(mappedData);
   });
 }
 
-export async function syncNewDiscs(clubId: number,  request: Request) {
+export async function syncNewDiscs(clubId: number, request: Request) {
   const importDiscData = getImporter(clubId);
   const discs = await importDiscData();
 
   const latestInternalDiscId = await getLatestInternalDiscId(clubId);
 
   if (!latestInternalDiscId) {
-    return null
+    return null;
   }
 
-  const newDiscs = discs.filter( (disc: DiscDTO) => disc.internalDiscId > latestInternalDiscId);
+  const newDiscs = discs.filter((disc: DiscDTO) => disc.internalDiscId > latestInternalDiscId);
 
   addDiscs(clubId, newDiscs, request);
 }
@@ -81,8 +87,8 @@ export async function getLatestInternalDiscId(clubId: number): Promise<number | 
   const supabase = createConnection();
 
   let { data, error } = await supabase
-    .from("discs")
-    .select("internal_disc_id")
+    .from('discs')
+    .select('internal_disc_id')
     .order('internal_disc_id', { ascending: false })
     .limit(1)
     .eq('club_id', clubId)
@@ -100,11 +106,12 @@ async function saveSyncTime(clubId: number, request: Request) {
       {
         id: clubId,
         updated_at: 'now()',
-        club_id: clubId
+        club_id: clubId,
       },
       {
         onConflict: 'club_id',
-        ignoreDuplicates: false
-      })
-    .select()
+        ignoreDuplicates: false,
+      },
+    )
+    .select();
 }
