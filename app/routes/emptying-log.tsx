@@ -29,8 +29,6 @@ export async function action({ request }: ActionArgs) {
 
   const item = body.get('item');
 
-  console.log(`action(), item: ${item}`);
-
   if (item) {
     await markAsEmptied(parseInt(item.toString(), 10), request);
   }

@@ -1,18 +1,16 @@
-import{createConnection} from "~/models/utils";
-import {toDTO} from "~/models/ClubMapper";
+import { createConnection } from '~/models/utils';
+import { toDTO } from '~/models/ClubMapper';
 
 export async function fetchClubs() {
   const supabase = createConnection();
 
   let { data, error } = await supabase
-    .from("clubs")
-    .select("id, created_at, updated_at, name, sync_log(id, club_id, updated_at)");
+    .from('clubs')
+    .select('id, created_at, updated_at, name, sync_log(id, club_id, updated_at)');
 
   if (error) {
-    throw new Error("Failed to retrieve clubs");
+    throw new Error('Failed to retrieve clubs');
   }
-
-  console.log(`fetchClubs(), data: ${JSON.stringify(data,null,2)}`)
 
   const mapped = data && data.map((item) => toDTO(item));
 

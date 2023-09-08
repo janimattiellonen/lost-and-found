@@ -34,20 +34,23 @@ export const getLegendItems2 = (data: AddedDiscCountByMonthType[]): string[] => 
 export function mapBySeparator(
   data: DiscDTO[],
   getSeparator: (date: Date) => number,
+  getMonthData: (data: DiscDTO) => Date | null,
 ): { [key: number]: { value: number; date?: Date } } {
   const mapped: { [key: number]: { value: number; date?: Date } } = {};
 
   data.map((item: DiscDTO) => {
-    if (!item.addedAt) {
+    // const date = new Date(item.addedAt);
+    const date = getMonthData(item);
+    const separator = date ? getSeparator(date) : null;
+
+    if (!separator) {
       return null;
     }
 
-    const date = new Date(item.addedAt);
-    const separator = getSeparator(date);
     const prevValue: number = mapped[separator] ? mapped[separator].value : 0;
 
     if (!mapped[separator]) {
-      mapped[separator] = { value: 0, date };
+      mapped[separator] = { value: 0, date: date ?? undefined };
     }
 
     mapped[separator].value = prevValue + 1;
@@ -58,7 +61,6 @@ export function mapBySeparator(
 
 export function sortMappedData(mapped: { [key: number]: { value: number; date?: Date } }): AddedDiscCountByMonthType[] {
   const keys = Object.keys(mapped);
-
   const res: AddedDiscCountByMonthType[] = keys.map((key) => {
     return {
       dataTopic: parseInt(key, 10) + 1,
@@ -87,8 +89,9 @@ export function sortMappedData(mapped: { [key: number]: { value: number; date?: 
 export function getAddedDiscCountByMonth(
   data: DiscDTO[],
   getSeparator: (date: Date) => number,
+  getMonthData: (data: DiscDTO) => Date | null,
 ): AddedDiscCountByMonthType[] {
-  const mapped = mapBySeparator(data, getSeparator);
+  const mapped = mapBySeparator(data, getSeparator, getMonthData);
 
   return sortMappedData(mapped);
 }
@@ -97,6 +100,7 @@ export function getAddedDiscCountByDaysInMonth(
   date: Date,
   data: DiscDTO[],
   getSeparator: (date: Date) => number,
+  getMonthData: (data: DiscDTO) => Date | null,
 ): AddedDiscCountByMonthType[] {
   const firstDay: Date | null = date ? new Date(format(date, 'yyyy-MM-01')) : null;
   const lastDay: Date | null = date ? lastDayOfMonth(date) : null;
@@ -106,10 +110,11 @@ export function getAddedDiscCountByDaysInMonth(
       return false;
     }
 
-    return item.addedAt && isWithinInterval(new Date(item.addedAt), { start: firstDay, end: lastDay });
+    const md = getMonthData(item);
+    return md && isWithinInterval(md, { start: firstDay, end: lastDay });
   });
 
-  const mapped = mapBySeparator(filtered, getSeparator);
+  const mapped = mapBySeparator(filtered, getSeparator, getMonthData);
 
   return sortMappedData(mapped);
 }

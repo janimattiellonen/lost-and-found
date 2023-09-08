@@ -1,12 +1,12 @@
-import {DbDiscType, DiscDTO} from "~/types";
+import { DbDiscType, DiscDTO } from '~/types';
 
-import {format, parse} from "date-fns";
+import { format, parse } from 'date-fns';
 
 function isEmpty(str?: string | null): boolean {
-  return !str || str.length === 0
+  return !str || str.length === 0;
 }
 export const toDTO = (raw: any): DiscDTO => {
-  format(parse("19.6.2023", "d.M.y", new Date()), "d.M.y")
+  format(parse('19.6.2023', 'd.M.y', new Date()), 'd.M.y');
   return {
     internalDiscId: raw.internal_disc_id,
     createdAt: raw.created_at,
@@ -19,7 +19,7 @@ export const toDTO = (raw: any): DiscDTO => {
     addedAt: raw.added_at,
     additionalInfo: raw.additional_info,
     isReturnedToOwner: !isEmpty(raw.is_returned_to_owner) ? true : false,
-    returnedToOwnerText: raw.is_returned_to_owner,
+    returnedToOwnerText: raw.returned_to_owner_text,
     canBeSoldOrDonated: !isEmpty(raw.can_be_sold_or_donated) ? true : false,
     canBeSoldOrDonatedText: raw.can_be_sold_or_donated,
     clubId: raw.club_id,
@@ -46,5 +46,5 @@ export const fromDto = (discDTO: DiscDTO): DbDiscType => {
     can_be_sold_or_donated_text: discDTO.canBeSoldOrDonatedText,
     club_id: discDTO.clubId,
     course: discDTO.course,
-  }
-}
+  };
+};

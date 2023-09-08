@@ -6,11 +6,13 @@ import H2 from '~/routes/components/H2';
 
 import { getDiscsForStats } from '~/models/discs.server';
 
-import LostDiscs from '~/routes/components/admin/stats/LostDiscs';
-
+import DiscsReturnedToClub from '~/routes/components/admin/stats/DiscsReturnedToClub';
+import DiscsReturnedToOwner from '~/routes/components/admin/stats/DiscsReturnedToOwner';
 import { getReturnedDiscCount, getDonatedOrSoldDiscCount } from '~/routes/components/admin/stats/stats-utils';
 
 import H3 from '~/routes/components/H3';
+
+import MostLostByDiscName from '~/routes/components/admin/stats/MostLostByDiscName';
 
 export const loader = async ({ request }: LoaderArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
@@ -34,12 +36,19 @@ export default function StatsPage(): JSX.Element {
 
         <p>{getDonatedOrSoldDiscCount(data)}</p>
 
-        <H3>Palautettujen kiekkojen määrä</H3>
+        <H3>Omistajille palautettujen kiekkojen määrä</H3>
 
         <p>{getReturnedDiscCount(data)}</p>
       </div>
 
-      <LostDiscs data={data} />
+      <H2 className="mt-4 mb-2">Seuralle palautetut kiekot</H2>
+      <DiscsReturnedToClub data={data} />
+
+      <H2 className="mt-4 mb-2">Omistajille palautetut kiekot</H2>
+
+      <DiscsReturnedToOwner data={data} />
+
+      <MostLostByDiscName data={data} />
     </div>
   );
 }

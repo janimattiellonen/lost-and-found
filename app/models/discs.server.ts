@@ -35,7 +35,7 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
 
   let { data, error } = await supabase
     .from('discs')
-    .select('can_be_sold_or_donated, is_returned_to_owner, added_at')
+    .select('disc_name, can_be_sold_or_donated, is_returned_to_owner, returned_to_owner_text, added_at')
     .order('added_at', { ascending: true })
     .eq('club_id', clubId);
 
