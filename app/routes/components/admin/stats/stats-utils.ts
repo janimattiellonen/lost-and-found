@@ -33,10 +33,10 @@ export const getLegendItems2 = (data: AddedDiscCountByMonthType[]): string[] => 
 
 export function mapBySeparator(
   data: DiscDTO[],
-  getSeparator: (date: Date) => number,
+  getSeparator: (date: Date) => number | string,
   getMonthData: (data: DiscDTO) => Date | null,
 ): { [key: number]: { value: number; date?: Date } } {
-  const mapped: { [key: number]: { value: number; date?: Date } } = {};
+  const mapped: { [key: number | string]: { value: number; date?: Date } } = {};
 
   data.map((item: DiscDTO) => {
     // const date = new Date(item.addedAt);
@@ -59,13 +59,15 @@ export function mapBySeparator(
   return mapped;
 }
 
-export function sortMappedData(mapped: { [key: number]: { value: number; date?: Date } }): AddedDiscCountByMonthType[] {
+export function sortMappedData(mapped: {
+  [key: number | string]: { value: number; date?: Date };
+}): AddedDiscCountByMonthType[] {
   const keys = Object.keys(mapped);
   const res: AddedDiscCountByMonthType[] = keys.map((key) => {
     return {
       dataTopic: parseInt(key, 10) + 1,
-      amount: mapped[parseInt(key, 10)].value,
-      date: mapped[parseInt(key, 10)].date,
+      amount: mapped[key].value,
+      date: mapped[key].date,
     };
   });
 
@@ -88,7 +90,7 @@ export function sortMappedData(mapped: { [key: number]: { value: number; date?: 
 
 export function getAddedDiscCountByMonth(
   data: DiscDTO[],
-  getSeparator: (date: Date) => number,
+  getSeparator: (date: Date) => number | string,
   getMonthData: (data: DiscDTO) => Date | null,
 ): AddedDiscCountByMonthType[] {
   const mapped = mapBySeparator(data, getSeparator, getMonthData);

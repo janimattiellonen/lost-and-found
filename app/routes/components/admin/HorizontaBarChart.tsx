@@ -63,7 +63,7 @@ export default function HorizontalBarChart({ data }: HorizontalBarChartProps): J
         const width = Math.round((item.value / (highest + 30)) * 100);
 
         return (
-          <Wrapper>
+          <Wrapper key={index}>
             <Label>{item.label}</Label>
             <HorizontalBar width={width} colour={'red'} key={index}>
               <BarValue>{item.value}</BarValue>
