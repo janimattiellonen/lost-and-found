@@ -20,10 +20,17 @@ function getMonthFromData(data: DiscDTO): Date | null {
   return new Date(data.addedAt);
 }
 
+function createSparator(date: Date): string | number {
+  const month = getMonth(date);
+  const year = getYear(date);
+
+  return `${month}.${year}`;
+}
+
 export default function DiscsReturnedToClub({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
 
-  const mapped = getAddedDiscCountByMonth(data, getMonth, getMonthFromData);
+  const mapped = getAddedDiscCountByMonth(data, createSparator, getMonthFromData);
 
   return (
     <div>

@@ -113,8 +113,8 @@ export default function BarChart({ className, data, legendItems, onBarClick, tit
         })}
       </Wrapper>
       <Legend>
-        {legendItems.map((item) => {
-          return <div>{item}</div>;
+        {legendItems.map((item, index: number) => {
+          return <div key={index}>{item}</div>;
         })}
       </Legend>
     </Outer>

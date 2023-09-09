@@ -45,7 +45,6 @@ function getMonthFromData(data: DiscDTO): Date | null {
 
   return parse(ret[0], 'd.M.yyyy', new Date());
 }
-
 export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const filtered = filter(data);
