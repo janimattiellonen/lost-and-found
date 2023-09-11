@@ -49,6 +49,12 @@ export default function StatsPage(): JSX.Element {
       <DiscsReturnedToOwner data={data} />
 
       <MostLostByDiscName data={data} />
+
+      <H2>SMS Test</H2>
+
+      <p>
+        <a href="sms:+358504643904&body=Bla bla bla blaah">Click me!</a>
+      </p>
     </div>
   );
 }
