@@ -6,6 +6,8 @@ import { createServerClient } from '@supabase/auth-helpers-remix';
 
 import { Button } from '@mui/material';
 
+import Label from './components/Label';
+
 type LoginErrors = {
   password?: string | null | undefined;
   email?: string | null | undefined;
@@ -84,9 +86,7 @@ export default function SignInPage({ user }: SignInPageProps): JSX.Element {
 
       <Form method="post">
         <div className="mb-2">
-          <label className="text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Sähköpostiosoite
-          </label>
+          <Label htmlFor="email">Sähköpostiosoite</Label>
           <input
             id="email"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -98,9 +98,7 @@ export default function SignInPage({ user }: SignInPageProps): JSX.Element {
           {errors?.email ? <p className="text-red-500 text-xs italic">{errors.email}</p> : null}
         </div>
         <div className="mb-2">
-          <label className="text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-            Salasana
-          </label>
+          <Label htmlFor="password">Salasana</Label>
           <input
             id="password"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"

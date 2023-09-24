@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react';
 
 import 'react-data-grid/lib/styles.css';
 
+import { Link, useOutletContext } from '@remix-run/react';
+
 import { add, isAfter } from 'date-fns';
 
 import styled from '@emotion/styled';
 import WarningIcon from '@mui/icons-material/Warning';
+import TextsmsIcon from '@mui/icons-material/Textsms';
 
 import DataGrid, { SortColumn } from 'react-data-grid';
 
@@ -26,6 +29,7 @@ interface Row {
   owner: string;
   ownerPhoneNumber: string;
   addedAt: number;
+  internalDiscId: number;
 }
 
 type Comparator = (a: Row, b: Row) => number;
@@ -81,35 +85,50 @@ const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
   return !isAfter(date, now);
 };
 
-const columns = [
-  { key: 'id', name: '#', width: 'max-content' },
-  { key: 'discName', name: 'Kiekko' },
-  { key: 'discColour', name: 'Väri' },
-  { key: 'owner', name: 'Omistaja' },
-  {
-    key: 'ownerPhoneNumber',
-    name: 'Puhelinnumero',
-    renderCell(props: any) {
-      return props.row.ownerPhoneNumber ? `****${props.row.ownerPhoneNumber}` : '';
+const getColumns = (isLoggedIn: boolean): any => {
+  const columns = [
+    { key: 'id', name: '#', width: 'max-content' },
+    { key: 'discName', name: 'Kiekko' },
+    { key: 'discColour', name: 'Väri' },
+    { key: 'owner', name: 'Omistaja' },
+    {
+      key: 'ownerPhoneNumber',
+      name: 'Puhelinnumero',
+      renderCell(props: any) {
+        return props.row.ownerPhoneNumber ? (
+          <span>
+            ****{props.row.ownerPhoneNumber}{' '}
+            {isLoggedIn === true && (
+              <Link to={`/message/send/${props.row.internalDiscId}`}>
+                <TextsmsIcon />
+              </Link>
+            )}
+          </span>
+        ) : (
+          ''
+        );
+      },
     },
-  },
-  {
-    key: 'addedAt',
-    name: 'Lisätty',
-    renderCell(props: any) {
-      return (
-        <div className="flex gap-4 items-center">
-          {formatDate(props.row.addedAt)}
-          {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
-            <StyledWarningIcon
-              titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
-            />
-          )}
-        </div>
-      );
+    {
+      key: 'addedAt',
+      name: 'Lisätty',
+      renderCell(props: any) {
+        return (
+          <div className="flex gap-4 items-center">
+            {formatDate(props.row.addedAt)}
+            {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
+              <StyledWarningIcon
+                titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
+              />
+            )}
+          </div>
+        );
+      },
     },
-  },
-];
+  ];
+
+  return columns;
+};
 
 function mapToDataRows(discs: DiscDTO[]): any {
   return discs.map((disc: DiscDTO, index: number) => {
@@ -121,11 +140,18 @@ function mapToDataRows(discs: DiscDTO[]): any {
       owner: disc.ownerName,
       ownerPhoneNumber: disc.ownerPhoneNumber,
       addedAt: disc.addedAt,
+      internalDiscId: disc.internalDiscId,
     };
   });
 }
 
 export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
+  const { session } = useOutletContext();
+
+  const isLoggedIn = (): boolean => {
+    return !!session?.user?.id;
+  };
+
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
 
   const rows = mapToDataRows(discs);
@@ -152,7 +178,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
         resizable: true,
       }}
       rows={sortedRows}
-      columns={columns}
+      columns={getColumns(isLoggedIn())}
       sortColumns={sortColumns}
       onSortColumnsChange={setSortColumns}
     />

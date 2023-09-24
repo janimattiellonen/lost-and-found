@@ -17,14 +17,14 @@ export type EmptyingLogDTO = {
   clubId: number;
   courseName: string;
   emptiedAt?: string | null;
-}
+};
 
 export type ClubDTO = {
   id: number;
   createdAt: string;
   updatedAt: string;
   name: string;
-  syncLog?: SyncLogType
+  syncLog?: SyncLogType;
 };
 
 export type DiscDTO = {
@@ -44,36 +44,42 @@ export type DiscDTO = {
   isReturnedToOwner?: boolean | null;
   returnedToOwnerText?: string | null;
   canBeSoldOrDonated?: boolean;
-  canBeSoldOrDonatedText?: string | null
+  canBeSoldOrDonatedText?: string | null;
   ownerClubName?: string | null;
   addedAt?: string;
   course?: string | null;
-}
+};
+
+export type MessageTemplateDTO = {
+  id?: number;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  clubId: number;
+  content: string;
+  isDefault?: boolean | null;
+};
 
 export type DbDiscType = {
-  id?: number | null,
-  internal_disc_id: number,
-  created_at?: string | null,
-  updated_at?: string | null,
-  disc_name: string,
-  disc_colour: string,
-  disc_manufacturer?: string | null
-  owner_name?: string | null,
-  owner_phone_number?: string,
-  owner_email_address?: string,
-  owner_club_name?: string | null,
-  added_at? : string | null,
-  additional_info?: string | null,
-  is_returned_to_owner?: boolean | null,
-  returned_to_owner_text?: string | null
-  can_be_sold_or_donated?: boolean,
-  can_be_sold_or_donated_text?: string | null,
-  club_id: number,
-  course?: string | null
-}
-
-
-
+  id?: number | null;
+  internal_disc_id: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  disc_name: string;
+  disc_colour: string;
+  disc_manufacturer?: string | null;
+  owner_name?: string | null;
+  owner_phone_number?: string;
+  owner_email_address?: string;
+  owner_club_name?: string | null;
+  added_at?: string | null;
+  additional_info?: string | null;
+  is_returned_to_owner?: boolean | null;
+  returned_to_owner_text?: string | null;
+  can_be_sold_or_donated?: boolean;
+  can_be_sold_or_donated_text?: string | null;
+  club_id: number;
+  course?: string | null;
+};
 
 /*
 export type authorBookType = {
