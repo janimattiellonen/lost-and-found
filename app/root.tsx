@@ -112,7 +112,7 @@ export default function App() {
       <body>
         <AdminMenu supabase={supabase} user={session?.user} />
         <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />
-        <Outlet context={{ supabase }} />
+        <Outlet context={{ supabase, session }} />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

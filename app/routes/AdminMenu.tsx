@@ -34,6 +34,9 @@ export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
           <Link to="/emptying-log">Tyhjennysloki</Link>
         </Li>
         <Li>
+          <Link to="/message-templates">Viestipohjat</Link>
+        </Li>
+        <Li>
           <Link to="/stats">Statistiikka</Link>
         </Li>
         <Li>

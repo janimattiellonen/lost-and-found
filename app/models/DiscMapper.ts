@@ -5,9 +5,10 @@ import { format, parse } from 'date-fns';
 function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;
 }
+
 export const toDTO = (raw: any): DiscDTO => {
-  format(parse('19.6.2023', 'd.M.y', new Date()), 'd.M.y');
   return {
+    id: raw.id,
     internalDiscId: raw.internal_disc_id,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
