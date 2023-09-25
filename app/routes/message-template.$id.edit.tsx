@@ -1,8 +1,8 @@
-import { SyntheticEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
 import { Button, Checkbox, FormControlLabel, TextField } from '@mui/material';
 
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react';
 
 import { getMessageTemplate, editMessageTemplate } from '~/models/messageTemplate.server';
 
@@ -58,13 +58,10 @@ export default function EditMessageTemplate(): JSX.Element {
   const [isDefault, setIsDefault] = useState<boolean>(false);
 
   const response = useActionData();
-  const loaderData = useLoaderData();
-  const messageTemplate = loaderData.messageTemplate;
-  const loaderDataOk = loaderData.ok;
+  const { messageTemplate } = useLoaderData();
 
-  const { errors, ok } = response || {};
-  console.log(`ok: ${ok}`);
-  console.log(`loaderDataOk: ${loaderDataOk}`);
+  const { errors } = response || {};
+
   useEffect(() => {
     if (messageTemplate) {
       setMessage(messageTemplate.content);
@@ -72,19 +69,11 @@ export default function EditMessageTemplate(): JSX.Element {
     }
   }, []);
 
-  const handleClose = (event?: SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-
-    setOpen(false);
-  };
-
   return (
     <div>
       <H2 className="mt-8 mb-4">Muokkaa viestipohjaa</H2>
 
-      <Form method="post" key={location.key}>
+      <Form method="post">
         <Wrapper>
           <Label htmlFor="content">Sisältö</Label>
           <TextField
@@ -118,9 +107,15 @@ export default function EditMessageTemplate(): JSX.Element {
           />
         </Wrapper>
 
-        <Button name="action" value="create" variant="contained" type="submit">
-          Päivitä
-        </Button>
+        <div className="flex justify-start gap-4">
+          <Button color="error" variant="contained" component={Link} to={`/message-templates`}>
+            Peru
+          </Button>
+
+          <Button name="action" value="create" variant="contained" type="submit">
+            Päivitä
+          </Button>
+        </div>
       </Form>
     </div>
   );
