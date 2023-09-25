@@ -1,5 +1,5 @@
 import { json, LoaderArgs, redirect } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { Link, useLoaderData } from '@remix-run/react';
 
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
@@ -49,7 +49,9 @@ export default function MessageTemplatesPage(): JSX.Element {
     <div>
       <H2 className="mt-8 mb-4">Viestipohjat</H2>
 
-      <Button variant="contained">Luo uusi viestipohja</Button>
+      <Button component={Link} to="/message-template/create" variant="contained">
+        Luo uusi viestipohja
+      </Button>
 
       <Wrapper>
         {messageTemplates.map((messageTemplate: MessageTemplateDTO) => {
