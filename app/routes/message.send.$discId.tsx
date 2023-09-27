@@ -1,8 +1,4 @@
-import { Form, useLoaderData } from '@remix-run/react';
-
-import styled from '@emotion/styled';
-
-import { Link } from '@remix-run/react';
+import { Form, Link, useFetcher, useLoaderData, useParams } from '@remix-run/react';
 
 import { useState, useEffect } from 'react';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -10,18 +6,23 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
-// import { Form, useActionData, useLoaderData, useOutletContext } from '@remix-run/react';
-
-import { json, LoaderArgs, redirect } from '@remix-run/node';
+import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
 import { isUserLoggedIn } from '~/models/utils';
 import { getDiscWithFullPhoneNumber } from '~/models/discs.server';
 import { getMessageTemplates } from '~/models/messageTemplate.server';
 
-import { DiscDTO, MessageTemplateDTO } from '~/types';
+import { getSentMessages, markAsSent } from '~/models/messageLog.server';
+
+import { MessageLogDTO, MessageTemplateDTO } from '~/types';
 
 import H2 from './components/H2';
 import Label from './components/Label';
 import Wrapper from './components/Wrapper';
+import PaperItem from '~/routes/components/PaperItem';
+
+import { formatDate } from '~/routes/utils';
+import { convertLineBreaks, lineBreakToBr, replaceTokensWithValues } from '~/routes/components/admin/message-utils';
+import H3 from '~/routes/components/H3';
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
@@ -33,41 +34,60 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const discId: number = parseInt(params.discId || '', 10);
 
   const messageTemplates = await getMessageTemplates(request);
+  const sentMessages = await getSentMessages(discId, request);
   const data = await getDiscWithFullPhoneNumber(discId);
 
-  return json({ data, messageTemplates });
+  return json({ data, messageTemplates, sentMessages });
 };
 
-function convertLineBreaks(value: string): string {
-  return value.replaceAll('\n', '%0a');
-}
+export async function action({ request }: ActionArgs) {
+  const form = await request.formData();
 
-function replaceTokensWithValues(message: string, disc: DiscDTO): string {
-  return message
-    .replace('[colour]', disc.discColour ? disc.discColour : '')
-    .replace('[disc]', disc.discName ? disc.discName : '');
+  const id = form.get('id');
+
+  const internalDiscId = parseInt(id ? id.toString() : '', 10);
+  const content = form.get('content');
+
+  await markAsSent(internalDiscId, content ? content.toString() : '', request);
+
+  return json({ ok: true });
 }
 
 export default function SendNotificationPage(): JSX.Element {
+  const params = useParams();
+  const fetcher = useFetcher();
+
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [message, setMessage] = useState<string>('');
+  const [selected, setSelected] = useState<number>(-1);
+  const { data, messageTemplates, sentMessages } = useLoaderData();
+  const ok: boolean = fetcher.data?.ok || false;
 
-  const { data, messageTemplates } = useLoaderData();
+  const getStatusText = (): string => {
+    if (ok) {
+      return 'Lähetetty';
+    } else if (fetcher.state !== 'idle') {
+      return 'Lähetetään...';
+    }
 
-  const selected = messageTemplates.find((messageTemplate: MessageTemplateDTO) => messageTemplate.isDefault === true);
+    return 'Merkitse viesti lähetetyksi';
+  };
+
+  // const selected = messageTemplates.find((messageTemplate: MessageTemplateDTO) => messageTemplate.isDefault === true);
 
   useEffect(() => {
     setPhoneNumber(data.ownerPhoneNumber);
   }, []);
 
   useEffect(() => {
-    setMessage(selected.content);
+    const s = messageTemplates.find((messageTemplate: MessageTemplateDTO) => messageTemplate.isDefault === true);
+    setMessage(s.content);
+    setSelected(s.id);
   }, []);
 
   return (
     <div>
       <H2 className="mt-8 mb-4">Viestin luonti</H2>
-
       <Form method="post">
         <Wrapper>
           <Label htmlFor="phone">Puhelinnumero</Label>
@@ -87,7 +107,7 @@ export default function SendNotificationPage(): JSX.Element {
 
           <Select
             className="[width:100%]"
-            value={selected ? selected.id : -1}
+            value={selected.toString()}
             id="message-template"
             onChange={(e: SelectChangeEvent) => {
               const messageTemplate = messageTemplates.find(
@@ -96,6 +116,7 @@ export default function SendNotificationPage(): JSX.Element {
 
               if (messageTemplate) {
                 setMessage(messageTemplate.content);
+                setSelected(messageTemplate.id);
               }
             }}
           >
@@ -121,19 +142,51 @@ export default function SendNotificationPage(): JSX.Element {
             rows={9}
           />
         </Wrapper>
-        <div className="flex justify-start gap-4">
-          <Button color="error" variant="contained" component={Link} to={`/`}>
-            Peru
-          </Button>
-          <Button
-            variant="contained"
-            component={Link}
-            to={`sms:${phoneNumber}&body=${convertLineBreaks(replaceTokensWithValues(message, data))}`}
-          >
-            Lähetä tekstiviesti
-          </Button>
-        </div>
       </Form>
+      <div className="flex justify-start gap-4">
+        <Button color="error" variant="contained" component={Link} to={`/`}>
+          Peru
+        </Button>
+        <Button
+          variant="contained"
+          component={Link}
+          to={`sms:${phoneNumber}&body=${convertLineBreaks(replaceTokensWithValues(message, data))}`}
+        >
+          Lähetä tekstiviesti
+        </Button>
+
+        <fetcher.Form method="post">
+          <input type="hidden" name="id" value={params.discId} />
+          <input type="hidden" name="content" value={lineBreakToBr(replaceTokensWithValues(message, data))} />
+          <Button type="submit" disabled={ok === true}>
+            {getStatusText()}
+          </Button>
+        </fetcher.Form>
+      </div>
+      <Wrapper>
+        <PaperItem>
+          <>
+            <H3 className="mb-2">Esikatselu</H3>
+            <div dangerouslySetInnerHTML={{ __html: lineBreakToBr(replaceTokensWithValues(message, data)) }} />
+          </>
+        </PaperItem>
+      </Wrapper>
+
+      {sentMessages && sentMessages.length > 0 && (
+        <Wrapper>
+          <H2 className="mt-8">Lähetetyt viestit</H2>
+
+          {sentMessages.map((message: MessageLogDTO, index: number) => {
+            return (
+              <PaperItem key={index}>
+                <div dangerouslySetInnerHTML={{ __html: message.content }} />
+
+                <div className="mt-4 font-bold">Lähetetty: {formatDate(message.sentAt)}</div>
+              </PaperItem>
+            );
+          })}
+        </Wrapper>
+      )}
     </div>
   );
 }

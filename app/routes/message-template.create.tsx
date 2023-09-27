@@ -1,5 +1,4 @@
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
-import styled from '@emotion/styled';
+import { Form, useActionData } from '@remix-run/react';
 
 import { ActionArgs, json, redirect } from '@remix-run/node';
 
@@ -25,7 +24,7 @@ export async function action({ request }: ActionArgs) {
   const content = form.get('content')!;
 
   const isDefault = form.get('is-default')!;
-  console.log(`isDefault: ${isDefault}`);
+
   if (typeof content !== 'string' || content.length === 0) {
     errors.content = 'Sisältö on pakollinen';
   }
