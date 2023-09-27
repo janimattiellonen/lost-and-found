@@ -24,7 +24,7 @@ export async function action({ request }: ActionArgs) {
   const content = form.get('content')!;
 
   const isDefault = form.get('is-default')!;
-  console.log(`isDefault: ${isDefault}`);
+
   if (typeof content !== 'string' || content.length === 0) {
     errors.content = 'Sisältö on pakollinen';
   }
