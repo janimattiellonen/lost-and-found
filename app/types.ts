@@ -59,6 +59,14 @@ export type MessageTemplateDTO = {
   isDefault?: boolean | null;
 };
 
+export type MessageLogDTO = {
+  id?: number;
+  sentAt?: string | null;
+  internalDiscId: number;
+  clubId: number;
+  content: string;
+};
+
 export type DbDiscType = {
   id?: number | null;
   internal_disc_id: number;

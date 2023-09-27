@@ -3,7 +3,7 @@ import { importDiscData as importPuskasoturitDiscData } from '~/import/PuskaSotu
 
 import { createConnection, createSupabaseServerClient } from '~/models/utils';
 
-import { fromDto } from '~/models/DiscMapper';
+import { fromDTO } from '~/models/DiscMapper';
 import { DbDiscType, DiscDTO } from '~/types';
 
 export const PUSKASOTURIT: number = 1;
@@ -57,7 +57,7 @@ async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Pro
 
   chunked.map(async (chunk: DiscDTO[], index: number) => {
     const mappedData = chunk.map((item) => {
-      const foo = fromDto(item);
+      const foo = fromDTO(item);
       delete foo['id'];
       delete foo['created_at'];
       delete foo['updated_at'];

@@ -1,7 +1,5 @@
 import { DbDiscType, DiscDTO } from '~/types';
 
-import { format, parse } from 'date-fns';
-
 function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;
 }
@@ -28,7 +26,7 @@ export const toDTO = (raw: any): DiscDTO => {
   };
 };
 
-export const fromDto = (discDTO: DiscDTO): DbDiscType => {
+export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
   return {
     id: discDTO.id,
     internal_disc_id: discDTO.internalDiscId,

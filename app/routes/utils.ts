@@ -33,7 +33,7 @@ export function groupByInitialCharacter(data: string[]) {
   return values;
 }
 
-export function formatDate(dateStr: string | undefined): string {
+export function formatDate(dateStr: string | undefined | null): string {
   if (!dateStr) {
     return '';
   }
