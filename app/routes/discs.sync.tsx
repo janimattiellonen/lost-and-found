@@ -37,7 +37,7 @@ export async function action({ request }: ActionArgs) {
     await syncNewDiscs(parseInt(clubId ? clubId.toString() : '', 10), request);
   }
 
-  return null;
+  return json({ ok: true });
 }
 
 export default function SyncPage(): JSX.Element {
