@@ -1,20 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useFetcher } from '@remix-run/react';
 import debounce from 'lodash.debounce';
 
 import styled from '@emotion/styled';
 
 import Button from '@mui/material/Button';
-import Collapse from '@mui/material/Collapse';
 import Paper from '@mui/material/Paper';
-import InfoBox from '~/routes/components/InfoBox';
-import EmptyingLogItem from '~/routes/components/EmptyingLogItem';
+import Collapse from '@mui/material/Collapse';
 import WarningIcon from '@mui/icons-material/Warning';
 
-import DiscTable from '~/routes/DiscTable';
+import { json, LoaderArgs } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
+
 import { DiscDTO, EmptyingLogDTO } from '~/types';
+
+import { getDiscs } from '~/models/discs.server';
+import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
+import { getDistinctDiscNames } from '~/routes/utils';
+
 import DiscSelector from '~/routes/DiscSelector';
 import NumberSearch from '~/routes/components/NumberSearch';
+
+import DiscTable from '~/routes/DiscTable';
+import EmptyingLogItem from '~/routes/components/EmptyingLogItem';
+
+import InfoBox from '~/routes/components/InfoBox';
 
 const H2 = styled.h2`
   font-weight: bold;
@@ -31,18 +40,25 @@ const StyledWarningIcon = styled(WarningIcon)`
   margin-right: 0.5rem;
 `;
 
-export default function TestPage(): JSX.Element {
-  const fetcher = useFetcher();
+export const loader = async ({ request }: LoaderArgs) => {
+  const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
 
+  const emptyingLogItems = await getEmptyingLogItemsForClub(clubId, request);
+
+  const data = await getDiscs();
+
+  const distinctDiscNames = getDistinctDiscNames(data);
+
+  return json({ clubId: clubId, data, distinctDiscNames, emptyingLogItems });
+};
+export default function IndexPage(): JSX.Element {
   const [isInfoBoxVisible, showInfoBox] = useState<boolean>(false);
-  const [discs, setDiscs] = useState<DiscDTO[]>([]);
-  const [emptyingLogItems, setEmptyingLogItems] = useState<EmptyingLogDTO[]>([]);
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
 
-  const [clubId, setClubId] = useState<number>(null);
+  const { clubId, data, distinctDiscNames, emptyingLogItems } = useLoaderData();
 
-  const [distinctDiscNames, setDistinctDiscNames] = useState<string[]>([]);
+  const [discs, setDiscs] = useState<DiscDTO[]>([]);
 
   const changeHandler = (e: any): void => {
     if (e.target.value.length > 2) {
@@ -57,37 +73,19 @@ export default function TestPage(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    fetcher.load('/foo');
-  }, []);
-
-  useEffect(() => {
-    if (fetcher.data?.clubId) {
-      setClubId(fetcher.data?.clubId);
-    }
-
-    if (fetcher.data?.data) {
-      setDiscs(fetcher.data?.data);
-    }
-
-    if (fetcher.data?.distinctDiscNames) {
-      setDistinctDiscNames(fetcher.data?.distinctDiscNames);
-    }
-
-    if (fetcher.data?.emptyingLogItems) {
-      setEmptyingLogItems(fetcher.data?.emptyingLogItems);
-    }
-  }, [fetcher.data]);
+    setDiscs(data);
+  }, [data]);
 
   useEffect(() => {
     if (discTerm == null && phoneNumberTerm == null) {
-      setDiscs(fetcher.data?.data || []);
+      setDiscs(data);
       return;
     }
 
-    let filtered = fetcher.data?.data || [];
+    let filtered = data;
 
     if (discTerm) {
-      filtered = fetcher.data?.data.filter((disc: DiscDTO) => disc.discName === discTerm);
+      filtered = data.filter((disc: DiscDTO) => disc.discName === discTerm);
     }
 
     if (phoneNumberTerm) {
@@ -98,7 +96,7 @@ export default function TestPage(): JSX.Element {
   }, [discTerm, phoneNumberTerm]);
 
   return (
-    <div>
+    <>
       {clubId === 2 && (
         <div className="mt-8 max-w-4xl">
           <p>
@@ -129,6 +127,7 @@ export default function TestPage(): JSX.Element {
           </p>
         </div>
       )}
+
       <div className="mt-8">
         {emptyingLogItems.length > 0 && (
           <div>
@@ -143,6 +142,7 @@ export default function TestPage(): JSX.Element {
           </div>
         )}
       </div>
+
       <div className="mt-8">
         <div className="flex gap-4">
           <DiscSelector
@@ -168,6 +168,6 @@ export default function TestPage(): JSX.Element {
         </div>
         <DiscTable discs={discs} />
       </div>
-    </div>
+    </>
   );
 }
