@@ -10,6 +10,7 @@ import Paper from '@mui/material/Paper';
 import InfoBox from '~/routes/components/InfoBox';
 import EmptyingLogItem from '~/routes/components/EmptyingLogItem';
 import WarningIcon from '@mui/icons-material/Warning';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import DiscTable from '~/routes/DiscTable';
 import { DiscDTO, EmptyingLogDTO } from '~/types';
@@ -166,7 +167,8 @@ export default function TestPage(): JSX.Element {
             </Collapse>
           }
         </div>
-        <DiscTable discs={discs} />
+        {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && <DiscTable discs={discs} />}
+        {fetcher.state !== 'idle' && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
       </div>
     </div>
   );
