@@ -28,6 +28,7 @@ export async function getDiscs(): Promise<DiscDTO[]> {
         return toDTO(row);
       })
     : [];
+
 }
 
 export async function getDiscsForStats(): Promise<DiscDTO[]> {
