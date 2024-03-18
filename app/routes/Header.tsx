@@ -1,9 +1,9 @@
-import styled from "@emotion/styled";
+import styled from '@emotion/styled';
 
 type HeaderProps = {
-  clubId: number
-  clubName: string
-}
+  clubId: number;
+  clubName: string;
+};
 
 const Logo = styled.img`
   font-weight: bold;
@@ -12,7 +12,7 @@ const Logo = styled.img`
   @media (min-width: 600px) {
     width: 100px;
   }
-`
+`;
 
 const H1 = styled.h1`
   font-size: 1.5rem;
@@ -22,13 +22,21 @@ const H1 = styled.h1`
   }
 `;
 
-function getClubLogo(clubId: number ): string | undefined {
+function getClubLogo(clubId: number): string | undefined {
+  if (clubId === 1) {
+    return '/puskasoturit-logo2.png';
+  }
   if (clubId === 2) {
-    return '/tt-sini-logo.jpg'
+    return '/tt-sini-logo.jpg';
   }
 
   return undefined;
 }
-export default function Header({clubId, clubName}: HeaderProps): JSX.Element {
-  return <div className="flex items-center"><Logo className="mr-4" src={getClubLogo(clubId)} alt={""}/><H1>Löytökiekot - {clubName}</H1></div>
+export default function Header({ clubId, clubName }: HeaderProps): JSX.Element {
+  return (
+    <div className="flex items-center">
+      <Logo className="mr-4" src={getClubLogo(clubId)} alt={''} />
+      <H1>Löytökiekot - {clubName}</H1>
+    </div>
+  );
 }

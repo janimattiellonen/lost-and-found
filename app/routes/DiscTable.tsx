@@ -73,8 +73,17 @@ const StyledDataGrid = styled(DataGrid)`
   block-size: auto;
   margin-top: 1rem;
 
+  & .rdg-cell-resizable {
+    //background: #18521D;
+  }
   & .rdg-row-even {
     background: rgb(63, 60, 60);
+    //background: #207026;
+  }
+
+  & .rdg-row-odd {
+    //background: rgb(63, 60, 60);
+    //background: #27842e;
   }
 `;
 
