@@ -41,7 +41,7 @@ export default function TestPage(): JSX.Element {
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
 
-  const [clubId, setClubId] = useState<number>(null);
+  const [clubId, setClubId] = useState<number | null>(null);
 
   const [distinctDiscNames, setDistinctDiscNames] = useState<string[]>([]);
 
@@ -163,7 +163,7 @@ export default function TestPage(): JSX.Element {
         <div className="mt-4 mb-4">
           {
             <Collapse in={isInfoBoxVisible}>
-              <Paper elevation={3} children={<InfoBox onClose={() => showInfoBox(false)} />} />
+              <Paper elevation={3} children={<InfoBox clubId={clubId || 0} onClose={() => showInfoBox(false)} />} />
             </Collapse>
           }
         </div>

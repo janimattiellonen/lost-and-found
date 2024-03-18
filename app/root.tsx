@@ -83,6 +83,8 @@ export default function App() {
 
   const serverAccessToken = session?.access_token;
 
+  const clubId = parseInt(env.CLUB_ID, 10);
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -98,7 +100,7 @@ export default function App() {
     };
   }, [serverAccessToken, supabase, revalidate]);
 
-  const iconUrl = parseInt(env.CLUB_ID, 10) === 2 ? '/tt-sini-logo-32-32.jpg' : '';
+  const iconUrl = parseInt(env.CLUB_ID, 10) === 2 ? '/tt-sini-logo-32-32.jpg' : '/puskasoturit-logo2.png';
 
   return (
     <html lang="en">
@@ -110,9 +112,10 @@ export default function App() {
         <Links />
       </head>
       <body>
+        {}
         <AdminMenu supabase={supabase} user={session?.user} />
-        <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />
-        <Outlet context={{ supabase, session }} />
+        <Header clubId={clubId} clubName={env.CLUB_NAME} />
+        <Outlet context={{ supabase, session, clubId }} />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

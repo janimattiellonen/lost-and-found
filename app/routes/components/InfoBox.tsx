@@ -28,9 +28,21 @@ const StyledCloseIcon = styled(CloseIcon)`
 `;
 
 type InfoBoxProps = {
+  clubId?: number;
   onClose: () => void;
 };
-export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
+
+function getTalinTallaajatEmail(): string {
+  return 'janimatti.ellonen@gmail.com';
+}
+
+function getPuskasoturitEmail(): string {
+  return 'loytokiekot@puskasoturit.com';
+}
+
+export default function InfoBox({ clubId, onClose }: InfoBoxProps): JSX.Element {
+  const email = clubId === 1 ? getPuskasoturitEmail() : getTalinTallaajatEmail();
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
@@ -62,14 +74,16 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
         painoa ja stämpin väriä.
       </p>
       <p>
-        Nimettömän spessukiekkojen takaisin saanti on hieman helpompaa, jos vain osaat kuvaille stämpin ja muut
-        yksityiskohdat.
+        Nimettömän spessukiekkojen takaisin saanti on hieman helpompaa, jos osaat kuvailla stämppiä ja muita
+        yksityiskohtia.
       </p>
-      <p>
-        Haettuasi kiekon kopilta, vastaa tekstiviestiin “Kiekko haettu”, mikäli viesti löydetystä kiekosta on tullut
-        puhelinnumerosta, jonka 4 viimeistä numeroa ovat 3904. Tällöin voimme poistaa kiekkosi listalta, eikä se näy
-        siellä enää virheellisesti.
-      </p>
+      {clubId === 2 && (
+        <p>
+          Haettuasi kiekon kopilta, vastaa tekstiviestiin “Kiekko haettu”, mikäli viesti löydetystä kiekosta on tullut
+          puhelinnumerosta, jonka 4 viimeistä numeroa ovat 3904. Tällöin voimme poistaa kiekkosi listalta, eikä se näy
+          siellä enää virheellisesti.
+        </p>
+      )}
 
       <p>
         Emme julkaise tällä sivustolla omistajan koko nimeä, koko puhelinnumeroa, PDGA-numeroa, tai muita omistajaa
@@ -77,8 +91,7 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
       </p>
 
       <p className="font-bold text-lg">
-        Tiedustelut sähköpostitse osoitteeseen{' '}
-        <a href="mailto:janimatti.ellonen@gmail.com">janimatti.ellonen@gmail.com</a>.
+        Tiedustelut sähköpostitse osoitteeseen <a href={`mailto:${email}`}>{email}</a>.
       </p>
     </div>
   );
