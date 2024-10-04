@@ -79,7 +79,7 @@ const StyledDataGrid = styled(DataGrid)`
 `;
 
 const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
-  const date = add(new Date(dateStr), { months: 6 });
+  const date = add(new Date(dateStr), { months: 3 });
   const now = new Date();
 
   return !isAfter(date, now);
@@ -118,7 +118,7 @@ const getColumns = (isLoggedIn: boolean): any => {
             {formatDate(props.row.addedAt)}
             {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
               <StyledWarningIcon
-                titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
+                titleAccess={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
               />
             )}
           </div>
