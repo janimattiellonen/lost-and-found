@@ -123,9 +123,9 @@ export default function TestPage(): JSX.Element {
 
           <p>
             <StyledWarningIcon
-              titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
+              titleAccess={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
             />
-            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 6kk ja se saatetaan
+            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
             pian myydä tai lahjoittaa.
           </p>
         </div>
@@ -167,7 +167,7 @@ export default function TestPage(): JSX.Element {
             </Collapse>
           }
         </div>
-        {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && <DiscTable discs={discs} />}
+        {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && <DiscTable clubId={clubId || 0} discs={discs} />}
         {fetcher.state !== 'idle' && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
       </div>
     </div>

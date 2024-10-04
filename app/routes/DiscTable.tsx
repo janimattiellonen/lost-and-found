@@ -15,6 +15,7 @@ import DataGrid, { SortColumn } from 'react-data-grid';
 import { DiscDTO } from '~/types';
 
 type DiscTableProps = {
+  clubId: number;
   discs: DiscDTO[];
 };
 
@@ -44,7 +45,8 @@ function getComparator(sortColumn: string): Comparator {
     case 'discName':
     case 'discColour':
     case 'owner':
-    case 'ownerPhoneNumber': {
+    case 'ownerPhoneNumber':
+    case 'course': {
       return (a, b) => {
         return a[sortColumn].localeCompare(b[sortColumn]);
       };
@@ -88,13 +90,13 @@ const StyledDataGrid = styled(DataGrid)`
 `;
 
 const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
-  const date = add(new Date(dateStr), { months: 6 });
+  const date = add(new Date(dateStr), { months: 3 });
   const now = new Date();
 
   return !isAfter(date, now);
 };
 
-const getColumns = (isLoggedIn: boolean): any => {
+const getColumns = (isLoggedIn: boolean, isCourseColumnVisible: boolean): any => {
   const columns = [
     { key: 'id', name: '#', width: 'max-content' },
     { key: 'discName', name: 'Kiekko' },
@@ -127,7 +129,7 @@ const getColumns = (isLoggedIn: boolean): any => {
             {formatDate(props.row.addedAt)}
             {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
               <StyledWarningIcon
-                titleAccess={'Kiekko on ollut seuran hallussa yli 6kk ja se saatetaan pian myydä tai lahjoittaa'}
+                titleAccess={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
               />
             )}
           </div>
@@ -135,6 +137,41 @@ const getColumns = (isLoggedIn: boolean): any => {
       },
     },
   ];
+
+  if (isCourseColumnVisible) {
+    return [
+      ...columns,
+      {
+        key: 'course',
+        name: 'Rata',
+        renderCell(props: any) {
+          const course = props.row.course?.toLowerCase();
+
+          const getCourseName = () => {
+            if (course.indexOf('äijänpelto') === 0) {
+              return 'Äijänpelto';
+            }
+
+            if (course.indexOf('oittaa') === 0) {
+              return 'Oittaa';
+            }
+
+            if (course.indexOf('backby') === 0) {
+              return 'Backby';
+            }
+
+            if (course.indexOf('kiekko backb') !== -1) {
+              return '';
+            }
+
+            return course;
+          };
+
+          return <span>{getCourseName()}</span>;
+        },
+      },
+    ];
+  }
 
   return columns;
 };
@@ -150,11 +187,12 @@ function mapToDataRows(discs: DiscDTO[]): any {
       ownerPhoneNumber: disc.ownerPhoneNumber,
       addedAt: disc.addedAt,
       internalDiscId: disc.internalDiscId,
+      course: disc.course,
     };
   });
 }
 
-export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
+export default function DiscTable({ discs, clubId }: DiscTableProps): JSX.Element | null {
   const { session } = useOutletContext();
 
   const isLoggedIn = (): boolean => {
@@ -187,7 +225,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
         resizable: true,
       }}
       rows={sortedRows}
-      columns={getColumns(isLoggedIn())}
+      columns={getColumns(isLoggedIn(), clubId === 1)}
       sortColumns={sortColumns}
       onSortColumnsChange={setSortColumns}
     />
