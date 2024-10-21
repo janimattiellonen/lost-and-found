@@ -125,7 +125,7 @@ export default function TestPage(): JSX.Element {
             <StyledWarningIcon
               titleAccess={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
             />
-            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 6kk ja se saatetaan
+            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
             pian myydä tai lahjoittaa.
           </p>
         </div>
