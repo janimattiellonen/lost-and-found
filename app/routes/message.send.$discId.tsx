@@ -16,6 +16,7 @@ import { getSentMessages, markAsSent } from '~/models/messageLog.server';
 import { MessageLogDTO, MessageTemplateDTO } from '~/types';
 
 import H2 from './components/H2';
+
 import Label from './components/Label';
 import Wrapper from './components/Wrapper';
 import PaperItem from '~/routes/components/PaperItem';
@@ -85,11 +86,23 @@ export default function SendNotificationPage(): JSX.Element {
     setSelected(s.id);
   }, []);
 
+  console.log(`data: ${JSON.stringify(data, null, 2)}`);
   return (
     <div>
       <H2 className="mt-8 mb-4">Viestin luonti</H2>
+
+      <Wrapper>
+        <H3>Käyttäjän tiedot</H3>
+        <p>
+          Nimi: {data.ownerName}
+          <br />
+          Ilmoitettu: {data.notifiedAt ? formatDate(data.notifiedAt) : ''}
+        </p>
+      </Wrapper>
       <Form method="post">
         <Wrapper>
+          <H3>Viesti</H3>
+
           <Label htmlFor="phone">Puhelinnumero</Label>
           <input
             id="phone"

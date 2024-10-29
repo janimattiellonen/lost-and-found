@@ -60,7 +60,7 @@ export async function getDiscWithFullPhoneNumber(internalDiscId: number): Promis
 
   let { data, error } = await supabase
     .from('discs')
-    .select('internal_disc_id, owner_phone_number, disc_name, disc_colour')
+    .select('internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
     .eq('club_id', clubId)
     .eq('internal_disc_id', internalDiscId)
     .single();

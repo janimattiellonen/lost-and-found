@@ -47,6 +47,7 @@ export async function importDiscData(): Promise<DiscDTO[]> {
     .filter((item: any) => item[INTERNAL_DISC_ID] !== '' && !isEmpty(item[DISC_NAME]) && !isEmpty(item[ADDED_AT]));
 
   const discs: DiscDTO[] = filteredValues.map((item: any) => {
+    // console.log(`${item[INTERNAL_DISC_ID]}: item[NOTIFIED_AT]: ${item[NOTIFIED_AT]}`);
     return {
       internalDiscId: item[INTERNAL_DISC_ID],
       discName: item[DISC_NAME],
@@ -54,7 +55,9 @@ export async function importDiscData(): Promise<DiscDTO[]> {
       ownerName: item[OWNER_NAME],
       ownerPhoneNumber: item[OWNER_PHONE_NUMBER],
       ownerClubName: item[OWNER_CLUB_NAME],
-      notifiedAt: item[NOTIFIED_AT],
+      notifiedAt: item[NOTIFIED_AT]
+        ? format(parse(item[NOTIFIED_AT] ? item[NOTIFIED_AT] : '', 'd.M.y', new Date()), 'y-MM-dd')
+        : null,
       additionalInfo: item[ADDITIONAL_INFO],
       addedAt: item[ADDED_AT]
         ? format(parse(item[ADDED_AT] ? item[ADDED_AT] : '', 'd.M.y', new Date()), 'y-MM-dd')
