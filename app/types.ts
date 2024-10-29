@@ -87,6 +87,7 @@ export type DbDiscType = {
   can_be_sold_or_donated_text?: string | null;
   club_id: number;
   course?: string | null;
+  notified_at?: string | null;
 };
 
 /*

@@ -23,6 +23,7 @@ export const toDTO = (raw: any): DiscDTO => {
     canBeSoldOrDonatedText: raw.can_be_sold_or_donated,
     clubId: raw.club_id,
     course: raw.course,
+    notifiedAt: raw.notified_at,
   };
 };
 
@@ -45,5 +46,6 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     can_be_sold_or_donated_text: discDTO.canBeSoldOrDonatedText,
     club_id: discDTO.clubId,
     course: discDTO.course,
+    notified_at: discDTO.notifiedAt,
   };
 };
