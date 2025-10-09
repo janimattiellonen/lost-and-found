@@ -5,6 +5,7 @@ function isEmpty(str?: string | null): boolean {
 }
 
 export const toDTO = (raw: any): DiscDTO => {
+  console.log(`raw: ${JSON.stringify(raw,null,2)}`);
   return {
     id: raw.id,
     internalDiscId: raw.internal_disc_id,
@@ -21,6 +22,7 @@ export const toDTO = (raw: any): DiscDTO => {
     returnedToOwnerText: raw.returned_to_owner_text,
     canBeSoldOrDonated: !isEmpty(raw.can_be_sold_or_donated) ? true : false,
     canBeSoldOrDonatedText: raw.can_be_sold_or_donated,
+    canBeSoldOrDonatedDate: raw.can_be_sold_or_donated_date,
     clubId: raw.club_id,
     course: raw.course,
     notifiedAt: raw.notified_at,
@@ -43,6 +45,7 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     is_returned_to_owner: discDTO.isReturnedToOwner,
     returned_to_owner_text: discDTO.returnedToOwnerText,
     can_be_sold_or_donated: discDTO.canBeSoldOrDonated,
+    can_be_sold_or_donated_date: discDTO.canBeSoldOrDonatedDate,
     can_be_sold_or_donated_text: discDTO.canBeSoldOrDonatedText,
     club_id: discDTO.clubId,
     course: discDTO.course,

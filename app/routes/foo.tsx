@@ -8,7 +8,6 @@ export const loader = async ({ request }: LoaderArgs) => {
   console.log(`foo.loader(), clubId: ${clubId}`);
 
   const emptyingLogItems = await getEmptyingLogItemsForClub(clubId, request);
-  console.log(`feppa, emptyingLogItems: ${JSON.stringify(emptyingLogItems, null, 2)}`);
   const data = await getDiscs();
 
   const distinctDiscNames = getDistinctDiscNames(data);

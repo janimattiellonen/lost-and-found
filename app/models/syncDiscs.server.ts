@@ -64,6 +64,8 @@ async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Pro
       return foo;
     });
 
+    console.log(`MAPPED: ${JSON.stringify(mappedData, null, 2)}`);
+
     const { error: error } = await supabase.from('discs').insert(mappedData);
   });
 }

@@ -18,6 +18,7 @@ const indexes = {
   ADDED_AT: 9,
   IS_RETURNED_TO_OWNER: 11,
   CAN_BE_SOLD_OR_DONATED: 12,
+  CAN_BE_SOLD_OR_DONATED_DATE: 14
 };
 export async function importDiscData(): Promise<DiscDTO[]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/1_E4YYH5RfejSL14LB4AVa4wxPJ9djuNbwsGulhevy0s/values/Master?valueRenderOption=FORMATTED_VALUE&key=${process.env.TT_SHEETS_KEY}`;
@@ -25,6 +26,8 @@ export async function importDiscData(): Promise<DiscDTO[]> {
   const res = await fetch(url);
 
   const data = await res.json();
+
+  console.log(JSON.stringify(data, null, 2));
 
   const TALIN_TALLAAJAT_ID = 2;
 
@@ -40,6 +43,7 @@ export async function importDiscData(): Promise<DiscDTO[]> {
     ADDED_AT,
     IS_RETURNED_TO_OWNER,
     CAN_BE_SOLD_OR_DONATED,
+    CAN_BE_SOLD_OR_DONATED_DATE
   } = indexes;
 
   const filteredValues = data.values
@@ -67,8 +71,11 @@ export async function importDiscData(): Promise<DiscDTO[]> {
       canBeSoldOrDonated: !isEmpty(item[CAN_BE_SOLD_OR_DONATED]) ? true : false,
       canBeSoldOrDonatedText: item[CAN_BE_SOLD_OR_DONATED],
       clubId: TALIN_TALLAAJAT_ID,
+      canBeSoldOrDonatedDate: item[CAN_BE_SOLD_OR_DONATED_DATE] || ''
     };
   });
+
+  console.log(`FOPPA: ${JSON.stringify(filteredValues, null, 2)}`);
 
   return discs;
 }

@@ -41,7 +41,7 @@ export default function TestPage(): JSX.Element {
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
 
-  const [clubId, setClubId] = useState<number>(null);
+  const [clubId, setClubId] = useState<number | null>(null);
 
   const [distinctDiscNames, setDistinctDiscNames] = useState<string[]>([]);
 

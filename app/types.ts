@@ -48,6 +48,7 @@ export type DiscDTO = {
   ownerClubName?: string | null;
   addedAt?: string;
   course?: string | null;
+  canBeSoldOrDonatedDate: string | null
 };
 
 export type MessageTemplateDTO = {
@@ -85,6 +86,7 @@ export type DbDiscType = {
   returned_to_owner_text?: string | null;
   can_be_sold_or_donated?: boolean;
   can_be_sold_or_donated_text?: string | null;
+  can_be_sold_or_donated_date?: string | null;
   club_id: number;
   course?: string | null;
   notified_at?: string | null;
