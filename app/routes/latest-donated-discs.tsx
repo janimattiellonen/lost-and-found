@@ -6,6 +6,9 @@ import { getLatestDiscsMarkedToBeSoldOrDonated } from '~/models/discs.server';
 import { useLoaderData } from '@remix-run/react';
 import { DiscDTO } from '~/types';
 
+import {formatDate} from '~/routes/utils';
+import { LatestDonatedDiscsPage } from '~/pages/LatestDonatedDiscsPage';
+
 export const loader = async ({ request }: LoaderArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
@@ -24,11 +27,7 @@ export default function LatestDonatedDiscs() {
     <div>
       <H2 className="mt-8 mb-8">Uusimmat seuralle lahjoitetut kiekot</H2>
 
-      <div>
-        {data?.length > 0 && data.map( (disc: DiscDTO) => {
-          return <div key={disc.id}>{disc.discName}: {disc.canBeSoldOrDonatedDate}</div>
-        })}
-      </div>
+      {data.length > 0 && <LatestDonatedDiscsPage data={data} />}
     </div>
   )
 }

@@ -24,6 +24,12 @@ export const loader = async ({ request }: LoaderArgs) => {
 };
 
 export async function action({ request }: ActionArgs) {
+  const isLoggedIn = await isUserLoggedIn(request);
+
+  if (!isLoggedIn) {
+    return redirect('/sign-in');
+  }
+
   const body = await request.formData();
 
   const clubId = body.get('clubId');

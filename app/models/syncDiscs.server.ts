@@ -41,7 +41,11 @@ export async function syncAllDiscs(clubId: number, request: Request) {
   const discs = await importDiscData();
 
   const supabase = createSupabaseServerClient(request);
-  const session = await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error('Unauthorized: No valid session found');
+  }
 
   const { error: error } = await supabase.from('discs').delete().eq('club_id', clubId);
 

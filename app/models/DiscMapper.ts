@@ -45,7 +45,7 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     is_returned_to_owner: discDTO.isReturnedToOwner,
     returned_to_owner_text: discDTO.returnedToOwnerText,
     can_be_sold_or_donated: discDTO.canBeSoldOrDonated,
-    can_be_sold_or_donated_date: discDTO.canBeSoldOrDonatedDate,
+    can_be_sold_or_donated_date: discDTO.canBeSoldOrDonatedDate || null,
     can_be_sold_or_donated_text: discDTO.canBeSoldOrDonatedText,
     club_id: discDTO.clubId,
     course: discDTO.course,

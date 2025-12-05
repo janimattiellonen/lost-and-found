@@ -1,0 +1,190 @@
+import { useMemo, useState } from 'react';
+
+import 'react-data-grid/lib/styles.css';
+
+import { Link, useOutletContext } from '@remix-run/react';
+
+import { add, isAfter } from 'date-fns';
+
+import styled from '@emotion/styled';
+import WarningIcon from '@mui/icons-material/Warning';
+import TextsmsIcon from '@mui/icons-material/Textsms';
+
+import DataGrid, { SortColumn } from 'react-data-grid';
+
+import { DiscDTO } from '~/types';
+
+type DonbatedDiscsTableProps = {
+  discs: DiscDTO[];
+};
+
+const StyledWarningIcon = styled(WarningIcon)`
+  color: red;
+`;
+
+interface Row {
+  id: string;
+  discName: string;
+  discColour: string;
+  owner: string;
+  ownerPhoneNumber: string;
+  notifiedAt: string;
+  internalDiscId: number;
+}
+
+type Comparator = (a: Row, b: Row) => number;
+
+function getComparator(sortColumn: string): Comparator {
+  switch (sortColumn) {
+    case 'id': {
+      return (a, b) => {
+        return a[sortColumn] - b[sortColumn];
+      };
+    }
+    case 'discName':
+    case 'discColour':
+    case 'owner':
+    case 'ownerPhoneNumber': {
+      return (a, b) => {
+        return a[sortColumn].localeCompare(b[sortColumn]);
+      };
+    }
+    case 'notifiedAt': {
+      return (a, b) => {
+        return new Date(a[sortColumn]).getTime() - new Date(b[sortColumn]).getTime();
+      };
+    }
+    default: {
+      throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+    }
+  }
+}
+
+function formatDate(dateStr: string | undefined): string {
+
+  if (!dateStr) {
+    return '';
+  }
+
+  const formattedDate = new Intl.DateTimeFormat('fi-FI').format(new Date(dateStr));
+
+  return formattedDate;
+}
+const StyledDataGrid = styled(DataGrid)`
+  block-size: auto;
+  margin-top: 1rem;
+
+  & .rdg-row-even {
+    background: rgb(63, 60, 60);
+  }
+`;
+
+
+const getColumns = (isLoggedIn: boolean): any => {
+  const columns = [
+    { key: 'id', name: '#', width: 'max-content' },
+    { key: 'discName', name: 'Kiekko' },
+    { key: 'discColour', name: 'Väri' },
+    { key: 'owner', name: 'Omistaja' },
+    {
+      key: 'ownerPhoneNumber',
+      name: 'Puhelinnumero',
+      renderCell(props: any) {
+        return props.row.ownerPhoneNumber ? (
+          <span>
+            ****{props.row.ownerPhoneNumber}{' '}
+            {isLoggedIn === true && (
+              <Link to={`/message/send/${props.row.internalDiscId}`}>
+                <TextsmsIcon />
+              </Link>
+            )}
+          </span>
+        ) : (
+          ''
+        );
+      },
+    },
+    {
+      key: 'notifiedAt',
+      name: 'Ilmoitettu (pvm)',
+      renderCell(props: any) {
+        return (
+          <div className="flex gap-4 items-center">
+            {formatDate(props.row.notifiedAt)}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'canBeSoldOrDonatedDate',
+      name: 'Lahjoitettu (pvm)',
+      renderCell(props: any) {
+        return (
+          <div className="flex gap-4 items-center">
+            {formatDate(props.row.canBeSoldOrDonatedDate)}
+          </div>
+        );
+      },
+    },
+  ];
+
+  return columns;
+};
+
+function mapToDataRows(discs: DiscDTO[]): any {
+  return discs.map((disc: DiscDTO, index: number) => {
+    return {
+      id: index + 1,
+      key: index + 1,
+      discName: disc.discName,
+      discColour: disc.discColour,
+      owner: disc.ownerName,
+      ownerPhoneNumber: disc.ownerPhoneNumber,
+      notifiedAt: disc.notifiedAt,
+      internalDiscId: disc.internalDiscId,
+      canBeSoldOrDonatedDate: disc.canBeSoldOrDonatedDate,
+    };
+  });
+}
+
+export default function DonatedDiscsTable({ discs }: DonbatedDiscsTableProps): JSX.Element | null {
+  const { session } = useOutletContext();
+
+  console.log(`DonatedDiscsTable, discs: ${JSON.stringify(discs,null,2)}`);
+
+  const isLoggedIn = (): boolean => {
+    return !!session?.user?.id;
+  };
+
+  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+
+  const rows = mapToDataRows(discs);
+
+  const sortedRows = useMemo((): readonly Row[] => {
+    if (sortColumns.length === 0) return rows;
+
+    return [...rows].sort((a, b) => {
+      for (const sort of sortColumns) {
+        const comparator = getComparator(sort.columnKey);
+        const compResult = comparator(a, b);
+        if (compResult !== 0) {
+          return sort.direction === 'ASC' ? compResult : -compResult;
+        }
+      }
+      return 0;
+    });
+  }, [rows, sortColumns]);
+
+  return (
+    <StyledDataGrid
+      defaultColumnOptions={{
+        sortable: true,
+        resizable: true,
+      }}
+      rows={sortedRows}
+      columns={getColumns(isLoggedIn())}
+      sortColumns={sortColumns}
+      onSortColumnsChange={setSortColumns}
+    />
+  );
+}
