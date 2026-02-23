@@ -43,6 +43,14 @@ export function formatDate(dateStr: string | undefined | null): string {
   return formattedDate;
 }
 
+export function formatDateTime(dateStr: string | undefined | null): string {
+  if (!dateStr) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('fi-FI', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(dateStr));
+}
+
 export function getMonth(date: Date): number {
   return getMonthNumber(date);
 }
