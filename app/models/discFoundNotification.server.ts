@@ -63,3 +63,12 @@ export async function deleteNotification(id: number, request: Request): Promise<
     .eq('id', id)
     .eq('club_id', clubId);
 }
+
+export async function deleteAllNotifications(request: Request): Promise<void> {
+  const supabase = createSupabaseServerClient(request);
+
+  await supabase
+    .from('disc_found_notifications')
+    .delete()
+    .gte('id', 0);
+}

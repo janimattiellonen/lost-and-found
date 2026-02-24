@@ -113,3 +113,20 @@ The title should be "Löysitkö kiekon?"
 When I visit http://localhost:3400/notify/tali I can still see the radio buttons. 
 The radio buttons (along with course selection validation) should not be in use. The course selection
 should only be visible if I visit "/notify"
+
+
+## PDF improvements
+- show url below the QR code
+- show the image public/TT-Logo-transparent.png centered above the QR code
+
+Add a greeting at the bottom:
+
+"Kiitos!
+
+[clubName]"
+
+
+## Visual improvements to /notify page
+- when on /notify page, show the menu, logo (/tt-sini-logo.jpg) and the title 
+ "Löytökiekot - Talin Tallaajat" only if the user is logged in
+- style the /notify page to look better. The idea with this page is to be shown on mobile devices

@@ -20,13 +20,17 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
 
   if (actionData?.success) {
     return (
-      <div className="mt-8 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
+        <div className="text-5xl mb-6">&#9989;</div>
         <H2 className="mb-4">Kiitos ilmoituksesta!</H2>
-        <p className="text-gray-700 mb-6">
+        <p className="text-gray-600 mb-8 text-center text-lg">
           Ilmoitus löydetystä kiekosta on vastaanotettu.
         </p>
         <Button
           variant="outlined"
+          size="large"
+          fullWidth
+          sx={{ maxWidth: '20rem' }}
           onClick={() => window.location.reload()}
         >
           Lähetä uusi ilmoitus
@@ -36,16 +40,16 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
   }
 
   return (
-    <div className="mt-8">
-      <H2 className="mb-4">Ilmoita löydetystä kiekosta</H2>
+    <div className="px-6 py-8 max-w-lg mx-auto">
+      <H2 className="mb-2">Ilmoita kiekosta</H2>
 
       {course && (
-        <p className="text-gray-700 mb-2">
-          <strong>Rata:</strong> {course.name}
+        <p className="text-black font-bold mb-4 text-sm">
+          {course.name}
         </p>
       )}
 
-      <p className="text-gray-700 mb-6">
+      <p className="text-gray-700 mb-8 text-base leading-relaxed">
         Löysitkö kiekon ja jätit sen löytökiekkolaatikkoon? Ilmoita siitä painamalla alla olevaa nappia.
         Halutessasi voit myös jättää yhteystietosi ja lyhyen viestin.
       </p>
@@ -80,13 +84,13 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
           </Wrapper>
         )}
 
-        <div className="mb-4">
+        <div className="mb-6">
           <Button
             variant="text"
             size="small"
             onClick={() => setShowDetails(!showDetails)}
           >
-            {showDetails ? 'Piilota lisätiedot' : 'Lisää yhteystiedot tai viesti (valinnainen)'}
+            {showDetails ? 'Piilota lisätiedot' : 'Lisää yhteystiedot'}
           </Button>
         </div>
 
@@ -97,7 +101,6 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
               name="contactName"
               id="contactName"
               fullWidth
-              size="small"
             />
           </Wrapper>
 
@@ -107,7 +110,7 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
               name="contactPhone"
               id="contactPhone"
               fullWidth
-              size="small"
+              inputProps={{ inputMode: 'tel' }}
             />
           </Wrapper>
 
@@ -118,7 +121,7 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
               id="contactEmail"
               type="email"
               fullWidth
-              size="small"
+              inputProps={{ inputMode: 'email' }}
             />
           </Wrapper>
 
@@ -130,7 +133,6 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
               multiline
               rows={3}
               fullWidth
-              size="small"
               placeholder="Esim. kiekon väri, tyyppi tai löytöpaikka"
             />
           </Wrapper>
@@ -140,8 +142,9 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
           variant="contained"
           type="submit"
           size="large"
+          fullWidth
         >
-          Ilmoita löydetystä kiekosta
+          Ilmoita kiekosta
         </Button>
       </Form>
     </div>

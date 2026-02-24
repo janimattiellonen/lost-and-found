@@ -5,7 +5,7 @@ import styled from '@emotion/styled';
 import { Button } from '@mui/material';
 
 import { isUserLoggedIn } from '~/models/utils';
-import { getDiscFoundNotifications, markNotificationAsRead, deleteNotification } from '~/models/discFoundNotification.server';
+import { getDiscFoundNotifications, markNotificationAsRead, deleteNotification, deleteAllNotifications } from '~/models/discFoundNotification.server';
 import { DiscFoundNotificationDTO } from '~/types';
 import { formatDateTime } from '~/routes/utils';
 
@@ -41,6 +41,11 @@ export async function action({ request }: ActionArgs) {
   const body = await request.formData();
   const intent = body.get('intent');
   const notificationId = body.get('notificationId');
+
+  if (intent === 'deleteAll') {
+    await deleteAllNotifications(request);
+    return json({});
+  }
 
   if (!notificationId) {
     return json({});
@@ -126,12 +131,31 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
 
 export default function NotificationsPage(): JSX.Element {
   const { notifications } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
 
   return (
     <div>
       <H2 className="mt-8 mb-4">Ilmoitukset löydetyistä kiekoista</H2>
 
       <QrPosterButtons />
+
+      {notifications.length > 0 && (
+        <div className="mb-4">
+          <fetcher.Form
+            method="post"
+            onSubmit={(e) => {
+              if (!confirm('Haluatko varmasti poistaa kaikki ilmoitukset?')) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="intent" value="deleteAll" />
+            <Button variant="outlined" size="small" color="error" type="submit">
+              Poista kaikki
+            </Button>
+          </fetcher.Form>
+        </div>
+      )}
 
       {notifications.length === 0 && (
         <p className="text-gray-500">Ei ilmoituksia.</p>
