@@ -4,6 +4,8 @@
   "scripts": {
     "build": "remix build",
     "dev": "PORT=3400 remix dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc"
   },
   "dependencies": {
