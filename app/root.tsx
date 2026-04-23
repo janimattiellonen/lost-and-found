@@ -14,6 +14,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useLocation,
   useRevalidator,
 } from '@remix-run/react';
 
@@ -79,6 +80,7 @@ export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
 export default function App() {
   const { env, session } = useLoaderData();
   const { revalidate } = useRevalidator();
+  const location = useLocation();
   const [supabase] = useState(() => createBrowserClient(env.SUPABASE_URL, env.SUPABASE_KEY));
 
   const serverAccessToken = session?.access_token;
@@ -99,6 +101,9 @@ export default function App() {
   }, [serverAccessToken, supabase, revalidate]);
 
   const iconUrl = parseInt(env.CLUB_ID, 10) === 2 ? '/tt-sini-logo-32-32.jpg' : '';
+  const isNotifyPage = location.pathname.startsWith('/notify');
+  const isLoggedIn = !!session?.user;
+  const showHeader = !isNotifyPage || isLoggedIn;
 
   return (
     <html lang="en">
@@ -110,8 +115,8 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AdminMenu supabase={supabase} user={session?.user} />
-        <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />
+        {showHeader && <AdminMenu supabase={supabase} user={session?.user} />}
+        {showHeader && <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />}
         <Outlet context={{ supabase, session }} />
         <ScrollRestoration />
         <Scripts />

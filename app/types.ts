@@ -67,6 +67,18 @@ export type MessageLogDTO = {
   content: string;
 };
 
+export type DiscFoundNotificationDTO = {
+  id?: number;
+  createdAt?: string | null;
+  clubId: number;
+  courseName?: string | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  message?: string | null;
+  readAt?: string | null;
+};
+
 export type DbDiscType = {
   id?: number | null;
   internal_disc_id: number;

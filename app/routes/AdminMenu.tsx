@@ -40,6 +40,9 @@ export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
           <Link to="/stats">Statistiikka</Link>
         </Li>
         <Li>
+          <Link to="/notifications">Ilmoitukset</Link>
+        </Li>
+        <Li>
           <Link to={''} onClick={handleLogout}>
             Kirjaudu ulos
           </Link>
