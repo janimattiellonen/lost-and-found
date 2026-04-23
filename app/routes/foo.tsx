@@ -1,4 +1,5 @@
-import { json, LoaderArgs } from '@remix-run/node';
+import type { LoaderArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
 import { getDiscs } from '~/models/discs.server';
 import { getDistinctDiscNames } from '~/routes/utils';

@@ -1,6 +1,6 @@
 import Button from '@mui/material/Button';
 
-import { ClubDTO } from "~/types";
+import type { ClubDTO } from "~/types";
 
 type SyncItemProps = {
   club: ClubDTO;

@@ -1,4 +1,5 @@
-import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs} from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { useLoaderData, useFetcher } from '@remix-run/react';
 
 import styled from '@emotion/styled';
@@ -6,7 +7,7 @@ import { Button } from '@mui/material';
 
 import { isUserLoggedIn } from '~/models/utils';
 import { getDiscFoundNotifications, markNotificationAsRead, deleteNotification, deleteAllNotifications } from '~/models/discFoundNotification.server';
-import { DiscFoundNotificationDTO } from '~/types';
+import type { DiscFoundNotificationDTO } from '~/types';
 import { formatDateTime } from '~/routes/utils';
 
 import H2 from '~/routes/components/H2';

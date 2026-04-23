@@ -1,4 +1,4 @@
-import {ClubDTO} from "~/types";
+import type {ClubDTO} from "~/types";
 
 export const toDTO = (raw: any): ClubDTO => {
   return {

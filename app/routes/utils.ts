@@ -1,13 +1,13 @@
 import { format, getMonth as getMonthNumber, getYear as getYearFromDate } from 'date-fns';
 
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 export function getDistinctDiscNames(discs: DiscDTO[]): string[] {
   const set = new Set<string>();
 
   const unique: string[] = [];
 
-  discs.map((disc: DiscDTO) => {
+  discs.forEach((disc: DiscDTO) => {
     if (!set.has(disc?.discName?.toLowerCase())) {
       set.add(disc?.discName?.toLowerCase());
       unique.push(disc?.discName);
@@ -24,7 +24,7 @@ type GroupedType = {
 export function groupByInitialCharacter(data: string[]) {
   const values: GroupedType = {};
 
-  data.map((item: string) => {
+  data.forEach((item: string) => {
     const firstChar = item.slice(0, 1);
     const items = values[firstChar] ? values[firstChar] : [];
     values[firstChar] = [...items, item];

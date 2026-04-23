@@ -1,11 +1,9 @@
 import { Form, useActionData } from '@remix-run/react';
 
-import { ActionArgs, json, redirect } from '@remix-run/node';
+import type { ActionArgs} from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 
-import { TextField } from '@mui/material';
-import { Checkbox } from '@mui/material';
-import { Button } from '@mui/material';
-import { FormControlLabel } from '@mui/material';
+import { TextField , Checkbox , Button , FormControlLabel } from '@mui/material';
 
 import H2 from './components/H2';
 import Label from './components/Label';
@@ -46,7 +44,7 @@ export async function action({ request }: ActionArgs) {
 export default function CreateMessageTemplate(): JSX.Element {
   const response = useActionData();
 
-  const { errors, data } = response || {};
+  const { errors } = response || {};
 
   return (
     <div>

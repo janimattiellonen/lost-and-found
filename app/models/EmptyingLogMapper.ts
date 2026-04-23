@@ -1,4 +1,4 @@
-import {EmptyingLogDTO} from "~/types";
+import type {EmptyingLogDTO} from "~/types";
 
 export const toDTO = (raw: any): EmptyingLogDTO => {
   return {

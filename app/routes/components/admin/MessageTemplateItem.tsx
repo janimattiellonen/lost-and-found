@@ -1,12 +1,9 @@
-import { useFetcher } from '@remix-run/react';
+import { useFetcher, Link } from '@remix-run/react';
 
-import styled from '@emotion/styled';
-
-import { Link } from '@remix-run/react';
 import Button from '@mui/material/Button';
 
 import { formatDate } from '~/routes/utils';
-import { MessageTemplateDTO } from '~/types';
+import type { MessageTemplateDTO } from '~/types';
 
 type MessageTemplateProps = {
   messageTemplate: MessageTemplateDTO;

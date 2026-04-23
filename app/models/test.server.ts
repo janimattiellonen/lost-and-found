@@ -1,6 +1,4 @@
-import mysql from 'mysql2'
-
-export  function getStats() {
+export function getStats() {
 
 
   const data = [

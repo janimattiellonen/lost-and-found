@@ -4,7 +4,7 @@ import { importDiscData as importPuskasoturitDiscData } from '~/import/PuskaSotu
 import { createConnection, createSupabaseServerClient } from '~/models/utils';
 
 import { fromDTO } from '~/models/DiscMapper';
-import { DbDiscType, DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 export const PUSKASOTURIT: number = 1;
 export const TALIN_TALLAAJAT: number = 2;
@@ -41,9 +41,8 @@ export async function syncAllDiscs(clubId: number, request: Request) {
   const discs = await importDiscData();
 
   const supabase = createSupabaseServerClient(request);
-  const session = await supabase.auth.getSession();
 
-  const { error: error } = await supabase.from('discs').delete().eq('club_id', clubId);
+  await supabase.from('discs').delete().eq('club_id', clubId);
 
   addDiscs(clubId, discs, request);
 
@@ -55,7 +54,7 @@ async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Pro
 
   const chunked = spliceIntoChunks(discs, 100);
 
-  chunked.map(async (chunk: DiscDTO[], index: number) => {
+  chunked.map(async (chunk: DiscDTO[]) => {
     const mappedData = chunk.map((item) => {
       const foo = fromDTO(item);
       delete foo['id'];
@@ -64,7 +63,7 @@ async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Pro
       return foo;
     });
 
-    const { error: error } = await supabase.from('discs').insert(mappedData);
+    await supabase.from('discs').insert(mappedData);
   });
 }
 
@@ -86,7 +85,7 @@ export async function syncNewDiscs(clubId: number, request: Request) {
 export async function getLatestInternalDiscId(clubId: number): Promise<number | null> {
   const supabase = createConnection();
 
-  let { data, error } = await supabase
+  let { data } = await supabase
     .from('discs')
     .select('internal_disc_id')
     .order('internal_disc_id', { ascending: false })

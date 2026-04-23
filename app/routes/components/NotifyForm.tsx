@@ -7,7 +7,8 @@ import H2 from './H2';
 import Wrapper from './Wrapper';
 import Label from './Label';
 
-import { Course, courses } from '~/config/courses';
+import type { Course} from '~/config/courses';
+import { courses } from '~/config/courses';
 
 type NotifyFormProps = {
   course?: Course;

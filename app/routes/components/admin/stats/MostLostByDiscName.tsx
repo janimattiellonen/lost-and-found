@@ -1,4 +1,4 @@
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 import H3 from '../../H3';
 

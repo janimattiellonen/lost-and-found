@@ -5,7 +5,7 @@ import { toDTO } from '~/models/EmptyingLogMapper';
 export async function getEmptyingLogItems(request: Request) {
   const supabase = createSupabaseServerClient(request);
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('emptying_log')
     .select('id, created_at, emptied_at, club_id, course_name');
 
@@ -19,7 +19,7 @@ export async function getEmptyingLogItems(request: Request) {
 export async function markAsEmptied(courseId: number, request: Request) {
   const supabase = createSupabaseServerClient(request);
 
-  const { error } = await supabase.from('emptying_log').update({ emptied_at: 'now()' }).eq('id', courseId);
+  await supabase.from('emptying_log').update({ emptied_at: 'now()' }).eq('id', courseId);
 
   return [];
 }
@@ -27,7 +27,7 @@ export async function markAsEmptied(courseId: number, request: Request) {
 export async function getEmptyingLogItemsForClub(clubId: number, request: Request) {
   const supabase = createSupabaseServerClient(request);
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('emptying_log')
     .select('id, created_at, club_id, course_name, emptied_at')
     .eq('club_id', clubId);

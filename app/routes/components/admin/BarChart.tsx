@@ -81,7 +81,7 @@ export default function BarChart({ className, data, legendItems, onBarClick, tit
 
   let highest = 0;
 
-  data.map((item: BarValueType) => {
+  data.forEach((item: BarValueType) => {
     if (item.value > highest) {
       highest = item.value;
     }

@@ -8,10 +8,11 @@ import Paper from '@mui/material/Paper';
 import Collapse from '@mui/material/Collapse';
 import WarningIcon from '@mui/icons-material/Warning';
 
-import { json, LoaderArgs } from '@remix-run/node';
+import type { LoaderArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 
-import { DiscDTO, EmptyingLogDTO } from '~/types';
+import type { DiscDTO, EmptyingLogDTO } from '~/types';
 
 import { getDiscs } from '~/models/discs.server';
 import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
@@ -93,6 +94,7 @@ export default function IndexPage(): JSX.Element {
     }
 
     setDiscs(filtered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discTerm, phoneNumberTerm]);
 
   return (

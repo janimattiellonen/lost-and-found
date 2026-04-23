@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { cssBundleHref } from '@remix-run/css-bundle';
 import type { LinksFunction, LoaderArgs, V2_MetaFunction } from '@remix-run/node';
 
-import { metaV1 } from '@remix-run/v1-meta';
-
 import { json } from '@remix-run/node';
 
 import {

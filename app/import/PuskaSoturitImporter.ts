@@ -1,4 +1,4 @@
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 import { format, parse } from 'date-fns';
 import process from 'process';
 

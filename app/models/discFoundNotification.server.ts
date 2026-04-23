@@ -1,6 +1,6 @@
 import { createConnection, createSupabaseServerClient } from '~/models/utils';
 import { toDTO } from '~/models/DiscFoundNotificationMapper';
-import { DiscFoundNotificationDTO } from '~/types';
+import type { DiscFoundNotificationDTO } from '~/types';
 import process from 'process';
 
 export async function createDiscFoundNotification(data: {

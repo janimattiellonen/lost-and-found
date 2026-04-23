@@ -10,9 +10,10 @@ import styled from '@emotion/styled';
 import WarningIcon from '@mui/icons-material/Warning';
 import TextsmsIcon from '@mui/icons-material/Textsms';
 
-import DataGrid, { SortColumn } from 'react-data-grid';
+import type { SortColumn } from 'react-data-grid';
+import DataGrid from 'react-data-grid';
 
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 type DiscTableProps = {
   discs: DiscDTO[];

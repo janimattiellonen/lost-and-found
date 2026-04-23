@@ -1,4 +1,4 @@
-import {EmptyingLogDTO} from "~/types";
+import type {EmptyingLogDTO} from "~/types";
 
 type EmptyingLogItemProps = {
   item: EmptyingLogDTO

@@ -1,7 +1,7 @@
 import { createConnection } from '~/models/utils';
 import * as process from 'process';
 
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 import { toDTO } from '~/models/DiscMapper';
 
@@ -10,7 +10,7 @@ export async function getDiscs(): Promise<DiscDTO[]> {
 
   const supabase = createConnection();
 
-  let { data, error } = await supabase
+  let { data } = await supabase
     .from('discs')
     .select(
       'internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at',
@@ -35,7 +35,7 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
 
   const supabase = createConnection();
 
-  let { data, error } = await supabase
+  let { data } = await supabase
     .from('discs')
     .select(
       'internal_disc_id, disc_name, can_be_sold_or_donated, is_returned_to_owner, returned_to_owner_text, added_at',
@@ -58,7 +58,7 @@ export async function getDiscWithFullPhoneNumber(internalDiscId: number): Promis
 
   const supabase = createConnection();
 
-  let { data, error } = await supabase
+  let { data } = await supabase
     .from('discs')
     .select('internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
     .eq('club_id', clubId)

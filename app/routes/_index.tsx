@@ -13,7 +13,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import DiscTable from '~/routes/DiscTable';
-import { DiscDTO, EmptyingLogDTO } from '~/types';
+import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/routes/DiscSelector';
 import NumberSearch from '~/routes/components/NumberSearch';
 
@@ -59,6 +59,7 @@ export default function TestPage(): JSX.Element {
 
   useEffect(() => {
     fetcher.load('/foo');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -96,6 +97,7 @@ export default function TestPage(): JSX.Element {
     }
 
     setDiscs(filtered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discTerm, phoneNumberTerm]);
 
   return (

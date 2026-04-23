@@ -1,4 +1,4 @@
-import { MessageLogDTO } from '~/types';
+import type { MessageLogDTO } from '~/types';
 
 export function toDTO(raw: any): MessageLogDTO {
   return {

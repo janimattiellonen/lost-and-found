@@ -1,4 +1,4 @@
-import { DiscFoundNotificationDTO } from '~/types';
+import type { DiscFoundNotificationDTO } from '~/types';
 
 export function toDTO(raw: any): DiscFoundNotificationDTO {
   return {

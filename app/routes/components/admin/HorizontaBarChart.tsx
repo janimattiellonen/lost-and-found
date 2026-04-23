@@ -1,4 +1,3 @@
-import { BarValueType } from '~/routes/components/admin/BarChart';
 import styled from '@emotion/styled';
 
 type Stat = {
@@ -51,7 +50,7 @@ const Label = styled.div`
 export default function HorizontalBarChart({ data }: HorizontalBarChartProps): JSX.Element {
   let highest: number = 0;
 
-  data.map((item: Stat) => {
+  data.forEach((item: Stat) => {
     if (item.value > highest) {
       highest = item.value;
     }

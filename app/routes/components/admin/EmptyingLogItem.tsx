@@ -1,4 +1,4 @@
-import {EmptyingLogDTO} from "~/types";
+import type {EmptyingLogDTO} from "~/types";
 import Button from "@mui/material/Button";
 
 type EmptyingLogItemProps = {

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '@mui/material';
 import QRCode from 'qrcode';
 
-import { courses, Course } from '~/config/courses';
+import type { Course } from '~/config/courses';
+import { courses } from '~/config/courses';
 
 async function generateAndDownloadPdf(course: Course) {
   const { Document, Page, Text, Image, StyleSheet, pdf } = await import('@react-pdf/renderer');

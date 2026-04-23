@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '~/models/utils';
 
 import { toDTO } from '~/models/MessageTemplateMapper';
-import { MessageTemplateDTO } from '~/types';
+import type { MessageTemplateDTO } from '~/types';
 import process from 'process';
 
 export async function getMessageTemplates(request: Request): Promise<MessageTemplateDTO[]> {
@@ -9,7 +9,7 @@ export async function getMessageTemplates(request: Request): Promise<MessageTemp
 
   const clubId = process.env.APP_CLUB_ID;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('message_templates')
     .select('id, created_at, updated_at, club_id, content, is_default')
     .eq('club_id', clubId)

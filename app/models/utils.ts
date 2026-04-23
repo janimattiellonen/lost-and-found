@@ -1,5 +1,6 @@
-import {createClient, SupabaseClient} from "@supabase/supabase-js";
-import { Database } from "../../schema";
+import type { SupabaseClient} from "@supabase/supabase-js";
+import {createClient} from "@supabase/supabase-js";
+import type { Database } from "../../schema";
 import {createServerClient} from "@supabase/auth-helpers-remix";
 
 export function createConnection() {

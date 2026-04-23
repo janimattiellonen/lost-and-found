@@ -1,5 +1,4 @@
 import H3 from '../H3';
-import MessageTemplateItem from '~/routes/components/admin/MessageTemplateItem';
 import Paper from '@mui/material/Paper';
 
 type MessagePreviewProps = {
