@@ -152,7 +152,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
     return !!session?.user?.id;
   };
 
-  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([{ columnKey: 'addedAt', direction: 'DESC' }]);
 
   const rows = mapToDataRows(discs);
 
