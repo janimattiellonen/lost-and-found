@@ -59,7 +59,9 @@ export function getDayOfMonth(date: Date): number {
   return parseInt(format(date, 'd'), 10);
 }
 
-export function getMonthName(date?: Date, mode: string = 'short'): string {
+type MonthStyle = 'long' | 'short' | 'narrow' | 'numeric' | '2-digit';
+
+export function getMonthName(date?: Date, mode: MonthStyle = 'short'): string {
   if (!date) {
     return '';
   }

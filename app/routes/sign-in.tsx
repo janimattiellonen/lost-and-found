@@ -64,12 +64,16 @@ export async function action({ request }: ActionArgs) {
   }
 }
 type SignInPageProps = {
-  user?: object | null;
+  user?: { email?: string } | null;
+};
+
+type OutletContext = {
+  supabase: { auth: { signOut: () => Promise<unknown> } };
 };
 
 export default function SignInPage({ user }: SignInPageProps): JSX.Element {
-  const errors = useActionData();
-  const { supabase } = useOutletContext();
+  const errors = useActionData<LoginErrors>();
+  const { supabase } = useOutletContext<OutletContext>();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

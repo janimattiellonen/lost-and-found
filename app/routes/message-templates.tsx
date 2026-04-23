@@ -1,4 +1,4 @@
-import type { LoaderArgs} from '@remix-run/node';
+import type { ActionArgs, LoaderArgs} from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 
@@ -16,9 +16,9 @@ import Wrapper from './components/Wrapper';
 import MessageTemplateItem from '~/routes/components/admin/MessageTemplateItem';
 
 
-export async function action({ request }) {
+export async function action({ request }: ActionArgs) {
   const formData = await request.formData();
-  const id = formData.get('id');
+  const id = Number(formData.get('id'));
   const action = formData.get('action');
 
   if (action === 'delete') {

@@ -1,13 +1,12 @@
 import type { SupabaseClient} from "@supabase/supabase-js";
 import {createClient} from "@supabase/supabase-js";
-import type { Database } from "../../schema";
 import {createServerClient} from "@supabase/auth-helpers-remix";
 
 export function createConnection() {
   const supabaseUrl = process.env.SUPABASE_URL!;
   const supabaseKey = process.env.SUPABASE_KEY!;
 
-  return createClient<Database>(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey);
 }
 
 export function createFunctionConnection() {

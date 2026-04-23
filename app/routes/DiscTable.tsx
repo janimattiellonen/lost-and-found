@@ -24,7 +24,7 @@ const StyledWarningIcon = styled(WarningIcon)`
 `;
 
 interface Row {
-  id: string;
+  id: number;
   discName: string;
   discColour: string;
   owner: string;
@@ -32,6 +32,10 @@ interface Row {
   addedAt: number;
   internalDiscId: number;
 }
+
+type OutletContext = {
+  session: { user?: { id?: string } } | null;
+};
 
 type Comparator = (a: Row, b: Row) => number;
 
@@ -147,7 +151,7 @@ function mapToDataRows(discs: DiscDTO[]): any {
 }
 
 export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
-  const { session } = useOutletContext();
+  const { session } = useOutletContext<OutletContext>();
 
   const isLoggedIn = (): boolean => {
     return !!session?.user?.id;
