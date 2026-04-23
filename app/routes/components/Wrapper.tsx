@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import styled from '@emotion/styled';
 
 const Div = styled.div`
@@ -8,7 +9,7 @@ const Div = styled.div`
 
 type WrapperProps = {
   className?: string;
-  children: JSX.Element | JSX.Element[] | string;
+  children: ReactNode;
 };
 export default function Wrapper({ className, children }: WrapperProps): JSX.Element {
   return <Div className={className}>{children}</Div>;

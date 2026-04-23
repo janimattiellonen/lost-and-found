@@ -1,12 +1,18 @@
-import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { useLoaderData, useFetcher } from '@remix-run/react';
 
 import styled from '@emotion/styled';
 import { Button } from '@mui/material';
 
 import { isUserLoggedIn } from '~/models/utils';
-import { getDiscFoundNotifications, markNotificationAsRead, deleteNotification, deleteAllNotifications } from '~/models/discFoundNotification.server';
-import { DiscFoundNotificationDTO } from '~/types';
+import {
+  getDiscFoundNotifications,
+  markNotificationAsRead,
+  deleteNotification,
+  deleteAllNotifications,
+} from '~/models/discFoundNotification.server';
+import type { DiscFoundNotificationDTO } from '~/types';
 import { formatDateTime } from '~/routes/utils';
 
 import H2 from '~/routes/components/H2';
@@ -73,19 +79,27 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
     <CardComponent>
       <div className="text-sm text-gray-500 mb-2">
         {formatDateTime(notification.createdAt)}
-        {notification.courseName && (
-          <span className="ml-4">{notification.courseName}</span>
-        )}
-        {notification.readAt && (
-          <span className="ml-4">Luettu: {formatDateTime(notification.readAt)}</span>
-        )}
+        {notification.courseName && <span className="ml-4">{notification.courseName}</span>}
+        {notification.readAt && <span className="ml-4">Luettu: {formatDateTime(notification.readAt)}</span>}
       </div>
 
       {hasContactInfo && (
         <div className="mb-2">
-          {notification.contactName && <div><strong>Nimi:</strong> {notification.contactName}</div>}
-          {notification.contactPhone && <div><strong>Puhelin:</strong> {notification.contactPhone}</div>}
-          {notification.contactEmail && <div><strong>Sähköposti:</strong> {notification.contactEmail}</div>}
+          {notification.contactName && (
+            <div>
+              <strong>Nimi:</strong> {notification.contactName}
+            </div>
+          )}
+          {notification.contactPhone && (
+            <div>
+              <strong>Puhelin:</strong> {notification.contactPhone}
+            </div>
+          )}
+          {notification.contactEmail && (
+            <div>
+              <strong>Sähköposti:</strong> {notification.contactEmail}
+            </div>
+          )}
         </div>
       )}
 
@@ -95,9 +109,7 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
         </div>
       )}
 
-      {!hasContactInfo && !notification.message && (
-        <div className="text-gray-500 italic mb-2">Ei lisätietoja</div>
-      )}
+      {!hasContactInfo && !notification.message && <div className="text-gray-500 italic mb-2">Ei lisätietoja</div>}
 
       <div className="flex gap-2 mt-2">
         {isUnread && (
@@ -157,9 +169,7 @@ export default function NotificationsPage(): JSX.Element {
         </div>
       )}
 
-      {notifications.length === 0 && (
-        <p className="text-gray-500">Ei ilmoituksia.</p>
-      )}
+      {notifications.length === 0 && <p className="text-gray-500">Ei ilmoituksia.</p>}
 
       {notifications.map((notification: DiscFoundNotificationDTO) => (
         <NotificationItem key={notification.id} notification={notification} />

@@ -1,5 +1,5 @@
-import { DiscDTO } from '~/types';
-import { BarValueType } from '~/routes/components/admin/BarChart';
+import type { DiscDTO } from '~/types';
+import type { BarValueType } from '~/routes/components/admin/BarChart';
 import { getMonthName } from '~/routes/utils';
 import { format, isWithinInterval, lastDayOfMonth } from 'date-fns';
 
@@ -38,13 +38,13 @@ export function mapBySeparator(
 ): { [key: number]: { value: number; date?: Date } } {
   const mapped: { [key: number | string]: { value: number; date?: Date } } = {};
 
-  data.map((item: DiscDTO) => {
+  data.forEach((item: DiscDTO) => {
     // const date = new Date(item.addedAt);
     const date = getMonthData(item);
     const separator = date ? getSeparator(date) : null;
 
     if (!separator) {
-      return null;
+      return;
     }
 
     const prevValue: number = mapped[separator] ? mapped[separator].value : 0;

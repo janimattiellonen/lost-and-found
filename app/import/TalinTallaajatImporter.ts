@@ -1,6 +1,6 @@
 import { format, parse } from 'date-fns';
 
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;

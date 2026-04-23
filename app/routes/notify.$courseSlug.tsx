@@ -1,4 +1,5 @@
-import { ActionArgs, json, LoaderArgs } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 
 import NotifyForm from './components/NotifyForm';

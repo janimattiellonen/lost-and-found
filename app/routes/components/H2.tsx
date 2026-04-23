@@ -1,5 +1,4 @@
 import styled from '@emotion/styled';
-import { className } from 'postcss-selector-parser';
 
 const Heading2 = styled.h2`
   font-weight: bold;

@@ -1,4 +1,4 @@
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 export function convertLineBreaks(value: string): string {
   return value.replaceAll('\n', '%0a');

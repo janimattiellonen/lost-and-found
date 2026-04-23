@@ -1,4 +1,4 @@
-import { MessageTemplateDTO } from '~/types';
+import type { MessageTemplateDTO } from '~/types';
 
 export function toDTO(raw: any): MessageTemplateDTO {
   return {

@@ -1,19 +1,21 @@
 import { Form, Link, useFetcher, useLoaderData, useParams } from '@remix-run/react';
 
 import { useState, useEffect } from 'react';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
-import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { isUserLoggedIn } from '~/models/utils';
 import { getDiscWithFullPhoneNumber } from '~/models/discs.server';
 import { getMessageTemplates } from '~/models/messageTemplate.server';
 
 import { getSentMessages, markAsSent } from '~/models/messageLog.server';
 
-import { MessageLogDTO, MessageTemplateDTO } from '~/types';
+import type { MessageLogDTO, MessageTemplateDTO } from '~/types';
 
 import H2 from './components/H2';
 
@@ -78,12 +80,14 @@ export default function SendNotificationPage(): JSX.Element {
 
   useEffect(() => {
     setPhoneNumber(data.ownerPhoneNumber);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const s = messageTemplates.find((messageTemplate: MessageTemplateDTO) => messageTemplate.isDefault === true);
     setMessage(s.content);
     setSelected(s.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   console.log(`data: ${JSON.stringify(data, null, 2)}`);

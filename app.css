@@ -2,19 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-
 body {
-   margin: 1rem;
+  margin: 1rem;
 }
 
 p {
-   margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 a {
-   text-decoration: underline;
+  text-decoration: underline;
 }
 
 a:hover {
-   text-decoration: none;
+  text-decoration: none;
 }

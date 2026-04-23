@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { Button, Checkbox, FormControlLabel, TextField } from '@mui/material';
 
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react';
@@ -7,7 +8,7 @@ import { Form, Link, useActionData, useLoaderData } from '@remix-run/react';
 import { getMessageTemplate, editMessageTemplate } from '~/models/messageTemplate.server';
 
 import { isUserLoggedIn } from '~/models/utils';
-import { MessageTemplateDTO } from '~/types';
+import type { MessageTemplateDTO } from '~/types';
 
 import H2 from './components/H2';
 import Wrapper from '~/routes/components/Wrapper';
@@ -67,6 +68,7 @@ export default function EditMessageTemplate(): JSX.Element {
       setMessage(messageTemplate.content);
       setIsDefault(messageTemplate.isDefault);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

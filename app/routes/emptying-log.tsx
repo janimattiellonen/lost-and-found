@@ -1,10 +1,9 @@
-import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 
-import styled from '@emotion/styled';
-
 import { getEmptyingLogItems, markAsEmptied } from '~/models/emptyingLog.server';
-import { EmptyingLogDTO } from '~/types';
+import type { EmptyingLogDTO } from '~/types';
 
 import { isUserLoggedIn } from '~/models/utils';
 

@@ -5,15 +5,15 @@ import { parse } from 'date-fns';
 import { getMonth, getMonthName, getDayOfMonth, getYear } from '~/routes/utils';
 import BarChart from '~/routes/components/admin/BarChart';
 
+import type { LostDiscsProps } from '~/routes/components/admin/stats/stats-utils';
 import {
   getAddedDiscCountByMonth,
   getAddedDiscCountByDaysInMonth,
-  LostDiscsProps,
   mapBarData,
   getLegendItems,
   getLegendItems2,
 } from '~/routes/components/admin/stats/stats-utils';
-import { DiscDTO } from '~/types';
+import type { DiscDTO } from '~/types';
 
 function hasDate(str?: string | null | undefined): boolean {
   if (!str) {

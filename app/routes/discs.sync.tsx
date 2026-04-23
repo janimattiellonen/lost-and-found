@@ -1,10 +1,11 @@
-import { ActionArgs, json, LoaderArgs, redirect } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 
 import { fetchClubs } from '~/models/clubs.server';
 import { useLoaderData } from '@remix-run/react';
 
 import SyncItem from '~/routes/discs.syncItem';
-import { ClubDTO } from '~/types';
+import type { ClubDTO } from '~/types';
 
 import { syncAllDiscs, syncNewDiscs } from '~/models/syncDiscs.server';
 

@@ -1,6 +1,6 @@
 import { createConnection, createSupabaseServerClient } from '~/models/utils';
 import { toDTO } from '~/models/DiscFoundNotificationMapper';
-import { DiscFoundNotificationDTO } from '~/types';
+import type { DiscFoundNotificationDTO } from '~/types';
 import process from 'process';
 
 export async function createDiscFoundNotification(data: {
@@ -13,16 +13,14 @@ export async function createDiscFoundNotification(data: {
   const supabase = createConnection();
   const clubId = process.env.APP_CLUB_ID;
 
-  const { error } = await supabase
-    .from('disc_found_notifications')
-    .insert({
-      club_id: clubId,
-      course_name: data.courseName || null,
-      contact_name: data.contactName || null,
-      contact_phone: data.contactPhone || null,
-      contact_email: data.contactEmail || null,
-      message: data.message || null,
-    });
+  const { error } = await supabase.from('disc_found_notifications').insert({
+    club_id: clubId,
+    course_name: data.courseName || null,
+    contact_name: data.contactName || null,
+    contact_phone: data.contactPhone || null,
+    contact_email: data.contactEmail || null,
+    message: data.message || null,
+  });
 
   if (error) {
     console.error('Failed to create disc found notification:', error.message);
@@ -57,18 +55,11 @@ export async function deleteNotification(id: number, request: Request): Promise<
   const supabase = createSupabaseServerClient(request);
   const clubId = process.env.APP_CLUB_ID;
 
-  await supabase
-    .from('disc_found_notifications')
-    .delete()
-    .eq('id', id)
-    .eq('club_id', clubId);
+  await supabase.from('disc_found_notifications').delete().eq('id', id).eq('club_id', clubId);
 }
 
 export async function deleteAllNotifications(request: Request): Promise<void> {
   const supabase = createSupabaseServerClient(request);
 
-  await supabase
-    .from('disc_found_notifications')
-    .delete()
-    .gte('id', 0);
+  await supabase.from('disc_found_notifications').delete().gte('id', 0);
 }

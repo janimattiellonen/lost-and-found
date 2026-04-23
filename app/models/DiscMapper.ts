@@ -1,4 +1,4 @@
-import { DbDiscType, DiscDTO } from '~/types';
+import type { DbDiscType, DiscDTO } from '~/types';
 
 function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;

@@ -1,5 +1,4 @@
 import Paper from '@mui/material/Paper';
-import H3 from '~/routes/components/H3';
 
 type PaperItemProps = {
   children: string | JSX.Element | JSX.Element[];
