@@ -1,9 +1,9 @@
 import { Form, useActionData } from '@remix-run/react';
 
-import type { ActionArgs} from '@remix-run/node';
+import type { ActionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 
-import { TextField , Checkbox , Button , FormControlLabel } from '@mui/material';
+import { TextField, Checkbox, Button, FormControlLabel } from '@mui/material';
 
 import H2 from './components/H2';
 import Label from './components/Label';

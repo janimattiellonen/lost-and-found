@@ -1,6 +1,6 @@
 import { Form, useActionData, useOutletContext } from '@remix-run/react';
 
-import type { ActionArgs} from '@remix-run/node';
+import type { ActionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 
 import { createServerClient } from '@supabase/auth-helpers-remix';

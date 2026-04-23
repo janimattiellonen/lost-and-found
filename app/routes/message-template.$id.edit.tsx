@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ActionArgs, LoaderArgs} from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Button, Checkbox, FormControlLabel, TextField } from '@mui/material';
 

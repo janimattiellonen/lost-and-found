@@ -1,6 +1,6 @@
-import type { SupabaseClient} from "@supabase/supabase-js";
-import {createClient} from "@supabase/supabase-js";
-import {createServerClient} from "@supabase/auth-helpers-remix";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/auth-helpers-remix';
 
 export function createConnection() {
   const supabaseUrl = process.env.SUPABASE_URL!;
@@ -17,37 +17,35 @@ export function createFunctionConnection() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-
-export function createSupabaseServerClient(request: Request) : SupabaseClient {
+export function createSupabaseServerClient(request: Request): SupabaseClient {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
-  }
+  };
 
-  const response = new Response()
+  const response = new Response();
 
   return createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
     request,
-    response
-  })
-
+    response,
+  });
 }
-
 
 export async function isUserLoggedIn(request: Request): Promise<boolean> {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
-  }
-  const response = new Response()
-
+  };
+  const response = new Response();
 
   const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
     request,
     response,
-  })
+  });
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return user?.id != null
+  return user?.id != null;
 }

@@ -1,11 +1,11 @@
-import type { ActionArgs, LoaderArgs} from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 
-import { getMessageTemplates , deleteMessageTemplate, markAsDefault } from '~/models/messageTemplate.server';
+import { getMessageTemplates, deleteMessageTemplate, markAsDefault } from '~/models/messageTemplate.server';
 
 import type { MessageTemplateDTO } from '~/types';
 import { isUserLoggedIn } from '~/models/utils';
@@ -14,7 +14,6 @@ import H2 from './components/H2';
 import Wrapper from './components/Wrapper';
 
 import MessageTemplateItem from '~/routes/components/admin/MessageTemplateItem';
-
 
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData();

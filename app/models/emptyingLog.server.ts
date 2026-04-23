@@ -5,9 +5,7 @@ import { toDTO } from '~/models/EmptyingLogMapper';
 export async function getEmptyingLogItems(request: Request) {
   const supabase = createSupabaseServerClient(request);
 
-  const { data } = await supabase
-    .from('emptying_log')
-    .select('id, created_at, emptied_at, club_id, course_name');
+  const { data } = await supabase.from('emptying_log').select('id, created_at, emptied_at, club_id, course_name');
 
   return data
     ? data.map((row: any) => {

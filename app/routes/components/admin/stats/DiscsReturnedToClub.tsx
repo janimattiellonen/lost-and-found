@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { getMonth, getMonthName, getDayOfMonth, getYear } from '~/routes/utils';
 import BarChart from '~/routes/components/admin/BarChart';
 
-import type {
-  LostDiscsProps} from '~/routes/components/admin/stats/stats-utils';
+import type { LostDiscsProps } from '~/routes/components/admin/stats/stats-utils';
 import {
   getAddedDiscCountByMonth,
   getAddedDiscCountByDaysInMonth,

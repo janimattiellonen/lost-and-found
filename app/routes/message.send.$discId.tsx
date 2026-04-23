@@ -7,7 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
-import type { ActionArgs, LoaderArgs} from '@remix-run/node';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { isUserLoggedIn } from '~/models/utils';
 import { getDiscWithFullPhoneNumber } from '~/models/discs.server';

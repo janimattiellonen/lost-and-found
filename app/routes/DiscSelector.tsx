@@ -5,14 +5,10 @@ type DiscSelectorProps = {
   discNames: string[];
   onChange: (e: string | null) => void;
 };
-export default function DiscSelector({
-  discNames,
-  onChange,
-}: DiscSelectorProps): JSX.Element {
-
-  const options = discNames.map( (discName) => {
-    return discName
-  })
+export default function DiscSelector({ discNames, onChange }: DiscSelectorProps): JSX.Element {
+  const options = discNames.map((discName) => {
+    return discName;
+  });
 
   return (
     <Autocomplete
