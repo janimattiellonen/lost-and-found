@@ -6,6 +6,8 @@
     "dev": "PORT=3400 remix dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
+    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx --fix .",
     "typecheck": "tsc"
   },
   "dependencies": {
