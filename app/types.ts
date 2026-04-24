@@ -79,6 +79,14 @@ export type DiscFoundNotificationDTO = {
   readAt?: string | null;
 };
 
+export type BinFullNotificationDTO = {
+  id?: number;
+  createdAt?: string | null;
+  clubId: number;
+  courseName: string;
+  readAt?: string | null;
+};
+
 export type DbDiscType = {
   id?: number | null;
   internal_disc_id: number;

@@ -12,11 +12,18 @@ import {
   deleteNotification,
   deleteAllNotifications,
 } from '~/models/discFoundNotification.server';
-import type { DiscFoundNotificationDTO } from '~/types';
+import {
+  getBinFullNotifications,
+  markBinFullNotificationAsRead,
+  deleteBinFullNotification,
+  deleteAllBinFullNotifications,
+} from '~/models/binFullNotification.server';
+import type { BinFullNotificationDTO, DiscFoundNotificationDTO } from '~/types';
 import { formatDateTime } from '~/routes/utils';
 
 import H2 from '~/routes/components/H2';
 import QrPosterButtons from '~/routes/components/admin/QrPosterButtons';
+import BinFullQrPosterButtons from '~/routes/components/admin/BinFullQrPosterButtons';
 
 const Card = styled.div`
   border: 1px solid #e0e0e0;
@@ -38,9 +45,12 @@ export const loader = async ({ request }: LoaderArgs) => {
     return redirect('/sign-in');
   }
 
-  const notifications = await getDiscFoundNotifications(request);
+  const [notifications, binFullNotifications] = await Promise.all([
+    getDiscFoundNotifications(request),
+    getBinFullNotifications(request),
+  ]);
 
-  return json({ notifications });
+  return json({ notifications, binFullNotifications });
 };
 
 export async function action({ request }: ActionArgs) {
@@ -50,6 +60,11 @@ export async function action({ request }: ActionArgs) {
 
   if (intent === 'deleteAll') {
     await deleteAllNotifications(request);
+    return json({});
+  }
+
+  if (intent === 'deleteAllBinFull') {
+    await deleteAllBinFullNotifications(request);
     return json({});
   }
 
@@ -63,6 +78,10 @@ export async function action({ request }: ActionArgs) {
     await deleteNotification(id, request);
   } else if (intent === 'markAsRead') {
     await markNotificationAsRead(id, request);
+  } else if (intent === 'deleteBinFull') {
+    await deleteBinFullNotification(id, request);
+  } else if (intent === 'markBinFullAsRead') {
+    await markBinFullNotificationAsRead(id, request);
   }
 
   return json({});
@@ -141,8 +160,51 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
   );
 }
 
+function BinFullNotificationItem({ notification }: { notification: BinFullNotificationDTO }) {
+  const fetcher = useFetcher();
+  const isUnread = !notification.readAt;
+  const CardComponent = isUnread ? UnreadCard : Card;
+
+  return (
+    <CardComponent>
+      <div className="text-sm text-gray-500 mb-2">
+        {formatDateTime(notification.createdAt)}
+        <span className="ml-4">{notification.courseName}</span>
+        {notification.readAt && <span className="ml-4">Luettu: {formatDateTime(notification.readAt)}</span>}
+      </div>
+
+      <div className="flex gap-2 mt-2">
+        {isUnread && (
+          <fetcher.Form method="post">
+            <input type="hidden" name="notificationId" value={notification.id} />
+            <input type="hidden" name="intent" value="markBinFullAsRead" />
+            <Button variant="outlined" size="small" type="submit">
+              Merkitse luetuksi
+            </Button>
+          </fetcher.Form>
+        )}
+
+        <fetcher.Form
+          method="post"
+          onSubmit={(e) => {
+            if (!confirm('Haluatko varmasti poistaa ilmoituksen?')) {
+              e.preventDefault();
+            }
+          }}
+        >
+          <input type="hidden" name="notificationId" value={notification.id} />
+          <input type="hidden" name="intent" value="deleteBinFull" />
+          <Button variant="outlined" size="small" color="error" type="submit">
+            Poista
+          </Button>
+        </fetcher.Form>
+      </div>
+    </CardComponent>
+  );
+}
+
 export default function NotificationsPage(): JSX.Element {
-  const { notifications } = useLoaderData<typeof loader>();
+  const { notifications, binFullNotifications } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
 
   return (
@@ -173,6 +235,34 @@ export default function NotificationsPage(): JSX.Element {
 
       {notifications.map((notification: DiscFoundNotificationDTO) => (
         <NotificationItem key={notification.id} notification={notification} />
+      ))}
+
+      <H2 className="mt-12 mb-4">Ilmoitukset täysistä löytökiekkolaatikoista</H2>
+
+      <BinFullQrPosterButtons />
+
+      {binFullNotifications.length > 0 && (
+        <div className="mb-4">
+          <fetcher.Form
+            method="post"
+            onSubmit={(e) => {
+              if (!confirm('Haluatko varmasti poistaa kaikki ilmoitukset?')) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="intent" value="deleteAllBinFull" />
+            <Button variant="outlined" size="small" color="error" type="submit">
+              Poista kaikki
+            </Button>
+          </fetcher.Form>
+        </div>
+      )}
+
+      {binFullNotifications.length === 0 && <p className="text-gray-500">Ei ilmoituksia.</p>}
+
+      {binFullNotifications.map((notification: BinFullNotificationDTO) => (
+        <BinFullNotificationItem key={notification.id} notification={notification} />
       ))}
     </div>
   );
