@@ -7,10 +7,12 @@ import { Link, useOutletContext } from '@remix-run/react';
 import { add, isAfter } from 'date-fns';
 
 import styled from '@emotion/styled';
-import WarningIcon from '@mui/icons-material/Warning';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import TextsmsIcon from '@mui/icons-material/Textsms';
+import WarningIcon from '@mui/icons-material/Warning';
 
-import type { SortColumn } from 'react-data-grid';
+import type { RenderSortStatusProps, SortColumn } from 'react-data-grid';
 import DataGrid from 'react-data-grid';
 
 import type { DiscDTO } from '~/types';
@@ -81,7 +83,39 @@ const StyledDataGrid = styled(DataGrid)`
   & .rdg-row-even {
     background: rgb(63, 60, 60);
   }
+
+  & .rdg-header-row .rdg-cell {
+    transition: background-color 0.15s ease;
+  }
+
+  & .rdg-header-row .rdg-cell:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  & .rdg-header-row .rdg-cell[aria-sort='ascending'],
+  & .rdg-header-row .rdg-cell[aria-sort='descending'] {
+    background-color: rgba(255, 255, 255, 0.09);
+  }
 `;
+
+const SortIcon = styled('span')`
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 0.25rem;
+  color: rgba(255, 255, 255, 0.7);
+
+  & svg {
+    font-size: 1rem;
+  }
+`;
+
+function renderSortStatus({ sortDirection }: RenderSortStatusProps): JSX.Element | null {
+  if (!sortDirection) {
+    return null;
+  }
+
+  return <SortIcon>{sortDirection === 'ASC' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}</SortIcon>;
+}
 
 const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
   const date = add(new Date(dateStr), { months: 3 });
@@ -186,6 +220,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
       columns={getColumns(isLoggedIn())}
       sortColumns={sortColumns}
       onSortColumnsChange={setSortColumns}
+      renderers={{ renderSortStatus }}
     />
   );
 }
