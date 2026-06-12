@@ -1,10 +1,9 @@
-import type { LoaderArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs } from 'react-router';
 import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
 import { getDiscs } from '~/models/discs.server';
 import { getDistinctDiscNames } from '~/routes/utils';
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
   console.log(`foo.loader(), clubId: ${clubId}`);
 
@@ -14,7 +13,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 
   const distinctDiscNames = getDistinctDiscNames(data);
 
-  return json({ clubId: clubId, data, distinctDiscNames, emptyingLogItems });
+  return { clubId: clubId, data, distinctDiscNames, emptyingLogItems };
 };
 export default function Foo() {
   return <div>ssss</div>;

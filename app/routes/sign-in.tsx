@@ -1,7 +1,7 @@
-import { Form, useActionData, useOutletContext } from '@remix-run/react';
+import { Form, useActionData, useOutletContext } from 'react-router';
 
-import type { ActionArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import type { ActionFunctionArgs } from 'react-router';
+import { data, redirect } from 'react-router';
 
 import { createServerClient } from '@supabase/auth-helpers-remix';
 
@@ -14,7 +14,7 @@ type LoginErrors = {
   email?: string | null | undefined;
   invalidLogin?: boolean | null | undefined;
 };
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const errors: LoginErrors = {};
 
   const env = {
@@ -52,7 +52,7 @@ export async function action({ request }: ActionArgs) {
     }
 
     if (Object.keys(errors).length) {
-      return json(errors, { status: 422 });
+      return data(errors, { status: 422 });
     }
 
     return redirect('/', {

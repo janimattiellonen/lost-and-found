@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 
-import { Link } from '@remix-run/react';
+import { Link } from 'react-router';
 
 const Li = styled.li`
   display: inline;

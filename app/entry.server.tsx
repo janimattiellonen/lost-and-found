@@ -1,16 +1,26 @@
 /**
- * By default, Remix will handle generating the HTTP Response for you.
- * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
- * For more information, see https://remix.run/file-conventions/entry.server
+ * Custom server entry so MUI/Emotion styles are extracted during SSR and
+ * injected into <head>. Without this, Emotion inserts its `<style data-emotion>`
+ * tags on the client during hydration, mutating <head> and breaking
+ * full-document hydration.
+ *
+ * We render with `renderToPipeableStream` (not `renderToString`) because React
+ * Router's Single Fetch streams the hydration data into the document via
+ * `__reactRouterContext.streamController` chunks. `renderToString` omits those
+ * chunks, leaving the client waiting forever for initial data, so route
+ * components never mount. We buffer the full streamed output in `onAllReady`
+ * (the app uses no `defer`, so nothing is lost by waiting) and only then run
+ * Emotion's critical-style extraction, which needs the complete markup.
  */
 
-import { PassThrough } from 'node:stream';
+import { Writable } from 'node:stream';
 
-import type { AppLoadContext, EntryContext } from '@remix-run/node';
-import { Response } from '@remix-run/node';
-import { RemixServer } from '@remix-run/react';
-import isbot from 'isbot';
 import { renderToPipeableStream } from 'react-dom/server';
+import { ServerRouter, type EntryContext } from 'react-router';
+import { CacheProvider } from '@emotion/react';
+import createEmotionServer from '@emotion/server/create-instance';
+
+import { createEmotionCache } from './createEmotionCache';
 
 const ABORT_DELAY = 5_000;
 
@@ -18,93 +28,59 @@ export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
-  loadContext: AppLoadContext,
+  routerContext: EntryContext,
 ) {
-  return isbot(request.headers.get('user-agent'))
-    ? handleBotRequest(request, responseStatusCode, responseHeaders, remixContext)
-    : handleBrowserRequest(request, responseStatusCode, responseHeaders, remixContext);
-}
+  return new Promise<Response>((resolve, reject) => {
+    const cache = createEmotionCache();
+    const { extractCriticalToChunks, constructStyleTagsFromChunks } = createEmotionServer(cache);
 
-function handleBotRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  remixContext: EntryContext,
-) {
-  return new Promise((resolve, reject) => {
     let shellRendered = false;
+    let statusCode = responseStatusCode;
+
     const { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />,
+      <CacheProvider value={cache}>
+        <ServerRouter context={routerContext} url={request.url} />
+      </CacheProvider>,
       {
         onAllReady() {
           shellRendered = true;
-          const body = new PassThrough();
 
-          responseHeaders.set('Content-Type', 'text/html');
+          const chunks: Buffer[] = [];
+          const collector = new Writable({
+            write(chunk, _encoding, callback) {
+              chunks.push(Buffer.from(chunk));
+              callback();
+            },
+            final(callback) {
+              const html = Buffer.concat(chunks).toString('utf-8');
+              const emotionChunks = extractCriticalToChunks(html);
+              const styleTags = constructStyleTagsFromChunks({ html, styles: emotionChunks.styles });
 
-          resolve(
-            new Response(body, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            }),
-          );
+              // root.tsx renders the literal `__STYLES__` only on the server (it
+              // renders null on the client), giving a hydration-safe slot for the
+              // extracted style tags.
+              const markup = html.replace('__STYLES__', styleTags);
 
-          pipe(body);
+              responseHeaders.set('Content-Type', 'text/html');
+              resolve(
+                new Response(`<!DOCTYPE html>${markup}`, {
+                  status: statusCode,
+                  headers: responseHeaders,
+                }),
+              );
+              callback();
+            },
+          });
+
+          pipe(collector);
         },
         onShellError(error: unknown) {
           reject(error);
         },
         onError(error: unknown) {
-          responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
-          if (shellRendered) {
-            console.error(error);
-          }
-        },
-      },
-    );
-
-    setTimeout(abort, ABORT_DELAY);
-  });
-}
-
-function handleBrowserRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  remixContext: EntryContext,
-) {
-  return new Promise((resolve, reject) => {
-    let shellRendered = false;
-    const { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />,
-      {
-        onShellReady() {
-          shellRendered = true;
-          const body = new PassThrough();
-
-          responseHeaders.set('Content-Type', 'text/html');
-
-          resolve(
-            new Response(body, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            }),
-          );
-
-          pipe(body);
-        },
-        onShellError(error: unknown) {
-          reject(error);
-        },
-        onError(error: unknown) {
-          responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
+          statusCode = 500;
+          // Log streaming errors once the shell has rendered; shell errors are
+          // surfaced via onShellError/reject.
           if (shellRendered) {
             console.error(error);
           }

@@ -1,11 +1,10 @@
-import type { ActionArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import type { ActionFunctionArgs } from 'react-router';
 
 import NotifyForm from './components/NotifyForm';
 
 import { createDiscFoundNotification } from '~/models/discFoundNotification.server';
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const form = await request.formData();
 
   const courseName = form.get('courseName')?.toString() || null;
@@ -22,7 +21,7 @@ export async function action({ request }: ActionArgs) {
     message,
   });
 
-  return json({ success: true });
+  return { success: true };
 }
 
 export default function NotifyPage(): JSX.Element {

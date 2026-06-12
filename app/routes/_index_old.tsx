@@ -8,9 +8,8 @@ import Paper from '@mui/material/Paper';
 import Collapse from '@mui/material/Collapse';
 import WarningIcon from '@mui/icons-material/Warning';
 
-import type { LoaderArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import type { LoaderFunctionArgs } from 'react-router';
+import { useLoaderData } from 'react-router';
 
 import type { DiscDTO, EmptyingLogDTO } from '~/types';
 
@@ -41,7 +40,7 @@ const StyledWarningIcon = styled(WarningIcon)`
   margin-right: 0.5rem;
 `;
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
 
   const emptyingLogItems = await getEmptyingLogItemsForClub(clubId, request);
@@ -50,7 +49,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 
   const distinctDiscNames = getDistinctDiscNames(data);
 
-  return json({ clubId: clubId, data, distinctDiscNames, emptyingLogItems });
+  return { clubId: clubId, data, distinctDiscNames, emptyingLogItems };
 };
 export default function IndexPage(): JSX.Element {
   const [isInfoBoxVisible, showInfoBox] = useState<boolean>(false);
