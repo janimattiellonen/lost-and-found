@@ -1,6 +1,6 @@
-import type { LoaderArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import type { LoaderFunctionArgs } from 'react-router';
+import { redirect } from 'react-router';
+import { useLoaderData } from 'react-router';
 
 import { isUserLoggedIn } from '~/models/utils';
 import H2 from '~/routes/components/H2';
@@ -15,7 +15,7 @@ import H3 from '~/routes/components/H3';
 
 import MostLostByDiscName from '~/routes/components/admin/stats/MostLostByDiscName';
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
   if (!isLoggedIn) {
@@ -24,7 +24,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 
   const data = await getDiscsForStats();
 
-  return json({ data });
+  return { data };
 };
 export default function StatsPage(): JSX.Element {
   const { data } = useLoaderData();

@@ -1,6 +1,6 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { useLoaderData, useFetcher } from '@remix-run/react';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { redirect } from 'react-router';
+import { useLoaderData, useFetcher } from 'react-router';
 
 import styled from '@emotion/styled';
 import { Button } from '@mui/material';
@@ -38,7 +38,7 @@ const UnreadCard = styled(Card)`
   background-color: #f5f9ff;
 `;
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
   if (!isLoggedIn) {
@@ -50,26 +50,26 @@ export const loader = async ({ request }: LoaderArgs) => {
     getBinFullNotifications(request),
   ]);
 
-  return json({ notifications, binFullNotifications });
+  return { notifications, binFullNotifications };
 };
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const body = await request.formData();
   const intent = body.get('intent');
   const notificationId = body.get('notificationId');
 
   if (intent === 'deleteAll') {
     await deleteAllNotifications(request);
-    return json({});
+    return {};
   }
 
   if (intent === 'deleteAllBinFull') {
     await deleteAllBinFullNotifications(request);
-    return json({});
+    return {};
   }
 
   if (!notificationId) {
-    return json({});
+    return {};
   }
 
   const id = parseInt(notificationId.toString(), 10);
@@ -84,7 +84,7 @@ export async function action({ request }: ActionArgs) {
     await markBinFullNotificationAsRead(id, request);
   }
 
-  return json({});
+  return {};
 }
 
 function NotificationItem({ notification }: { notification: DiscFoundNotificationDTO }) {

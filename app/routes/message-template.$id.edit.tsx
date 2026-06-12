@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { data, redirect } from 'react-router';
 import { Button, Checkbox, FormControlLabel, TextField } from '@mui/material';
 
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, Link, useActionData, useLoaderData } from 'react-router';
 
 import { getMessageTemplate, editMessageTemplate } from '~/models/messageTemplate.server';
 
@@ -18,7 +18,7 @@ type MessageTemplateErrors = {
   content?: string | null | undefined;
 };
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
   const errors: MessageTemplateErrors = {};
 
   const id = parseInt(params.id || '', 10);
@@ -32,15 +32,15 @@ export async function action({ request, params }: ActionArgs) {
   }
 
   if (Object.keys(errors).length) {
-    return json({ errors, ok: null }, { status: 422 });
+    return data({ errors, ok: null }, { status: 422 });
   }
 
   await editMessageTemplate(id, content.toString(), isDefault ? Boolean(isDefault.toString()) : false, request);
 
-  return json({ errors: null, ok: true }, { status: 201 });
+  return data({ errors: null, ok: true }, { status: 201 });
 }
 
-export const loader = async ({ params, request }: LoaderArgs) => {
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
   if (!isLoggedIn) {
@@ -51,7 +51,7 @@ export const loader = async ({ params, request }: LoaderArgs) => {
 
   const messageTemplate: MessageTemplateDTO | null = await getMessageTemplate(id, request);
 
-  return json({ messageTemplate, ok: null });
+  return { messageTemplate, ok: null };
 };
 
 export default function EditMessageTemplate(): JSX.Element {

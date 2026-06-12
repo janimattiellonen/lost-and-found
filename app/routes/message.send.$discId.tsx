@@ -1,4 +1,4 @@
-import { Form, Link, useFetcher, useLoaderData, useParams } from '@remix-run/react';
+import { Form, Link, useFetcher, useLoaderData, useParams } from 'react-router';
 
 import { useState, useEffect } from 'react';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -7,8 +7,8 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { redirect } from 'react-router';
 import { isUserLoggedIn } from '~/models/utils';
 import { getDiscWithFullPhoneNumber } from '~/models/discs.server';
 import { getMessageTemplates } from '~/models/messageTemplate.server';
@@ -27,7 +27,7 @@ import { formatDate } from '~/routes/utils';
 import { convertLineBreaks, lineBreakToBr, replaceTokensWithValues } from '~/routes/components/admin/message-utils';
 import H3 from '~/routes/components/H3';
 
-export const loader = async ({ request, params }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
   if (!isLoggedIn) {
@@ -40,10 +40,10 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const sentMessages = await getSentMessages(discId, request);
   const data = await getDiscWithFullPhoneNumber(discId);
 
-  return json({ data, messageTemplates, sentMessages });
+  return { data, messageTemplates, sentMessages };
 };
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const form = await request.formData();
 
   const id = form.get('id');
@@ -53,7 +53,7 @@ export async function action({ request }: ActionArgs) {
 
   await markAsSent(internalDiscId, content ? content.toString() : '', request);
 
-  return json({ ok: true });
+  return { ok: true };
 }
 
 export default function SendNotificationPage(): JSX.Element {

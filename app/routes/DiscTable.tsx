@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 
 import 'react-data-grid/lib/styles.css';
 
-import { Link, useOutletContext } from '@remix-run/react';
+import { Link, useOutletContext } from 'react-router';
 
 import { add, isAfter } from 'date-fns';
 

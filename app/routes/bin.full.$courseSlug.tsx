@@ -1,6 +1,6 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { createCookie, json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { createCookie, data } from 'react-router';
+import { useLoaderData } from 'react-router';
 
 import BinFullForm from './components/BinFullForm';
 
@@ -25,7 +25,7 @@ async function readRateLimitedAt(request: Request, slug: string): Promise<number
   return Date.now() - ts < RATE_LIMIT_MS ? ts : null;
 }
 
-export const loader = async ({ request, params }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const course = getCourseBySlug(params.courseSlug!);
 
   if (!course) {
@@ -34,10 +34,10 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
   const recentlySubmitted = (await readRateLimitedAt(request, course.slug)) != null;
 
-  return json({ course, recentlySubmitted });
+  return { course, recentlySubmitted };
 };
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
   const course = getCourseBySlug(params.courseSlug!);
 
   if (!course) {
@@ -54,7 +54,7 @@ export async function action({ request, params }: ActionArgs) {
   const headers = new Headers();
   headers.append('Set-Cookie', await cookie.serialize(Date.now()));
 
-  return json({ success: true }, { headers });
+  return data({ success: true }, { headers });
 }
 
 export default function BinFullCourseSlugPage(): JSX.Element {
