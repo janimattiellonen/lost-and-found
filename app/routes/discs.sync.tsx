@@ -1,8 +1,8 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { redirect } from 'react-router';
 
 import { fetchClubs } from '~/models/clubs.server';
-import { useLoaderData } from '@remix-run/react';
+import { useLoaderData } from 'react-router';
 
 import SyncItem from '~/routes/discs.syncItem';
 import type { ClubDTO } from '~/types';
@@ -13,7 +13,7 @@ import { isUserLoggedIn } from '~/models/utils';
 
 import H2 from '~/routes/components/H2';
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
   if (!isLoggedIn) {
@@ -21,10 +21,10 @@ export const loader = async ({ request }: LoaderArgs) => {
   }
 
   const data = await fetchClubs();
-  return json({ data });
+  return { data };
 };
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const body = await request.formData();
 
   const clubId = body.get('clubId');
@@ -38,7 +38,7 @@ export async function action({ request }: ActionArgs) {
     await syncNewDiscs(parseInt(clubId ? clubId.toString() : '', 10), request);
   }
 
-  return json({ ok: true });
+  return { ok: true };
 }
 
 export default function SyncPage(): JSX.Element {

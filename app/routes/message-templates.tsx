@@ -1,6 +1,6 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { redirect } from 'react-router';
+import { Link, useLoaderData } from 'react-router';
 
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
@@ -15,7 +15,7 @@ import Wrapper from './components/Wrapper';
 
 import MessageTemplateItem from '~/routes/components/admin/MessageTemplateItem';
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const id = Number(formData.get('id'));
   const action = formData.get('action');
@@ -29,7 +29,7 @@ export async function action({ request }: ActionArgs) {
   return { ok: true };
 }
 
-export const loader = async ({ params, request }: LoaderArgs) => {
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 
   if (!isLoggedIn) {
@@ -38,7 +38,7 @@ export const loader = async ({ params, request }: LoaderArgs) => {
 
   const messageTemplates: MessageTemplateDTO[] = await getMessageTemplates(request);
 
-  return json({ messageTemplates });
+  return { messageTemplates };
 };
 
 export default function MessageTemplatesPage(): JSX.Element {

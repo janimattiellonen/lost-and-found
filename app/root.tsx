@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
-import { cssBundleHref } from '@remix-run/css-bundle';
-import type { LinksFunction, LoaderArgs, V2_MetaFunction } from '@remix-run/node';
-
-import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import {
+  data,
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -14,24 +11,18 @@ import {
   useLoaderData,
   useLocation,
   useRevalidator,
-} from '@remix-run/react';
+} from 'react-router';
 
 import { createBrowserClient, createServerClient } from '@supabase/auth-helpers-remix';
 
 import AdminMenu from '~/routes/AdminMenu';
 import Header from '~/routes/Header';
-import appStyles from '../app.css';
+// Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
+// dev and build (a `?url` import is served raw in dev, leaving @tailwind
+// directives unexpanded). React Router injects the resulting stylesheet for SSR.
+import '../app.css';
 
-export const links: LinksFunction = () => [
-  ...(cssBundleHref
-    ? [
-        { rel: 'stylesheet', href: cssBundleHref },
-        { rel: 'stylesheet', href: appStyles },
-      ]
-    : [{ rel: 'stylesheet', href: appStyles }]),
-];
-
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_KEY: process.env.SUPABASE_KEY!,
@@ -50,7 +41,7 @@ export async function loader({ request }: LoaderArgs) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  return json(
+  return data(
     {
       env,
       session,
@@ -61,7 +52,7 @@ export async function loader({ request }: LoaderArgs) {
   );
 }
 
-export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
     { title: `Löytökiekot | ${data?.env.CLUB_NAME}` },
     {
@@ -111,6 +102,10 @@ export default function App() {
         <Meta />
         <link rel="shortcut icon" href={iconUrl} />
         <Links />
+        {/* Server-only slot: entry.server replaces `__STYLES__` with the
+            extracted Emotion style tags. On the client this renders nothing, so
+            hydration sees a matching empty trailing position. */}
+        {typeof document === 'undefined' ? '__STYLES__' : null}
       </head>
       <body>
         {showHeader && <AdminMenu supabase={supabase} user={session?.user} />}
@@ -118,7 +113,6 @@ export default function App() {
         <Outlet context={{ supabase, session }} />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );

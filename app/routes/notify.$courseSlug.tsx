@@ -1,23 +1,22 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { useLoaderData } from 'react-router';
 
 import NotifyForm from './components/NotifyForm';
 
 import { createDiscFoundNotification } from '~/models/discFoundNotification.server';
 import { getCourseBySlug } from '~/config/courses';
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   const course = getCourseBySlug(params.courseSlug!);
 
   if (!course) {
     throw new Response('Rataa ei löytynyt', { status: 404 });
   }
 
-  return json({ course });
+  return { course };
 };
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
   const course = getCourseBySlug(params.courseSlug!);
 
   if (!course) {
@@ -39,7 +38,7 @@ export async function action({ request, params }: ActionArgs) {
     message,
   });
 
-  return json({ success: true });
+  return { success: true };
 }
 
 export default function NotifyCourseSlugPage(): JSX.Element {
