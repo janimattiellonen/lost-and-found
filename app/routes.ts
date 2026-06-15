@@ -17,6 +17,7 @@ export default flatRoutes({
     '**/AdminMenu.tsx',
     '**/DiscSelector.tsx',
     '**/DiscTable.tsx',
+    '**/discs.syncItem.tsx',
     '**/Header.tsx',
     '**/utils.ts',
     '**/components/**',
