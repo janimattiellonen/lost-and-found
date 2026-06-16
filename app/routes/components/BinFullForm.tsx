@@ -19,9 +19,7 @@ export default function BinFullForm({ course, alreadySubmitted }: BinFullFormPro
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
         <div className="text-5xl mb-6">&#9989;</div>
         <H2 className="mb-4">Kiitos ilmoituksesta!</H2>
-        <p className="text-gray-600 text-center text-lg">
-          Ilmoitus täydestä löytökiekkolaatikosta on vastaanotettu.
-        </p>
+        <p className="text-gray-600 text-center text-lg">Ilmoitus täydestä löytökiekkolaatikosta on vastaanotettu.</p>
       </div>
     );
   }
