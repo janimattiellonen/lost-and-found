@@ -3,7 +3,8 @@ import { Form, useActionData } from 'react-router';
 import type { ActionFunctionArgs } from 'react-router';
 import { data, redirect } from 'react-router';
 
-import { TextField, Checkbox, FormControlLabel } from '@mui/material';
+import { Checkbox, FormControlLabel } from '@mui/material';
+import TextField from '~/routes/components/TextField';
 import Button from '~/routes/components/Button';
 
 import H2 from './components/H2';
@@ -54,13 +55,7 @@ export default function CreateMessageTemplate(): JSX.Element {
       <Form method="post">
         <Wrapper>
           <Label htmlFor="content">Sisältö</Label>
-          <TextField
-            name="content"
-            id="content"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            multiline
-            rows={9}
-          />
+          <TextField name="content" id="content" multiline rows={9} fullWidth />
 
           {errors?.content && <p className="text-red-500 text-xs italic">{errors.content}</p>}
         </Wrapper>

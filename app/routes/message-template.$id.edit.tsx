@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { data, redirect } from 'react-router';
-import { Checkbox, FormControlLabel, TextField } from '@mui/material';
+import { Checkbox, FormControlLabel } from '@mui/material';
+import TextField from '~/routes/components/TextField';
 import Button from '~/routes/components/Button';
 
 import { Form, useActionData, useLoaderData } from 'react-router';
@@ -82,9 +83,9 @@ export default function EditMessageTemplate(): JSX.Element {
           <TextField
             name="content"
             id="content"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             multiline
             rows={9}
+            fullWidth
             value={message}
             onChange={(e) => {
               setMessage(e.target.value);
