@@ -7,10 +7,8 @@ import { Link, useOutletContext } from 'react-router';
 import { add, isAfter } from 'date-fns';
 
 import styled from '@emotion/styled';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import TextsmsIcon from '@mui/icons-material/Textsms';
-import WarningIcon from '@mui/icons-material/Warning';
+
+import { ArrowDownwardIcon, ArrowUpwardIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
 
 import type { RenderSortStatusProps, SortColumn } from 'react-data-grid';
 import DataGrid from 'react-data-grid';
@@ -21,9 +19,6 @@ type DiscTableProps = {
   discs: DiscDTO[];
 };
 
-const StyledWarningIcon = styled(WarningIcon)`
-  color: red;
-`;
 
 interface Row {
   id: number;
@@ -156,8 +151,9 @@ const getColumns = (isLoggedIn: boolean): any => {
           <div className="flex gap-4 items-center">
             {formatDate(props.row.addedAt)}
             {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
-              <StyledWarningIcon
-                titleAccess={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
+              <WarningIcon
+                title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
+                style={{ color: 'red' }}
               />
             )}
           </div>
