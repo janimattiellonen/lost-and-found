@@ -1,6 +1,6 @@
-import { useFetcher, Link } from 'react-router';
+import { useFetcher } from 'react-router';
 
-import Button from '@mui/material/Button';
+import Button from '~/routes/components/Button';
 
 import { formatDate } from '~/routes/utils';
 import type { MessageTemplateDTO } from '~/types';
@@ -29,7 +29,7 @@ export default function MessageTemplateItem({ messageTemplate }: MessageTemplate
           <Button name="action" value={'default'} type="submit">
             Merkitse oletukseksi
           </Button>
-          <Button component={Link} to={`/message-template/${messageTemplate.id}/edit`}>
+          <Button to={`/message-template/${messageTemplate.id}/edit`}>
             Muokkaa
           </Button>
           <Button

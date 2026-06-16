@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { data, redirect } from 'react-router';
-import { Button, Checkbox, FormControlLabel, TextField } from '@mui/material';
+import { Checkbox, FormControlLabel, TextField } from '@mui/material';
+import Button from '~/routes/components/Button';
 
-import { Form, Link, useActionData, useLoaderData } from 'react-router';
+import { Form, useActionData, useLoaderData } from 'react-router';
 
 import { getMessageTemplate, editMessageTemplate } from '~/models/messageTemplate.server';
 
@@ -110,7 +111,7 @@ export default function EditMessageTemplate(): JSX.Element {
         </Wrapper>
 
         <div className="flex justify-start gap-4">
-          <Button color="error" variant="contained" component={Link} to={`/message-templates`}>
+          <Button color="error" variant="contained" to={`/message-templates`}>
             Peru
           </Button>
 

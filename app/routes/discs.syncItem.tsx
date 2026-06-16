@@ -1,4 +1,4 @@
-import Button from '@mui/material/Button';
+import Button from '~/routes/components/Button';
 
 import type { ClubDTO } from '~/types';
 

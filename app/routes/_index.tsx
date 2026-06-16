@@ -4,7 +4,7 @@ import debounce from 'lodash.debounce';
 
 import styled from '@emotion/styled';
 
-import Button from '@mui/material/Button';
+import Button from '~/routes/components/Button';
 import Collapse from '@mui/material/Collapse';
 import Paper from '~/routes/components/Paper';
 import InfoBox from '~/routes/components/InfoBox';

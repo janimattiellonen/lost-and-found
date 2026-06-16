@@ -3,7 +3,7 @@ import { redirect } from 'react-router';
 import { useLoaderData, useFetcher } from 'react-router';
 
 import styled from '@emotion/styled';
-import { Button } from '@mui/material';
+import Button from '~/routes/components/Button';
 
 import { isUserLoggedIn } from '~/models/utils';
 import {

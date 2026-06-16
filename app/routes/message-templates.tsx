@@ -1,9 +1,9 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { redirect } from 'react-router';
-import { Link, useLoaderData } from 'react-router';
+import { useLoaderData } from 'react-router';
 
 import Paper from '~/routes/components/Paper';
-import Button from '@mui/material/Button';
+import Button from '~/routes/components/Button';
 
 import { getMessageTemplates, deleteMessageTemplate, markAsDefault } from '~/models/messageTemplate.server';
 
@@ -48,7 +48,7 @@ export default function MessageTemplatesPage(): JSX.Element {
     <div>
       <H2 className="mt-8 mb-4">Viestipohjat</H2>
 
-      <Button component={Link} to="/message-template/create" variant="contained">
+      <Button to="/message-template/create" variant="contained">
         Luo uusi viestipohja
       </Button>
 

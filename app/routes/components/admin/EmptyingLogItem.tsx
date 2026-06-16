@@ -1,5 +1,5 @@
 import type { EmptyingLogDTO } from '~/types';
-import Button from '@mui/material/Button';
+import Button from '~/routes/components/Button';
 
 type EmptyingLogItemProps = {
   item: EmptyingLogDTO;

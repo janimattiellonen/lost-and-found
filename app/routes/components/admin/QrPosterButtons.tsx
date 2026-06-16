@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@mui/material';
+import Button from '~/routes/components/Button';
 import QRCode from 'qrcode';
 
 import type { Course } from '~/config/courses';
