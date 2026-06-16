@@ -6,7 +6,7 @@ import styled from '@emotion/styled';
 
 import Button from '@mui/material/Button';
 import Collapse from '@mui/material/Collapse';
-import Paper from '@mui/material/Paper';
+import Paper from '~/routes/components/Paper';
 import InfoBox from '~/routes/components/InfoBox';
 import EmptyingLogItem from '~/routes/components/EmptyingLogItem';
 import WarningIcon from '@mui/icons-material/Warning';

@@ -2,7 +2,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { redirect } from 'react-router';
 import { Link, useLoaderData } from 'react-router';
 
-import Paper from '@mui/material/Paper';
+import Paper from '~/routes/components/Paper';
 import Button from '@mui/material/Button';
 
 import { getMessageTemplates, deleteMessageTemplate, markAsDefault } from '~/models/messageTemplate.server';
@@ -58,7 +58,7 @@ export default function MessageTemplatesPage(): JSX.Element {
             <Paper
               key={messageTemplate.id}
               className={messageTemplate.isDefault ? 'mb-8 mt-8' : 'mt-8'}
-              sx={messageTemplate.isDefault ? { border: 'solid rgba(2, 208, 232, 0.85) 4px' } : {}}
+              style={messageTemplate.isDefault ? { border: 'solid rgba(2, 208, 232, 0.85) 4px' } : undefined}
               elevation={messageTemplate.isDefault ? 7 : 1}
               children={<MessageTemplateItem messageTemplate={messageTemplate} />}
             />
