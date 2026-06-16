@@ -13,7 +13,9 @@ import {
   useRevalidator,
 } from 'react-router';
 
-import { createBrowserClient, createServerClient } from '@supabase/auth-helpers-remix';
+import { createBrowserClient } from '@supabase/ssr';
+
+import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import AdminMenu from '~/routes/AdminMenu';
 import Header from '~/routes/Header';
@@ -30,12 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     CLUB_ID: process.env.APP_CLUB_ID!,
   };
 
-  const response = new Response();
-
-  const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
-    request,
-    response,
-  });
+  const { supabase, headers } = createSupabaseServerClientWithHeaders(request);
 
   const {
     data: { session },
@@ -47,7 +44,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       session,
     },
     {
-      headers: response.headers,
+      headers,
     },
   );
 }

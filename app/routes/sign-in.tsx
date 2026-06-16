@@ -3,7 +3,7 @@ import { Form, useActionData, useOutletContext } from 'react-router';
 import type { ActionFunctionArgs } from 'react-router';
 import { data, redirect } from 'react-router';
 
-import { createServerClient } from '@supabase/auth-helpers-remix';
+import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import { Button } from '@mui/material';
 
@@ -17,17 +17,7 @@ type LoginErrors = {
 export async function action({ request }: ActionFunctionArgs) {
   const errors: LoginErrors = {};
 
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL!,
-    SUPABASE_KEY: process.env.SUPABASE_KEY!,
-  };
-
-  const response = new Response();
-
-  const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
-    request,
-    response,
-  });
+  const { supabase, headers } = createSupabaseServerClientWithHeaders(request);
 
   try {
     const form = await request.formData();
@@ -57,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return redirect('/', {
       status: 302,
-      headers: response.headers,
+      headers,
     });
   } catch (error) {
     console.log(`ERROR: ${JSON.stringify(error, null, 2)}`);

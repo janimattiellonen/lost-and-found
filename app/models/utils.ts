@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/auth-helpers-remix';
+import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr';
 
 export function createConnection() {
   const supabaseUrl = process.env.SUPABASE_URL!;
@@ -17,31 +17,45 @@ export function createFunctionConnection() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-export function createSupabaseServerClient(request: Request): SupabaseClient {
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL!,
-    SUPABASE_KEY: process.env.SUPABASE_KEY!,
-  };
+// Builds a request-scoped Supabase client. Cookie writes (e.g. a session
+// refresh or sign-in) are collected onto `headers`; callers that establish or
+// refresh a session must return those headers on their response so the browser
+// stores the updated auth cookies.
+export function createSupabaseServerClientWithHeaders(request: Request): {
+  supabase: SupabaseClient;
+  headers: Headers;
+} {
+  const headers = new Headers();
 
-  const response = new Response();
-
-  return createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
-    request,
-    response,
+  const supabase = createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!, {
+    cookies: {
+      getAll() {
+        return parseCookieHeader(request.headers.get('Cookie') ?? '').map(({ name, value }) => ({
+          name,
+          value: value ?? '',
+        }));
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) =>
+          headers.append('Set-Cookie', serializeCookieHeader(name, value, options)),
+        );
+      },
+    },
   });
+
+  return { supabase, headers };
+}
+
+// Read-only convenience for the many model functions that only need an
+// auth-scoped client for RLS queries. Cookie writes are intentionally dropped
+// here (these requests don't return Supabase's Set-Cookie headers), matching
+// the prior @supabase/auth-helpers-remix behaviour.
+export function createSupabaseServerClient(request: Request): SupabaseClient {
+  return createSupabaseServerClientWithHeaders(request).supabase;
 }
 
 export async function isUserLoggedIn(request: Request): Promise<boolean> {
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL!,
-    SUPABASE_KEY: process.env.SUPABASE_KEY!,
-  };
-  const response = new Response();
-
-  const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
-    request,
-    response,
-  });
+  const supabase = createSupabaseServerClient(request);
 
   const {
     data: { user },
