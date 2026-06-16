@@ -1,31 +1,34 @@
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
 
-import CloseIcon from '@mui/icons-material/Close';
+import { font, space } from '~/styles/tokens.stylex';
 
-const H3 = styled.h2`
-  font-weight: bold;
-
-  font-size: 1rem;
-
-  @media (min-width: 600px) {
-    font-size: 1.25rem;
-  }
-`;
-
-const Ul = styled.ul`
-  margin-bottom: 1rem;
-`;
-
-const Li = styled.li`
-  list-style: disc;
-  margin-left: 1rem;
-`;
-
-const StyledCloseIcon = styled(CloseIcon)`
-  &:hover {
-    cursor: pointer;
-  }
-`;
+const styles = stylex.create({
+  heading: {
+    fontWeight: font.weightBold,
+    fontSize: {
+      default: font.sizeMd,
+      '@media (min-width: 600px)': font.sizeLg,
+    },
+  },
+  ul: {
+    marginBottom: space.md,
+  },
+  li: {
+    listStyle: 'disc',
+    marginLeft: space.md,
+  },
+  // Replaces the MUI CloseIcon: a bare icon button (also fixes the previous
+  // keyboard-inaccessible clickable icon).
+  closeButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: 0,
+    border: 'none',
+    background: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+  },
+});
 
 type InfoBoxProps = {
   onClose: () => void;
@@ -34,8 +37,12 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
-        <H3>Ohjeet</H3>
-        <StyledCloseIcon onClick={onClose} />
+        <h2 {...stylex.props(styles.heading)}>Ohjeet</h2>
+        <button type="button" onClick={onClose} aria-label="Sulje" {...stylex.props(styles.closeButton)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
       </div>
 
       <p>
@@ -47,15 +54,15 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
         Jos olet sitä mieltä (tai epäilet), että listalta löytyvä kiekko on sinun, laita mahdollisimman tarkat tiedot
         kiekosta:
       </p>
-      <Ul>
-        <Li>nimi</Li>
-        <Li>väri</Li>
-        <Li>muovi</Li>
-        <Li>kiekosta mahdollisesti löytyvä nimi ja puhelinnumero</Li>
-        <Li>paino</Li>
-        <Li>stämpin väri</Li>
-        <Li>onko ns. spessu (Nate Sexton Firebird, Cloud Breaker, Doom Bird etc)</Li>
-      </Ul>
+      <ul {...stylex.props(styles.ul)}>
+        <li {...stylex.props(styles.li)}>nimi</li>
+        <li {...stylex.props(styles.li)}>väri</li>
+        <li {...stylex.props(styles.li)}>muovi</li>
+        <li {...stylex.props(styles.li)}>kiekosta mahdollisesti löytyvä nimi ja puhelinnumero</li>
+        <li {...stylex.props(styles.li)}>paino</li>
+        <li {...stylex.props(styles.li)}>stämpin väri</li>
+        <li {...stylex.props(styles.li)}>onko ns. spessu (Nate Sexton Firebird, Cloud Breaker, Doom Bird etc)</li>
+      </ul>
       <p>
         Jos kiekosta puuttuu nimi ja puhelinnumero ja kyseessä ns stockikiekko (perus kaupan hyllystä löytyvä
         normikiekko), ovat mahdollisuudet saada kiekko takaisin heikot, ellet tarkkaan tiedä kiekon väriä, muovia,
