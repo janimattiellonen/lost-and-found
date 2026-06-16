@@ -1,5 +1,5 @@
 import H3 from '../H3';
-import Paper from '@mui/material/Paper';
+import Paper from '~/routes/components/Paper';
 
 type MessagePreviewProps = {
   message: string;
