@@ -1,9 +1,11 @@
 import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   resolve: {
+    // Vite 8 resolves tsconfig `paths` (the `~/*` -> `./app/*` alias) natively,
+    // replacing the former vite-tsconfig-paths plugin.
+    tsconfigPaths: true,
     alias: [
       // `@mui/icons-material/<Icon>` resolves to a CJS flat file (the icons have
       // no per-icon package.json, so Vite never picks the ESM build). Vite's dev
@@ -22,5 +24,5 @@ export default defineConfig({
     // @mui scope into the server build lets Vite apply proper CJS/ESM interop.
     noExternal: [/^@mui\//],
   },
-  plugins: [reactRouter(), tsconfigPaths()],
+  plugins: [reactRouter()],
 });
