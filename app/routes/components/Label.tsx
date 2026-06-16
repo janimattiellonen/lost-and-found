@@ -1,17 +1,33 @@
-import styled from '@emotion/styled';
-import InputLabel from '@mui/material/InputLabel';
-import type { InputLabelProps } from '@mui/material/InputLabel';
+import type { LabelHTMLAttributes } from 'react';
 
-const StyledLabel = styled(InputLabel)`
-  font-weight: 700;
-  --tw-text-opacity: 1;
-  color: rgb(55 65 81 / var(--tw-text-opacity));
-`;
+import * as stylex from '@stylexjs/stylex';
 
-interface FooProps extends InputLabelProps<'label'> {
+import { color, font } from '~/styles/tokens.stylex';
+
+const styles = stylex.create({
+  // Replaces MUI InputLabel: block label, bold, gray-700 text (the only styles
+  // the previous component actually set; the rest were MUI defaults).
+  label: {
+    display: 'block',
+    fontWeight: font.weightBold,
+    fontSize: font.sizeMd,
+    color: color.textSecondary,
+  },
+});
+
+type LabelProps = LabelHTMLAttributes<HTMLLabelElement> & {
   children: JSX.Element | string;
-}
+};
 
-export default function Label({ children, ...rest }: FooProps): JSX.Element {
-  return <StyledLabel {...rest}>{children}</StyledLabel>;
+export default function Label({ children, className, style, ...rest }: LabelProps): JSX.Element {
+  const props = stylex.props(styles.label);
+  return (
+    <label
+      {...rest}
+      className={[props.className, className].filter(Boolean).join(' ')}
+      style={{ ...props.style, ...style }}
+    >
+      {children}
+    </label>
+  );
 }
