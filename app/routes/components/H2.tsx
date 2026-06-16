@@ -1,14 +1,16 @@
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
 
-const Heading2 = styled.h2`
-  font-weight: bold;
+import { font } from '~/styles/tokens.stylex';
 
-  font-size: 1.25rem;
-
-  @media (min-width: 600px) {
-    font-size: 1.75rem;
-  }
-`;
+const styles = stylex.create({
+  h2: {
+    fontWeight: font.weightBold,
+    fontSize: {
+      default: font.sizeLg,
+      '@media (min-width: 600px)': font.sizeXl,
+    },
+  },
+});
 
 type H2Props = {
   children: JSX.Element | string;
@@ -16,5 +18,12 @@ type H2Props = {
 };
 
 export default function H2({ children, className }: H2Props): JSX.Element {
-  return <Heading2 className={className}>{children}</Heading2>;
+  // Merge StyleX's generated className with any caller-supplied className
+  // (callers still pass Tailwind utilities during the migration).
+  const { className: sxClassName, style } = stylex.props(styles.h2);
+  return (
+    <h2 className={[sxClassName, className].filter(Boolean).join(' ')} style={style}>
+      {children}
+    </h2>
+  );
 }

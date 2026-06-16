@@ -99,6 +99,10 @@ export default function App() {
         <Meta />
         <link rel="shortcut icon" href={iconUrl} />
         <Links />
+        {/* StyleX dev CSS endpoint (DEV only). In production the unplugin folds
+            StyleX's atomic CSS into the root stylesheet via cssInjectionTarget
+            (see vite.config.ts), which <Links/> already serves app-wide. */}
+        {import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" suppressHydrationWarning />}
         {/* Server-only slot: entry.server replaces `__STYLES__` with the
             extracted Emotion style tags. On the client this renders nothing, so
             hydration sees a matching empty trailing position. */}
@@ -110,6 +114,7 @@ export default function App() {
         <Outlet context={{ supabase, session }} />
         <ScrollRestoration />
         <Scripts />
+        {import.meta.env.DEV && <script type="module" src="/@id/virtual:stylex:runtime" />}
       </body>
     </html>
   );
