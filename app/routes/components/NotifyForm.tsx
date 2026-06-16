@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Form, useActionData } from 'react-router';
 
-import { TextField, Button, Collapse, RadioGroup, FormControlLabel, Radio } from '@mui/material';
+import { TextField, Collapse, RadioGroup, FormControlLabel, Radio } from '@mui/material';
+import Button from '~/routes/components/Button';
 
 import H2 from './H2';
 import Wrapper from './Wrapper';
@@ -29,7 +30,7 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
           variant="outlined"
           size="large"
           fullWidth
-          sx={{ maxWidth: '20rem' }}
+          style={{ maxWidth: '20rem' }}
           onClick={() => window.location.reload()}
         >
           Lähetä uusi ilmoitus

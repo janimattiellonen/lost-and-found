@@ -5,7 +5,7 @@ import { data, redirect } from 'react-router';
 
 import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
-import { Button } from '@mui/material';
+import Button from '~/routes/components/Button';
 
 import Label from './components/Label';
 

@@ -1,11 +1,11 @@
-import { Form, Link, useFetcher, useLoaderData, useParams } from 'react-router';
+import { Form, useFetcher, useLoaderData, useParams } from 'react-router';
 
 import { useState, useEffect } from 'react';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
+import Button from '~/routes/components/Button';
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { redirect } from 'react-router';
@@ -161,12 +161,12 @@ export default function SendNotificationPage(): JSX.Element {
         </Wrapper>
       </Form>
       <div className="flex justify-start gap-4">
-        <Button color="error" variant="contained" component={Link} to={`/`}>
+        <Button color="error" variant="contained" to={`/`}>
           Peru
         </Button>
         <Button
           variant="contained"
-          component={Link}
+         
           to={`sms:${phoneNumber}&body=${convertLineBreaks(replaceTokensWithValues(message, data))}`}
         >
           Lähetä tekstiviesti

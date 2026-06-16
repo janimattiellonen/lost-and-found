@@ -1,6 +1,6 @@
 import { Form, useActionData } from 'react-router';
 
-import { Button } from '@mui/material';
+import Button from '~/routes/components/Button';
 
 import H2 from './H2';
 

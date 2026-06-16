@@ -3,7 +3,8 @@ import { Form, useActionData } from 'react-router';
 import type { ActionFunctionArgs } from 'react-router';
 import { data, redirect } from 'react-router';
 
-import { TextField, Checkbox, Button, FormControlLabel } from '@mui/material';
+import { TextField, Checkbox, FormControlLabel } from '@mui/material';
+import Button from '~/routes/components/Button';
 
 import H2 from './components/H2';
 import Label from './components/Label';
