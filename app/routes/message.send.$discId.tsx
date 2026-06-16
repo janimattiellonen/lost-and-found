@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import TextField from '@mui/material/TextField';
+import TextField from '~/routes/components/TextField';
 import Button from '~/routes/components/Button';
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
@@ -151,12 +151,12 @@ export default function SendNotificationPage(): JSX.Element {
           <Label htmlFor="message">Viesti</Label>
 
           <TextField
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="message"
             onChange={(e) => setMessage(e.target.value)}
             value={message}
             multiline
             rows={9}
+            fullWidth
           />
         </Wrapper>
       </Form>
