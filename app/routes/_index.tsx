@@ -9,7 +9,7 @@ import Collapse from '@mui/material/Collapse';
 import Paper from '~/routes/components/Paper';
 import InfoBox from '~/routes/components/InfoBox';
 import EmptyingLogItem from '~/routes/components/EmptyingLogItem';
-import WarningIcon from '@mui/icons-material/Warning';
+import { WarningIcon } from '~/routes/components/icons';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import DiscTable from '~/routes/DiscTable';
@@ -27,10 +27,6 @@ const H2 = styled.h2`
   }
 `;
 
-const StyledWarningIcon = styled(WarningIcon)`
-  color: red;
-  margin-right: 0.5rem;
-`;
 
 export default function TestPage(): JSX.Element {
   const fetcher = useFetcher();
@@ -124,8 +120,9 @@ export default function TestPage(): JSX.Element {
           <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
 
           <p>
-            <StyledWarningIcon
-              titleAccess={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
+            <WarningIcon
+              title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
+              style={{ color: 'red', marginRight: '0.5rem' }}
             />
             Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
             pian myydä tai lahjoittaa.
