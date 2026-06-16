@@ -1,16 +1,27 @@
 import type { ReactNode } from 'react';
-import styled from '@emotion/styled';
 
-const Div = styled.div`
-  width: 100%;
-  max-width: 40rem;
-  margin-bottom: 1rem;
-`;
+import * as stylex from '@stylexjs/stylex';
+
+import { space } from '~/styles/tokens.stylex';
+
+const styles = stylex.create({
+  wrapper: {
+    width: '100%',
+    maxWidth: '40rem',
+    marginBottom: space.md,
+  },
+});
 
 type WrapperProps = {
   className?: string;
   children: ReactNode;
 };
+
 export default function Wrapper({ className, children }: WrapperProps): JSX.Element {
-  return <Div className={className}>{children}</Div>;
+  const { className: sxClassName, style } = stylex.props(styles.wrapper);
+  return (
+    <div className={[sxClassName, className].filter(Boolean).join(' ')} style={style}>
+      {children}
+    </div>
+  );
 }

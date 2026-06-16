@@ -1,14 +1,17 @@
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
 
-const Heading2 = styled.h2`
-  font-weight: bold;
+import { font } from '~/styles/tokens.stylex';
 
-  font-size: 1rem;
-
-  @media (min-width: 600px) {
-    font-size: 1.5rem;
-  }
-`;
+const styles = stylex.create({
+  // Preserves the original markup: this component renders an <h2> element.
+  heading: {
+    fontWeight: font.weightBold,
+    fontSize: {
+      default: font.sizeMd,
+      '@media (min-width: 600px)': '1.5rem',
+    },
+  },
+});
 
 type H3Props = {
   children: JSX.Element | string;
@@ -16,5 +19,10 @@ type H3Props = {
 };
 
 export default function H3({ children, className }: H3Props): JSX.Element {
-  return <Heading2 className={className}>{children}</Heading2>;
+  const { className: sxClassName, style } = stylex.props(styles.heading);
+  return (
+    <h2 className={[sxClassName, className].filter(Boolean).join(' ')} style={style}>
+      {children}
+    </h2>
+  );
 }
