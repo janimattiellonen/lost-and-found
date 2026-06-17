@@ -10,7 +10,7 @@ import Paper from '~/routes/components/Paper';
 import InfoBox from '~/routes/components/InfoBox';
 import EmptyingLogItem from '~/routes/components/EmptyingLogItem';
 import { WarningIcon } from '~/routes/components/icons';
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from '~/routes/components/CircularProgress';
 
 import DiscTable from '~/routes/DiscTable';
 import type { DiscDTO, EmptyingLogDTO } from '~/types';
