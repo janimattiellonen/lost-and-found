@@ -79,12 +79,17 @@ const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
   return !isAfter(date, now);
 };
 
+// Dark table theme matching the previous react-data-grid rendering: a dark base
+// with light text, the header slightly darker, and even rows a subtly lighter
+// shade (rgb(63,60,60)) — not the harsh white/dark zebra of a light base.
 const styles = stylex.create({
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     marginTop: space.md,
     fontSize: '0.875rem',
+    backgroundColor: '#212121',
+    color: '#ddd',
   },
   th: {
     position: 'relative',
@@ -92,23 +97,24 @@ const styles = stylex.create({
     textAlign: 'left',
     fontWeight: 700,
     padding: '8px 12px',
+    color: '#fff',
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: '#d1d5db',
+    borderBottomColor: 'rgba(255,255,255,0.15)',
     userSelect: 'none',
-    backgroundColor: { default: 'transparent', ':hover': 'rgba(0,0,0,0.04)' },
+    backgroundColor: { default: '#292929', ':hover': '#333' },
   },
   thSortable: { cursor: 'pointer' },
-  thSorted: { backgroundColor: 'rgba(0,0,0,0.06)' },
+  thSorted: { backgroundColor: '#383838' },
   td: {
     boxSizing: 'border-box',
     padding: '8px 12px',
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  // Preserves the previous dark even-row striping.
-  rowEven: { backgroundColor: 'rgb(63, 60, 60)', color: '#fff' },
+  // Even rows a subtle shade lighter than the base, as in the old grid.
+  rowEven: { backgroundColor: 'rgb(63, 60, 60)' },
   sortIcon: {
     display: 'inline-flex',
     alignItems: 'center',
