@@ -1,9 +1,7 @@
 import { Form, useFetcher, useLoaderData, useParams } from 'react-router';
 
 import { useState, useEffect } from 'react';
-import type { SelectChangeEvent } from '@mui/material/Select';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
+import Select, { MenuItem } from '~/routes/components/Select';
 import TextField from '~/routes/components/TextField';
 import Button from '~/routes/components/Button';
 
@@ -123,10 +121,10 @@ export default function SendNotificationPage(): JSX.Element {
           <Label htmlFor="message-template">Viestipohja</Label>
 
           <Select
-            className="[width:100%]"
+            fullWidth
             value={selected.toString()}
             id="message-template"
-            onChange={(e: SelectChangeEvent) => {
+            onChange={(e) => {
               const messageTemplate = messageTemplates.find(
                 (item: MessageTemplateDTO) => item.id === parseInt(e.target.value, 10),
               );
