@@ -21,7 +21,7 @@ test('NumberSearch renders and accepts input', async ({ page }) => {
 
 test('filter row controls are bottom-aligned', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('grid')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('table')).toBeVisible({ timeout: 20_000 });
 
   const combo = page.getByRole('combobox').first(); // DiscSelector input (has a label above)
   const search = page.getByRole('textbox', { name: 'Puh nro., 4 viimeistä' });

@@ -13,7 +13,7 @@ test('DiscSelector opens the full list on click and filters on type', async ({ p
 
   // Disc names load client-side (fetcher.load('/foo')); wait for the disc grid
   // to render so the combobox has data before we open it.
-  await expect(page.getByRole('grid')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('table')).toBeVisible({ timeout: 20_000 });
 
   const input = page.getByRole('combobox').first();
   await expect(input).toBeVisible();
@@ -47,7 +47,7 @@ test('DiscSelector opens the full list on click and filters on type', async ({ p
 test('DiscSelector flips the list above the field when near the viewport bottom', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 420 });
   await page.goto('/');
-  await expect(page.getByRole('grid')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('table')).toBeVisible({ timeout: 20_000 });
 
   const input = page.getByRole('combobox').first();
   // Pin the field to the bottom of the viewport so there's no room below.
