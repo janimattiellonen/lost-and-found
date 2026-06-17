@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Form, useActionData } from 'react-router';
 
-import { Collapse } from '@mui/material';
+import Collapse from '~/routes/components/Collapse';
 import { RadioGroup, Radio } from '~/routes/components/RadioGroup';
 import FormControlLabel from '~/routes/components/FormControlLabel';
 import TextField from '~/routes/components/TextField';
