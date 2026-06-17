@@ -1,0 +1,27 @@
+/*
+ * react-data-grid customizations for DiscTable. These target the grid's own
+ * internal classes (.rdg-*) via descendant selectors, which StyleX cannot
+ * express — so they live here as scoped plain CSS (applied via the `disc-grid`
+ * class on the DataGrid root). Migrated from the former emotion styled(DataGrid).
+ */
+.disc-grid {
+  block-size: auto;
+  margin-top: 1rem;
+}
+
+.disc-grid .rdg-row-even {
+  background: rgb(63, 60, 60);
+}
+
+.disc-grid .rdg-header-row .rdg-cell {
+  transition: background-color 0.15s ease;
+}
+
+.disc-grid .rdg-header-row .rdg-cell:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.disc-grid .rdg-header-row .rdg-cell[aria-sort='ascending'],
+.disc-grid .rdg-header-row .rdg-cell[aria-sort='descending'] {
+  background-color: rgba(255, 255, 255, 0.09);
+}
