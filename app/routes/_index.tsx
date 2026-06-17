@@ -133,7 +133,7 @@ export default function TestPage(): JSX.Element {
         )}
       </div>
       <div className="mt-8">
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-end">
           <DiscSelector
             discNames={distinctDiscNames}
             onChange={(selectedItem: string | null) => {
