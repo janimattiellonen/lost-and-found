@@ -2,6 +2,8 @@ import * as stylex from '@stylexjs/stylex';
 
 import { font, space } from '~/styles/tokens.stylex';
 
+import type { JSX } from "react";
+
 const styles = stylex.create({
   heading: {
     fontWeight: font.weightBold,

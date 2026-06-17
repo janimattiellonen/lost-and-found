@@ -1,5 +1,7 @@
 import type { EmptyingLogDTO } from '~/types';
 
+import type { JSX } from "react";
+
 type EmptyingLogItemProps = {
   item: EmptyingLogDTO;
   showCourseName: boolean;

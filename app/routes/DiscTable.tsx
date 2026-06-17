@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 
 import { Link, useOutletContext } from 'react-router';
 
@@ -167,14 +167,13 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           row.original.ownerPhoneNumber ? (
             // inline-flex keeps the SMS icon on the same line — Tailwind's
             // preflight sets `svg { display: block }`, which otherwise wraps it.
-            <span className="inline-flex items-center gap-2">
-              ****{row.original.ownerPhoneNumber}
+            (<span className="inline-flex items-center gap-2">****{row.original.ownerPhoneNumber}
               {isLoggedIn && (
                 <Link to={`/message/send/${row.original.internalDiscId}`} className="inline-flex">
                   <TextsmsIcon width={18} height={18} />
                 </Link>
               )}
-            </span>
+            </span>)
           ) : (
             ''
           ),
@@ -245,13 +244,13 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
                   {header.column.getCanResize() && (
                     // Pointer-only column resize handle, hidden from assistive
                     // tech (resizing isn't keyboard-operated, as with the grid).
-                    <div
+                    (<div
                       aria-hidden="true"
                       {...stylex.props(styles.resizer)}
                       onMouseDown={header.getResizeHandler()}
                       onTouchStart={header.getResizeHandler()}
                       onClick={(e) => e.stopPropagation()}
-                    />
+                    />)
                   )}
                 </th>
               );

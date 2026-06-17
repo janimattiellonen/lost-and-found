@@ -14,6 +14,8 @@ import Wrapper from './components/Wrapper';
 
 import { createMessageTemplate } from '~/models/messageTemplate.server';
 
+import type { JSX } from "react";
+
 type MessageTemplateErrors = {
   content?: string | null | undefined;
 };

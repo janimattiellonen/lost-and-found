@@ -9,6 +9,8 @@ import Button from '~/routes/components/Button';
 
 import Label from './components/Label';
 
+import type { JSX } from "react";
+
 type LoginErrors = {
   password?: string | null | undefined;
   email?: string | null | undefined;

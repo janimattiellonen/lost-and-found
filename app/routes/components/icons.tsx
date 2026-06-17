@@ -1,4 +1,4 @@
-import type { ReactNode, SVGProps } from 'react';
+import type { ReactNode, SVGProps, JSX } from 'react';
 
 // Inline Material icons (24x24, currentColor) replacing @mui/icons-material.
 // Accept all SVG props (className/style/onClick). Pass `title` for an accessible

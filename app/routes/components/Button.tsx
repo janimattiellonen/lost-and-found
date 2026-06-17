@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, JSX } from 'react';
 
 import { Link } from 'react-router';
 import * as stylex from '@stylexjs/stylex';

@@ -5,6 +5,8 @@ import Button from '~/routes/components/Button';
 import { formatDate } from '~/routes/utils';
 import type { MessageTemplateDTO } from '~/types';
 
+import type { JSX } from "react";
+
 type MessageTemplateProps = {
   messageTemplate: MessageTemplateDTO;
 };

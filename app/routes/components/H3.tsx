@@ -2,6 +2,8 @@ import * as stylex from '@stylexjs/stylex';
 
 import { font } from '~/styles/tokens.stylex';
 
+import type { JSX } from "react";
+
 const styles = stylex.create({
   // Preserves the original markup: this component renders an <h2> element.
   heading: {

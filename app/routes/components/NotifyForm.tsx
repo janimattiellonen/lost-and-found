@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { Form, useActionData } from 'react-router';
 
 import Collapse from '~/routes/components/Collapse';

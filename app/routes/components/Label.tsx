@@ -1,4 +1,4 @@
-import type { LabelHTMLAttributes } from 'react';
+import type { LabelHTMLAttributes, JSX } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 

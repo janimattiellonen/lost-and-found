@@ -1,4 +1,4 @@
-import type { FormEventHandler, ReactNode } from 'react';
+import type { FormEventHandler, ReactNode, JSX } from 'react';
 import { createContext, useContext } from 'react';
 
 import * as stylex from '@stylexjs/stylex';

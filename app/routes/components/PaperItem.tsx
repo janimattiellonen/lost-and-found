@@ -2,6 +2,8 @@ import * as stylex from '@stylexjs/stylex';
 
 import { color, radius, space } from '~/styles/tokens.stylex';
 
+import type { JSX } from "react";
+
 const styles = stylex.create({
   // Replaces MUI <Paper elevation={1}> + the `mt-8 p-4` Tailwind utilities.
   // Shadow is MUI's exact elevation-1 value; radius is MUI's default (4px).

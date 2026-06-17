@@ -1,5 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 
+import type { JSX } from "react";
+
 type HeaderProps = {
   clubId: number;
   clubName: string;
