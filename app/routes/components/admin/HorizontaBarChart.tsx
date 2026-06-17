@@ -1,4 +1,6 @@
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
+
+import { space } from '~/styles/tokens.stylex';
 
 type Stat = {
   label: string;
@@ -9,44 +11,15 @@ type HorizontalBarChartProps = {
   data: Stat[];
 };
 
-type BarProps = {
-  width: number;
-  colour: string;
-};
+const styles = stylex.create({
+  wrapper: { display: 'flex', justifyContent: 'flex-start' },
+  label: { width: '10rem', marginRight: space.md },
+  barBase: { position: 'relative', height: '25px', marginBottom: space.sm },
+  // Dynamic per-bar width/colour.
+  barDynamic: (width: number, colour: string) => ({ width: `${width}%`, backgroundColor: colour }),
+  barValue: { position: 'absolute', right: '-25px', color: 'black' },
+});
 
-const HorizontalBar = styled.div<BarProps>`
-  position: relative;
-  height: 25px;
-  background: pink;
-  ${(props) => {
-    return {
-      background: `${props.colour}`,
-      width: `${props.width}%`,
-    };
-  }}
-
-  margin-bottom: 0.5rem;
-`;
-
-const BarValue = styled.div`
-  right: -25px;
-  color: black;
-  position: absolute;
-
-  & > div {
-    text-align: center;
-  }
-`;
-
-const Wrapper = styled.div`
-  display: flex;
-  justify-content: flex-start;
-`;
-
-const Label = styled.div`
-  width: 10rem;
-  margin-right: 1rem;
-`;
 export default function HorizontalBarChart({ data }: HorizontalBarChartProps): JSX.Element {
   let highest: number = 0;
 
@@ -62,12 +35,12 @@ export default function HorizontalBarChart({ data }: HorizontalBarChartProps): J
         const width = Math.round((item.value / (highest + 30)) * 100);
 
         return (
-          <Wrapper key={index}>
-            <Label>{item.label}</Label>
-            <HorizontalBar width={width} colour={'red'} key={index}>
-              <BarValue>{item.value}</BarValue>
-            </HorizontalBar>
-          </Wrapper>
+          <div key={index} {...stylex.props(styles.wrapper)}>
+            <div {...stylex.props(styles.label)}>{item.label}</div>
+            <div {...stylex.props(styles.barBase, styles.barDynamic(width, 'red'))}>
+              <div {...stylex.props(styles.barValue)}>{item.value}</div>
+            </div>
+          </div>
         );
       })}
     </div>

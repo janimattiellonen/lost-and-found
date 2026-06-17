@@ -1,66 +1,39 @@
 import { useState } from 'react';
 
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
 
 import H3 from '../H3';
+import { space } from '~/styles/tokens.stylex';
 
-const Outer = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Wrapper = styled.div`
-  width: 100%;
-  height: 200px;
-  display: flex;
-  align-items: self-end;
-  gap: 1rem;
-`;
-
-const Legend = styled.div`
-  display: flex;
-  gap: 1rem;
-  width: 100%;
-  max-width: 1200px;
-
-  & > div {
-    width: 75px;
-    text-align: center;
-  }
-`;
-
-type BarProps = {
-  height: number;
-  colour: string;
-};
-
-const VerticalBar = styled.div<BarProps>`
-  position: relative;
-  width: 75px;
-  background: pink;
-  ${(props) => {
-    return {
-      background: `${props.colour}`,
-      height: `${props.height}%`,
-    };
-  }}
-
-  &:hover {
-    background: blue;
-  }
-`;
-
-const BarValue = styled.div`
-  top: -25px;
-  color: black;
-  position: absolute;
-  margin: 0 auto;
-  width: 100%;
-
-  & > div {
-    text-align: center;
-  }
-`;
+const styles = stylex.create({
+  outer: { display: 'flex', flexDirection: 'column' },
+  wrapper: { width: '100%', height: '200px', display: 'flex', alignItems: 'self-end', gap: space.md },
+  legend: { display: 'flex', gap: space.md, width: '100%', maxWidth: '1200px' },
+  legendItem: { width: '75px', textAlign: 'center' },
+  // Rendered as a <button> (the bars are clickable) with a button reset.
+  barBase: {
+    position: 'relative',
+    width: '75px',
+    appearance: 'none',
+    borderStyle: 'none',
+    padding: 0,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+  },
+  // Dynamic per-bar height/colour. Background must be StyleX (not inline style)
+  // so the :hover rule can override it.
+  barDynamic: (height: number, colour: string) => ({ height: `${height}%`, backgroundColor: colour }),
+  barHover: { backgroundColor: { ':hover': 'blue' } },
+  barValue: {
+    position: 'absolute',
+    top: '-25px',
+    width: '100%',
+    marginBlock: 0,
+    marginInline: 'auto',
+    color: 'black',
+  },
+  barValueInner: { textAlign: 'center' },
+});
 
 export type BarValueType = {
   label: string;
@@ -87,36 +60,40 @@ export default function BarChart({ className, data, legendItems, onBarClick, tit
     }
   });
 
+  const outer = stylex.props(styles.outer);
+
   return (
-    <Outer className={className}>
+    <div className={[outer.className, className].filter(Boolean).join(' ')} style={outer.style}>
       <H3>{title}</H3>
-      <Wrapper>
+      <div {...stylex.props(styles.wrapper)}>
         {data.map((item: BarValueType, index: number) => {
           const height = Math.round((item.value / (highest + 30)) * 100);
           return (
-            <VerticalBar
+            <button
               key={index}
-              height={height}
-              colour={index === selectedBar ? 'blue' : 'red'}
-              onClick={(e) => {
+              type="button"
+              {...stylex.props(styles.barBase, styles.barHover, styles.barDynamic(height, index === selectedBar ? 'blue' : 'red'))}
+              onClick={() => {
                 if (onBarClick) {
                   setSelectedBar(index);
                   onBarClick(item.date);
                 }
               }}
             >
-              <BarValue>
-                <div>{item.value}</div>
-              </BarValue>
-            </VerticalBar>
+              <div {...stylex.props(styles.barValue)}>
+                <div {...stylex.props(styles.barValueInner)}>{item.value}</div>
+              </div>
+            </button>
           );
         })}
-      </Wrapper>
-      <Legend>
-        {legendItems.map((item, index: number) => {
-          return <div key={index}>{item}</div>;
-        })}
-      </Legend>
-    </Outer>
+      </div>
+      <div {...stylex.props(styles.legend)}>
+        {legendItems.map((item, index: number) => (
+          <div key={index} {...stylex.props(styles.legendItem)}>
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
