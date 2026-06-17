@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 
 import 'react-data-grid/lib/styles.css';
+import '~/styles/disc-table.css';
 
 import { Link, useOutletContext } from 'react-router';
 
 import { add, isAfter } from 'date-fns';
 
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
 
 import { ArrowDownwardIcon, ArrowUpwardIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
+import { space } from '~/styles/tokens.stylex';
 
 import type { RenderSortStatusProps, SortColumn } from 'react-data-grid';
 import DataGrid from 'react-data-grid';
@@ -71,45 +73,25 @@ function formatDate(dateStr: string | undefined): string {
 
   return formattedDate;
 }
-const StyledDataGrid = styled(DataGrid)`
-  block-size: auto;
-  margin-top: 1rem;
-
-  & .rdg-row-even {
-    background: rgb(63, 60, 60);
-  }
-
-  & .rdg-header-row .rdg-cell {
-    transition: background-color 0.15s ease;
-  }
-
-  & .rdg-header-row .rdg-cell:hover {
-    background-color: rgba(255, 255, 255, 0.06);
-  }
-
-  & .rdg-header-row .rdg-cell[aria-sort='ascending'],
-  & .rdg-header-row .rdg-cell[aria-sort='descending'] {
-    background-color: rgba(255, 255, 255, 0.09);
-  }
-`;
-
-const SortIcon = styled('span')`
-  display: inline-flex;
-  align-items: center;
-  margin-inline-start: 0.25rem;
-  color: rgba(255, 255, 255, 0.7);
-
-  & svg {
-    font-size: 1rem;
-  }
-`;
+const styles = stylex.create({
+  sortIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    marginInlineStart: space.xs,
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+});
 
 function renderSortStatus({ sortDirection }: RenderSortStatusProps): JSX.Element | null {
   if (!sortDirection) {
     return null;
   }
 
-  return <SortIcon>{sortDirection === 'ASC' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}</SortIcon>;
+  return (
+    <span {...stylex.props(styles.sortIcon)}>
+      {sortDirection === 'ASC' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+    </span>
+  );
 }
 
 const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
@@ -207,7 +189,8 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
   }, [rows, sortColumns]);
 
   return (
-    <StyledDataGrid
+    <DataGrid
+      className="disc-grid"
       defaultColumnOptions={{
         sortable: true,
         resizable: true,
