@@ -83,6 +83,15 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
     openMenu,
   } = useCombobox({
     items,
+    // Clicking the input always OPENS the list (never toggles it closed), so a
+    // click reliably shows all options — matching the previous MUI Autocomplete.
+    // The chevron toggle and blur still close it.
+    stateReducer(state, { type, changes }) {
+      if (type === useCombobox.stateChangeTypes.InputClick) {
+        return { ...changes, isOpen: true };
+      }
+      return changes;
+    },
     onInputValueChange({ inputValue }) {
       const filter = (inputValue ?? '').toLowerCase();
       setItems(discNames.filter((name) => name.toLowerCase().includes(filter)));
