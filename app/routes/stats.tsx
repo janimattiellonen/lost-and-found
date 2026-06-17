@@ -15,6 +15,8 @@ import H3 from '~/routes/components/H3';
 
 import MostLostByDiscName from '~/routes/components/admin/stats/MostLostByDiscName';
 
+import type { JSX } from "react";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
 

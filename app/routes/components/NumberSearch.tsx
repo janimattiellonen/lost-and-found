@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, JSX } from 'react';
 
 import TextField from '~/routes/components/TextField';
 

@@ -4,6 +4,8 @@ import H3 from '../../H3';
 
 import HorizontalBarChart from '~/routes/components/admin/HorizontaBarChart';
 
+import type { JSX } from "react";
+
 type DiscProps = {
   data: DiscDTO[];
 };

@@ -1,6 +1,6 @@
 import { Form, useFetcher, useLoaderData, useParams } from 'react-router';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import Select, { MenuItem } from '~/routes/components/Select';
 import TextField from '~/routes/components/TextField';
 import Button from '~/routes/components/Button';

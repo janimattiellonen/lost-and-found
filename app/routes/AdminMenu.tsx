@@ -4,6 +4,8 @@ import { Link } from 'react-router';
 
 import { space } from '~/styles/tokens.stylex';
 
+import type { JSX } from "react";
+
 // StyleX has no descendant selectors, so the former `& a:hover { underline }`
 // is applied to the links directly.
 const styles = stylex.create({

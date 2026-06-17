@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode, JSX } from 'react';
 import { cloneElement } from 'react';
 
 import * as stylex from '@stylexjs/stylex';

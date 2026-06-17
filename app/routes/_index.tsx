@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 import { useFetcher } from 'react-router';
 import debounce from 'lodash.debounce';
 

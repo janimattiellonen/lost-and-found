@@ -1,4 +1,4 @@
-import type { ChangeEventHandler } from 'react';
+import type { ChangeEventHandler, JSX } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
