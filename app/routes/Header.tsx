@@ -1,26 +1,18 @@
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
 
 type HeaderProps = {
   clubId: number;
   clubName: string;
 };
 
-const Logo = styled.img`
-  font-weight: bold;
-  width: 50px;
-
-  @media (min-width: 600px) {
-    width: 100px;
-  }
-`;
-
-const H1 = styled.h1`
-  font-size: 1.5rem;
-
-  @media (min-width: 600px) {
-    font-size: 2.25rem;
-  }
-`;
+const styles = stylex.create({
+  logo: {
+    width: { default: '50px', '@media (min-width: 600px)': '100px' },
+  },
+  h1: {
+    fontSize: { default: '1.5rem', '@media (min-width: 600px)': '2.25rem' },
+  },
+});
 
 function getClubLogo(clubId: number): string | undefined {
   if (clubId === 2) {
@@ -29,11 +21,13 @@ function getClubLogo(clubId: number): string | undefined {
 
   return undefined;
 }
+
 export default function Header({ clubId, clubName }: HeaderProps): JSX.Element {
+  const logo = stylex.props(styles.logo);
   return (
     <div className="flex items-center">
-      <Logo className="mr-4" src={getClubLogo(clubId)} alt={''} />
-      <H1>Löytökiekot - {clubName}</H1>
+      <img className={`mr-4 ${logo.className ?? ''}`} style={logo.style} src={getClubLogo(clubId)} alt={''} />
+      <h1 {...stylex.props(styles.h1)}>Löytökiekot - {clubName}</h1>
     </div>
   );
 }

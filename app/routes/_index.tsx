@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useFetcher } from 'react-router';
 import debounce from 'lodash.debounce';
 
-import styled from '@emotion/styled';
-
+import H2 from '~/routes/components/H2';
 import Button from '~/routes/components/Button';
 import Collapse from '~/routes/components/Collapse';
 import Paper from '~/routes/components/Paper';
@@ -16,16 +15,6 @@ import DiscTable from '~/routes/DiscTable';
 import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/routes/DiscSelector';
 import NumberSearch from '~/routes/components/NumberSearch';
-
-const H2 = styled.h2`
-  font-weight: bold;
-
-  font-size: 1.25rem;
-
-  @media (min-width: 600px) {
-    font-size: 1.75rem;
-  }
-`;
 
 
 export default function TestPage(): JSX.Element {
