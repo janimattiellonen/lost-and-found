@@ -2,7 +2,9 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { redirect } from 'react-router';
 import { useLoaderData, useFetcher } from 'react-router';
 
-import styled from '@emotion/styled';
+import * as stylex from '@stylexjs/stylex';
+
+import { color, radius, space } from '~/styles/tokens.stylex';
 import Button from '~/routes/components/Button';
 
 import { isUserLoggedIn } from '~/models/utils';
@@ -25,18 +27,22 @@ import H2 from '~/routes/components/H2';
 import QrPosterButtons from '~/routes/components/admin/QrPosterButtons';
 import BinFullQrPosterButtons from '~/routes/components/admin/BinFullQrPosterButtons';
 
-const Card = styled.div`
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  max-width: 40rem;
-`;
-
-const UnreadCard = styled(Card)`
-  border-left: 4px solid #1976d2;
-  background-color: #f5f9ff;
-`;
+const styles = stylex.create({
+  card: {
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: '#e0e0e0',
+    borderRadius: radius.md,
+    padding: space.md,
+    marginBottom: space.md,
+    maxWidth: '40rem',
+  },
+  unread: {
+    borderLeftWidth: '4px',
+    borderLeftColor: color.accent,
+    backgroundColor: '#f5f9ff',
+  },
+});
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
@@ -90,12 +96,11 @@ export async function action({ request }: ActionFunctionArgs) {
 function NotificationItem({ notification }: { notification: DiscFoundNotificationDTO }) {
   const fetcher = useFetcher();
   const isUnread = !notification.readAt;
-  const CardComponent = isUnread ? UnreadCard : Card;
 
   const hasContactInfo = notification.contactName || notification.contactPhone || notification.contactEmail;
 
   return (
-    <CardComponent>
+    <div {...stylex.props(styles.card, isUnread && styles.unread)}>
       <div className="text-sm text-gray-500 mb-2">
         {formatDateTime(notification.createdAt)}
         {notification.courseName && <span className="ml-4">{notification.courseName}</span>}
@@ -156,17 +161,16 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
           </Button>
         </fetcher.Form>
       </div>
-    </CardComponent>
+    </div>
   );
 }
 
 function BinFullNotificationItem({ notification }: { notification: BinFullNotificationDTO }) {
   const fetcher = useFetcher();
   const isUnread = !notification.readAt;
-  const CardComponent = isUnread ? UnreadCard : Card;
 
   return (
-    <CardComponent>
+    <div {...stylex.props(styles.card, isUnread && styles.unread)}>
       <div className="text-sm text-gray-500 mb-2">
         {formatDateTime(notification.createdAt)}
         <span className="ml-4">{notification.courseName}</span>
@@ -199,7 +203,7 @@ function BinFullNotificationItem({ notification }: { notification: BinFullNotifi
           </Button>
         </fetcher.Form>
       </div>
-    </CardComponent>
+    </div>
   );
 }
 
