@@ -1,19 +1,22 @@
 import { useMemo, useState } from 'react';
 
-import 'react-data-grid/lib/styles.css';
-import '~/styles/disc-table.css';
-
 import { Link, useOutletContext } from 'react-router';
 
 import { add, isAfter } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type SortingFn,
+  type SortingState,
+} from '@tanstack/react-table';
 
 import { ArrowDownwardIcon, ArrowUpwardIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
 import { space } from '~/styles/tokens.stylex';
-
-import type { RenderSortStatusProps, SortColumn } from 'react-data-grid';
-import DataGrid from 'react-data-grid';
 
 import type { DiscDTO } from '~/types';
 
@@ -21,14 +24,13 @@ type DiscTableProps = {
   discs: DiscDTO[];
 };
 
-
 interface Row {
   id: number;
   discName: string;
   discColour: string;
   owner: string;
   ownerPhoneNumber: string;
-  addedAt: number;
+  addedAt: string;
   internalDiscId: number;
 }
 
@@ -41,22 +43,16 @@ type Comparator = (a: Row, b: Row) => number;
 function getComparator(sortColumn: string): Comparator {
   switch (sortColumn) {
     case 'id': {
-      return (a, b) => {
-        return a[sortColumn] - b[sortColumn];
-      };
+      return (a, b) => a.id - b.id;
     }
     case 'discName':
     case 'discColour':
     case 'owner':
     case 'ownerPhoneNumber': {
-      return (a, b) => {
-        return a[sortColumn].localeCompare(b[sortColumn]);
-      };
+      return (a, b) => a[sortColumn].localeCompare(b[sortColumn]);
     }
     case 'addedAt': {
-      return (a, b) => {
-        return new Date(a[sortColumn]).getTime() - new Date(b[sortColumn]).getTime();
-      };
+      return (a, b) => new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime();
     }
     default: {
       throw new Error(`unsupported sortColumn: "${sortColumn}"`);
@@ -64,34 +60,16 @@ function getComparator(sortColumn: string): Comparator {
   }
 }
 
+// Reuse the existing comparators as a TanStack sortingFn (ascending; TanStack
+// negates for descending).
+const sortDiscs: SortingFn<Row> = (a, b, columnId) => getComparator(columnId)(a.original, b.original);
+
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) {
     return '';
   }
 
-  const formattedDate = new Intl.DateTimeFormat('fi-FI').format(new Date(dateStr));
-
-  return formattedDate;
-}
-const styles = stylex.create({
-  sortIcon: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    marginInlineStart: space.xs,
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-});
-
-function renderSortStatus({ sortDirection }: RenderSortStatusProps): JSX.Element | null {
-  if (!sortDirection) {
-    return null;
-  }
-
-  return (
-    <span {...stylex.props(styles.sortIcon)}>
-      {sortDirection === 'ASC' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
-    </span>
-  );
+  return new Intl.DateTimeFormat('fi-FI').format(new Date(dateStr));
 }
 
 const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
@@ -101,105 +79,204 @@ const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
   return !isAfter(date, now);
 };
 
-const getColumns = (isLoggedIn: boolean): any => {
-  const columns = [
-    { key: 'id', name: '#', width: 'max-content' },
-    { key: 'discName', name: 'Kiekko' },
-    { key: 'discColour', name: 'Väri' },
-    { key: 'owner', name: 'Omistaja' },
-    {
-      key: 'ownerPhoneNumber',
-      name: 'Puhelinnumero',
-      renderCell(props: any) {
-        return props.row.ownerPhoneNumber ? (
-          <span>
-            ****{props.row.ownerPhoneNumber}{' '}
-            {isLoggedIn === true && (
-              <Link to={`/message/send/${props.row.internalDiscId}`}>
-                <TextsmsIcon />
-              </Link>
-            )}
-          </span>
-        ) : (
-          ''
-        );
+// Dark table theme matching the previous react-data-grid rendering: a dark base
+// with light text, the header slightly darker, and even rows a subtly lighter
+// shade (rgb(63,60,60)) — not the harsh white/dark zebra of a light base.
+const styles = stylex.create({
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    marginTop: space.md,
+    fontSize: '0.875rem',
+    backgroundColor: '#212121',
+    color: '#ddd',
+  },
+  th: {
+    position: 'relative',
+    boxSizing: 'border-box',
+    textAlign: 'left',
+    fontWeight: 700,
+    padding: '8px 12px',
+    color: '#fff',
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'rgba(255,255,255,0.15)',
+    userSelect: 'none',
+    backgroundColor: { default: '#292929', ':hover': '#333' },
+  },
+  thSortable: { cursor: 'pointer' },
+  thSorted: { backgroundColor: '#383838' },
+  // Shrink a column to its content width (used for the "#" column).
+  tight: { width: '1%', whiteSpace: 'nowrap' },
+  td: {
+    boxSizing: 'border-box',
+    padding: '8px 12px',
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  // Even rows a subtle shade lighter than the base, as in the old grid.
+  rowEven: { backgroundColor: 'rgb(63, 60, 60)' },
+  sortIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    verticalAlign: 'middle',
+    marginInlineStart: space.xs,
+  },
+  resizer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    height: '100%',
+    width: '5px',
+    cursor: 'col-resize',
+    userSelect: 'none',
+    touchAction: 'none',
+  },
+});
+
+function mapToDataRows(discs: DiscDTO[]): Row[] {
+  return discs.map((disc, index) => ({
+    id: index + 1,
+    discName: disc.discName,
+    discColour: disc.discColour,
+    owner: disc.ownerName ?? '',
+    ownerPhoneNumber: disc.ownerPhoneNumber ?? '',
+    addedAt: disc.addedAt ?? '',
+    internalDiscId: disc.internalDiscId,
+  }));
+}
+
+export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
+  const { session } = useOutletContext<OutletContext>();
+  const isLoggedIn = !!session?.user?.id;
+
+  const rows = useMemo(() => mapToDataRows(discs), [discs]);
+
+  const columns = useMemo<ColumnDef<Row>[]>(
+    () => [
+      { accessorKey: 'id', header: '#', enableResizing: false, sortingFn: sortDiscs },
+      { accessorKey: 'discName', header: 'Kiekko', sortingFn: sortDiscs },
+      { accessorKey: 'discColour', header: 'Väri', sortingFn: sortDiscs },
+      { accessorKey: 'owner', header: 'Omistaja', sortingFn: sortDiscs },
+      {
+        accessorKey: 'ownerPhoneNumber',
+        header: 'Puhelinnumero',
+        sortingFn: sortDiscs,
+        cell: ({ row }) =>
+          row.original.ownerPhoneNumber ? (
+            // inline-flex keeps the SMS icon on the same line — Tailwind's
+            // preflight sets `svg { display: block }`, which otherwise wraps it.
+            <span className="inline-flex items-center gap-2">
+              ****{row.original.ownerPhoneNumber}
+              {isLoggedIn && (
+                <Link to={`/message/send/${row.original.internalDiscId}`} className="inline-flex">
+                  <TextsmsIcon width={18} height={18} />
+                </Link>
+              )}
+            </span>
+          ) : (
+            ''
+          ),
       },
-    },
-    {
-      key: 'addedAt',
-      name: 'Lisätty',
-      renderCell(props: any) {
-        return (
+      {
+        accessorKey: 'addedAt',
+        header: 'Lisätty',
+        sortingFn: sortDiscs,
+        cell: ({ row }) => (
           <div className="flex gap-4 items-center">
-            {formatDate(props.row.addedAt)}
-            {isInDangerOfBeingDonatedOrSold(props.row.addedAt) && (
+            {formatDate(row.original.addedAt)}
+            {isInDangerOfBeingDonatedOrSold(row.original.addedAt) && (
               <WarningIcon
                 title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
                 style={{ color: 'red' }}
               />
             )}
           </div>
-        );
+        ),
       },
-    },
-  ];
+    ],
+    [isLoggedIn],
+  );
 
-  return columns;
-};
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
 
-function mapToDataRows(discs: DiscDTO[]): any {
-  return discs.map((disc: DiscDTO, index: number) => {
-    return {
-      id: index + 1,
-      key: index + 1,
-      discName: disc.discName,
-      discColour: disc.discColour,
-      owner: disc.ownerName,
-      ownerPhoneNumber: disc.ownerPhoneNumber,
-      addedAt: disc.addedAt,
-      internalDiscId: disc.internalDiscId,
-    };
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    columnResizeMode: 'onChange',
+    enableColumnResizing: true,
   });
-}
-
-export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
-  const { session } = useOutletContext<OutletContext>();
-
-  const isLoggedIn = (): boolean => {
-    return !!session?.user?.id;
-  };
-
-  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([{ columnKey: 'addedAt', direction: 'DESC' }]);
-
-  const rows = mapToDataRows(discs);
-
-  const sortedRows = useMemo((): readonly Row[] => {
-    if (sortColumns.length === 0) return rows;
-
-    return [...rows].sort((a, b) => {
-      for (const sort of sortColumns) {
-        const comparator = getComparator(sort.columnKey);
-        const compResult = comparator(a, b);
-        if (compResult !== 0) {
-          return sort.direction === 'ASC' ? compResult : -compResult;
-        }
-      }
-      return 0;
-    });
-  }, [rows, sortColumns]);
 
   return (
-    <DataGrid
-      className="disc-grid"
-      defaultColumnOptions={{
-        sortable: true,
-        resizable: true,
-      }}
-      rows={sortedRows}
-      columns={getColumns(isLoggedIn())}
-      sortColumns={sortColumns}
-      onSortColumnsChange={setSortColumns}
-      renderers={{ renderSortStatus }}
-    />
+    <table {...stylex.props(styles.table)}>
+      <thead>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <tr key={headerGroup.id}>
+            {headerGroup.headers.map((header) => {
+              const sorted = header.column.getIsSorted();
+              const tight = header.column.id === 'id';
+              return (
+                <th
+                  key={header.id}
+                  {...stylex.props(
+                    styles.th,
+                    header.column.getCanSort() && styles.thSortable,
+                    sorted && styles.thSorted,
+                    tight && styles.tight,
+                  )}
+                  style={tight ? undefined : { width: header.getSize() }}
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  {sorted && (
+                    <span {...stylex.props(styles.sortIcon)}>
+                      {sorted === 'asc' ? (
+                        <ArrowUpwardIcon width={16} height={16} />
+                      ) : (
+                        <ArrowDownwardIcon width={16} height={16} />
+                      )}
+                    </span>
+                  )}
+                  {header.column.getCanResize() && (
+                    // Pointer-only column resize handle, hidden from assistive
+                    // tech (resizing isn't keyboard-operated, as with the grid).
+                    <div
+                      aria-hidden="true"
+                      {...stylex.props(styles.resizer)}
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                </th>
+              );
+            })}
+          </tr>
+        ))}
+      </thead>
+      <tbody>
+        {table.getRowModel().rows.map((row, index) => (
+          <tr key={row.id} {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+            {row.getVisibleCells().map((cell) => {
+              const tight = cell.column.id === 'id';
+              return (
+                <td
+                  key={cell.id}
+                  {...stylex.props(styles.td, tight && styles.tight)}
+                  style={tight ? undefined : { width: cell.column.getSize() }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
