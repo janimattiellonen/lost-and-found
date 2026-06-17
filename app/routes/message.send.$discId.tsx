@@ -88,7 +88,6 @@ export default function SendNotificationPage(): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  console.log(`data: ${JSON.stringify(data, null, 2)}`);
   return (
     <div>
       <H2 className="mt-8 mb-4">Viestin luonti</H2>
@@ -164,7 +163,6 @@ export default function SendNotificationPage(): JSX.Element {
         </Button>
         <Button
           variant="contained"
-         
           to={`sms:${phoneNumber}&body=${convertLineBreaks(replaceTokensWithValues(message, data))}`}
         >
           Lähetä tekstiviesti
