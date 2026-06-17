@@ -30,6 +30,8 @@ const styles = stylex.create({
     borderRadius: radius.sm,
     outline: 'none',
   },
+  // Reserve room for both the clear (×) and chevron buttons when a value is set.
+  inputWithClear: { paddingRight: '64px' },
   toggle: {
     position: 'absolute',
     right: '4px',
@@ -44,6 +46,7 @@ const styles = stylex.create({
     color: color.textMuted,
     cursor: 'pointer',
   },
+  clearOffset: { right: '32px' },
   chevron: {
     transitionProperty: 'transform',
     transitionDuration: '150ms',
@@ -97,6 +100,8 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
     getItemProps,
     highlightedIndex,
     openMenu,
+    selectItem,
+    reset,
   } = useCombobox({
     items,
     // Clicking the input always OPENS the list (never toggles it closed), so a
@@ -118,6 +123,12 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
     },
     onInputValueChange({ inputValue }) {
       setFilter(inputValue ?? '');
+      // Emptying the field clears the selection so the parent filter resets.
+      // Otherwise downshift keeps the previous selectedItem (and restores it on
+      // blur), leaving the disc impossible to deselect.
+      if (!inputValue) {
+        selectItem(null);
+      }
     },
     onSelectedItemChange({ selectedItem }) {
       onChange(selectedItem ?? null);
@@ -134,7 +145,25 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
       </label>
       <div ref={inputWrapRef} {...stylex.props(styles.inputWrap)}>
         {/* Open the full list on focus, matching the previous MUI Autocomplete. */}
-        <input {...getInputProps({ onFocus: () => !isOpen && openMenu() })} {...stylex.props(styles.input)} />
+        <input
+          {...getInputProps({ onFocus: () => !isOpen && openMenu() })}
+          {...stylex.props(styles.input, filter.length > 0 && styles.inputWithClear)}
+        />
+        {filter.length > 0 && (
+          <button
+            type="button"
+            aria-label="Tyhjennä valinta"
+            // Prevent the input from blurring so downshift doesn't restore the
+            // value before reset() runs.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => reset()}
+            {...stylex.props(styles.toggle, styles.clearOffset)}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z" />
+            </svg>
+          </button>
+        )}
         <button type="button" aria-label="Avaa lista" {...getToggleButtonProps()} {...stylex.props(styles.toggle)}>
           <svg
             width="20"
