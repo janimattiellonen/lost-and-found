@@ -103,10 +103,6 @@ export default function App() {
             StyleX's atomic CSS into the root stylesheet via cssInjectionTarget
             (see vite.config.ts), which <Links/> already serves app-wide. */}
         {import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" suppressHydrationWarning />}
-        {/* Server-only slot: entry.server replaces `__STYLES__` with the
-            extracted Emotion style tags. On the client this renders nothing, so
-            hydration sees a matching empty trailing position. */}
-        {typeof document === 'undefined' ? '__STYLES__' : null}
       </head>
       <body>
         {showHeader && <AdminMenu supabase={supabase} user={session?.user} />}
