@@ -165,11 +165,13 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
         sortingFn: sortDiscs,
         cell: ({ row }) =>
           row.original.ownerPhoneNumber ? (
-            <span>
-              ****{row.original.ownerPhoneNumber}{' '}
+            // inline-flex keeps the SMS icon on the same line — Tailwind's
+            // preflight sets `svg { display: block }`, which otherwise wraps it.
+            <span className="inline-flex items-center gap-2">
+              ****{row.original.ownerPhoneNumber}
               {isLoggedIn && (
-                <Link to={`/message/send/${row.original.internalDiscId}`}>
-                  <TextsmsIcon />
+                <Link to={`/message/send/${row.original.internalDiscId}`} className="inline-flex">
+                  <TextsmsIcon width={18} height={18} />
                 </Link>
               )}
             </span>
