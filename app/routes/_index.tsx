@@ -43,7 +43,7 @@ export default function TestPage(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    fetcher.load('/foo');
+    fetcher.load('/discs/data');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
