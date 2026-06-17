@@ -10,3 +10,9 @@ node_modules
 
 .idea
 .DS_Store
+
+# Playwright
+/test-results/
+/playwright-report/
+/e2e/__screens__/
+/.playwright/

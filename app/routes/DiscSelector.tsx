@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useCombobox } from 'downshift';
 import * as stylex from '@stylexjs/stylex';
@@ -70,7 +70,14 @@ const styles = stylex.create({
 });
 
 export default function DiscSelector({ discNames, onChange }: DiscSelectorProps): JSX.Element {
-  const [items, setItems] = useState<string[]>(discNames);
+  // Derive the visible items from the *current* discNames prop + filter text.
+  // discNames arrives asynchronously (loaded client-side), so it must not be
+  // frozen into state — that left the list permanently empty.
+  const [filter, setFilter] = useState('');
+  const items = useMemo(
+    () => discNames.filter((name) => name.toLowerCase().includes(filter.toLowerCase())),
+    [discNames, filter],
+  );
 
   const {
     isOpen,
@@ -93,8 +100,7 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
       return changes;
     },
     onInputValueChange({ inputValue }) {
-      const filter = (inputValue ?? '').toLowerCase();
-      setItems(discNames.filter((name) => name.toLowerCase().includes(filter)));
+      setFilter(inputValue ?? '');
     },
     onSelectedItemChange({ selectedItem }) {
       onChange(selectedItem ?? null);
