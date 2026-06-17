@@ -3,7 +3,8 @@ import { Form, useActionData } from 'react-router';
 import type { ActionFunctionArgs } from 'react-router';
 import { data, redirect } from 'react-router';
 
-import { Checkbox, FormControlLabel } from '@mui/material';
+import Checkbox from '~/routes/components/Checkbox';
+import FormControlLabel from '~/routes/components/FormControlLabel';
 import TextField from '~/routes/components/TextField';
 import Button from '~/routes/components/Button';
 
