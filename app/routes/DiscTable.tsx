@@ -106,6 +106,8 @@ const styles = stylex.create({
   },
   thSortable: { cursor: 'pointer' },
   thSorted: { backgroundColor: '#383838' },
+  // Shrink a column to its content width (used for the "#" column).
+  tight: { width: '1%', whiteSpace: 'nowrap' },
   td: {
     boxSizing: 'border-box',
     padding: '8px 12px',
@@ -153,7 +155,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
-      { accessorKey: 'id', header: '#', size: 60, sortingFn: sortDiscs },
+      { accessorKey: 'id', header: '#', enableResizing: false, sortingFn: sortDiscs },
       { accessorKey: 'discName', header: 'Kiekko', sortingFn: sortDiscs },
       { accessorKey: 'discColour', header: 'Väri', sortingFn: sortDiscs },
       { accessorKey: 'owner', header: 'Omistaja', sortingFn: sortDiscs },
@@ -215,11 +217,17 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           <tr key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               const sorted = header.column.getIsSorted();
+              const tight = header.column.id === 'id';
               return (
                 <th
                   key={header.id}
-                  {...stylex.props(styles.th, header.column.getCanSort() && styles.thSortable, sorted && styles.thSorted)}
-                  style={{ width: header.getSize() }}
+                  {...stylex.props(
+                    styles.th,
+                    header.column.getCanSort() && styles.thSortable,
+                    sorted && styles.thSorted,
+                    tight && styles.tight,
+                  )}
+                  style={tight ? undefined : { width: header.getSize() }}
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
@@ -252,11 +260,18 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
       <tbody>
         {table.getRowModel().rows.map((row, index) => (
           <tr key={row.id} {...stylex.props(index % 2 === 1 && styles.rowEven)}>
-            {row.getVisibleCells().map((cell) => (
-              <td key={cell.id} {...stylex.props(styles.td)} style={{ width: cell.column.getSize() }}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
+            {row.getVisibleCells().map((cell) => {
+              const tight = cell.column.id === 'id';
+              return (
+                <td
+                  key={cell.id}
+                  {...stylex.props(styles.td, tight && styles.tight)}
+                  style={tight ? undefined : { width: cell.column.getSize() }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              );
+            })}
           </tr>
         ))}
       </tbody>
