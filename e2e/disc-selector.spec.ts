@@ -43,3 +43,26 @@ test('DiscSelector opens the full list on click and filters on type', async ({ p
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
+
+test('DiscSelector flips the list above the field when near the viewport bottom', async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 420 });
+  await page.goto('/');
+  await expect(page.getByRole('grid')).toBeVisible({ timeout: 20_000 });
+
+  const input = page.getByRole('combobox').first();
+  // Pin the field to the bottom of the viewport so there's no room below.
+  await input.evaluate((el) => el.scrollIntoView({ block: 'end' }));
+  await input.click();
+
+  const listbox = page.getByRole('listbox');
+  await expect(listbox).toBeVisible();
+  await expect(page.getByRole('option').first()).toBeVisible();
+
+  const inputBox = await input.boundingBox();
+  const listBox = await listbox.boundingBox();
+  if (!inputBox || !listBox) throw new Error('missing bounding boxes');
+  // The list's bottom edge should sit at/above the input's top edge → rendered upward.
+  expect(listBox.y + listBox.height).toBeLessThanOrEqual(inputBox.y + 1);
+
+  await page.screenshot({ path: 'e2e/__screens__/03-flip-above.png' });
+});

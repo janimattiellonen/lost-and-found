@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { useCombobox } from 'downshift';
 import * as stylex from '@stylexjs/stylex';
@@ -10,8 +10,10 @@ type DiscSelectorProps = {
   onChange: (e: string | null) => void;
 };
 
+const MENU_MAX_HEIGHT = 240;
+
 const styles = stylex.create({
-  root: { position: 'relative', width: '300px' },
+  root: { width: '300px' },
   label: { display: 'block', fontWeight: 700, marginBottom: '4px', color: color.textSecondary },
   inputWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
   input: {
@@ -55,7 +57,7 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     listStyle: 'none',
-    maxHeight: '240px',
+    maxHeight: `${MENU_MAX_HEIGHT}px`,
     overflowY: 'auto',
     backgroundColor: color.surface,
     borderWidth: '1px',
@@ -64,6 +66,8 @@ const styles = stylex.create({
     borderRadius: radius.sm,
     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
   },
+  menuBelow: { top: 'calc(100% + 2px)' },
+  menuAbove: { bottom: 'calc(100% + 2px)' },
   menuClosed: { display: 'none' },
   item: { padding: '8px 12px', cursor: 'pointer' },
   itemHighlighted: { backgroundColor: 'rgba(25,118,210,0.08)' },
@@ -78,6 +82,11 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
     () => discNames.filter((name) => name.toLowerCase().includes(filter.toLowerCase())),
     [discNames, filter],
   );
+
+  // Flip the list above the field when there isn't room below (e.g. near the
+  // bottom of the viewport), matching the previous MUI Autocomplete/Popper.
+  const inputWrapRef = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
 
   const {
     isOpen,
@@ -99,6 +108,14 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
       }
       return changes;
     },
+    onIsOpenChange({ isOpen: open }) {
+      if (open && inputWrapRef.current) {
+        const rect = inputWrapRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        setPlacement(spaceBelow < MENU_MAX_HEIGHT && spaceAbove > spaceBelow ? 'top' : 'bottom');
+      }
+    },
     onInputValueChange({ inputValue }) {
       setFilter(inputValue ?? '');
     },
@@ -115,7 +132,7 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
       <label {...getLabelProps()} {...stylex.props(styles.label)}>
         Valitse kiekko
       </label>
-      <div {...stylex.props(styles.inputWrap)}>
+      <div ref={inputWrapRef} {...stylex.props(styles.inputWrap)}>
         {/* Open the full list on focus, matching the previous MUI Autocomplete. */}
         <input {...getInputProps({ onFocus: () => !isOpen && openMenu() })} {...stylex.props(styles.input)} />
         <button type="button" aria-label="Avaa lista" {...getToggleButtonProps()} {...stylex.props(styles.toggle)}>
@@ -130,19 +147,26 @@ export default function DiscSelector({ discNames, onChange }: DiscSelectorProps)
             <path d="M7 10l5 5 5-5z" />
           </svg>
         </button>
+        <ul
+          {...getMenuProps()}
+          {...stylex.props(
+            styles.menu,
+            placement === 'top' ? styles.menuAbove : styles.menuBelow,
+            !isOpen && styles.menuClosed,
+          )}
+        >
+          {isOpen &&
+            items.map((item, index) => (
+              <li
+                key={`${item}-${index}`}
+                {...getItemProps({ item, index })}
+                {...stylex.props(styles.item, highlightedIndex === index && styles.itemHighlighted)}
+              >
+                {item}
+              </li>
+            ))}
+        </ul>
       </div>
-      <ul {...getMenuProps()} {...stylex.props(styles.menu, !isOpen && styles.menuClosed)}>
-        {isOpen &&
-          items.map((item, index) => (
-            <li
-              key={`${item}-${index}`}
-              {...getItemProps({ item, index })}
-              {...stylex.props(styles.item, highlightedIndex === index && styles.itemHighlighted)}
-            >
-              {item}
-            </li>
-          ))}
-      </ul>
     </div>
   );
 }

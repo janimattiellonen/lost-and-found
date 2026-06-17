@@ -5,7 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
-  fullyParallel: true,
+  // Serialize: tests share one dev server; running them in parallel races on
+  // Vite's cold-start route compilation. One retry absorbs first-request lag.
+  workers: 1,
+  retries: 1,
   use: {
     baseURL: 'http://localhost:4321',
     screenshot: 'only-on-failure',
