@@ -1,0 +1,33 @@
+// A pre-built list of popular disc colors used as suggestions in the disc
+// form. The color field still accepts free text; this only seeds the
+// autocomplete. Sorted alphabetically.
+export const discColors: string[] = [
+  'Harmaa',
+  'Kellertävä',
+  'Keltainen',
+  'Keltainen, musta halo',
+  'Keltainen, sininen halo',
+  'Keltanen',
+  'Liila',
+  'Monivärinen, musta rimmi',
+  'Musta',
+  'Musta, liila halo',
+  'Musta, oranssi',
+  'Oranssi',
+  'Oranssi, valkoinen rimmi',
+  'Pinkki',
+  'Punainen',
+  'Punainen, musta rimmi',
+  'Ruskea',
+  'Sinertävä',
+  'Sininen',
+  'Sininen, musta rimmi',
+  'Tumman harmaa',
+  'Turkoosi',
+  'Vaalean sininen',
+  'Vaalean vihreä',
+  'Valkoinen',
+  'Vihertävä',
+  'Vihreä',
+  'Vihreä, musta rimmi',
+];

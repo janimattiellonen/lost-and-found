@@ -1,0 +1,31 @@
+{
+  "manufacturer": "RPM Discs",
+  "plastics": [
+    "Or-ion",
+    "Atomic",
+    "Cosmic",
+    "Glow",
+    "Magma",
+    "Magma Soft",
+    "Platinum",
+    "Strata"
+  ],
+  "discNames": [
+    "Huia",
+    "Kahu",
+    "Kahu OS",
+    "Kahu XG",
+    "Kea",
+    "Kiwi",
+    "Kotare",
+    "Kotuku",
+    "Pekapeka",
+    "Piwakawaka",
+    "Ruru",
+    "Takapu",
+    "Taniwha",
+    "Tara Iti",
+    "TeMoko",
+    "Tui"
+  ]
+}

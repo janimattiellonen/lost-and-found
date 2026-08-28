@@ -1,0 +1,25 @@
+{
+  "manufacturer": "EV-7",
+  "plastics": [
+    "Deluxe Blend",
+    "Eon Glow",
+    "OG Base",
+    "OG Eco",
+    "OG Firm",
+    "OG Glow",
+    "OG Medium",
+    "OG Premium",
+    "OG Soft"
+  ],
+  "discNames": [
+    "Agera",
+    "Lid",
+    "Mobius",
+    "Ouro Boros",
+    "Penrose",
+    "Phi",
+    "Telos",
+    "Yang",
+    "Yin"
+  ]
+}
