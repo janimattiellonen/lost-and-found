@@ -98,3 +98,19 @@ the data is only added to the table. Columns may be left empty, if no value for 
 I can manually reset the page by reloading it, so no reset button is needed.
 
 As no data is sent over the network, no login check is required. Use the route "/demo" for this prototype. 
+
+## Phase 3 - editable data
+
+I usually enter details of several discs in a row, sometimes up to 30 discs.
+The prototype allows me to fill in quite quickly. Sometimes I do make mistakes. THus, I need to be able to
+quickly fix errors. 
+
+I want to be able to just click on a specific cell in the table to edit that specific data.
+When I have added all discs and certain that the entered data is correct, I'll submit the data, which
+will then be persisted.
+
+In this phase, let's implement an in-place editor that replaces the static text with a text field containing the
+text. When I'm satisfied I'll press the Enter key, which triggers an in-memory save (no persisting over network
+at this point). The static text is then replaced with the changes I may have made in the text field.
+
+This phase requires an in-memory data structure that holds the data displayed in the table.
