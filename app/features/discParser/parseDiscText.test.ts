@@ -258,8 +258,15 @@ describe('parseDiscText — unknown discs', () => {
     ['Tuntematon westsiden kiekko', 'Westside Discs'],
     ['Tuntematon latituden kiekko', 'Latitude 64°'],
     ['Tuntematon prodiscuksen kiekko', 'Prodiscus'],
+    // The suffix can attach to the last word of a multi-word maker.
+    ['Tuntematon Latitude 64:n kiekko', 'Latitude 64°'],
+    ['Tuntematon Westside Discsin kiekko', 'Westside Discs'],
   ])('resolves the genitive in %s', (input, expected) => {
     expect(parseDiscText(input).manufacturer).toBe(expected);
+  });
+
+  it('keeps a multi-word genitive maker inside the phrase', () => {
+    expect(parseDiscText('Tuntematon Latitude 64:n kiekko').discName).toBe('Tuntematon Latitude 64:n kiekko');
   });
 
   it.each(['draiveri', 'midari', 'putteri', 'kiekko'])('recognises the disc type "%s"', (type) => {

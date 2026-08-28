@@ -9,11 +9,13 @@ import { normalize } from './normalize';
 const GENITIVE_SUFFIXES = [':n', 'in', 'n'];
 
 /**
- * Resolves a single word to a manufacturer, in its plain or genitive form.
- * Returns null when the word names no maker.
+ * Resolves a word or phrase to a manufacturer, in its plain or genitive form.
+ * Accepts a phrase because the suffix may attach to either word of a
+ * multi-word maker: both "Latituden" and "Latitude 64:n" mean Latitude 64°.
+ * Returns null when nothing names a maker.
  */
-export function resolveManufacturerWord(word: string, dictionary: Dictionary): string | null {
-  const key = normalize(word);
+export function resolveManufacturer(phrase: string, dictionary: Dictionary): string | null {
+  const key = normalize(phrase);
 
   const direct = dictionary.entries.get(key)?.find((entry) => entry.kind === MANUFACTURER);
 

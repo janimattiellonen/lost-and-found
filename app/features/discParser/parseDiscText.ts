@@ -9,7 +9,7 @@ import {
   buildDictionary,
   lookup,
 } from './dictionary';
-import { resolveManufacturerWord } from './genitive';
+import { resolveManufacturer } from './genitive';
 import { normalize, tokenize } from './normalize';
 import { findPhoneNumber, stripPhoneNumber } from './phoneNumber';
 
@@ -63,15 +63,24 @@ function segment(tokens: string[], dictionary: Dictionary): Span[] {
         matched = true;
         break;
       }
+
+      // Nothing matched outright: this may be an inflected manufacturer, as in
+      // "Innovan Destroyer" or "Tuntematon Latitude 64:n kiekko".
+      const maker = key.length > 0 ? resolveManufacturer(key, dictionary) : null;
+
+      if (maker) {
+        spans.push({
+          tokens: tokens.slice(index, index + size),
+          entries: [{ kind: MANUFACTURER, value: maker, manufacturer: maker }],
+        });
+        index += size;
+        matched = true;
+        break;
+      }
     }
 
     if (!matched) {
-      // Nothing matched outright: the word may be an inflected manufacturer,
-      // as in "Innovan Destroyer" or "Tuntematon innovan kiekko".
-      const maker = resolveManufacturerWord(tokens[index], dictionary);
-      const entries: DictionaryEntry[] = maker ? [{ kind: MANUFACTURER, value: maker, manufacturer: maker }] : [];
-
-      spans.push({ tokens: [tokens[index]], entries });
+      spans.push({ tokens: [tokens[index]], entries: [] });
       index += 1;
     }
   }
