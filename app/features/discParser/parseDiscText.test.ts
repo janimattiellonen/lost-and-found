@@ -221,6 +221,64 @@ describe('parseDiscText — ambiguity between disc names and plastics', () => {
   });
 });
 
+describe('parseDiscText — unknown discs', () => {
+  it('keeps the phrase verbatim as the disc name and resolves the genitive maker', () => {
+    expect(fields('Tuntematon innovan kiekko')).toMatchObject({
+      discName: 'Tuntematon innovan kiekko',
+      manufacturer: 'Innova',
+    });
+  });
+
+  it('reports the stated maker with high confidence', () => {
+    expect(parseDiscText('Tuntematon innovan kiekko').confidence.manufacturer).toBe('high');
+  });
+
+  it('still picks up the colour, phone number and owner around it', () => {
+    expect(fields('Tuntematon Innovan draiveri sininen 050 123 4567 Steve D.')).toEqual({
+      discName: 'Tuntematon Innovan draiveri',
+      plastic: null,
+      manufacturer: 'Innova',
+      colour: 'Sininen',
+      ownerName: 'Steve D.',
+      phoneNumber: '0501234567',
+    });
+  });
+
+  it('works without a manufacturer', () => {
+    expect(fields('Tuntematon kiekko punainen')).toMatchObject({
+      discName: 'Tuntematon kiekko',
+      manufacturer: null,
+      colour: 'Punainen',
+    });
+  });
+
+  it.each([
+    ['Tuntematon discmanian kiekko', 'Discmania'],
+    ['Tuntematon kastaplastin kiekko', 'Kastaplast'],
+    ['Tuntematon westsiden kiekko', 'Westside Discs'],
+    ['Tuntematon latituden kiekko', 'Latitude 64°'],
+    ['Tuntematon prodiscuksen kiekko', 'Prodiscus'],
+  ])('resolves the genitive in %s', (input, expected) => {
+    expect(parseDiscText(input).manufacturer).toBe(expected);
+  });
+
+  it.each(['draiveri', 'midari', 'putteri', 'kiekko'])('recognises the disc type "%s"', (type) => {
+    expect(parseDiscText(`Tuntematon innovan ${type}`).discName).toBe(`Tuntematon innovan ${type}`);
+  });
+
+  it('leaves a normal entry untouched', () => {
+    expect(fields('Star Destroyer punainen')).toMatchObject({ discName: 'Destroyer', plastic: 'Star' });
+  });
+
+  it('resolves a genitive maker outside an unknown-disc phrase too', () => {
+    expect(fields('Innovan Destroyer punainen')).toMatchObject({
+      discName: 'Destroyer',
+      manufacturer: 'Innova',
+      ownerName: null,
+    });
+  });
+});
+
 describe('parseDiscText — leftovers', () => {
   it('reports tokens it could not place', () => {
     expect(parseDiscText('Mako3 kaljakori').unmatched).toEqual(['kaljakori']);

@@ -1,11 +1,12 @@
 import { aliases } from './aliases';
 import type { DictionaryEntry, EntryKind } from './kinds';
-import { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC } from './kinds';
+import { COLOUR, DISC_NAME, DISC_TYPE, MANUFACTURER, PLASTIC, UNKNOWN_MARKER } from './kinds';
 import { discColors } from './discColors';
+import { vocabulary } from './vocabulary';
 import { normalize } from './normalize';
 
 export type { DictionaryEntry, EntryKind };
-export { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC };
+export { COLOUR, DISC_NAME, DISC_TYPE, MANUFACTURER, PLASTIC, UNKNOWN_MARKER };
 
 export type Dictionary = {
   entries: Map<string, DictionaryEntry[]>;
@@ -74,6 +75,10 @@ export function buildDictionary(extraEntries: DictionaryEntry[] = aliases): Dict
 
   for (const value of discColors) {
     add(entries, { kind: COLOUR, value, manufacturer: null });
+  }
+
+  for (const entry of vocabulary) {
+    add(entries, entry);
   }
 
   for (const entry of extraEntries) {

@@ -23,4 +23,8 @@ export const aliases: DictionaryEntry[] = [
   { kind: MANUFACTURER, value: 'Streamline', manufacturer: 'Streamline Discs' },
   { kind: MANUFACTURER, value: 'Westside', manufacturer: 'Westside Discs' },
   { kind: MANUFACTURER, value: 'Wild', manufacturer: 'Wild Discs' },
+
+  // Genitive forms the suffix rule in genitive.ts cannot reach.
+  { kind: MANUFACTURER, value: 'Prodiscuksen', manufacturer: 'Prodiscus' },
+  { kind: MANUFACTURER, value: 'Thought Spacen', manufacturer: 'Thought Space Athletics' },
 ];

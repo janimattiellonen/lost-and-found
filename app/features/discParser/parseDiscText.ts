@@ -1,5 +1,15 @@
 import type { Dictionary, DictionaryEntry, EntryKind } from './dictionary';
-import { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC, buildDictionary, lookup } from './dictionary';
+import {
+  COLOUR,
+  DISC_NAME,
+  DISC_TYPE,
+  MANUFACTURER,
+  PLASTIC,
+  UNKNOWN_MARKER,
+  buildDictionary,
+  lookup,
+} from './dictionary';
+import { resolveManufacturerWord } from './genitive';
 import { normalize, tokenize } from './normalize';
 import { findPhoneNumber, stripPhoneNumber } from './phoneNumber';
 
@@ -56,7 +66,12 @@ function segment(tokens: string[], dictionary: Dictionary): Span[] {
     }
 
     if (!matched) {
-      spans.push({ tokens: [tokens[index]], entries: [] });
+      // Nothing matched outright: the word may be an inflected manufacturer,
+      // as in "Innovan Destroyer" or "Tuntematon innovan kiekko".
+      const maker = resolveManufacturerWord(tokens[index], dictionary);
+      const entries: DictionaryEntry[] = maker ? [{ kind: MANUFACTURER, value: maker, manufacturer: maker }] : [];
+
+      spans.push({ tokens: [tokens[index]], entries });
       index += 1;
     }
   }
@@ -64,8 +79,17 @@ function segment(tokens: string[], dictionary: Dictionary): Span[] {
   return spans;
 }
 
+/** The kinds that map onto an output field; the rest are handled separately. */
+type SlotKind = typeof DISC_NAME | typeof PLASTIC | typeof COLOUR | typeof MANUFACTURER;
+
+const SLOT_KINDS: SlotKind[] = [DISC_NAME, PLASTIC, COLOUR, MANUFACTURER];
+
+function isSlotKind(kind: EntryKind): kind is SlotKind {
+  return (SLOT_KINDS as EntryKind[]).includes(kind);
+}
+
 /** Slots filled by the scan, each holding the entries that claimed it. */
-type Slots = Record<EntryKind, DictionaryEntry[] | null>;
+type Slots = Record<SlotKind, DictionaryEntry[] | null>;
 
 function assign(spans: Span[]): { slots: Slots; leftovers: string[] } {
   const slots: Slots = { [DISC_NAME]: null, [PLASTIC]: null, [COLOUR]: null, [MANUFACTURER]: null };
@@ -90,6 +114,11 @@ function assign(spans: Span[]): { slots: Slots; leftovers: string[] } {
 
     const kind = span.entries[0].kind;
 
+    if (!isSlotKind(kind)) {
+      leftovers.push(...span.tokens);
+      continue;
+    }
+
     if (slots[kind]) {
       leftovers.push(...span.tokens);
       continue;
@@ -101,7 +130,7 @@ function assign(spans: Span[]): { slots: Slots; leftovers: string[] } {
   // Second pass: a word that is both a disc name and a plastic takes whichever
   // slot is still free, preferring the disc name.
   for (const span of ambiguous) {
-    const kind = ([DISC_NAME, PLASTIC, COLOUR, MANUFACTURER] as EntryKind[]).find((candidate) => !slots[candidate]);
+    const kind = SLOT_KINDS.find((candidate) => !slots[candidate]);
 
     if (!kind) {
       leftovers.push(...span.tokens);
@@ -192,6 +221,50 @@ function splitLeftovers(leftovers: string[]): { ownerName: string | null; unmatc
   return { ownerName: nameParts.length > 0 ? nameParts.join(' ') : null, unmatched };
 }
 
+/** A span that belongs to an unknown-disc phrase such as "Tuntematon innovan kiekko". */
+function isPhrasePart(span: Span): boolean {
+  return span.entries.some(
+    (entry) => entry.kind === UNKNOWN_MARKER || entry.kind === MANUFACTURER || entry.kind === DISC_TYPE,
+  );
+}
+
+type UnknownDisc = { phrase: string; manufacturer: string | null; rest: Span[] };
+
+/**
+ * Finds a phrase describing a disc the admin could not identify and keeps it
+ * word for word, since no catalogue entry matches it. The maker named inside
+ * the phrase is still reported, so "Tuntematon innovan kiekko" is filed under
+ * Innova.
+ */
+function extractUnknownDisc(spans: Span[]): UnknownDisc | null {
+  const marker = spans.findIndex((span) => span.entries.some((entry) => entry.kind === UNKNOWN_MARKER));
+
+  if (marker === -1) {
+    return null;
+  }
+
+  // Grow outwards over the makers and disc types sitting either side of it.
+  let start = marker;
+  let end = marker + 1;
+
+  while (start > 0 && isPhrasePart(spans[start - 1])) {
+    start -= 1;
+  }
+
+  while (end < spans.length && isPhrasePart(spans[end])) {
+    end += 1;
+  }
+
+  const phraseSpans = spans.slice(start, end);
+  const maker = phraseSpans.flatMap((span) => span.entries).find((entry) => entry.kind === MANUFACTURER);
+
+  return {
+    phrase: phraseSpans.flatMap((span) => span.tokens).join(' '),
+    manufacturer: maker ? maker.manufacturer : null,
+    rest: [...spans.slice(0, start), ...spans.slice(end)],
+  };
+}
+
 function valueOf(entries: DictionaryEntry[] | null): string | null {
   return entries ? entries[0].value : null;
 }
@@ -200,12 +273,20 @@ export function parseDiscText(input: string, dictionary: Dictionary = defaultDic
   const phone = findPhoneNumber(input);
   const tokens = tokenize(stripPhoneNumber(input, phone));
 
-  const { slots, leftovers } = assign(segment(tokens, dictionary));
+  const spans = segment(tokens, dictionary);
+  const unknown = extractUnknownDisc(spans);
+
+  const { slots, leftovers } = assign(unknown ? unknown.rest : spans);
+
+  if (unknown?.manufacturer && !slots[MANUFACTURER]) {
+    slots[MANUFACTURER] = [{ kind: MANUFACTURER, value: unknown.manufacturer, manufacturer: unknown.manufacturer }];
+  }
+
   const { manufacturer, confidence } = inferManufacturer(slots);
   const { ownerName, unmatched } = splitLeftovers(leftovers);
 
   return {
-    discName: valueOf(slots[DISC_NAME]),
+    discName: unknown ? unknown.phrase : valueOf(slots[DISC_NAME]),
     plastic: valueOf(slots[PLASTIC]),
     manufacturer,
     colour: valueOf(slots[COLOUR]),

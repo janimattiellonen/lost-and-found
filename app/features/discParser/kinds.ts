@@ -6,8 +6,18 @@ export const DISC_NAME = 'discName';
 export const PLASTIC = 'plastic';
 export const COLOUR = 'colour';
 export const MANUFACTURER = 'manufacturer';
+/** "Tuntematon" -- the admin saying they could not identify the mould. */
+export const UNKNOWN_MARKER = 'unknownMarker';
+/** "kiekko", "draiveri", "midari", "putteri". */
+export const DISC_TYPE = 'discType';
 
-export type EntryKind = typeof DISC_NAME | typeof PLASTIC | typeof COLOUR | typeof MANUFACTURER;
+export type EntryKind =
+  | typeof DISC_NAME
+  | typeof PLASTIC
+  | typeof COLOUR
+  | typeof MANUFACTURER
+  | typeof UNKNOWN_MARKER
+  | typeof DISC_TYPE;
 
 export type DictionaryEntry = {
   kind: EntryKind;
