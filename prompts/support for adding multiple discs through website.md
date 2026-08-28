@@ -114,3 +114,8 @@ text. When I'm satisfied I'll press the Enter key, which triggers an in-memory s
 at this point). The static text is then replaced with the changes I may have made in the text field.
 
 This phase requires an in-memory data structure that holds the data displayed in the table.
+
+
+## Phase 4 - allow removing a row
+
+Add a delete icon after each row. If pressed, ask for confirmation. If given, remove the row.

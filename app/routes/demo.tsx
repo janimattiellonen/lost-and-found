@@ -77,6 +77,57 @@ const styles = stylex.create({
     borderRadius: radius.sm,
     cursor: 'pointer',
   },
+  actionCell: { whiteSpace: 'nowrap', textAlign: 'right' },
+  iconButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    padding: 0,
+    color: { default: color.textMuted, ':hover': color.danger },
+    background: 'none',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: { default: 'transparent', ':focus-visible': color.accent },
+    borderRadius: radius.sm,
+    cursor: 'pointer',
+  },
+  confirm: { display: 'inline-flex', alignItems: 'center', gap: space.sm, fontSize: font.sizeSm },
+  confirmButton: {
+    padding: '2px 8px',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    color: color.onAccent,
+    backgroundColor: { default: color.danger, ':hover': '#b71c1c' },
+    borderStyle: 'none',
+    borderRadius: radius.sm,
+    cursor: 'pointer',
+  },
+  cancelButton: {
+    padding: '2px 8px',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    color: color.textSecondary,
+    backgroundColor: color.surface,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: color.border,
+    borderRadius: radius.sm,
+    cursor: 'pointer',
+  },
+  // Present for screen readers, out of the way visually.
+  srOnly: {
+    position: 'absolute',
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0 0 0 0)',
+    whiteSpace: 'nowrap',
+    borderWidth: 0,
+  },
   cellInput: {
     width: '100%',
     boxSizing: 'border-box',
@@ -102,6 +153,22 @@ const columns: { header: string; field: EditableField }[] = [
   { header: 'Puhelinnumero', field: 'phoneNumber' },
   { header: 'Omistaja', field: 'ownerName' },
 ];
+
+function TrashIcon(): JSX.Element {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 type CellProps = {
   value: string | null;
@@ -160,6 +227,8 @@ function Cell({ value, header, isEditing, onOpen, onCommit, onCancel }: CellProp
 export default function DemoPage(): JSX.Element {
   const [rows, setRows] = useState<Row[]>([]);
   const [editing, setEditing] = useState<EditTarget | null>(null);
+  // The row whose delete button has been pressed and is awaiting a yes/no.
+  const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const nextId = useRef(1);
 
   /** Writes an edited cell back to the in-memory table and closes the editor. */
@@ -171,6 +240,14 @@ export default function DemoPage(): JSX.Element {
     );
 
     setEditing(null);
+  }
+
+  function remove(rowId: number): void {
+    setRows((current) => current.filter((row) => row.id !== rowId));
+    setConfirmingDelete(null);
+
+    // The row is gone; do not leave an editor pointing at it.
+    setEditing((current) => (current?.rowId === rowId ? null : current));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
@@ -223,18 +300,21 @@ export default function DemoPage(): JSX.Element {
                   {column.header}
                 </th>
               ))}
+              <th scope="col" {...stylex.props(styles.th)}>
+                <span {...stylex.props(styles.srOnly)}>Toiminnot</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length} {...stylex.props(styles.td, styles.none)}>
+                <td colSpan={columns.length + 1} {...stylex.props(styles.td, styles.none)}>
                   Ei vielä tunnistettuja kiekkoja.
                 </td>
               </tr>
             )}
 
-            {rows.map((row) => (
+            {rows.map((row, index) => (
               <tr key={row.id}>
                 {columns.map((column) => {
                   const target = { rowId: row.id, field: column.field };
@@ -252,6 +332,33 @@ export default function DemoPage(): JSX.Element {
                     </td>
                   );
                 })}
+
+                <td {...stylex.props(styles.td, styles.actionCell)}>
+                  {confirmingDelete === row.id ? (
+                    <span {...stylex.props(styles.confirm)}>
+                      Poistetaanko?
+                      <button type="button" onClick={() => remove(row.id)} {...stylex.props(styles.confirmButton)}>
+                        Kyllä
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingDelete(null)}
+                        {...stylex.props(styles.cancelButton)}
+                      >
+                        Peruuta
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`Poista rivi ${index + 1}`}
+                      onClick={() => setConfirmingDelete(row.id)}
+                      {...stylex.props(styles.iconButton)}
+                    >
+                      <TrashIcon />
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -11,7 +11,7 @@ test.describe('/demo disc text parsing', () => {
     await input.fill('Star Destroyer punainen 050 123 4567 Steve D.');
     await input.press('Enter');
 
-    const cells = page.locator('tbody tr').first().locator('td');
+    const cells = page.locator('tbody tr').first().locator('td:not(:last-child)');
 
     await expect(cells).toHaveText(['Destroyer', 'Star', 'Punainen', 'Innova', '0501234567', 'Steve D.']);
 
@@ -33,8 +33,22 @@ test.describe('/demo disc text parsing', () => {
     const rows = page.locator('tbody tr');
 
     await expect(rows).toHaveCount(2);
-    await expect(rows.nth(0).locator('td')).toHaveText(['Mako3', '–', 'Keltainen', 'Innova', '–', '–']);
-    await expect(rows.nth(1).locator('td')).toHaveText(['DD3', 'S-Line', 'Pinkki', 'Discmania', '–', 'Peter D.']);
+    await expect(rows.nth(0).locator('td:not(:last-child)')).toHaveText([
+      'Mako3',
+      '–',
+      'Keltainen',
+      'Innova',
+      '–',
+      '–',
+    ]);
+    await expect(rows.nth(1).locator('td:not(:last-child)')).toHaveText([
+      'DD3',
+      'S-Line',
+      'Pinkki',
+      'Discmania',
+      '–',
+      'Peter D.',
+    ]);
   });
 
   test('edits a cell in place and keeps the change', async ({ page }) => {
@@ -56,7 +70,7 @@ test.describe('/demo disc text parsing', () => {
     await editor.press('Enter');
 
     await expect(editor).toBeHidden();
-    await expect(page.locator('tbody tr').first().locator('td')).toHaveText([
+    await expect(page.locator('tbody tr').first().locator('td:not(:last-child)')).toHaveText([
       'Mako3',
       '–',
       'Punainen',
@@ -81,7 +95,7 @@ test.describe('/demo disc text parsing', () => {
     await editor.fill('Steve D.');
     await editor.press('Enter');
 
-    await expect(page.locator('tbody tr').first().locator('td').nth(5)).toHaveText('Steve D.');
+    await expect(page.locator('tbody tr').first().locator('td:not(:last-child)').nth(5)).toHaveText('Steve D.');
   });
 
   test('discards an edit on Escape', async ({ page }) => {
@@ -99,7 +113,7 @@ test.describe('/demo disc text parsing', () => {
     await editor.fill('Roimaa');
     await editor.press('Escape');
 
-    await expect(page.locator('tbody tr').first().locator('td').nth(0)).toHaveText('Mako3');
+    await expect(page.locator('tbody tr').first().locator('td:not(:last-child)').nth(0)).toHaveText('Mako3');
   });
 
   test('clearing a cell leaves it empty', async ({ page }) => {
@@ -117,7 +131,7 @@ test.describe('/demo disc text parsing', () => {
     await editor.fill('   ');
     await editor.press('Enter');
 
-    await expect(page.locator('tbody tr').first().locator('td').nth(2)).toHaveText('–');
+    await expect(page.locator('tbody tr').first().locator('td:not(:last-child)').nth(2)).toHaveText('–');
   });
 
   test('edits only the row that was clicked', async ({ page }) => {
@@ -138,7 +152,52 @@ test.describe('/demo disc text parsing', () => {
     await editor.fill('Sininen');
     await editor.press('Enter');
 
-    await expect(page.locator('tbody tr').nth(0).locator('td').nth(2)).toHaveText('Keltainen');
-    await expect(page.locator('tbody tr').nth(1).locator('td').nth(2)).toHaveText('Sininen');
+    await expect(page.locator('tbody tr').nth(0).locator('td:not(:last-child)').nth(2)).toHaveText('Keltainen');
+    await expect(page.locator('tbody tr').nth(1).locator('td:not(:last-child)').nth(2)).toHaveText('Sininen');
+  });
+
+  test('removes a row only after the delete is confirmed', async ({ page }) => {
+    await page.goto('/demo');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+    await input.fill('Star Destroyer punainen');
+    await input.press('Enter');
+
+    const rows = page.locator('tbody tr');
+
+    await expect(rows).toHaveCount(2);
+
+    // Pressing delete asks first and removes nothing on its own.
+    await page.getByRole('button', { name: 'Poista rivi 1' }).click();
+    await expect(page.getByText('Poistetaanko?')).toBeVisible();
+    await expect(rows).toHaveCount(2);
+
+    await page.getByRole('button', { name: 'Peruuta' }).click();
+    await expect(rows).toHaveCount(2);
+    await expect(page.getByText('Poistetaanko?')).toBeHidden();
+
+    // Confirming removes that row and leaves the other one alone.
+    await page.getByRole('button', { name: 'Poista rivi 1' }).click();
+    await page.getByRole('button', { name: 'Kyllä' }).click();
+
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first().locator('td:not(:last-child)').nth(0)).toHaveText('Destroyer');
+  });
+
+  test('shows the empty message again once the last row is deleted', async ({ page }) => {
+    await page.goto('/demo');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+
+    await page.getByRole('button', { name: 'Poista rivi 1' }).click();
+    await page.getByRole('button', { name: 'Kyllä' }).click();
+
+    await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
   });
 });
