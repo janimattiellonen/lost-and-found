@@ -79,3 +79,22 @@ implementation round, stick with the very low hanging fruits.
 
 Run the unit tests and report back on your findings.
 
+## Phase 2 - UI prototype
+
+Next up, let's create a simple UI prototype that I can use to test identification of entered text.
+
+A simple UI with two components:
+- text field for entering disc data
+- a table component that displays the parsed and identified data
+
+When I enter some text and press the Enter key, the identification process begins
+
+The table component contains columns with headers:
+- disc name, plastic, colour, manufacturer, phone number, owner name
+
+At this point, nothing in the table component is editable. Nothing is persisted over the network. Data, or parts of
+the data is only added to the table. Columns may be left empty, if no value for a given attribute was identified.
+
+I can manually reset the page by reloading it, so no reset button is needed.
+
+As no data is sent over the network, no login check is required. Use the route "/demo" for this prototype. 
