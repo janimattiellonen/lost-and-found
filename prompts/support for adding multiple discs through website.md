@@ -119,3 +119,12 @@ This phase requires an in-memory data structure that holds the data displayed in
 ## Phase 4 - allow removing a row
 
 Add a delete icon after each row. If pressed, ask for confirmation. If given, remove the row.
+
+## Phase 5 - persistence prototype
+
+No actual api calls yet. Just about everything else. I want to see what the "interface" looks like.
+Include error handling, displaying of error messages and success messages. 
+Add a submit button that sends data over to the server side. Replace button text with "Lähettää..." 
+during sending. Show a success box when data is successfully persisted. In this phase assume data is successfully 
+persisted. 
+

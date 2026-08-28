@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent, type JSX, type KeyboardEvent } from '
 import * as stylex from '@stylexjs/stylex';
 
 import { parseDiscText, type ParsedDisc } from '~/features/discParser/parseDiscText';
+import { submitDiscs, toSubmission } from '~/features/discSubmission/submitDiscs';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
 
 /** The six fields shown in the table, all of them editable by hand. */
@@ -12,6 +13,13 @@ type Row = ParsedDisc & { id: number; input: string };
 
 /** Which cell, if any, is currently open for editing. */
 type EditTarget = { rowId: number; field: EditableField };
+
+/** Where the save is up to; drives the button label and the feedback box. */
+type SubmitState =
+  | { status: 'idle' }
+  | { status: 'sending' }
+  | { status: 'success'; savedCount: number }
+  | { status: 'error'; message: string };
 
 const styles = stylex.create({
   page: { padding: space.lg, fontFamily: font.family, color: color.textPrimary },
@@ -116,6 +124,31 @@ const styles = stylex.create({
     borderRadius: radius.sm,
     cursor: 'pointer',
   },
+  footer: { display: 'flex', alignItems: 'center', gap: space.md, marginTop: space.lg },
+  submit: {
+    padding: '10px 20px',
+    fontFamily: 'inherit',
+    fontSize: font.sizeMd,
+    fontWeight: font.weightBold,
+    color: color.onAccent,
+    backgroundColor: { default: color.accent, ':hover': color.accentHover },
+    borderStyle: 'none',
+    borderRadius: radius.sm,
+    cursor: 'pointer',
+  },
+  submitDisabled: {
+    backgroundColor: { default: color.border, ':hover': color.border },
+    cursor: 'not-allowed',
+  },
+  feedback: {
+    padding: space.md,
+    marginTop: space.md,
+    borderRadius: radius.sm,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+  },
+  success: { color: '#1b5e20', backgroundColor: '#e8f5e9', borderColor: '#a5d6a7' },
+  error: { color: '#8e0000', backgroundColor: '#fdecea', borderColor: '#f5c2c0' },
   // Present for screen readers, out of the way visually.
   srOnly: {
     position: 'absolute',
@@ -229,13 +262,23 @@ export default function DemoPage(): JSX.Element {
   const [editing, setEditing] = useState<EditTarget | null>(null);
   // The row whose delete button has been pressed and is awaiting a yes/no.
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
+  const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const nextId = useRef(1);
+
+  /**
+   * Any change to the table makes an earlier "saved" or "failed" box stale, so
+   * it is cleared as soon as the data moves on.
+   */
+  function updateRows(update: (current: Row[]) => Row[]): void {
+    setRows(update);
+    setSubmitState({ status: 'idle' });
+  }
 
   /** Writes an edited cell back to the in-memory table and closes the editor. */
   function commit(target: EditTarget, value: string): void {
     const trimmed = value.trim();
 
-    setRows((current) =>
+    updateRows((current) =>
       current.map((row) => (row.id === target.rowId ? { ...row, [target.field]: trimmed || null } : row)),
     );
 
@@ -243,7 +286,7 @@ export default function DemoPage(): JSX.Element {
   }
 
   function remove(rowId: number): void {
-    setRows((current) => current.filter((row) => row.id !== rowId));
+    updateRows((current) => current.filter((row) => row.id !== rowId));
     setConfirmingDelete(null);
 
     // The row is gone; do not leave an editor pointing at it.
@@ -261,10 +304,35 @@ export default function DemoPage(): JSX.Element {
       return;
     }
 
-    setRows((current) => [...current, { id: nextId.current++, input: text, ...parseDiscText(text) }]);
+    updateRows((current) => [...current, { id: nextId.current++, input: text, ...parseDiscText(text) }]);
 
     // Clear so the next disc can be typed straight away.
     form.reset();
+  }
+
+  const isSending = submitState.status === 'sending';
+
+  async function handleSave(): Promise<void> {
+    setSubmitState({ status: 'sending' });
+
+    // Read by the stub only, so the error box can be seen while every save is
+    // assumed to succeed: /demo?simulate=error
+    const simulate = new URLSearchParams(window.location.search).get('simulate');
+
+    const result = await submitDiscs(rows.map(toSubmission), { simulate });
+
+    if (result.status === 'error') {
+      setSubmitState({ status: 'error', message: result.message });
+      return;
+    }
+
+    setSubmitState({ status: 'success', savedCount: result.savedCount });
+
+    // The batch is persisted, so clear the table for the next one. Done with
+    // setRows rather than updateRows, which would wipe the success box.
+    setRows([]);
+    setEditing(null);
+    setConfirmingDelete(null);
   }
 
   return (
@@ -363,6 +431,36 @@ export default function DemoPage(): JSX.Element {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div {...stylex.props(styles.footer)}>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSending || rows.length === 0}
+          {...stylex.props(styles.submit, (isSending || rows.length === 0) && styles.submitDisabled)}
+        >
+          {isSending ? 'Lähettää...' : 'Tallenna kiekot'}
+        </button>
+
+        {rows.length > 0 && !isSending && (
+          <span {...stylex.props(styles.hint)}>
+            {rows.length} {rows.length === 1 ? 'kiekko' : 'kiekkoa'} tallennettavana.
+          </span>
+        )}
+      </div>
+
+      {/* Announced politely so the outcome reaches a screen reader too. */}
+      <div role="status" aria-live="polite">
+        {submitState.status === 'success' && (
+          <p {...stylex.props(styles.feedback, styles.success)}>
+            Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
+          </p>
+        )}
+
+        {submitState.status === 'error' && (
+          <p {...stylex.props(styles.feedback, styles.error)}>{submitState.message}</p>
+        )}
       </div>
     </div>
   );

@@ -200,4 +200,69 @@ test.describe('/demo disc text parsing', () => {
 
     await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
   });
+
+  test('saves the batch, showing progress then a success box', async ({ page }) => {
+    await page.goto('/demo');
+
+    const input = page.getByLabel('Kiekon tiedot');
+    const save = page.getByRole('button', { name: /Tallenna kiekot|Lähettää/ });
+
+    // Nothing to save yet.
+    await expect(save).toBeDisabled();
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+    await input.fill('Star Destroyer punainen');
+    await input.press('Enter');
+
+    await expect(save).toBeEnabled();
+    await expect(page.getByText('2 kiekkoa tallennettavana.')).toBeVisible();
+
+    await save.click();
+
+    // Mid-flight: the label changes and the button cannot be pressed again.
+    await expect(save).toHaveText('Lähettää...');
+    await expect(save).toBeDisabled();
+
+    await expect(page.getByRole('status')).toContainText('2 kiekkoa lisättiin');
+
+    // The batch is persisted, so the table is cleared for the next one.
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
+    await expect(save).toBeDisabled();
+  });
+
+  test('shows an error box and keeps the rows when saving fails', async ({ page }) => {
+    await page.goto('/demo?simulate=error');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+
+    await page.getByRole('button', { name: 'Tallenna kiekot' }).click();
+
+    await expect(page.getByRole('status')).toContainText('Tallennus epäonnistui');
+
+    // Nothing was saved, so the work must still be there to retry.
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Tallenna kiekot' })).toBeEnabled();
+  });
+
+  test('clears a stale success box once the table changes again', async ({ page }) => {
+    await page.goto('/demo');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+    await page.getByRole('button', { name: 'Tallenna kiekot' }).click();
+
+    await expect(page.getByRole('status')).toContainText('lisättiin');
+
+    await input.fill('Star Destroyer punainen');
+    await input.press('Enter');
+
+    await expect(page.getByRole('status')).toBeEmpty();
+  });
 });
