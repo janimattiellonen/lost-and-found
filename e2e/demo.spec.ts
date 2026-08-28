@@ -226,8 +226,17 @@ test.describe('/demo disc text parsing', () => {
 
     await expect(page.getByRole('status')).toContainText('2 kiekkoa lisättiin');
 
-    // The batch is persisted, so the table is cleared for the next one.
-    await expect(page.locator('tbody tr')).toHaveCount(1);
+    // What went out stays on screen for a last read-through, since the table
+    // above is cleared.
+    const receipt = page.getByRole('status').locator('tbody tr');
+
+    await expect(receipt).toHaveCount(2);
+    await expect(receipt.nth(0).locator('td')).toHaveText(['Mako3', '–', 'Keltainen', 'Innova', '–', '–']);
+    await expect(receipt.nth(1).locator('td')).toHaveText(['Destroyer', 'Star', 'Punainen', 'Innova', '–', '–']);
+    await expect(page.getByText('Lähetetty data (JSON)')).toBeVisible();
+
+    // The batch is persisted, so the entry table is cleared for the next one.
+    await expect(page.locator('table').first().locator('tbody tr')).toHaveCount(1);
     await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
     await expect(save).toBeDisabled();
   });

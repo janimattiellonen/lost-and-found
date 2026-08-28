@@ -3,7 +3,7 @@ import { useRef, useState, type FormEvent, type JSX, type KeyboardEvent } from '
 import * as stylex from '@stylexjs/stylex';
 
 import { parseDiscText, type ParsedDisc } from '~/features/discParser/parseDiscText';
-import { submitDiscs, toSubmission } from '~/features/discSubmission/submitDiscs';
+import { submitDiscs, toSubmission, type DiscSubmission } from '~/features/discSubmission/submitDiscs';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
 
 /** The six fields shown in the table, all of them editable by hand. */
@@ -18,7 +18,7 @@ type EditTarget = { rowId: number; field: EditableField };
 type SubmitState =
   | { status: 'idle' }
   | { status: 'sending' }
-  | { status: 'success'; savedCount: number }
+  | { status: 'success'; savedCount: number; sent: DiscSubmission[] }
   | { status: 'error'; message: string };
 
 const styles = stylex.create({
@@ -148,6 +148,30 @@ const styles = stylex.create({
     borderStyle: 'solid',
   },
   success: { color: '#1b5e20', backgroundColor: '#e8f5e9', borderColor: '#a5d6a7' },
+  successHeading: { fontWeight: font.weightBold, marginBottom: space.sm },
+  // The sent rows, kept on screen because a successful save empties the table
+  // above and this becomes the only record of what went out.
+  receiptTable: { borderCollapse: 'collapse', width: '100%', fontSize: font.sizeSm },
+  receiptCell: {
+    padding: '4px 8px',
+    textAlign: 'left',
+    verticalAlign: 'top',
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: '#a5d6a7',
+  },
+  receiptHead: { fontWeight: font.weightBold, whiteSpace: 'nowrap' },
+  payload: { marginTop: space.md },
+  payloadCode: {
+    display: 'block',
+    overflowX: 'auto',
+    padding: space.sm,
+    marginTop: space.sm,
+    fontSize: font.sizeSm,
+    backgroundColor: color.surface,
+    borderRadius: radius.sm,
+    whiteSpace: 'pre',
+  },
   error: { color: '#8e0000', backgroundColor: '#fdecea', borderColor: '#f5c2c0' },
   // Present for screen readers, out of the way visually.
   srOnly: {
@@ -319,14 +343,15 @@ export default function DemoPage(): JSX.Element {
     // assumed to succeed: /demo?simulate=error
     const simulate = new URLSearchParams(window.location.search).get('simulate');
 
-    const result = await submitDiscs(rows.map(toSubmission), { simulate });
+    const sent = rows.map(toSubmission);
+    const result = await submitDiscs(sent, { simulate });
 
     if (result.status === 'error') {
       setSubmitState({ status: 'error', message: result.message });
       return;
     }
 
-    setSubmitState({ status: 'success', savedCount: result.savedCount });
+    setSubmitState({ status: 'success', savedCount: result.savedCount, sent });
 
     // The batch is persisted, so clear the table for the next one. Done with
     // setRows rather than updateRows, which would wipe the success box.
@@ -340,8 +365,8 @@ export default function DemoPage(): JSX.Element {
       <h2 {...stylex.props(styles.heading)}>Kiekkotekstin tunnistus</h2>
 
       <p {...stylex.props(styles.intro)}>
-        Kokeiluversio. Mitään ei tallenneta – tyhjennä taulukko lataamalla sivu uudelleen. Korjaa tietoja napsauttamalla
-        solua; Enter tallentaa, Esc peruu.
+        Kokeiluversio. Korjaa tietoja napsauttamalla solua; Enter tallentaa, Esc peruu. Tallennus on simuloitu – mitään
+        ei lähetetä palvelimelle.
       </p>
 
       <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>
@@ -453,9 +478,39 @@ export default function DemoPage(): JSX.Element {
       {/* Announced politely so the outcome reaches a screen reader too. */}
       <div role="status" aria-live="polite">
         {submitState.status === 'success' && (
-          <p {...stylex.props(styles.feedback, styles.success)}>
-            Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
-          </p>
+          <div {...stylex.props(styles.feedback, styles.success)}>
+            <p {...stylex.props(styles.successHeading)}>
+              Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
+            </p>
+
+            <table {...stylex.props(styles.receiptTable)}>
+              <thead>
+                <tr>
+                  {columns.map((column) => (
+                    <th key={column.field} scope="col" {...stylex.props(styles.receiptCell, styles.receiptHead)}>
+                      {column.header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {submitState.sent.map((disc, index) => (
+                  <tr key={index}>
+                    {columns.map((column) => (
+                      <td key={column.field} {...stylex.props(styles.receiptCell)}>
+                        {disc[column.field] ?? '–'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <details {...stylex.props(styles.payload)}>
+              <summary>Lähetetty data (JSON)</summary>
+              <code {...stylex.props(styles.payloadCode)}>{JSON.stringify(submitState.sent, null, 2)}</code>
+            </details>
+          </div>
         )}
 
         {submitState.status === 'error' && (
