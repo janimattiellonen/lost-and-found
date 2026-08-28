@@ -179,6 +179,38 @@ describe('parseDiscText — manufacturer inference', () => {
   });
 });
 
+describe('parseDiscText — an explicitly typed manufacturer', () => {
+  it('is recognised rather than mistaken for the owner', () => {
+    expect(fields('Innova Destroyer punainen')).toMatchObject({
+      discName: 'Destroyer',
+      manufacturer: 'Innova',
+      ownerName: null,
+    });
+  });
+
+  it('is recognised when written after the disc name', () => {
+    expect(fields('Berg Kastaplast sininen')).toMatchObject({
+      discName: 'Berg',
+      manufacturer: 'Kastaplast',
+      ownerName: null,
+    });
+  });
+
+  it('is trusted over the disc name it disagrees with', () => {
+    const result = parseDiscText('Innova Berg sininen');
+
+    expect(result.manufacturer).toBe('Innova');
+    expect(result.confidence.manufacturer).toBe('high');
+  });
+
+  it('still leaves a real owner name in place', () => {
+    expect(fields('Innova Destroyer punainen Steve D.')).toMatchObject({
+      manufacturer: 'Innova',
+      ownerName: 'Steve D.',
+    });
+  });
+});
+
 describe('parseDiscText — ambiguity between disc names and plastics', () => {
   it('reads "Eclipse Wave" as a plastic followed by a disc name', () => {
     expect(fields('Eclipse Wave punainen')).toMatchObject({ plastic: 'Eclipse', discName: 'Wave' });

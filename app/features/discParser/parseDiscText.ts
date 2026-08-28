@@ -1,5 +1,5 @@
 import type { Dictionary, DictionaryEntry, EntryKind } from './dictionary';
-import { COLOUR, DISC_NAME, PLASTIC, buildDictionary, lookup } from './dictionary';
+import { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC, buildDictionary, lookup } from './dictionary';
 import { normalize, tokenize } from './normalize';
 import { findPhoneNumber, stripPhoneNumber } from './phoneNumber';
 
@@ -68,7 +68,7 @@ function segment(tokens: string[], dictionary: Dictionary): Span[] {
 type Slots = Record<EntryKind, DictionaryEntry[] | null>;
 
 function assign(spans: Span[]): { slots: Slots; leftovers: string[] } {
-  const slots: Slots = { [DISC_NAME]: null, [PLASTIC]: null, [COLOUR]: null };
+  const slots: Slots = { [DISC_NAME]: null, [PLASTIC]: null, [COLOUR]: null, [MANUFACTURER]: null };
   const leftovers: string[] = [];
   const ambiguous: Span[] = [];
 
@@ -101,7 +101,7 @@ function assign(spans: Span[]): { slots: Slots; leftovers: string[] } {
   // Second pass: a word that is both a disc name and a plastic takes whichever
   // slot is still free, preferring the disc name.
   for (const span of ambiguous) {
-    const kind = ([DISC_NAME, PLASTIC, COLOUR] as EntryKind[]).find((candidate) => !slots[candidate]);
+    const kind = ([DISC_NAME, PLASTIC, COLOUR, MANUFACTURER] as EntryKind[]).find((candidate) => !slots[candidate]);
 
     if (!kind) {
       leftovers.push(...span.tokens);
@@ -130,6 +130,15 @@ function manufacturersOf(entries: DictionaryEntry[] | null): string[] {
 }
 
 function inferManufacturer(slots: Slots): { manufacturer: string | null; confidence: Confidence } {
+  const stated = manufacturersOf(slots[MANUFACTURER]);
+
+  // Naming the maker outright beats anything inferred from the disc or the
+  // plastic, including when the three disagree: the admin is looking at the
+  // disc, and a mismatch usually means a rebranded or unlisted mould.
+  if (stated.length > 0) {
+    return { manufacturer: stated[0], confidence: 'high' };
+  }
+
   const fromDisc = manufacturersOf(slots[DISC_NAME]);
   const fromPlastic = manufacturersOf(slots[PLASTIC]);
 

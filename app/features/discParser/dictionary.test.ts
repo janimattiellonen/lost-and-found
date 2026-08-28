@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { COLOUR, DISC_NAME, PLASTIC, buildDictionary, lookup } from './dictionary';
+import { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC, buildDictionary, lookup } from './dictionary';
 
 const dictionary = buildDictionary();
 
@@ -58,5 +58,26 @@ describe('lookup', () => {
 
   it('resolves aliases that are missing from the vendored data', () => {
     expect(lookup(dictionary, 'k1 line')).toEqual([{ kind: PLASTIC, value: 'K1 Line', manufacturer: 'Kastaplast' }]);
+  });
+
+  it('finds manufacturers, which stand for themselves', () => {
+    expect(lookup(dictionary, 'innova')).toEqual([{ kind: MANUFACTURER, value: 'Innova', manufacturer: 'Innova' }]);
+  });
+
+  it('finds multi-word manufacturers', () => {
+    expect(lookup(dictionary, 'westside discs')).toEqual([
+      { kind: MANUFACTURER, value: 'Westside Discs', manufacturer: 'Westside Discs' },
+    ]);
+  });
+
+  it('finds a manufacturer written without its degree sign', () => {
+    expect(lookup(dictionary, 'latitude 64')).toEqual([
+      { kind: MANUFACTURER, value: 'Latitude 64\u00b0', manufacturer: 'Latitude 64\u00b0' },
+    ]);
+  });
+
+  it('leaves short forms that clash with a disc name alone', () => {
+    // "Viking" is an Innova disc, so it must not be read as Viking Discs.
+    expect(lookup(dictionary, 'viking')).toEqual([{ kind: DISC_NAME, value: 'Viking', manufacturer: 'Innova' }]);
   });
 });

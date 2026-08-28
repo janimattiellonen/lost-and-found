@@ -1,11 +1,11 @@
 import { aliases } from './aliases';
 import type { DictionaryEntry, EntryKind } from './kinds';
-import { COLOUR, DISC_NAME, PLASTIC } from './kinds';
+import { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC } from './kinds';
 import { discColors } from './discColors';
 import { normalize } from './normalize';
 
 export type { DictionaryEntry, EntryKind };
-export { COLOUR, DISC_NAME, PLASTIC };
+export { COLOUR, DISC_NAME, MANUFACTURER, PLASTIC };
 
 export type Dictionary = {
   entries: Map<string, DictionaryEntry[]>;
@@ -58,6 +58,10 @@ export function buildDictionary(extraEntries: DictionaryEntry[] = aliases): Dict
     const data = module.default;
 
     manufacturers.push(data.manufacturer);
+
+    // Indexed so that typing the maker explicitly is recognised instead of
+    // surviving as a leftover word and being claimed as the owner's name.
+    add(entries, { kind: MANUFACTURER, value: data.manufacturer, manufacturer: data.manufacturer });
 
     for (const value of data.discNames ?? []) {
       add(entries, { kind: DISC_NAME, value, manufacturer: data.manufacturer });
