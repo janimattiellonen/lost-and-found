@@ -106,8 +106,12 @@ export default function App() {
       </head>
       <body>
         {showHeader && <AdminMenu supabase={supabase} user={session?.user} />}
-        {showHeader && <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />}
-        <Outlet context={{ supabase, session }} />
+        {/* The menu spans the viewport edges; everything below keeps the page inset
+            that used to come from the body margin. */}
+        <div style={{ margin: '1rem' }}>
+          {showHeader && <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />}
+          <Outlet context={{ supabase, session }} />
+        </div>
         <ScrollRestoration />
         <Scripts />
         {import.meta.env.DEV && <script type="module" src="/@id/virtual:stylex:runtime" />}
