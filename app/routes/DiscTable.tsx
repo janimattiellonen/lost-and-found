@@ -15,13 +15,16 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 
-import { ArrowDownwardIcon, ArrowUpwardIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
+import { deleteDisc } from '~/features/discDeletion/deleteDisc';
+import { ArrowDownwardIcon, ArrowUpwardIcon, DeleteIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
 import { space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 
 type DiscTableProps = {
   discs: DiscDTO[];
+  /** Called after a disc has been deleted, so the list can be reloaded. */
+  onDeleted?: () => void;
 };
 
 interface Row {
@@ -31,7 +34,9 @@ interface Row {
   owner: string;
   ownerPhoneNumber: string;
   addedAt: string;
-  internalDiscId: number;
+  internalDiscId: number | null;
+  /** Only present for a signed-in visitor; the admin actions are keyed on it. */
+  externalId?: string;
 }
 
 type OutletContext = {
@@ -144,10 +149,64 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
     ownerPhoneNumber: disc.ownerPhoneNumber ?? '',
     addedAt: disc.addedAt ?? '',
     internalDiscId: disc.internalDiscId,
+    externalId: disc.externalId,
   }));
 }
 
-export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
+type DeleteButtonProps = {
+  row: Row;
+  onDeleted?: () => void;
+};
+
+/**
+ * Deletes one disc, after a confirmation. Owns its own busy state so the rest
+ * of the table does not re-render while one row is being deleted.
+ */
+function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const externalId = row.externalId;
+
+  // No external id means the loader did not send one, i.e. nobody is signed in.
+  if (!externalId) {
+    return null;
+  }
+
+  const handleClick = async (): Promise<void> => {
+    const owner = row.owner ? ` (${row.owner})` : '';
+
+    if (!window.confirm(`Poistetaanko kiekko ${row.discName}${owner}? Poistoa ei voi peruuttaa.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    const result = await deleteDisc(externalId);
+
+    setIsDeleting(false);
+
+    if (result.status === 'error') {
+      window.alert(result.message);
+      return;
+    }
+
+    onDeleted?.();
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={`Poista kiekko ${row.discName}`}
+      disabled={isDeleting}
+      onClick={handleClick}
+      className="inline-flex text-gray-500 hover:text-red-600 disabled:opacity-40"
+    >
+      <DeleteIcon width={18} height={18} />
+    </button>
+  );
+}
+
+export default function DiscTable({ discs, onDeleted }: DiscTableProps): JSX.Element | null {
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
 
@@ -167,13 +226,16 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           row.original.ownerPhoneNumber ? (
             // inline-flex keeps the SMS icon on the same line — Tailwind's
             // preflight sets `svg { display: block }`, which otherwise wraps it.
-            (<span className="inline-flex items-center gap-2">****{row.original.ownerPhoneNumber}
-              {isLoggedIn && (
+            <span className="inline-flex items-center gap-2">
+              ****{row.original.ownerPhoneNumber}
+              {/* Only sheet-imported discs can be messaged: /message/send is
+                  keyed on internalDiscId, which web-added discs do not have. */}
+              {isLoggedIn && row.original.internalDiscId !== null && (
                 <Link to={`/message/send/${row.original.internalDiscId}`} className="inline-flex">
                   <TextsmsIcon width={18} height={18} />
                 </Link>
               )}
-            </span>)
+            </span>
           ) : (
             ''
           ),
@@ -194,8 +256,22 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           </div>
         ),
       },
+      // A column of its own rather than an icon in the phone number cell: a
+      // disc with no phone number has an empty cell there, and it has to be
+      // deletable too.
+      ...(isLoggedIn
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              enableSorting: false,
+              enableResizing: false,
+              cell: ({ row }) => <DeleteButton row={row.original} onDeleted={onDeleted} />,
+            } satisfies ColumnDef<Row>,
+          ]
+        : []),
     ],
-    [isLoggedIn],
+    [isLoggedIn, onDeleted],
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
@@ -218,7 +294,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           <tr key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               const sorted = header.column.getIsSorted();
-              const tight = header.column.id === 'id';
+              const tight = header.column.id === 'id' || header.column.id === 'actions';
               return (
                 <th
                   key={header.id}
@@ -244,13 +320,13 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
                   {header.column.getCanResize() && (
                     // Pointer-only column resize handle, hidden from assistive
                     // tech (resizing isn't keyboard-operated, as with the grid).
-                    (<div
+                    <div
                       aria-hidden="true"
                       {...stylex.props(styles.resizer)}
                       onMouseDown={header.getResizeHandler()}
                       onTouchStart={header.getResizeHandler()}
                       onClick={(e) => e.stopPropagation()}
-                    />)
+                    />
                   )}
                 </th>
               );
@@ -262,7 +338,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
         {table.getRowModel().rows.map((row, index) => (
           <tr key={row.id} {...stylex.props(index % 2 === 1 && styles.rowEven)}>
             {row.getVisibleCells().map((cell) => {
-              const tight = cell.column.id === 'id';
+              const tight = cell.column.id === 'id' || cell.column.id === 'actions';
               return (
                 <td
                   key={cell.id}

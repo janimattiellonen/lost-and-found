@@ -16,12 +16,10 @@ import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/routes/DiscSelector';
 import NumberSearch from '~/routes/components/NumberSearch';
 
-
 export default function TestPage(): JSX.Element {
   const fetcher = useFetcher();
 
   const [isInfoBoxVisible, showInfoBox] = useState<boolean>(false);
-  const [discs, setDiscs] = useState<DiscDTO[]>([]);
   const [emptyingLogItems, setEmptyingLogItems] = useState<EmptyingLogDTO[]>([]);
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
@@ -42,6 +40,22 @@ export default function TestPage(): JSX.Element {
     return debounce(changeHandler, 300);
   }, []);
 
+  // Derived rather than kept in state: a reload after a delete then cannot lose
+  // the filters the way a separate copy of the list would.
+  const discs = useMemo<DiscDTO[]>(() => {
+    let filtered: DiscDTO[] = fetcher.data?.data ?? [];
+
+    if (discTerm) {
+      filtered = filtered.filter((disc: DiscDTO) => disc.discName === discTerm);
+    }
+
+    if (phoneNumberTerm) {
+      filtered = filtered.filter((disc: DiscDTO) => disc.ownerPhoneNumber?.endsWith(phoneNumberTerm));
+    }
+
+    return filtered;
+  }, [fetcher.data, discTerm, phoneNumberTerm]);
+
   useEffect(() => {
     fetcher.load('/discs/data');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -52,10 +66,6 @@ export default function TestPage(): JSX.Element {
       setClubId(fetcher.data?.clubId);
     }
 
-    if (fetcher.data?.data) {
-      setDiscs(fetcher.data?.data);
-    }
-
     if (fetcher.data?.distinctDiscNames) {
       setDistinctDiscNames(fetcher.data?.distinctDiscNames);
     }
@@ -64,26 +74,6 @@ export default function TestPage(): JSX.Element {
       setEmptyingLogItems(fetcher.data?.emptyingLogItems);
     }
   }, [fetcher.data]);
-
-  useEffect(() => {
-    if (discTerm == null && phoneNumberTerm == null) {
-      setDiscs(fetcher.data?.data || []);
-      return;
-    }
-
-    let filtered = fetcher.data?.data || [];
-
-    if (discTerm) {
-      filtered = fetcher.data?.data.filter((disc: DiscDTO) => disc.discName === discTerm);
-    }
-
-    if (phoneNumberTerm) {
-      filtered = filtered.filter((disc: DiscDTO) => disc.ownerPhoneNumber?.endsWith(phoneNumberTerm));
-    }
-
-    setDiscs(filtered);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discTerm, phoneNumberTerm]);
 
   return (
     <div>
@@ -155,7 +145,9 @@ export default function TestPage(): JSX.Element {
             </Collapse>
           }
         </div>
-        {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && <DiscTable discs={discs} />}
+        {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && (
+          <DiscTable discs={discs} onDeleted={() => fetcher.load('/discs/data')} />
+        )}
         {fetcher.state !== 'idle' && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
       </div>
     </div>

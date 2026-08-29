@@ -1,9 +1,11 @@
-import { createConnection } from '~/models/utils';
+import { format } from 'date-fns';
+
+import { createConnection, createSupabaseServerClient } from '~/models/utils';
 import * as process from 'process';
 
 import type { DiscDTO } from '~/types';
 
-import { toDTO } from '~/models/DiscMapper';
+import { fromDTO, toDTO } from '~/models/DiscMapper';
 
 export async function getDiscs(): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
@@ -13,7 +15,7 @@ export async function getDiscs(): Promise<DiscDTO[]> {
   let { data } = await supabase
     .from('discs')
     .select(
-      'internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at',
+      'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at',
     )
     .order('disc_name', { ascending: true })
     .eq('is_returned_to_owner', false)
@@ -66,4 +68,107 @@ export async function getDiscWithFullPhoneNumber(internalDiscId: number): Promis
     .single();
 
   return toDTO(data);
+}
+
+/**
+ * Drops keys whose value is undefined.
+ *
+ * postgrest-js builds the insert's `columns=` parameter from Object.keys(), and
+ * an undefined value keeps its key while JSON.stringify removes it from the
+ * body — so PostgREST would insert NULL for a column the caller never meant to
+ * set, id included.
+ */
+function withoutUndefined(row: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(row).filter(([, value]) => value !== undefined));
+}
+
+/**
+ * Builds the rows for a batch of hand-added discs.
+ *
+ * Separate from the insert so the row shape can be tested without a database.
+ */
+export function toInsertRows(discs: DiscDTO[], clubId: number, addedAt: string): Record<string, unknown>[] {
+  return discs.map((disc) =>
+    withoutUndefined({
+      ...fromDTO(disc),
+      // Assigned by the database, never sent.
+      id: undefined,
+      created_at: undefined,
+      updated_at: undefined,
+      external_id: crypto.randomUUID(),
+      internal_disc_id: null,
+      club_id: clubId,
+      added_at: disc.addedAt ?? addedAt,
+      is_returned_to_owner: false,
+      can_be_sold_or_donated: false,
+    }),
+  );
+}
+
+/**
+ * Inserts a batch of discs added by hand through the web app.
+ *
+ * These have no Google Sheet row, so internal_disc_id is left null and
+ * external_id is what identifies them from the outside. The uuid is generated
+ * here rather than by a column default, so the caller learns the ids without a
+ * second round trip.
+ *
+ * The club comes from APP_CLUB_ID, not from the request, so a disc can never be
+ * filed under another club's list.
+ *
+ * Returns the external ids of the inserted discs.
+ */
+export async function createDiscs(discs: DiscDTO[], request: Request): Promise<string[]> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  if (discs.length === 0) {
+    return [];
+  }
+
+  const supabase = createSupabaseServerClient(request);
+
+  const rows = toInsertRows(discs, Number(clubId), format(new Date(), 'y-MM-dd'));
+
+  const { data, error } = await supabase.from('discs').insert(rows).select('external_id');
+
+  if (error) {
+    throw new Error(`Kiekkojen tallennus epäonnistui: ${error.message}`);
+  }
+
+  return data ? data.map((row: { external_id: string }) => row.external_id) : [];
+}
+
+/** Matches the canonical 8-4-4-4-12 uuid form. */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isExternalId(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
+/**
+ * Deletes one disc, addressed by its external id.
+ *
+ * Scoped to APP_CLUB_ID as well, so a club's admin cannot delete another club's
+ * disc even with a valid uuid in hand.
+ *
+ * Returns false when nothing matched — an unknown id, or one belonging to
+ * another club — so the caller can tell "already gone" from "deleted".
+ */
+export async function deleteDisc(externalId: string, request: Request): Promise<boolean> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  const supabase = createSupabaseServerClient(request);
+
+  const { data, error } = await supabase
+    .from('discs')
+    .delete()
+    .eq('external_id', externalId)
+    .eq('club_id', clubId)
+    .select('external_id');
+
+  if (error) {
+    throw new Error(`Kiekon poisto epäonnistui: ${error.message}`);
+  }
+
+  return (data?.length ?? 0) > 0;
 }

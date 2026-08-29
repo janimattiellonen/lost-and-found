@@ -128,3 +128,22 @@ Add a submit button that sends data over to the server side. Replace button text
 during sending. Show a success box when data is successfully persisted. In this phase assume data is successfully 
 persisted. 
 
+
+## Phase 6 - real persistence
+
+Next up, let's implement disc persistence. I just added a new column to discs: `external_id` (uuid). THis must be 
+generated and persisted manually.
+
+Note that club id must also be provided so that we can display correct discs on a public list.
+
+
+## Phase 7 - deleting disc
+
+I want to be able to delete selected discs. I won't use this often but at times I may need to. Add a server-side
+function for deleting a disc. 
+
+On the frontpage I have a table listing all the discs. When I'm signed in, an icon is shown in the phone column
+that allows me to send a message to the owner. In similar fashion, add a delete icon. When clicked, display an
+alert asking if I want to delete disc X. Call the server-side delete function if I confirm. Refresh the table
+content without page reload to remove the deleted disc. Use the external_id as disc id.
+

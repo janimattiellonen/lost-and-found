@@ -32,7 +32,11 @@ function spliceIntoChunks(arr: DiscDTO[], chunkSize: number): Array<DiscDTO[]> {
 }
 
 /**
- * Removes ALL discs for given club and inserts discs.
+ * Removes all sheet-imported discs for given club and inserts discs.
+ *
+ * Discs added through the web app are left alone: they have no
+ * internal_disc_id and the sheet has no copy of them, so deleting them here
+ * would lose them for good.
  *
  * @param clubId
  */
@@ -42,7 +46,7 @@ export async function syncAllDiscs(clubId: number, request: Request) {
 
   const supabase = createSupabaseServerClient(request);
 
-  await supabase.from('discs').delete().eq('club_id', clubId);
+  await supabase.from('discs').delete().eq('club_id', clubId).not('internal_disc_id', 'is', null);
 
   addDiscs(clubId, discs, request);
 
@@ -60,6 +64,9 @@ async function addDiscs(clubId: number, discs: DiscDTO[], request: Request): Pro
       delete foo['id'];
       delete foo['created_at'];
       delete foo['updated_at'];
+      // Every disc gets its external id here rather than from a column
+      // default, so the app does not depend on one being in place.
+      foo['external_id'] = crypto.randomUUID();
       return foo;
     });
 
@@ -77,7 +84,9 @@ export async function syncNewDiscs(clubId: number, request: Request) {
     return null;
   }
 
-  const newDiscs = discs.filter((disc: DiscDTO) => disc.internalDiscId > latestInternalDiscId);
+  const newDiscs = discs.filter(
+    (disc: DiscDTO) => disc.internalDiscId !== null && disc.internalDiscId > latestInternalDiscId,
+  );
 
   addDiscs(clubId, newDiscs, request);
 }
@@ -88,6 +97,10 @@ export async function getLatestInternalDiscId(clubId: number): Promise<number | 
   let { data } = await supabase
     .from('discs')
     .select('internal_disc_id')
+    // Web-added discs have no row number. Postgres sorts NULLs first on a
+    // descending order, so they have to be excluded or they would come back
+    // as the "latest" and stall the sync.
+    .not('internal_disc_id', 'is', null)
     .order('internal_disc_id', { ascending: false })
     .limit(1)
     .eq('club_id', clubId)

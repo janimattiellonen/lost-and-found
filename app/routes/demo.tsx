@@ -1,10 +1,20 @@
 import { useRef, useState, type FormEvent, type JSX, type KeyboardEvent } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
+import { redirect, type LoaderFunctionArgs } from 'react-router';
 
 import { parseDiscText, type ParsedDisc } from '~/features/discParser/parseDiscText';
 import { submitDiscs, toSubmission, type DiscSubmission } from '~/features/discSubmission/submitDiscs';
+import { isUserLoggedIn } from '~/models/utils';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  if (!(await isUserLoggedIn(request))) {
+    return redirect('/sign-in');
+  }
+
+  return null;
+};
 
 /** The six fields shown in the table, all of them editable by hand. */
 type EditableField = 'discName' | 'plastic' | 'colour' | 'manufacturer' | 'phoneNumber' | 'ownerName';
@@ -339,12 +349,8 @@ export default function DemoPage(): JSX.Element {
   async function handleSave(): Promise<void> {
     setSubmitState({ status: 'sending' });
 
-    // Read by the stub only, so the error box can be seen while every save is
-    // assumed to succeed: /demo?simulate=error
-    const simulate = new URLSearchParams(window.location.search).get('simulate');
-
     const sent = rows.map(toSubmission);
-    const result = await submitDiscs(sent, { simulate });
+    const result = await submitDiscs(sent);
 
     if (result.status === 'error') {
       setSubmitState({ status: 'error', message: result.message });
@@ -365,8 +371,8 @@ export default function DemoPage(): JSX.Element {
       <h2 {...stylex.props(styles.heading)}>Kiekkotekstin tunnistus</h2>
 
       <p {...stylex.props(styles.intro)}>
-        Kokeiluversio. Korjaa tietoja napsauttamalla solua; Enter tallentaa, Esc peruu. Tallennus on simuloitu – mitään
-        ei lähetetä palvelimelle.
+        Korjaa tietoja napsauttamalla solua; Enter tallentaa, Esc peruu. Tallennus vie kiekot tietokantaan ja julkiselle
+        listalle.
       </p>
 
       <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>

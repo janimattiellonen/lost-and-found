@@ -29,7 +29,9 @@ export type ClubDTO = {
 
 export type DiscDTO = {
   id?: number;
-  internalDiscId: number;
+  externalId?: string;
+  /** The Google Sheet row number. Null for discs added through the web app. */
+  internalDiscId: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   discName: string;
@@ -89,7 +91,8 @@ export type BinFullNotificationDTO = {
 
 export type DbDiscType = {
   id?: number | null;
-  internal_disc_id: number;
+  external_id?: string;
+  internal_disc_id: number | null;
   created_at?: string | null;
   updated_at?: string | null;
   disc_name: string;

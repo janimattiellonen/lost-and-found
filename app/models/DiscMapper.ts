@@ -7,11 +7,13 @@ function isEmpty(str?: string | null): boolean {
 export const toDTO = (raw: any): DiscDTO => {
   return {
     id: raw.id,
+    externalId: raw.external_id,
     internalDiscId: raw.internal_disc_id,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
     discName: raw.disc_name,
     discColour: raw.disc_colour,
+    discManufacturer: raw.disc_manufacturer,
     ownerName: raw.owner_name,
     ownerPhoneNumber: raw.owner_phone_number,
     ownerClubName: raw.owner_club_name,
@@ -30,11 +32,13 @@ export const toDTO = (raw: any): DiscDTO => {
 export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
   return {
     id: discDTO.id,
+    external_id: discDTO.externalId,
     internal_disc_id: discDTO.internalDiscId,
     created_at: discDTO.createdAt,
     updated_at: discDTO.updatedAt,
     disc_name: discDTO.discName,
     disc_colour: discDTO.discColour,
+    disc_manufacturer: discDTO.discManufacturer,
     owner_name: discDTO.ownerName,
     owner_phone_number: discDTO.ownerPhoneNumber,
     owner_club_name: discDTO.ownerClubName,
