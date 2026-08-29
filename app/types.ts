@@ -51,6 +51,10 @@ export type DiscDTO = {
   returnMethod?: number | null;
   canBeSoldOrDonated?: boolean;
   canBeSoldOrDonatedText?: string | null;
+  /** ISO date (y-MM-dd) the disc was released for sale or donation. */
+  canBeSoldOrDonatedDate?: string | null;
+  /** See DisposalMethod in app/features/discDisposal/disposalMethod.ts. */
+  canBeSoldOrDonatedMethod?: number | null;
   ownerClubName?: string | null;
   addedAt?: string;
   course?: string | null;
@@ -114,6 +118,8 @@ export type DbDiscType = {
   return_method?: number | null;
   can_be_sold_or_donated?: boolean;
   can_be_sold_or_donated_text?: string | null;
+  can_be_sold_or_donated_date?: string | null;
+  can_be_sold_or_donated_method?: number | null;
   club_id: number;
   course?: string | null;
   notified_at?: string | null;

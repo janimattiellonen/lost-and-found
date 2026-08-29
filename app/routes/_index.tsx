@@ -75,6 +75,12 @@ export default function TestPage(): JSX.Element {
     }
   }, [fetcher.data]);
 
+  const hasDiscs = discs.length > 0;
+  // A reload keeps the previous fetcher.data, so "loading with data already on
+  // screen" is what separates a refresh from the very first load.
+  const isReloading = fetcher.state !== 'idle' && fetcher.data != null;
+  const isFirstLoad = fetcher.state !== 'idle' && fetcher.data == null;
+
   return (
     <div>
       {clubId === 2 && (
@@ -145,10 +151,16 @@ export default function TestPage(): JSX.Element {
             </Collapse>
           }
         </div>
-        {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && (
-          <DiscTable discs={discs} onChanged={() => fetcher.load('/discs/data')} />
+        {/* The table stays mounted while the list is reloading after a delete
+            or a mark: unmounting it looked like a page reload, and it threw
+            away the sort order, which lives inside DiscTable. The spinner is
+            for the first load only, when there is nothing to show yet. */}
+        {hasDiscs && (
+          <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
+            <DiscTable discs={discs} onChanged={() => fetcher.load('/discs/data')} />
+          </div>
         )}
-        {fetcher.state !== 'idle' && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
+        {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
       </div>
     </div>
   );

@@ -24,7 +24,11 @@ export const toDTO = (raw: any): DiscDTO => {
     returnedToOwnerDate: raw.returned_to_owner_date,
     returnMethod: raw.return_method,
     canBeSoldOrDonated: !isEmpty(raw.can_be_sold_or_donated) ? true : false,
-    canBeSoldOrDonatedText: raw.can_be_sold_or_donated,
+    // Was reading raw.can_be_sold_or_donated, the boolean, so the text never
+    // arrived and the DTO carried a boolean in a string field.
+    canBeSoldOrDonatedText: raw.can_be_sold_or_donated_text,
+    canBeSoldOrDonatedDate: raw.can_be_sold_or_donated_date,
+    canBeSoldOrDonatedMethod: raw.can_be_sold_or_donated_method,
     clubId: raw.club_id,
     course: raw.course,
     notifiedAt: raw.notified_at,
@@ -52,6 +56,8 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     return_method: discDTO.returnMethod,
     can_be_sold_or_donated: discDTO.canBeSoldOrDonated,
     can_be_sold_or_donated_text: discDTO.canBeSoldOrDonatedText,
+    can_be_sold_or_donated_date: discDTO.canBeSoldOrDonatedDate,
+    can_be_sold_or_donated_method: discDTO.canBeSoldOrDonatedMethod,
     club_id: discDTO.clubId,
     course: discDTO.course,
     notified_at: discDTO.notifiedAt,

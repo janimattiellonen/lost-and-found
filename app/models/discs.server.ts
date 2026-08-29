@@ -187,6 +187,57 @@ export function isIsoDate(value: unknown): value is string {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(value);
 }
 
+/**
+ * What came of a mark: the row was updated, no such row exists for this club,
+ * or the row is there but the update changed nothing.
+ *
+ * The last case is worth keeping separate: a row-level security policy filters
+ * an UPDATE by returning zero rows rather than by raising an error, so a
+ * missing permission and a missing disc otherwise look identical.
+ */
+export type MarkOutcome = 'updated' | 'not-found' | 'not-permitted';
+
+/**
+ * Applies a patch to one disc, addressed by its external id and scoped to
+ * APP_CLUB_ID, and reports which of the three outcomes happened.
+ */
+async function updateDisc(
+  externalId: string,
+  patch: Record<string, unknown>,
+  request: Request,
+  failureMessage: string,
+): Promise<MarkOutcome> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  const supabase = createSupabaseServerClient(request);
+
+  const { data, error } = await supabase
+    .from('discs')
+    .update(patch)
+    .eq('external_id', externalId)
+    .eq('club_id', clubId)
+    .select('external_id');
+
+  if (error) {
+    throw new Error(`${failureMessage}: ${error.message}`);
+  }
+
+  if ((data?.length ?? 0) > 0) {
+    return 'updated';
+  }
+
+  // Nothing was updated. Read the row back to find out whether it is there at
+  // all: SELECT is open to everyone, so this succeeds even when UPDATE is not
+  // permitted.
+  const { data: existing } = await supabase
+    .from('discs')
+    .select('external_id')
+    .eq('external_id', externalId)
+    .eq('club_id', clubId);
+
+  return (existing?.length ?? 0) > 0 ? 'not-permitted' : 'not-found';
+}
+
 export type DiscReturn = {
   returnedToOwnerDate: string;
   /** Null when the method was left unanswered. */
@@ -203,25 +254,48 @@ export type DiscReturn = {
  * Scoped to APP_CLUB_ID as well as the uuid. Returns false when nothing
  * matched.
  */
-export async function markAsReturned(externalId: string, details: DiscReturn, request: Request): Promise<boolean> {
-  const clubId = process.env.APP_CLUB_ID;
-
-  const supabase = createSupabaseServerClient(request);
-
-  const { data, error } = await supabase
-    .from('discs')
-    .update({
+export async function markAsReturned(externalId: string, details: DiscReturn, request: Request): Promise<MarkOutcome> {
+  return updateDisc(
+    externalId,
+    {
       is_returned_to_owner: true,
       returned_to_owner_date: details.returnedToOwnerDate,
       return_method: details.returnMethod,
-    })
-    .eq('external_id', externalId)
-    .eq('club_id', clubId)
-    .select('external_id');
+    },
+    request,
+    'Kiekon merkitseminen palautetuksi epäonnistui',
+  );
+}
 
-  if (error) {
-    throw new Error(`Kiekon merkitseminen palautetuksi epäonnistui: ${error.message}`);
-  }
+export type DiscDisposal = {
+  canBeSoldOrDonatedDate: string;
+  /** Null when the method was left unanswered. */
+  canBeSoldOrDonatedMethod: number | null;
+};
 
-  return (data?.length ?? 0) > 0;
+/**
+ * Marks one disc as free to be sold or donated, addressed by its external id.
+ *
+ * The counterpart to markAsReturned: the same date-and-method pair, on the
+ * can_be_sold_or_donated columns. The text column is left untouched, so the
+ * sheet-imported history stays as it is.
+ *
+ * Scoped to APP_CLUB_ID as well as the uuid. Returns false when nothing
+ * matched.
+ */
+export async function markForDisposal(
+  externalId: string,
+  details: DiscDisposal,
+  request: Request,
+): Promise<MarkOutcome> {
+  return updateDisc(
+    externalId,
+    {
+      can_be_sold_or_donated: true,
+      can_be_sold_or_donated_date: details.canBeSoldOrDonatedDate,
+      can_be_sold_or_donated_method: details.canBeSoldOrDonatedMethod,
+    },
+    request,
+    'Kiekon merkitseminen myytäväksi tai lahjoitettavaksi epäonnistui',
+  );
 }

@@ -1,11 +1,11 @@
 import type { ActionFunctionArgs } from 'react-router';
 
-import { isReturnMethod } from '~/features/discReturn/returnMethod';
-import { isExternalId, isIsoDate, markAsReturned } from '~/models/discs.server';
+import { isDisposalMethod } from '~/features/discDisposal/disposalMethod';
+import { isExternalId, isIsoDate, markForDisposal } from '~/models/discs.server';
 import { isUserLoggedIn } from '~/models/utils';
 
 /**
- * Marks one disc as returned to its owner.
+ * Marks one disc as free to be sold or donated.
  *
  * A resource route for the same reason as /discs/create: a plain fetch POST to
  * a page route is answered with a rendered document, not the action's JSON.
@@ -27,25 +27,25 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: 'Virheellinen pyyntö.' }, { status: 400 });
   }
 
-  const { externalId, returnedToOwnerDate, returnMethod } = (body ?? {}) as Record<string, unknown>;
+  const { externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod } = (body ?? {}) as Record<string, unknown>;
 
   if (!isExternalId(externalId)) {
     return Response.json({ error: 'Virheellinen kiekon tunniste.' }, { status: 422 });
   }
 
-  if (!isIsoDate(returnedToOwnerDate)) {
-    return Response.json({ error: 'Virheellinen palautuspäivä.' }, { status: 422 });
+  if (!isIsoDate(canBeSoldOrDonatedDate)) {
+    return Response.json({ error: 'Virheellinen päivämäärä.' }, { status: 422 });
   }
 
   // The method is optional: the radio group can be left empty or cleared.
-  if (returnMethod != null && !isReturnMethod(returnMethod)) {
-    return Response.json({ error: 'Virheellinen palautustapa.' }, { status: 422 });
+  if (canBeSoldOrDonatedMethod != null && !isDisposalMethod(canBeSoldOrDonatedMethod)) {
+    return Response.json({ error: 'Virheellinen tapa.' }, { status: 422 });
   }
 
   try {
-    const outcome = await markAsReturned(
+    const outcome = await markForDisposal(
       externalId,
-      { returnedToOwnerDate, returnMethod: returnMethod ?? null },
+      { canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod: canBeSoldOrDonatedMethod ?? null },
       request,
     );
 
@@ -62,9 +62,10 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    return Response.json({ returned: true });
+    return Response.json({ marked: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Kiekon merkitseminen palautetuksi epäonnistui.';
+    const message =
+      error instanceof Error ? error.message : 'Kiekon merkitseminen myytäväksi tai lahjoitettavaksi epäonnistui.';
 
     return Response.json({ error: message }, { status: 500 });
   }

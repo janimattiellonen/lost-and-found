@@ -175,3 +175,18 @@ The new admin tool icon should present me with a modal or an inline form with th
     - Postitettu
     - Noudettu
 - Submit and Cancel buttons.
+
+## Phase 9 - marking disc for sale or donation
+
+The discs table contains columns `can_be_sold_or_donated_text` and `can_be_sold_or_donated_date`.
+
+In a similar fashion as in phase 8, I need a new admin tool that I can mark a disc for sale or donation. An 
+inline form with the fields:
+- date field
+  - can_be_sold_or_donated_date
+  - current date filled in by default
+- radio button
+  - can_be_sold_or_donated_method
+  - options (should be able to reset)
+    - Myydään
+    - Lahjoitetaan

@@ -1,8 +1,8 @@
-import { Fragment, useMemo, useState, type FormEvent, type JSX } from 'react';
+import { Fragment, useMemo, useState, type JSX } from 'react';
 
 import { Link, useOutletContext } from 'react-router';
 
-import { add, format, isAfter } from 'date-fns';
+import { add, isAfter } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -16,13 +16,17 @@ import {
 } from '@tanstack/react-table';
 
 import { deleteDisc } from '~/features/discDeletion/deleteDisc';
+import { disposalMethodOptions, type DisposalMethodValue } from '~/features/discDisposal/disposalMethod';
+import { markForDisposal } from '~/features/discDisposal/markForDisposal';
 import { markAsReturned } from '~/features/discReturn/markAsReturned';
 import { returnMethodOptions, type ReturnMethodValue } from '~/features/discReturn/returnMethod';
+import DateAndMethodForm from '~/routes/components/admin/DateAndMethodForm';
 import {
   ArrowDownwardIcon,
   ArrowUpwardIcon,
   CheckCircleIcon,
   DeleteIcon,
+  SellIcon,
   TextsmsIcon,
   WarningIcon,
 } from '~/routes/components/icons';
@@ -162,109 +166,84 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
   }));
 }
 
-type ReturnFormProps = {
+/** Which of the two marks is open on a row. */
+type MarkKind = 'return' | 'disposal';
+
+type OpenForm = { externalId: string; kind: MarkKind };
+
+type MarkFormProps = {
   row: Row;
   externalId: string;
+  kind: MarkKind;
   onDone: () => void;
   onCancel: () => void;
 };
 
 /**
- * Records a disc as returned to its owner: the date, and how it got there.
+ * The inline form behind both admin marks: returned to its owner, or released
+ * for sale or donation.
  *
- * Replaces the free-text note that used to be typed into the Google Sheet. The
- * method is optional — the radios can be cleared — because the older entries
- * did not always say.
+ * Both record a date and an optional method, replacing the free-text notes that
+ * used to be typed into the Google Sheet ("29.8.2026 (Janimatti), postitettu").
+ * The wording and the endpoint are all that differ.
  */
-function ReturnForm({ row, externalId, onDone, onCancel }: ReturnFormProps): JSX.Element {
-  const [returnedOn, setReturnedOn] = useState(() => format(new Date(), 'y-MM-dd'));
-  const [method, setMethod] = useState<ReturnMethodValue | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function MarkForm({ row, externalId, kind, onDone, onCancel }: MarkFormProps): JSX.Element {
+  if (kind === 'disposal') {
+    return (
+      <DateAndMethodForm
+        title="Merkitse myytäväksi tai lahjoitettavaksi"
+        discName={row.discName}
+        idPrefix={`disposal-${externalId}`}
+        dateLabel="Päivämäärä"
+        methodLabel="Tapa"
+        options={disposalMethodOptions}
+        submitLabel="Merkitse"
+        onCancel={onCancel}
+        onSubmit={async (date, method) => {
+          const result = await markForDisposal({
+            externalId,
+            canBeSoldOrDonatedDate: date,
+            canBeSoldOrDonatedMethod: method as DisposalMethodValue | null,
+          });
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
+          if (result.status === 'error') {
+            return result.message;
+          }
 
-    setIsSaving(true);
-    setError(null);
+          onDone();
 
-    const result = await markAsReturned({ externalId, returnedToOwnerDate: returnedOn, returnMethod: method });
-
-    setIsSaving(false);
-
-    if (result.status === 'error') {
-      setError(result.message);
-      return;
-    }
-
-    onDone();
-  };
+          return null;
+        }}
+      />
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
-      <p className="basis-full text-xs text-gray-600">
-        Merkitse palautetuksi: <b>{row.discName}</b>
-      </p>
+    <DateAndMethodForm
+      title="Merkitse palautetuksi"
+      discName={row.discName}
+      idPrefix={`return-${externalId}`}
+      dateLabel="Palautuspäivä"
+      methodLabel="Palautustapa"
+      options={returnMethodOptions}
+      submitLabel="Merkitse palautetuksi"
+      onCancel={onCancel}
+      onSubmit={async (date, method) => {
+        const result = await markAsReturned({
+          externalId,
+          returnedToOwnerDate: date,
+          returnMethod: method as ReturnMethodValue | null,
+        });
 
-      <div>
-        <label htmlFor={`returned-on-${externalId}`} className="block text-xs font-bold text-gray-600 mb-1">
-          Palautuspäivä
-        </label>
-        <input
-          id={`returned-on-${externalId}`}
-          type="date"
-          required
-          value={returnedOn}
-          onChange={(event) => setReturnedOn(event.currentTarget.value)}
-          className="border border-gray-300 rounded px-2 py-1"
-        />
-      </div>
+        if (result.status === 'error') {
+          return result.message;
+        }
 
-      <fieldset>
-        <legend className="text-xs font-bold text-gray-600 mb-1">Palautustapa</legend>
-        <div className="flex items-center gap-4">
-          {returnMethodOptions.map((option) => (
-            <label key={option.value} className="inline-flex items-center gap-1">
-              <input
-                type="radio"
-                name={`return-method-${externalId}`}
-                value={option.value}
-                checked={method === option.value}
-                onChange={() => setMethod(option.value)}
-              />
-              {option.label}
-            </label>
-          ))}
+        onDone();
 
-          <button
-            type="button"
-            // The method is nullable, so there has to be a way back to "not
-            // answered" once a radio has been picked.
-            disabled={method === null}
-            onClick={() => setMethod(null)}
-            className="text-xs underline text-gray-500 disabled:opacity-40 disabled:no-underline"
-          >
-            Tyhjennä
-          </button>
-        </div>
-      </fieldset>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="bg-green-700 hover:bg-green-800 disabled:opacity-40 text-white rounded px-3 py-1"
-        >
-          {isSaving ? 'Tallennetaan...' : 'Merkitse palautetuksi'}
-        </button>
-
-        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-gray-100 rounded px-3 py-1">
-          Peruuta
-        </button>
-      </div>
-
-      {error && <p className="basis-full text-red-700">{error}</p>}
-    </form>
+        return null;
+      }}
+    />
   );
 }
 
@@ -325,8 +304,14 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
 
-  // The disc whose return form is open, by external id.
-  const [returningId, setReturningId] = useState<string | null>(null);
+  // Which disc has one of the mark forms open, and which one.
+  const [openForm, setOpenForm] = useState<OpenForm | null>(null);
+
+  /** Opens the given mark on the given disc, or closes it if already open. */
+  const toggleForm = (externalId: string, kind: MarkKind): void =>
+    setOpenForm((current) =>
+      current?.externalId === externalId && current.kind === kind ? null : { externalId, kind },
+    );
 
   const rows = useMemo(() => mapToDataRows(discs), [discs]);
 
@@ -387,19 +372,27 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
               cell: ({ row }) => (
                 <span className="inline-flex items-center gap-2">
                   {row.original.externalId && (
-                    <button
-                      type="button"
-                      aria-label={`Merkitse kiekko ${row.original.discName} palautetuksi`}
-                      aria-expanded={returningId === row.original.externalId}
-                      onClick={() =>
-                        setReturningId((current) =>
-                          current === row.original.externalId ? null : (row.original.externalId ?? null),
-                        )
-                      }
-                      className="inline-flex text-gray-500 hover:text-green-700"
-                    >
-                      <CheckCircleIcon width={18} height={18} />
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`Merkitse kiekko ${row.original.discName} palautetuksi`}
+                        aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'return'}
+                        onClick={() => toggleForm(row.original.externalId!, 'return')}
+                        className="inline-flex text-gray-500 hover:text-green-700"
+                      >
+                        <CheckCircleIcon width={18} height={18} />
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-label={`Merkitse kiekko ${row.original.discName} myytäväksi tai lahjoitettavaksi`}
+                        aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'disposal'}
+                        onClick={() => toggleForm(row.original.externalId!, 'disposal')}
+                        className="inline-flex text-gray-500 hover:text-blue-700"
+                      >
+                        <SellIcon width={18} height={18} />
+                      </button>
+                    </>
                   )}
 
                   <DeleteButton row={row.original} onDeleted={onChanged} />
@@ -409,7 +402,7 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
           ]
         : []),
     ],
-    [isLoggedIn, onChanged, returningId],
+    [isLoggedIn, onChanged, openForm],
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
@@ -475,7 +468,7 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
       <tbody>
         {table.getRowModel().rows.map((row, index) => {
           const externalId = row.original.externalId;
-          const isReturning = externalId != null && externalId === returningId;
+          const open = externalId != null && openForm?.externalId === externalId ? openForm : null;
 
           return (
             <Fragment key={row.id}>
@@ -494,17 +487,18 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
                 })}
               </tr>
 
-              {/* The return form opens as a row of its own, under the disc it
+              {/* A mark form opens as a row of its own, under the disc it
                   belongs to, rather than as a modal. */}
-              {isReturning && (
+              {open && (
                 <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
                   <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
-                    <ReturnForm
+                    <MarkForm
                       row={row.original}
-                      externalId={externalId}
-                      onCancel={() => setReturningId(null)}
+                      externalId={open.externalId}
+                      kind={open.kind}
+                      onCancel={() => setOpenForm(null)}
                       onDone={() => {
-                        setReturningId(null);
+                        setOpenForm(null);
                         onChanged?.();
                       }}
                     />
