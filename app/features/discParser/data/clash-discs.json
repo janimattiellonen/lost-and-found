@@ -1,0 +1,31 @@
+{
+  "manufacturer": "Clash Discs",
+  "plastics": ["Hardy", "Planty", "Softy", "Steady", "Sunny", "Tone"],
+  "discNames": [
+    "Almond",
+    "Barley",
+    "Berry",
+    "Butter",
+    "Candy",
+    "Cherry",
+    "Cinnamon",
+    "Cookie",
+    "Fudge",
+    "Ginger",
+    "Guava",
+    "Lotus",
+    "Mango",
+    "Millet",
+    "Mint",
+    "Peach",
+    "Pepper",
+    "Peppermint",
+    "Popcorn",
+    "Sage",
+    "Salt",
+    "Soda",
+    "Spice",
+    "Vanilla",
+    "Wild Honey"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "manufacturer": "Prodiscus",
+  "plastics": ["Basic", "Premium", "Ultrium", "Platinum"],
+  "discNames": [
+    "Amulet",
+    "Empire",
+    "Fasti",
+    "Flipperi",
+    "Jokeri",
+    "JokeriX",
+    "Laseri",
+    "Legenda",
+    "Legion",
+    "Midari",
+    "MidariX",
+    "Origo",
+    "Pyramid",
+    "Razeri",
+    "Respecti",
+    "Rocket",
+    "Slaidi",
+    "Sparta",
+    "Stari",
+    "Talisman",
+    "Titan",
+    "Totem",
+    "Troija",
+    "Unicorn"
+  ]
+}

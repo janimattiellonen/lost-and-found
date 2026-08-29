@@ -1,0 +1,23 @@
+{
+  "manufacturer": "Viking Discs",
+  "manufacturerValuation": -1,
+  "plastics": ["Armor", "Ground", "Storm"],
+  "plasticValuations": {
+    "Ground": -1
+  },
+  "discNames": [
+    "Axe",
+    "Barbarian",
+    "Berserker",
+    "Cosmos",
+    "Fenrir",
+    "Knife",
+    "Loki",
+    "Nordic Warrior",
+    "Odin",
+    "Ragnarok",
+    "Rune",
+    "Thunder God Thor",
+    "Valhalla"
+  ]
+}

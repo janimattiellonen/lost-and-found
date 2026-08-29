@@ -1,0 +1,32 @@
+{
+  "manufacturer": "Kastaplast",
+  "plastics": ["K1", "K1 Glow", "K1 Soft", "K2", "K3", "K3 Hard"],
+  "discNames": [
+    "Alva",
+    "Berg",
+    "Berg X",
+    "Falk",
+    "Gote",
+    "Grym",
+    "Grym X",
+    "Guld",
+    "Idog",
+    "Impa",
+    "Järn",
+    "Kaxe",
+    "Kaxe Z",
+    "Krut",
+    "Lots",
+    "Malm",
+    "Nord",
+    "Rask",
+    "Reko",
+    "Reko X",
+    "Stal",
+    "Sten",
+    "Stig",
+    "Svea",
+    "Tuff",
+    "Vass"
+  ]
+}

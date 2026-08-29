@@ -1,0 +1,30 @@
+{
+  "manufacturer": "Millennium",
+  "plastics": [
+    "Standard",
+    "Delta-T",
+    "ET",
+    "SuperSoft",
+    "Quantum",
+    "Sirius",
+    "Lunar"
+  ],
+  "discNames": [
+    "Aquarius",
+    "Astra",
+    "Aurora MS",
+    "Draco",
+    "Falcon",
+    "JLS",
+    "Omega",
+    "Omega4",
+    "Orion LF",
+    "Orion LS",
+    "Photon",
+    "Polaris LS",
+    "Quasar",
+    "Scorpius",
+    "Vela",
+    "Zodiac"
+  ]
+}

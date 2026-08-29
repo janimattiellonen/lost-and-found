@@ -1,3 +1,6 @@
+import type { DisposalMethodValue } from '~/features/discDisposal/disposalMethod';
+import type { ReturnMethodValue } from '~/features/discReturn/returnMethod';
+
 export type clubType = {
   id: number;
   createdAt: string;
@@ -29,7 +32,9 @@ export type ClubDTO = {
 
 export type DiscDTO = {
   id?: number;
-  internalDiscId: number;
+  externalId?: string;
+  /** The Google Sheet row number. Null for discs added through the web app. */
+  internalDiscId: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   discName: string;
@@ -43,8 +48,14 @@ export type DiscDTO = {
   additionalInfo?: string;
   isReturnedToOwner?: boolean | null;
   returnedToOwnerText?: string | null;
+  /** ISO date (y-MM-dd) the disc was handed back. */
+  returnedToOwnerDate?: string | null;
+  returnMethod?: ReturnMethodValue | null;
   canBeSoldOrDonated?: boolean;
   canBeSoldOrDonatedText?: string | null;
+  /** ISO date (y-MM-dd) the disc was released for sale or donation. */
+  canBeSoldOrDonatedDate?: string | null;
+  canBeSoldOrDonatedMethod?: DisposalMethodValue | null;
   ownerClubName?: string | null;
   addedAt?: string;
   course?: string | null;
@@ -89,7 +100,8 @@ export type BinFullNotificationDTO = {
 
 export type DbDiscType = {
   id?: number | null;
-  internal_disc_id: number;
+  external_id?: string;
+  internal_disc_id: number | null;
   created_at?: string | null;
   updated_at?: string | null;
   disc_name: string;
@@ -103,8 +115,12 @@ export type DbDiscType = {
   additional_info?: string | null;
   is_returned_to_owner?: boolean | null;
   returned_to_owner_text?: string | null;
+  returned_to_owner_date?: string | null;
+  return_method?: number | null;
   can_be_sold_or_donated?: boolean;
   can_be_sold_or_donated_text?: string | null;
+  can_be_sold_or_donated_date?: string | null;
+  can_be_sold_or_donated_method?: number | null;
   club_id: number;
   course?: string | null;
   notified_at?: string | null;

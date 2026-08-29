@@ -37,8 +37,8 @@ export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
           </Link>
         </li>
         <li {...stylex.props(styles.item)}>
-          <Link to="/discs/sync" {...stylex.props(styles.link)}>
-            Päivitä kiekkodata
+          <Link to="/discs/add" {...stylex.props(styles.link)}>
+            Lisää kiekkoja
           </Link>
         </li>
         <li {...stylex.props(styles.item)}>

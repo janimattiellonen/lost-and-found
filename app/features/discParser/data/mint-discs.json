@@ -1,0 +1,25 @@
+{
+  "manufacturer": "Mint Discs",
+  "plastics": ["Apex", "Eternal", "Nocturnal", "Recycled", "Royal", "Sublime"],
+  "discNames": [
+    "Alpha",
+    "Bobcat",
+    "Bullet",
+    "Diamondback",
+    "Freetail",
+    "Goat",
+    "Grackle",
+    "Idol",
+    "Jackalope",
+    "Lasso",
+    "Lobster",
+    "Longhorn",
+    "Mustang",
+    "Phoenix",
+    "Pickle",
+    "Profit",
+    "Salamander",
+    "Taco",
+    "UFO"
+  ]
+}

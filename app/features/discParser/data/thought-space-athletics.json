@@ -1,0 +1,34 @@
+{
+  "manufacturer": "Thought Space Athletics",
+  "plastics": [
+    "Aura",
+    "Ethos",
+    "Ethereal",
+    "Glow",
+    "Nebula Aura",
+    "Nebula Ethereal",
+    "Nerve"
+  ],
+  "discNames": [
+    "Alter",
+    "Animus",
+    "Coalesce",
+    "Construct",
+    "Crux",
+    "Expanse",
+    "Mana",
+    "Mantra",
+    "Muse",
+    "Nuance",
+    "Omen",
+    "Pathfinder",
+    "Persona",
+    "Pneuma",
+    "Praxis",
+    "Requiem",
+    "Synapse",
+    "Temple",
+    "Vessel",
+    "Votum"
+  ]
+}

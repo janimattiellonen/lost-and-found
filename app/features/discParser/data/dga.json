@@ -1,0 +1,32 @@
+{
+  "manufacturer": "DGA",
+  "plastics": ["D-Line", "ProLine", "SP Line", "Signature Line"],
+  "discNames": [
+    "Aftershock",
+    "Avalanche",
+    "Banzai",
+    "Blast",
+    "Blowfly",
+    "Breaker",
+    "Gumbputt",
+    "Hellfire",
+    "Hurricane",
+    "Hypercane",
+    "Pipeline",
+    "Quake",
+    "Rift",
+    "Rogue",
+    "Sail",
+    "Sonar",
+    "Squall",
+    "Steady",
+    "Surf",
+    "Tempest",
+    "Torrent",
+    "Tremor",
+    "Tsunami",
+    "Typhoon",
+    "Vortex",
+    "Wave"
+  ]
+}

@@ -1,4 +1,4 @@
-import { useMemo, useState, type JSX } from 'react';
+import { Fragment, useMemo, useState, type JSX } from 'react';
 
 import { Link, useOutletContext } from 'react-router';
 
@@ -15,13 +15,29 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 
-import { ArrowDownwardIcon, ArrowUpwardIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
+import { deleteDisc } from '~/features/discDeletion/deleteDisc';
+import { disposalMethodOptions } from '~/features/discDisposal/disposalMethod';
+import { markForDisposal } from '~/features/discDisposal/markForDisposal';
+import { markAsReturned } from '~/features/discReturn/markAsReturned';
+import { returnMethodOptions } from '~/features/discReturn/returnMethod';
+import DateAndMethodForm from '~/routes/components/admin/DateAndMethodForm';
+import {
+  ArrowDownwardIcon,
+  ArrowUpwardIcon,
+  CheckCircleIcon,
+  DeleteIcon,
+  SellIcon,
+  TextsmsIcon,
+  WarningIcon,
+} from '~/routes/components/icons';
 import { space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 
 type DiscTableProps = {
   discs: DiscDTO[];
+  /** Called after a disc has been deleted or marked returned, to reload the list. */
+  onChanged?: () => void;
 };
 
 interface Row {
@@ -31,7 +47,9 @@ interface Row {
   owner: string;
   ownerPhoneNumber: string;
   addedAt: string;
-  internalDiscId: number;
+  internalDiscId: number | null;
+  /** Only present for a signed-in visitor; the admin actions are keyed on it. */
+  externalId?: string;
 }
 
 type OutletContext = {
@@ -144,12 +162,156 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
     ownerPhoneNumber: disc.ownerPhoneNumber ?? '',
     addedAt: disc.addedAt ?? '',
     internalDiscId: disc.internalDiscId,
+    externalId: disc.externalId,
   }));
 }
 
-export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null {
+/** Which of the two marks is open on a row. */
+type MarkKind = 'return' | 'disposal';
+
+type OpenForm = { externalId: string; kind: MarkKind };
+
+type MarkFormProps = {
+  row: Row;
+  externalId: string;
+  kind: MarkKind;
+  onDone: () => void;
+  onCancel: () => void;
+};
+
+/**
+ * The inline form behind both admin marks: returned to its owner, or released
+ * for sale or donation.
+ *
+ * Both record a date and an optional method, replacing the free-text notes that
+ * used to be typed into the Google Sheet ("29.8.2026 (Janimatti), postitettu").
+ * The wording and the endpoint are all that differ.
+ */
+function MarkForm({ row, externalId, kind, onDone, onCancel }: MarkFormProps): JSX.Element {
+  if (kind === 'disposal') {
+    return (
+      <DateAndMethodForm
+        title="Merkitse myytäväksi tai lahjoitettavaksi"
+        discName={row.discName}
+        idPrefix={`disposal-${externalId}`}
+        dateLabel="Päivämäärä"
+        methodLabel="Tapa"
+        options={disposalMethodOptions}
+        submitLabel="Merkitse"
+        onCancel={onCancel}
+        onSubmit={async (date, method) => {
+          const result = await markForDisposal({
+            externalId,
+            canBeSoldOrDonatedDate: date,
+            canBeSoldOrDonatedMethod: method,
+          });
+
+          if (result.status === 'error') {
+            return result.message;
+          }
+
+          onDone();
+
+          return null;
+        }}
+      />
+    );
+  }
+
+  return (
+    <DateAndMethodForm
+      title="Merkitse palautetuksi"
+      discName={row.discName}
+      idPrefix={`return-${externalId}`}
+      dateLabel="Palautuspäivä"
+      methodLabel="Palautustapa"
+      options={returnMethodOptions}
+      submitLabel="Merkitse palautetuksi"
+      onCancel={onCancel}
+      onSubmit={async (date, method) => {
+        const result = await markAsReturned({
+          externalId,
+          returnedToOwnerDate: date,
+          returnMethod: method,
+        });
+
+        if (result.status === 'error') {
+          return result.message;
+        }
+
+        onDone();
+
+        return null;
+      }}
+    />
+  );
+}
+
+type DeleteButtonProps = {
+  row: Row;
+  onDeleted?: () => void;
+};
+
+/**
+ * Deletes one disc, after a confirmation. Owns its own busy state so the rest
+ * of the table does not re-render while one row is being deleted.
+ */
+function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const externalId = row.externalId;
+
+  // No external id means the loader did not send one, i.e. nobody is signed in.
+  if (!externalId) {
+    return null;
+  }
+
+  const handleClick = async (): Promise<void> => {
+    const owner = row.owner ? ` (${row.owner})` : '';
+
+    if (!window.confirm(`Poistetaanko kiekko ${row.discName}${owner}? Poistoa ei voi peruuttaa.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    const result = await deleteDisc(externalId);
+
+    setIsDeleting(false);
+
+    if (result.status === 'error') {
+      window.alert(result.message);
+      return;
+    }
+
+    onDeleted?.();
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={`Poista kiekko ${row.discName}`}
+      disabled={isDeleting}
+      onClick={handleClick}
+      className="inline-flex text-gray-500 hover:text-red-600 disabled:opacity-40"
+    >
+      <DeleteIcon width={18} height={18} />
+    </button>
+  );
+}
+
+export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Element | null {
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
+
+  // Which disc has one of the mark forms open, and which one.
+  const [openForm, setOpenForm] = useState<OpenForm | null>(null);
+
+  /** Opens the given mark on the given disc, or closes it if already open. */
+  const toggleForm = (externalId: string, kind: MarkKind): void =>
+    setOpenForm((current) =>
+      current?.externalId === externalId && current.kind === kind ? null : { externalId, kind },
+    );
 
   const rows = useMemo(() => mapToDataRows(discs), [discs]);
 
@@ -167,13 +329,16 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           row.original.ownerPhoneNumber ? (
             // inline-flex keeps the SMS icon on the same line — Tailwind's
             // preflight sets `svg { display: block }`, which otherwise wraps it.
-            (<span className="inline-flex items-center gap-2">****{row.original.ownerPhoneNumber}
-              {isLoggedIn && (
+            <span className="inline-flex items-center gap-2">
+              ****{row.original.ownerPhoneNumber}
+              {/* Only sheet-imported discs can be messaged: /message/send is
+                  keyed on internalDiscId, which web-added discs do not have. */}
+              {isLoggedIn && row.original.internalDiscId !== null && (
                 <Link to={`/message/send/${row.original.internalDiscId}`} className="inline-flex">
                   <TextsmsIcon width={18} height={18} />
                 </Link>
               )}
-            </span>)
+            </span>
           ) : (
             ''
           ),
@@ -194,8 +359,50 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           </div>
         ),
       },
+      // A column of its own rather than icons in the phone number cell: a disc
+      // with no phone number has an empty cell there, and it still has to be
+      // deletable and markable as returned.
+      ...(isLoggedIn
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              enableSorting: false,
+              enableResizing: false,
+              cell: ({ row }) => (
+                <span className="inline-flex items-center gap-2">
+                  {row.original.externalId && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`Merkitse kiekko ${row.original.discName} palautetuksi`}
+                        aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'return'}
+                        onClick={() => toggleForm(row.original.externalId!, 'return')}
+                        className="inline-flex text-gray-500 hover:text-green-700"
+                      >
+                        <CheckCircleIcon width={18} height={18} />
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-label={`Merkitse kiekko ${row.original.discName} myytäväksi tai lahjoitettavaksi`}
+                        aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'disposal'}
+                        onClick={() => toggleForm(row.original.externalId!, 'disposal')}
+                        className="inline-flex text-gray-500 hover:text-blue-700"
+                      >
+                        <SellIcon width={18} height={18} />
+                      </button>
+                    </>
+                  )}
+
+                  <DeleteButton row={row.original} onDeleted={onChanged} />
+                </span>
+              ),
+            } satisfies ColumnDef<Row>,
+          ]
+        : []),
     ],
-    [isLoggedIn],
+    [isLoggedIn, onChanged, openForm],
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
@@ -218,7 +425,7 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
           <tr key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               const sorted = header.column.getIsSorted();
-              const tight = header.column.id === 'id';
+              const tight = header.column.id === 'id' || header.column.id === 'actions';
               return (
                 <th
                   key={header.id}
@@ -244,13 +451,13 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
                   {header.column.getCanResize() && (
                     // Pointer-only column resize handle, hidden from assistive
                     // tech (resizing isn't keyboard-operated, as with the grid).
-                    (<div
+                    <div
                       aria-hidden="true"
                       {...stylex.props(styles.resizer)}
                       onMouseDown={header.getResizeHandler()}
                       onTouchStart={header.getResizeHandler()}
                       onClick={(e) => e.stopPropagation()}
-                    />)
+                    />
                   )}
                 </th>
               );
@@ -259,22 +466,48 @@ export default function DiscTable({ discs }: DiscTableProps): JSX.Element | null
         ))}
       </thead>
       <tbody>
-        {table.getRowModel().rows.map((row, index) => (
-          <tr key={row.id} {...stylex.props(index % 2 === 1 && styles.rowEven)}>
-            {row.getVisibleCells().map((cell) => {
-              const tight = cell.column.id === 'id';
-              return (
-                <td
-                  key={cell.id}
-                  {...stylex.props(styles.td, tight && styles.tight)}
-                  style={tight ? undefined : { width: cell.column.getSize() }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              );
-            })}
-          </tr>
-        ))}
+        {table.getRowModel().rows.map((row, index) => {
+          const externalId = row.original.externalId;
+          const open = externalId != null && openForm?.externalId === externalId ? openForm : null;
+
+          return (
+            <Fragment key={row.id}>
+              <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+                {row.getVisibleCells().map((cell) => {
+                  const tight = cell.column.id === 'id' || cell.column.id === 'actions';
+                  return (
+                    <td
+                      key={cell.id}
+                      {...stylex.props(styles.td, tight && styles.tight)}
+                      style={tight ? undefined : { width: cell.column.getSize() }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* A mark form opens as a row of its own, under the disc it
+                  belongs to, rather than as a modal. */}
+              {open && (
+                <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+                  <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
+                    <MarkForm
+                      row={row.original}
+                      externalId={open.externalId}
+                      kind={open.kind}
+                      onCancel={() => setOpenForm(null)}
+                      onDone={() => {
+                        setOpenForm(null);
+                        onChanged?.();
+                      }}
+                    />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
+          );
+        })}
       </tbody>
     </table>
   );

@@ -1,0 +1,32 @@
+{
+  "manufacturer": "Streamline Discs",
+  "plastics": [
+    "Cosmic Electron",
+    "Cosmic Neutron",
+    "Eclipse",
+    "Electron",
+    "Electron Firm",
+    "Electron Soft",
+    "Neutron",
+    "Plasma",
+    "Proton"
+  ],
+  "discNames": [
+    "Ascend",
+    "Boost",
+    "Drift",
+    "Echo",
+    "Engine",
+    "Flare",
+    "Jet",
+    "Lift",
+    "Parachute",
+    "Pilot",
+    "Range",
+    "Runway",
+    "Shift",
+    "Stabilizer",
+    "Trace",
+    "Turbulence"
+  ]
+}
