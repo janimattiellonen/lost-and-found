@@ -1,25 +1,72 @@
 import * as stylex from '@stylexjs/stylex';
 
-import { Link } from 'react-router';
+import { NavLink } from 'react-router';
 
-import { space } from '~/styles/tokens.stylex';
+import Button from '~/routes/components/Button';
+import { color, radius, space } from '~/styles/tokens.stylex';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
-// StyleX has no descendant selectors, so the former `& a:hover { underline }`
-// is applied to the links directly.
+const links = [
+  { to: '/', label: 'Kiekot' },
+  { to: '/discs/add', label: 'Lisää kiekkoja' },
+  { to: '/emptying-log', label: 'Tyhjennysloki' },
+  { to: '/message-templates', label: 'Viestipohjat' },
+  { to: '/stats', label: 'Statistiikka' },
+  { to: '/notifications', label: 'Ilmoitukset' },
+];
+
+// StyleX has no descendant selectors, so hover/active styling is applied to the
+// links themselves rather than through the surrounding <nav>.
 const styles = stylex.create({
-  item: {
-    display: 'inline',
-    marginRight: space.md,
+  nav: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: space.sm,
+    padding: `${space.sm} ${space.md}`,
+    backgroundColor: color.surfaceMuted,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: color.border,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  },
+  list: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: space.xs,
+    margin: 0,
+    padding: 0,
+    listStyle: 'none',
   },
   link: {
-    textDecoration: { ':hover': 'underline' },
+    display: 'inline-block',
+    padding: `${space.xs} ${space.sm}`,
+    borderRadius: radius.sm,
+    color: { default: color.textSecondary, ':hover': color.accent },
+    backgroundColor: { default: 'transparent', ':hover': color.surface },
+    fontSize: '0.9375rem',
+    textDecoration: 'none',
+    transition: 'background-color 0.15s, color 0.15s',
+  },
+  activeLink: {
+    color: color.accent,
+    backgroundColor: color.surface,
+    fontWeight: 600,
+    boxShadow: 'inset 0 -2px 0 0 currentColor',
+  },
+  spacer: {
+    marginLeft: 'auto',
   },
 });
 
 export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
   const handleLogout = async () => {
+    if (!window.confirm('Haluatko varmasti kirjautua ulos?')) {
+      return;
+    }
+
     await supabase.auth.signOut();
   };
 
@@ -28,45 +75,25 @@ export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
   }
 
   return (
-    <div>
-      <ul>
-        <li {...stylex.props(styles.item)}>Kirjautuneena: {user?.email}</li>
-        <li {...stylex.props(styles.item)}>
-          <Link to="/" {...stylex.props(styles.link)}>
-            Kiekot
-          </Link>
-        </li>
-        <li {...stylex.props(styles.item)}>
-          <Link to="/discs/add" {...stylex.props(styles.link)}>
-            Lisää kiekkoja
-          </Link>
-        </li>
-        <li {...stylex.props(styles.item)}>
-          <Link to="/emptying-log" {...stylex.props(styles.link)}>
-            Tyhjennysloki
-          </Link>
-        </li>
-        <li {...stylex.props(styles.item)}>
-          <Link to="/message-templates" {...stylex.props(styles.link)}>
-            Viestipohjat
-          </Link>
-        </li>
-        <li {...stylex.props(styles.item)}>
-          <Link to="/stats" {...stylex.props(styles.link)}>
-            Statistiikka
-          </Link>
-        </li>
-        <li {...stylex.props(styles.item)}>
-          <Link to="/notifications" {...stylex.props(styles.link)}>
-            Ilmoitukset
-          </Link>
-        </li>
-        <li {...stylex.props(styles.item)}>
-          <Link to={''} onClick={handleLogout} {...stylex.props(styles.link)}>
-            Kirjaudu ulos
-          </Link>
-        </li>
+    <nav {...stylex.props(styles.nav)}>
+      <ul {...stylex.props(styles.list)}>
+        {links.map(({ to, label }) => (
+          <li key={to}>
+            <NavLink
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) => stylex.props(styles.link, isActive && styles.activeLink).className ?? ''}
+            >
+              {label}
+            </NavLink>
+          </li>
+        ))}
       </ul>
-    </div>
+      <div {...stylex.props(styles.spacer)}>
+        <Button variant="contained" color="error" size="small" onClick={handleLogout}>
+          Kirjaudu ulos
+        </Button>
+      </div>
+    </nav>
   );
 }
