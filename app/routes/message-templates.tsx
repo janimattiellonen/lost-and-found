@@ -15,7 +15,7 @@ import Wrapper from './components/Wrapper';
 
 import MessageTemplateItem from '~/routes/components/admin/MessageTemplateItem';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();

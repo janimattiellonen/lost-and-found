@@ -4,7 +4,7 @@ import NotifyForm from './components/NotifyForm';
 
 import { createDiscFoundNotification } from '~/models/discFoundNotification.server';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 export async function action({ request }: ActionFunctionArgs) {
   const form = await request.formData();

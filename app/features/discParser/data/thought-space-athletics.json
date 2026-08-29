@@ -1,14 +1,6 @@
 {
   "manufacturer": "Thought Space Athletics",
-  "plastics": [
-    "Aura",
-    "Ethos",
-    "Ethereal",
-    "Glow",
-    "Nebula Aura",
-    "Nebula Ethereal",
-    "Nerve"
-  ],
+  "plastics": ["Aura", "Ethos", "Ethereal", "Glow", "Nebula Aura", "Nebula Ethereal", "Nerve"],
   "discNames": [
     "Alter",
     "Animus",

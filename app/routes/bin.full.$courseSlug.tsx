@@ -7,7 +7,7 @@ import BinFullForm from './components/BinFullForm';
 import { createBinFullNotification } from '~/models/binFullNotification.server';
 import { getCourseBySlug } from '~/config/courses';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 const RATE_LIMIT_MS = 10 * 60 * 1000;
 

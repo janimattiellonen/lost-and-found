@@ -1,7 +1,7 @@
 import H3 from '../H3';
 import Paper from '~/routes/components/Paper';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type MessagePreviewProps = {
   message: string;

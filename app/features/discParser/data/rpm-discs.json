@@ -1,15 +1,6 @@
 {
   "manufacturer": "RPM Discs",
-  "plastics": [
-    "Or-ion",
-    "Atomic",
-    "Cosmic",
-    "Glow",
-    "Magma",
-    "Magma Soft",
-    "Platinum",
-    "Strata"
-  ],
+  "plastics": ["Or-ion", "Atomic", "Cosmic", "Glow", "Magma", "Magma Soft", "Platinum", "Strata"],
   "discNames": [
     "Huia",
     "Kahu",

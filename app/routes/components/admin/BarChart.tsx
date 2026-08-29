@@ -72,7 +72,11 @@ export default function BarChart({ className, data, legendItems, onBarClick, tit
             <button
               key={index}
               type="button"
-              {...stylex.props(styles.barBase, styles.barHover, styles.barDynamic(height, index === selectedBar ? 'blue' : 'red'))}
+              {...stylex.props(
+                styles.barBase,
+                styles.barHover,
+                styles.barDynamic(height, index === selectedBar ? 'blue' : 'red'),
+              )}
               onClick={() => {
                 if (onBarClick) {
                   setSelectedBar(index);

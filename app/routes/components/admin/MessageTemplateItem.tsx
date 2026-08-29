@@ -5,7 +5,7 @@ import Button from '~/routes/components/Button';
 import { formatDate } from '~/routes/utils';
 import type { MessageTemplateDTO } from '~/types';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type MessageTemplateProps = {
   messageTemplate: MessageTemplateDTO;
@@ -31,9 +31,7 @@ export default function MessageTemplateItem({ messageTemplate }: MessageTemplate
           <Button name="action" value={'default'} type="submit">
             Merkitse oletukseksi
           </Button>
-          <Button to={`/message-template/${messageTemplate.id}/edit`}>
-            Muokkaa
-          </Button>
+          <Button to={`/message-template/${messageTemplate.id}/edit`}>Muokkaa</Button>
           <Button
             color="error"
             variant="contained"

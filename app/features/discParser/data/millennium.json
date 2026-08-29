@@ -1,14 +1,6 @@
 {
   "manufacturer": "Millennium",
-  "plastics": [
-    "Standard",
-    "Delta-T",
-    "ET",
-    "SuperSoft",
-    "Quantum",
-    "Sirius",
-    "Lunar"
-  ],
+  "plastics": ["Standard", "Delta-T", "ET", "SuperSoft", "Quantum", "Sirius", "Lunar"],
   "discNames": [
     "Aquarius",
     "Astra",

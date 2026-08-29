@@ -11,7 +11,7 @@ import EmptyingLogItem from '~/routes/components/admin/EmptyingLogItem';
 
 import H2 from '~/routes/components/H2';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isLoggedIn = await isUserLoggedIn(request);
