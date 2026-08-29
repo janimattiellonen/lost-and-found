@@ -1,3 +1,6 @@
+import type { DisposalMethodValue } from '~/features/discDisposal/disposalMethod';
+import type { ReturnMethodValue } from '~/features/discReturn/returnMethod';
+
 export type clubType = {
   id: number;
   createdAt: string;
@@ -47,14 +50,12 @@ export type DiscDTO = {
   returnedToOwnerText?: string | null;
   /** ISO date (y-MM-dd) the disc was handed back. */
   returnedToOwnerDate?: string | null;
-  /** See ReturnMethod in app/features/discReturn/returnMethod.ts. */
-  returnMethod?: number | null;
+  returnMethod?: ReturnMethodValue | null;
   canBeSoldOrDonated?: boolean;
   canBeSoldOrDonatedText?: string | null;
   /** ISO date (y-MM-dd) the disc was released for sale or donation. */
   canBeSoldOrDonatedDate?: string | null;
-  /** See DisposalMethod in app/features/discDisposal/disposalMethod.ts. */
-  canBeSoldOrDonatedMethod?: number | null;
+  canBeSoldOrDonatedMethod?: DisposalMethodValue | null;
   ownerClubName?: string | null;
   addedAt?: string;
   course?: string | null;

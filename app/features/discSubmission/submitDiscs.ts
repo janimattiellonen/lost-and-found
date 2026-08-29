@@ -1,4 +1,4 @@
-import { CONNECTION_ERROR, messageForStatus } from '~/features/api/errorMessages';
+import { postJson } from '~/features/api/postJson';
 import type { ParsedDisc } from '~/features/discParser/parseDiscText';
 
 /** One disc as it will be sent to the server. */
@@ -30,8 +30,6 @@ const SUBMIT_URL = '/discs/create';
 
 const GENERIC_ERROR = 'Tallennus epäonnistui. Yritä uudelleen.';
 
-const failed = (status: number) => messageForStatus(status, GENERIC_ERROR);
-
 /**
  * Sends a batch of discs to be persisted.
  *
@@ -43,39 +41,18 @@ export async function submitDiscs(discs: DiscSubmission[]): Promise<SubmitResult
     return { status: 'error', message: 'Ei tallennettavia kiekkoja.' };
   }
 
-  let response: Response;
+  const result = await postJson(SUBMIT_URL, { discs }, GENERIC_ERROR);
 
-  try {
-    response = await fetch(SUBMIT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discs }),
-    });
-  } catch {
-    return { status: 'error', message: CONNECTION_ERROR };
+  if (result.status === 'error') {
+    return result;
   }
 
-  // The route answers with JSON on every path, so anything else means the
-  // request never reached it — a signed-out redirect to the sign-in page, or a
-  // proxy error page. The status decides what to say; do not guess at a cause.
-  let body: unknown;
+  const body = result.body as { savedCount?: unknown; error?: unknown } | null;
+  const savedCount = body?.savedCount;
 
-  try {
-    body = await response.json();
-  } catch {
-    return { status: 'error', message: failed(response.status) };
-  }
-
-  const message = typeof (body as { error?: unknown })?.error === 'string' ? (body as { error: string }).error : null;
-
-  if (!response.ok) {
-    return { status: 'error', message: message ?? failed(response.status) };
-  }
-
-  const savedCount = (body as { savedCount?: unknown })?.savedCount;
-
+  // A success the route did not count is not one we can report.
   if (typeof savedCount !== 'number') {
-    return { status: 'error', message: message ?? GENERIC_ERROR };
+    return { status: 'error', message: typeof body?.error === 'string' ? body.error : GENERIC_ERROR };
   }
 
   return { status: 'success', savedCount };

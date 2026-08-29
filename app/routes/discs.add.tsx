@@ -4,8 +4,9 @@ import * as stylex from '@stylexjs/stylex';
 import { redirect, type LoaderFunctionArgs } from 'react-router';
 
 import { parseDiscText, type ParsedDisc } from '~/features/discParser/parseDiscText';
-import { submitDiscs, toSubmission, type DiscSubmission } from '~/features/discSubmission/submitDiscs';
+import { submitDiscs, toSubmission } from '~/features/discSubmission/submitDiscs';
 import { isUserLoggedIn } from '~/models/utils';
+import { DeleteIcon } from '~/routes/components/icons';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -28,7 +29,7 @@ type EditTarget = { rowId: number; field: EditableField };
 type SubmitState =
   | { status: 'idle' }
   | { status: 'sending' }
-  | { status: 'success'; savedCount: number; sent: DiscSubmission[] }
+  | { status: 'success'; savedCount: number }
   | { status: 'error'; message: string };
 
 const styles = stylex.create({
@@ -76,6 +77,9 @@ const styles = stylex.create({
     borderBottomColor: color.border,
   },
   empty: { color: color.textMuted },
+  // The words the parser could not place. Muted, because a weight or a note is
+  // expected to land here and must not read as an error.
+  leftovers: { color: color.textMuted, fontStyle: 'italic' },
   none: { color: color.textMuted, fontStyle: 'italic' },
   // The static value is a button so a cell can be reached and opened by
   // keyboard as well as by clicking it.
@@ -158,30 +162,6 @@ const styles = stylex.create({
     borderStyle: 'solid',
   },
   success: { color: '#1b5e20', backgroundColor: '#e8f5e9', borderColor: '#a5d6a7' },
-  successHeading: { fontWeight: font.weightBold, marginBottom: space.sm },
-  // The sent rows, kept on screen because a successful save empties the table
-  // above and this becomes the only record of what went out.
-  receiptTable: { borderCollapse: 'collapse', width: '100%', fontSize: font.sizeSm },
-  receiptCell: {
-    padding: '4px 8px',
-    textAlign: 'left',
-    verticalAlign: 'top',
-    borderBottomWidth: '1px',
-    borderBottomStyle: 'solid',
-    borderBottomColor: '#a5d6a7',
-  },
-  receiptHead: { fontWeight: font.weightBold, whiteSpace: 'nowrap' },
-  payload: { marginTop: space.md },
-  payloadCode: {
-    display: 'block',
-    overflowX: 'auto',
-    padding: space.sm,
-    marginTop: space.sm,
-    fontSize: font.sizeSm,
-    backgroundColor: color.surface,
-    borderRadius: radius.sm,
-    whiteSpace: 'pre',
-  },
   error: { color: '#8e0000', backgroundColor: '#fdecea', borderColor: '#f5c2c0' },
   // Present for screen readers, out of the way visually.
   srOnly: {
@@ -220,22 +200,6 @@ const columns: { header: string; field: EditableField }[] = [
   { header: 'Puhelinnumero', field: 'phoneNumber' },
   { header: 'Omistaja', field: 'ownerName' },
 ];
-
-function TrashIcon(): JSX.Element {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-    >
-      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 type CellProps = {
   value: string | null;
@@ -291,7 +255,7 @@ function Cell({ value, header, isEditing, onOpen, onCommit, onCancel }: CellProp
   );
 }
 
-export default function DemoPage(): JSX.Element {
+export default function AddDiscsPage(): JSX.Element {
   const [rows, setRows] = useState<Row[]>([]);
   const [editing, setEditing] = useState<EditTarget | null>(null);
   // The row whose delete button has been pressed and is awaiting a yes/no.
@@ -349,15 +313,14 @@ export default function DemoPage(): JSX.Element {
   async function handleSave(): Promise<void> {
     setSubmitState({ status: 'sending' });
 
-    const sent = rows.map(toSubmission);
-    const result = await submitDiscs(sent);
+    const result = await submitDiscs(rows.map(toSubmission));
 
     if (result.status === 'error') {
       setSubmitState({ status: 'error', message: result.message });
       return;
     }
 
-    setSubmitState({ status: 'success', savedCount: result.savedCount, sent });
+    setSubmitState({ status: 'success', savedCount: result.savedCount });
 
     // The batch is persisted, so clear the table for the next one. Done with
     // setRows rather than updateRows, which would wipe the success box.
@@ -368,7 +331,7 @@ export default function DemoPage(): JSX.Element {
 
   return (
     <div {...stylex.props(styles.page)}>
-      <h2 {...stylex.props(styles.heading)}>Kiekkotekstin tunnistus</h2>
+      <h2 {...stylex.props(styles.heading)}>Lisää kiekkoja</h2>
 
       <p {...stylex.props(styles.intro)}>
         Korjaa tietoja napsauttamalla solua; Enter tallentaa, Esc peruu. Tallennus vie kiekot tietokantaan ja julkiselle
@@ -400,6 +363,9 @@ export default function DemoPage(): JSX.Element {
                 </th>
               ))}
               <th scope="col" {...stylex.props(styles.th)}>
+                Ohitettu
+              </th>
+              <th scope="col" {...stylex.props(styles.th)}>
                 <span {...stylex.props(styles.srOnly)}>Toiminnot</span>
               </th>
             </tr>
@@ -407,7 +373,7 @@ export default function DemoPage(): JSX.Element {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 1} {...stylex.props(styles.td, styles.none)}>
+                <td colSpan={columns.length + 2} {...stylex.props(styles.td, styles.none)}>
                   Ei vielä tunnistettuja kiekkoja.
                 </td>
               </tr>
@@ -432,6 +398,12 @@ export default function DemoPage(): JSX.Element {
                   );
                 })}
 
+                {/* What the parser could not place, so a typo or a dropped
+                    word is visible rather than silently missing. */}
+                <td {...stylex.props(styles.td, styles.leftovers)}>
+                  {row.unmatched.length > 0 ? row.unmatched.join(' ') : '–'}
+                </td>
+
                 <td {...stylex.props(styles.td, styles.actionCell)}>
                   {confirmingDelete === row.id ? (
                     <span {...stylex.props(styles.confirm)}>
@@ -454,7 +426,7 @@ export default function DemoPage(): JSX.Element {
                       onClick={() => setConfirmingDelete(row.id)}
                       {...stylex.props(styles.iconButton)}
                     >
-                      <TrashIcon />
+                      <DeleteIcon width="16" height="16" />
                     </button>
                   )}
                 </td>
@@ -484,39 +456,9 @@ export default function DemoPage(): JSX.Element {
       {/* Announced politely so the outcome reaches a screen reader too. */}
       <div role="status" aria-live="polite">
         {submitState.status === 'success' && (
-          <div {...stylex.props(styles.feedback, styles.success)}>
-            <p {...stylex.props(styles.successHeading)}>
-              Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
-            </p>
-
-            <table {...stylex.props(styles.receiptTable)}>
-              <thead>
-                <tr>
-                  {columns.map((column) => (
-                    <th key={column.field} scope="col" {...stylex.props(styles.receiptCell, styles.receiptHead)}>
-                      {column.header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {submitState.sent.map((disc, index) => (
-                  <tr key={index}>
-                    {columns.map((column) => (
-                      <td key={column.field} {...stylex.props(styles.receiptCell)}>
-                        {disc[column.field] ?? '–'}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <details {...stylex.props(styles.payload)}>
-              <summary>Lähetetty data (JSON)</summary>
-              <code {...stylex.props(styles.payloadCode)}>{JSON.stringify(submitState.sent, null, 2)}</code>
-            </details>
-          </div>
+          <p {...stylex.props(styles.feedback, styles.success)}>
+            Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
+          </p>
         )}
 
         {submitState.status === 'error' && (

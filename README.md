@@ -8,6 +8,23 @@
 
 - [Remix Docs](https://remix.run/docs)
 
+## Project layout
+
+- `app/routes/` — pages and resource routes (flat routes), plus the components a
+  page owns. A route file with no default export is a resource route: it answers
+  `fetch` with JSON rather than a rendered document.
+- `app/features/<feature>/` — logic that runs in the browser or in both places:
+  the disc-text parser, the client side of each admin action, and the small
+  shared helpers under `app/features/api/`. Nothing here talks to the database.
+- `app/models/*.server.ts` — everything that does talk to the database, plus the
+  DTO mappers that carry snake_case columns to camelCase fields.
+- `app/import/` — the per-club Google Sheet importers.
+- `supabase/migrations/` — schema changes; see `docs/rls.md` for the row-level
+  security policies.
+
+Unit tests (Vitest) sit next to the code they cover as `*.test.ts`; the
+Playwright suite lives in `e2e/`.
+
 ## Deployment
 
 After having run the `create-remix` command and selected "Vercel" as a deployment target, you only need to [import your Git repository](https://vercel.com/new) into Vercel, and it will be deployed.

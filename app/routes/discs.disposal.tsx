@@ -1,8 +1,9 @@
 import type { ActionFunctionArgs } from 'react-router';
 
+import { markRefusal, requireAdminJson } from '~/features/api/resourceRoute.server';
 import { isDisposalMethod } from '~/features/discDisposal/disposalMethod';
-import { isExternalId, isIsoDate, markForDisposal } from '~/models/discs.server';
-import { isUserLoggedIn } from '~/models/utils';
+import { isExternalId, isIsoDate } from '~/features/api/validate';
+import { markForDisposal } from '~/models/discs.server';
 
 /**
  * Marks one disc as free to be sold or donated.
@@ -11,23 +12,13 @@ import { isUserLoggedIn } from '~/models/utils';
  * a page route is answered with a rendered document, not the action's JSON.
  */
 export async function action({ request }: ActionFunctionArgs) {
-  if (request.method !== 'POST') {
-    return Response.json({ error: 'Virheellinen pyyntö.' }, { status: 405 });
+  const gate = await requireAdminJson(request);
+
+  if ('response' in gate) {
+    return gate.response;
   }
 
-  if (!(await isUserLoggedIn(request))) {
-    return Response.json({ error: 'Kirjautuminen on vanhentunut. Kirjaudu uudelleen.' }, { status: 401 });
-  }
-
-  let body: unknown;
-
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'Virheellinen pyyntö.' }, { status: 400 });
-  }
-
-  const { externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod } = (body ?? {}) as Record<string, unknown>;
+  const { externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod } = (gate.body ?? {}) as Record<string, unknown>;
 
   if (!isExternalId(externalId)) {
     return Response.json({ error: 'Virheellinen kiekon tunniste.' }, { status: 422 });
@@ -49,17 +40,10 @@ export async function action({ request }: ActionFunctionArgs) {
       request,
     );
 
-    if (outcome === 'not-found') {
-      return Response.json({ error: 'Kiekkoa ei löytynyt.' }, { status: 404 });
-    }
+    const refusal = markRefusal(outcome);
 
-    // The row is there but the update changed nothing, which is how a
-    // row-level security policy refuses an UPDATE.
-    if (outcome === 'not-permitted') {
-      return Response.json(
-        { error: 'Kiekko löytyi, mutta sen päivitys estyi. Tarkista tietokannan käyttöoikeudet (RLS).' },
-        { status: 403 },
-      );
+    if (refusal) {
+      return refusal;
     }
 
     return Response.json({ marked: true });

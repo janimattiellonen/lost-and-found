@@ -45,13 +45,10 @@ function filter(data: DiscDTO[]): DiscDTO[] {
   return data.filter((item: DiscDTO) => item.isReturnedToOwner && getReturnDate(item) !== null);
 }
 
-function getMonthFromData(data: DiscDTO): Date | null {
-  return getReturnDate(data);
-}
 export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const filtered = filter(data);
-  const mapped = getAddedDiscCountByMonth(filtered, getMonth, getMonthFromData);
+  const mapped = getAddedDiscCountByMonth(filtered, getMonth, getReturnDate);
 
   return (
     <div>
@@ -70,9 +67,9 @@ export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Elem
       {selectedMonth && (
         <BarChart
           className="[max-width:1200px] [border:solid_1px_red] p-4"
-          data={mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getMonthFromData))}
+          data={mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getReturnDate))}
           legendItems={getLegendItems2(
-            getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getMonthFromData),
+            getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getReturnDate),
           )}
           title={`Omistajille palautettujen kiekkojen määrä, ${getMonthName(selectedMonth, 'long')}, ${getYear(
             selectedMonth,

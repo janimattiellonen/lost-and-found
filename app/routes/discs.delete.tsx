@@ -1,7 +1,8 @@
 import type { ActionFunctionArgs } from 'react-router';
 
-import { deleteDisc, isExternalId } from '~/models/discs.server';
-import { isUserLoggedIn } from '~/models/utils';
+import { requireAdminJson } from '~/features/api/resourceRoute.server';
+import { isExternalId } from '~/features/api/validate';
+import { deleteDisc } from '~/models/discs.server';
 
 /**
  * Deletes one disc, addressed by its external id.
@@ -10,23 +11,13 @@ import { isUserLoggedIn } from '~/models/utils';
  * a page route is answered with a rendered document, not the action's JSON.
  */
 export async function action({ request }: ActionFunctionArgs) {
-  if (request.method !== 'POST') {
-    return Response.json({ error: 'Virheellinen pyyntö.' }, { status: 405 });
+  const gate = await requireAdminJson(request);
+
+  if ('response' in gate) {
+    return gate.response;
   }
 
-  if (!(await isUserLoggedIn(request))) {
-    return Response.json({ error: 'Kirjautuminen on vanhentunut. Kirjaudu uudelleen.' }, { status: 401 });
-  }
-
-  let body: unknown;
-
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'Virheellinen pyyntö.' }, { status: 400 });
-  }
-
-  const externalId = (body as { externalId?: unknown })?.externalId;
+  const externalId = (gate.body as { externalId?: unknown })?.externalId;
 
   if (!isExternalId(externalId)) {
     return Response.json({ error: 'Virheellinen kiekon tunniste.' }, { status: 422 });

@@ -30,8 +30,7 @@ The sync id is just a numeric value that increases by 1 each new row (I usually 
 selecting a few existing values and then pulling down so that google maps generates them for me)
 
 One thing that slows down entering the data is that I have to manually type in the name of the manufacturer, 
-name of the disc, plastic type and colour. A smart system would know what manufacturers, discs etc exist and
-autocomplete them for me.
+name of the disc, plastic type and colour.
 
 My initial thought is to build a database of manufacturers and what discs and plastics they have and also a list 
 colours I often use.
@@ -190,3 +189,10 @@ inline form with the fields:
   - options (should be able to reset)
     - Myydään
     - Lahjoitetaan
+
+## Phase 10 - rename route
+
+Currently /demo is the route for adding new discs. Let's rename it to /discs/add. Also rename the files 
+and components if needed.
+
+Make sure the route is protected and requires login. 

@@ -16,10 +16,10 @@ import {
 } from '@tanstack/react-table';
 
 import { deleteDisc } from '~/features/discDeletion/deleteDisc';
-import { disposalMethodOptions, type DisposalMethodValue } from '~/features/discDisposal/disposalMethod';
+import { disposalMethodOptions } from '~/features/discDisposal/disposalMethod';
 import { markForDisposal } from '~/features/discDisposal/markForDisposal';
 import { markAsReturned } from '~/features/discReturn/markAsReturned';
-import { returnMethodOptions, type ReturnMethodValue } from '~/features/discReturn/returnMethod';
+import { returnMethodOptions } from '~/features/discReturn/returnMethod';
 import DateAndMethodForm from '~/routes/components/admin/DateAndMethodForm';
 import {
   ArrowDownwardIcon,
@@ -203,7 +203,7 @@ function MarkForm({ row, externalId, kind, onDone, onCancel }: MarkFormProps): J
           const result = await markForDisposal({
             externalId,
             canBeSoldOrDonatedDate: date,
-            canBeSoldOrDonatedMethod: method as DisposalMethodValue | null,
+            canBeSoldOrDonatedMethod: method,
           });
 
           if (result.status === 'error') {
@@ -232,7 +232,7 @@ function MarkForm({ row, externalId, kind, onDone, onCancel }: MarkFormProps): J
         const result = await markAsReturned({
           externalId,
           returnedToOwnerDate: date,
-          returnMethod: method as ReturnMethodValue | null,
+          returnMethod: method,
         });
 
         if (result.status === 'error') {

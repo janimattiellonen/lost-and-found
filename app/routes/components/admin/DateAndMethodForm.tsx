@@ -3,9 +3,11 @@ import { useState, type FormEvent, type JSX } from 'react';
 import { format } from 'date-fns';
 
 /** One radio option: the value that gets persisted, and its Finnish label. */
-export type MethodOption = { value: number; label: string };
+export type MethodOption<V extends number = number> = { value: V; label: string };
 
-type DateAndMethodFormProps = {
+// Generic over the method's own value type, so a caller passing
+// returnMethodOptions gets a ReturnMethodValue back rather than a bare number.
+type DateAndMethodFormProps<V extends number> = {
   /** Names the disc the form is acting on, e.g. "Merkitse palautetuksi". */
   title: string;
   discName: string;
@@ -13,10 +15,10 @@ type DateAndMethodFormProps = {
   idPrefix: string;
   dateLabel: string;
   methodLabel: string;
-  options: MethodOption[];
+  options: MethodOption<V>[];
   submitLabel: string;
   /** Resolves to null on success, or to a message to show in the form. */
-  onSubmit: (date: string, method: number | null) => Promise<string | null>;
+  onSubmit: (date: string, method: V | null) => Promise<string | null>;
   onCancel: () => void;
 };
 
@@ -27,7 +29,7 @@ type DateAndMethodFormProps = {
  * The method is nullable in the database, so it can be cleared back to
  * unanswered after a radio has been picked.
  */
-export default function DateAndMethodForm({
+export default function DateAndMethodForm<V extends number>({
   title,
   discName,
   idPrefix,
@@ -37,9 +39,9 @@ export default function DateAndMethodForm({
   submitLabel,
   onSubmit,
   onCancel,
-}: DateAndMethodFormProps): JSX.Element {
+}: DateAndMethodFormProps<V>): JSX.Element {
   const [date, setDate] = useState(() => format(new Date(), 'y-MM-dd'));
-  const [method, setMethod] = useState<number | null>(null);
+  const [method, setMethod] = useState<V | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

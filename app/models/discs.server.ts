@@ -6,6 +6,8 @@ import * as process from 'process';
 import type { DiscDTO } from '~/types';
 
 import { fromDTO, toDTO } from '~/models/DiscMapper';
+import type { DiscDisposalDetails } from '~/features/discDisposal/discDisposal';
+import type { DiscReturnDetails } from '~/features/discReturn/discReturn';
 
 export async function getDiscs(): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
@@ -138,13 +140,6 @@ export async function createDiscs(discs: DiscDTO[], request: Request): Promise<s
   return data ? data.map((row: { external_id: string }) => row.external_id) : [];
 }
 
-/** Matches the canonical 8-4-4-4-12 uuid form. */
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isExternalId(value: unknown): value is string {
-  return typeof value === 'string' && UUID_PATTERN.test(value);
-}
-
 /**
  * Deletes one disc, addressed by its external id.
  *
@@ -171,20 +166,6 @@ export async function deleteDisc(externalId: string, request: Request): Promise<
   }
 
   return (data?.length ?? 0) > 0;
-}
-
-/** Matches an ISO calendar date, y-MM-dd. */
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-/** True for a real calendar date in ISO form — 2026-02-30 is rejected. */
-export function isIsoDate(value: unknown): value is string {
-  if (typeof value !== 'string' || !ISO_DATE_PATTERN.test(value)) {
-    return false;
-  }
-
-  const parsed = new Date(`${value}T00:00:00Z`);
-
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(value);
 }
 
 /**
@@ -238,12 +219,6 @@ async function updateDisc(
   return (existing?.length ?? 0) > 0 ? 'not-permitted' : 'not-found';
 }
 
-export type DiscReturn = {
-  returnedToOwnerDate: string;
-  /** Null when the method was left unanswered. */
-  returnMethod: number | null;
-};
-
 /**
  * Marks one disc as returned to its owner, addressed by its external id.
  *
@@ -254,7 +229,11 @@ export type DiscReturn = {
  * Scoped to APP_CLUB_ID as well as the uuid. Returns false when nothing
  * matched.
  */
-export async function markAsReturned(externalId: string, details: DiscReturn, request: Request): Promise<MarkOutcome> {
+export async function markAsReturned(
+  externalId: string,
+  details: DiscReturnDetails,
+  request: Request,
+): Promise<MarkOutcome> {
   return updateDisc(
     externalId,
     {
@@ -266,12 +245,6 @@ export async function markAsReturned(externalId: string, details: DiscReturn, re
     'Kiekon merkitseminen palautetuksi epäonnistui',
   );
 }
-
-export type DiscDisposal = {
-  canBeSoldOrDonatedDate: string;
-  /** Null when the method was left unanswered. */
-  canBeSoldOrDonatedMethod: number | null;
-};
 
 /**
  * Marks one disc as free to be sold or donated, addressed by its external id.
@@ -285,7 +258,7 @@ export type DiscDisposal = {
  */
 export async function markForDisposal(
   externalId: string,
-  details: DiscDisposal,
+  details: DiscDisposalDetails,
   request: Request,
 ): Promise<MarkOutcome> {
   return updateDisc(
