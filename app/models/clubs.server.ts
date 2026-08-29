@@ -4,7 +4,7 @@ import { toDTO } from '~/models/ClubMapper';
 export async function fetchClubs() {
   const supabase = createConnection();
 
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('clubs')
     .select('id, created_at, updated_at, name, sync_log(id, club_id, updated_at)');
 
