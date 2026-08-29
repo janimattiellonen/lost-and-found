@@ -1,15 +1,6 @@
 {
   "manufacturer": "Wild Discs",
-  "plastics": [
-    "Lava",
-    "Lava Flare",
-    "Landslide",
-    "Meteor",
-    "Nuclear",
-    "Ozone",
-    "Quicksand",
-    "Whirlpool"
-  ],
+  "plastics": ["Lava", "Lava Flare", "Landslide", "Meteor", "Nuclear", "Ozone", "Quicksand", "Whirlpool"],
   "discNames": [
     "Addax",
     "Angler",

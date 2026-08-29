@@ -2,7 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 
 import { color, radius, space } from '~/styles/tokens.stylex';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 const styles = stylex.create({
   // Replaces MUI <Paper elevation={1}> + the `mt-8 p-4` Tailwind utilities.
@@ -13,8 +13,7 @@ const styles = stylex.create({
     backgroundColor: color.surface,
     color: color.textPrimary,
     borderRadius: radius.sm,
-    boxShadow:
-      '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
+    boxShadow: '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
   },
 });
 

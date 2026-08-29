@@ -6,7 +6,7 @@ import H2 from './H2';
 
 import type { Course } from '~/config/courses';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type BinFullFormProps = {
   course: Course;

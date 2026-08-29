@@ -11,15 +11,5 @@
     "OG Premium",
     "OG Soft"
   ],
-  "discNames": [
-    "Agera",
-    "Lid",
-    "Mobius",
-    "Ouro Boros",
-    "Penrose",
-    "Phi",
-    "Telos",
-    "Yang",
-    "Yin"
-  ]
+  "discNames": ["Agera", "Lid", "Mobius", "Ouro Boros", "Penrose", "Phi", "Telos", "Yang", "Yin"]
 }

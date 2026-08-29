@@ -6,7 +6,7 @@ import NotifyForm from './components/NotifyForm';
 import { createDiscFoundNotification } from '~/models/discFoundNotification.server';
 import { getCourseBySlug } from '~/config/courses';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const course = getCourseBySlug(params.courseSlug!);

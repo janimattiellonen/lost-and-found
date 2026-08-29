@@ -1,7 +1,7 @@
 import type { EmptyingLogDTO } from '~/types';
 import Button from '~/routes/components/Button';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type EmptyingLogItemProps = {
   item: EmptyingLogDTO;

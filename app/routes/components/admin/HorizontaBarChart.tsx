@@ -2,7 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 
 import { space } from '~/styles/tokens.stylex';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type Stat = {
   label: string;

@@ -1,19 +1,6 @@
 {
   "manufacturer": "Prodigy",
-  "plastics": [
-    "200",
-    "300",
-    "300 Firm",
-    "300 Soft",
-    "400",
-    "400G",
-    "500",
-    "750",
-    "750G",
-    "AIR",
-    "Glow",
-    "ReBlend"
-  ],
+  "plastics": ["200", "300", "300 Firm", "300 Soft", "400", "400G", "500", "750", "750G", "AIR", "Glow", "ReBlend"],
   "discNames": [
     "A1",
     "A2",

@@ -27,7 +27,7 @@ import H2 from '~/routes/components/H2';
 import QrPosterButtons from '~/routes/components/admin/QrPosterButtons';
 import BinFullQrPosterButtons from '~/routes/components/admin/BinFullQrPosterButtons';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 const styles = stylex.create({
   card: {

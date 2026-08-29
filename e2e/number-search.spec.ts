@@ -35,5 +35,8 @@ test('filter row controls are bottom-aligned', async ({ page }) => {
   expect(Math.abs(bottom(c) - bottom(s))).toBeLessThanOrEqual(4);
   expect(Math.abs(bottom(c) - bottom(b))).toBeLessThanOrEqual(4);
 
-  await page.screenshot({ path: 'e2e/__screens__/04-filter-row.png', clip: { x: 0, y: c.y - 60, width: 760, height: 140 } });
+  await page.screenshot({
+    path: 'e2e/__screens__/04-filter-row.png',
+    clip: { x: 0, y: c.y - 60, width: 760, height: 140 },
+  });
 });

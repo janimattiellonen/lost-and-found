@@ -2,7 +2,7 @@ import Button from '~/routes/components/Button';
 
 import type { ClubDTO } from '~/types';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type SyncItemProps = {
   club: ClubDTO;
