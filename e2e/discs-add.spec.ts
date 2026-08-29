@@ -54,6 +54,40 @@ test.describe('/discs/add disc text parsing', () => {
     await expect(input).toHaveValue('');
   });
 
+  test('flags a manufacturer it had to guess, and stops once corrected', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    // "Wave" is a disc name under two makers, so the one picked is a coin flip.
+    await input.fill('Wave punainen');
+    await input.press('Enter');
+
+    const flag = page.locator('tbody tr').first().getByTitle('Valmistaja on epävarma – tarkista.');
+
+    await expect(flag).toBeVisible();
+
+    // A maker typed by hand is stated outright, so the flag goes.
+    await page
+      .locator('tbody tr')
+      .first()
+      .getByRole('button', { name: /^Valmistaja:/ })
+      .click();
+    await page.getByLabel('Valmistaja').fill('MVP');
+    await page.getByLabel('Valmistaja').press('Enter');
+
+    await expect(flag).toHaveCount(0);
+  });
+
+  test('leaves a confidently parsed manufacturer unflagged', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    await page.getByLabel('Kiekon tiedot').fill('Mako3 keltainen');
+    await page.getByLabel('Kiekon tiedot').press('Enter');
+
+    await expect(page.getByTitle('Valmistaja on epävarma – tarkista.')).toHaveCount(0);
+  });
+
   test('shows the words it could not place', async ({ page }) => {
     await page.goto('/discs/add');
 

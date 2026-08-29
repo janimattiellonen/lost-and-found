@@ -80,6 +80,12 @@ const styles = stylex.create({
   // The words the parser could not place. Muted, because a weight or a note is
   // expected to land here and must not read as an error.
   leftovers: { color: color.textMuted, fontStyle: 'italic' },
+  // Only 'low' is worth showing: it means the disc name and the plastic named
+  // different makers, so the one picked is roughly a coin flip. 'medium' fires
+  // on half of all entries and has never yet been wrong, which would make it
+  // noise.
+  flaggedCell: { display: 'flex', alignItems: 'baseline', gap: space.xs },
+  uncertain: { color: '#8a6100', cursor: 'help' },
   none: { color: color.textMuted, fontStyle: 'italic' },
   // The static value is a button so a cell can be reached and opened by
   // keyboard as well as by clicking it.
@@ -192,6 +198,9 @@ const styles = stylex.create({
   },
 });
 
+/** Shown beside a manufacturer the parser had to guess between two makers. */
+const UNCERTAIN_HINT = 'Valmistaja on epävarma – tarkista.';
+
 const columns: { header: string; field: EditableField }[] = [
   { header: 'Kiekko', field: 'discName' },
   { header: 'Muovi', field: 'plastic' },
@@ -277,7 +286,19 @@ export default function AddDiscsPage(): JSX.Element {
     const trimmed = value.trim();
 
     updateRows((current) =>
-      current.map((row) => (row.id === target.rowId ? { ...row, [target.field]: trimmed || null } : row)),
+      current.map((row) => {
+        if (row.id !== target.rowId) {
+          return row;
+        }
+
+        const edited = { ...row, [target.field]: trimmed || null };
+
+        // Typing the maker by hand is stating it outright, which is what 'high'
+        // means -- so a corrected cell stops being flagged as a guess.
+        return target.field === 'manufacturer'
+          ? { ...edited, confidence: { ...row.confidence, manufacturer: 'high' as const } }
+          : edited;
+      }),
     );
 
     setEditing(null);
@@ -383,9 +404,10 @@ export default function AddDiscsPage(): JSX.Element {
               <tr key={row.id}>
                 {columns.map((column) => {
                   const target = { rowId: row.id, field: column.field };
+                  const isGuessed = column.field === 'manufacturer' && row.confidence.manufacturer === 'low';
 
                   return (
-                    <td key={column.field} {...stylex.props(styles.td)}>
+                    <td key={column.field} {...stylex.props(styles.td, isGuessed && styles.flaggedCell)}>
                       <Cell
                         value={row[column.field]}
                         header={column.header}
@@ -394,6 +416,13 @@ export default function AddDiscsPage(): JSX.Element {
                         onCommit={(value) => commit(target, value)}
                         onCancel={() => setEditing(null)}
                       />
+
+                      {isGuessed && (
+                        <span {...stylex.props(styles.uncertain)} title={UNCERTAIN_HINT}>
+                          <span aria-hidden="true">?</span>
+                          <span {...stylex.props(styles.srOnly)}>{UNCERTAIN_HINT}</span>
+                        </span>
+                      )}
                     </td>
                   );
                 })}
