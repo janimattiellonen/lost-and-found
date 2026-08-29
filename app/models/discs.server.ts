@@ -40,7 +40,7 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
   let { data } = await supabase
     .from('discs')
     .select(
-      'internal_disc_id, disc_name, can_be_sold_or_donated, is_returned_to_owner, returned_to_owner_text, added_at',
+      'internal_disc_id, disc_name, can_be_sold_or_donated, is_returned_to_owner, returned_to_owner_text, returned_to_owner_date, added_at',
     )
     .order('added_at', { ascending: true })
     .eq('club_id', clubId);
@@ -168,6 +168,59 @@ export async function deleteDisc(externalId: string, request: Request): Promise<
 
   if (error) {
     throw new Error(`Kiekon poisto epäonnistui: ${error.message}`);
+  }
+
+  return (data?.length ?? 0) > 0;
+}
+
+/** Matches an ISO calendar date, y-MM-dd. */
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/** True for a real calendar date in ISO form — 2026-02-30 is rejected. */
+export function isIsoDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !ISO_DATE_PATTERN.test(value)) {
+    return false;
+  }
+
+  const parsed = new Date(`${value}T00:00:00Z`);
+
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(value);
+}
+
+export type DiscReturn = {
+  returnedToOwnerDate: string;
+  /** Null when the method was left unanswered. */
+  returnMethod: number | null;
+};
+
+/**
+ * Marks one disc as returned to its owner, addressed by its external id.
+ *
+ * Replaces the free-text note that used to be typed into the Google Sheet
+ * ("29.8.2026 (Janimatti), postitettu") with the same facts as data. The text
+ * column is left untouched, so the sheet-imported history stays as it is.
+ *
+ * Scoped to APP_CLUB_ID as well as the uuid. Returns false when nothing
+ * matched.
+ */
+export async function markAsReturned(externalId: string, details: DiscReturn, request: Request): Promise<boolean> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  const supabase = createSupabaseServerClient(request);
+
+  const { data, error } = await supabase
+    .from('discs')
+    .update({
+      is_returned_to_owner: true,
+      returned_to_owner_date: details.returnedToOwnerDate,
+      return_method: details.returnMethod,
+    })
+    .eq('external_id', externalId)
+    .eq('club_id', clubId)
+    .select('external_id');
+
+  if (error) {
+    throw new Error(`Kiekon merkitseminen palautetuksi epäonnistui: ${error.message}`);
   }
 
   return (data?.length ?? 0) > 0;

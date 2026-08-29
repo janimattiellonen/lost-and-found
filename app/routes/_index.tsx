@@ -146,7 +146,7 @@ export default function TestPage(): JSX.Element {
           }
         </div>
         {fetcher.data?.data?.length > 0 && fetcher.state === 'idle' && (
-          <DiscTable discs={discs} onDeleted={() => fetcher.load('/discs/data')} />
+          <DiscTable discs={discs} onChanged={() => fetcher.load('/discs/data')} />
         )}
         {fetcher.state !== 'idle' && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
       </div>

@@ -15,35 +15,38 @@ import {
 } from '~/routes/components/admin/stats/stats-utils';
 import type { DiscDTO } from '~/types';
 
-function hasDate(str?: string | null | undefined): boolean {
-  if (!str) {
-    return false;
+// The date a disc went back to its owner comes from one of two places:
+// returned_to_owner_date, written by the admin tool, or the leading d.M.yyyy of
+// the free-text note copied from the Google Sheet ("29.8.2026 (Janimatti),
+// postitettu"), which is all the older rows have.
+function getReturnDate(disc: DiscDTO): Date | null {
+  if (disc.returnedToOwnerDate) {
+    const parsed = parse(disc.returnedToOwnerDate, 'y-MM-dd', new Date());
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
-  const pattern = /^\d+\.\d+\.\d+/;
 
-  const ret = str.match(pattern);
-
-  return ret?.length === 1;
-}
-
-function filter(data: DiscDTO[]): DiscDTO[] {
-  return data.filter((item: DiscDTO) => item.isReturnedToOwner && hasDate(item.returnedToOwnerText));
-}
-
-function getMonthFromData(data: DiscDTO): Date | null {
-  if (!data.returnedToOwnerText) {
+  if (!disc.returnedToOwnerText) {
     return null;
   }
 
-  const pattern = /^\d+\.\d+\.\d+/;
-
-  const ret = data.returnedToOwnerText.match(pattern);
+  const ret = disc.returnedToOwnerText.match(/^\d+\.\d+\.\d+/);
 
   if (ret?.length !== 1) {
     return null;
   }
 
-  return parse(ret[0], 'd.M.yyyy', new Date());
+  const parsed = parse(ret[0], 'd.M.yyyy', new Date());
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function filter(data: DiscDTO[]): DiscDTO[] {
+  return data.filter((item: DiscDTO) => item.isReturnedToOwner && getReturnDate(item) !== null);
+}
+
+function getMonthFromData(data: DiscDTO): Date | null {
+  return getReturnDate(data);
 }
 export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);

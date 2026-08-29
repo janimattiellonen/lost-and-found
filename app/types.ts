@@ -45,6 +45,10 @@ export type DiscDTO = {
   additionalInfo?: string;
   isReturnedToOwner?: boolean | null;
   returnedToOwnerText?: string | null;
+  /** ISO date (y-MM-dd) the disc was handed back. */
+  returnedToOwnerDate?: string | null;
+  /** See ReturnMethod in app/features/discReturn/returnMethod.ts. */
+  returnMethod?: number | null;
   canBeSoldOrDonated?: boolean;
   canBeSoldOrDonatedText?: string | null;
   ownerClubName?: string | null;
@@ -106,6 +110,8 @@ export type DbDiscType = {
   additional_info?: string | null;
   is_returned_to_owner?: boolean | null;
   returned_to_owner_text?: string | null;
+  returned_to_owner_date?: string | null;
+  return_method?: number | null;
   can_be_sold_or_donated?: boolean;
   can_be_sold_or_donated_text?: string | null;
   club_id: number;

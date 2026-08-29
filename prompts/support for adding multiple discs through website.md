@@ -147,3 +147,31 @@ that allows me to send a message to the owner. In similar fashion, add a delete 
 alert asking if I want to delete disc X. Call the server-side delete function if I confirm. Refresh the table
 content without page reload to remove the deleted disc. Use the external_id as disc id.
 
+## Phase 8 - marking disc as returned
+
+The discs table has a column `is_returned_to_owner`. I need a new admin tool to the table that allows me to mark 
+a disc as returned to the owner. Currently I add a manual entry to the google sheet: 
+- "29.8.2026 (Janimatti), postitettu"
+- "28.8.2026 (Janimatti), noudettu"
+
+It records the date the disc was returned, who returned and basically whether the disc was sent by mail or the 
+owner fetched it in person.
+
+Previously there was another person besides me who handled the list so that's why a name is included in the
+message. Now I only handle these but the message format stuck.
+
+I want to record explicitly how the disc was returned (`return_method`, tinyint, nullable), using a dedicated column 
+in `clubs` table. We can use numerical representatio: (0: BY_MAIL, 1: PICKED_UP, .... ). 
+I also need a new column for the date of return (`returned_to_owner_date`, nullable). I no longer need to record 
+the name of the "handler".
+
+The new admin tool icon should present me with a modal or an inline form with the fields:
+- date field
+  - returned_to_owner_date
+  - current date filled in by default
+- radio button
+  - return_method
+  - options (should be able to be reset)
+    - Postitettu
+    - Noudettu
+- Submit and Cancel buttons.

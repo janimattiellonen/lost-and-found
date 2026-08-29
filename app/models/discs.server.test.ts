@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isExternalId, toInsertRows } from './discs.server';
+import { isExternalId, isIsoDate, toInsertRows } from './discs.server';
 
 const disc = { internalDiscId: null, discName: 'Destroyer, Star', discColour: 'Punainen', clubId: 2 };
 
@@ -65,5 +65,26 @@ describe('isExternalId', () => {
     ['a uuid with trailing text', '3f8a1c2e-5b6d-4a7f-9c0e-1d2b3a4c5d6e drop table'],
   ])('rejects %s', (_reason, value) => {
     expect(isExternalId(value)).toBe(false);
+  });
+});
+
+describe('isIsoDate', () => {
+  it.each(['2026-08-29', '2026-01-01', '2024-02-29'])('accepts %s', (value) => {
+    expect(isIsoDate(value)).toBe(true);
+  });
+
+  it.each<[string, unknown]>([
+    ['a Finnish date', '29.8.2026'],
+    ['a day that does not exist', '2026-02-30'],
+    ['a month that does not exist', '2026-13-01'],
+    ['a non-leap 29 February', '2025-02-29'],
+    ['a single-digit month', '2026-8-29'],
+    ['a datetime', '2026-08-29T12:00:00Z'],
+    ['a date with trailing text', '2026-08-29 postitettu'],
+    ['a number', 20260829],
+    ['null', null],
+    ['undefined', undefined],
+  ])('rejects %s', (_reason, value) => {
+    expect(isIsoDate(value)).toBe(false);
   });
 });

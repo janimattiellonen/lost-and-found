@@ -1,8 +1,8 @@
-import { useMemo, useState, type JSX } from 'react';
+import { Fragment, useMemo, useState, type FormEvent, type JSX } from 'react';
 
 import { Link, useOutletContext } from 'react-router';
 
-import { add, isAfter } from 'date-fns';
+import { add, format, isAfter } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -16,15 +16,24 @@ import {
 } from '@tanstack/react-table';
 
 import { deleteDisc } from '~/features/discDeletion/deleteDisc';
-import { ArrowDownwardIcon, ArrowUpwardIcon, DeleteIcon, TextsmsIcon, WarningIcon } from '~/routes/components/icons';
+import { markAsReturned } from '~/features/discReturn/markAsReturned';
+import { returnMethodOptions, type ReturnMethodValue } from '~/features/discReturn/returnMethod';
+import {
+  ArrowDownwardIcon,
+  ArrowUpwardIcon,
+  CheckCircleIcon,
+  DeleteIcon,
+  TextsmsIcon,
+  WarningIcon,
+} from '~/routes/components/icons';
 import { space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 
 type DiscTableProps = {
   discs: DiscDTO[];
-  /** Called after a disc has been deleted, so the list can be reloaded. */
-  onDeleted?: () => void;
+  /** Called after a disc has been deleted or marked returned, to reload the list. */
+  onChanged?: () => void;
 };
 
 interface Row {
@@ -153,6 +162,112 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
   }));
 }
 
+type ReturnFormProps = {
+  row: Row;
+  externalId: string;
+  onDone: () => void;
+  onCancel: () => void;
+};
+
+/**
+ * Records a disc as returned to its owner: the date, and how it got there.
+ *
+ * Replaces the free-text note that used to be typed into the Google Sheet. The
+ * method is optional — the radios can be cleared — because the older entries
+ * did not always say.
+ */
+function ReturnForm({ row, externalId, onDone, onCancel }: ReturnFormProps): JSX.Element {
+  const [returnedOn, setReturnedOn] = useState(() => format(new Date(), 'y-MM-dd'));
+  const [method, setMethod] = useState<ReturnMethodValue | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+
+    setIsSaving(true);
+    setError(null);
+
+    const result = await markAsReturned({ externalId, returnedToOwnerDate: returnedOn, returnMethod: method });
+
+    setIsSaving(false);
+
+    if (result.status === 'error') {
+      setError(result.message);
+      return;
+    }
+
+    onDone();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
+      <p className="basis-full text-xs text-gray-600">
+        Merkitse palautetuksi: <b>{row.discName}</b>
+      </p>
+
+      <div>
+        <label htmlFor={`returned-on-${externalId}`} className="block text-xs font-bold text-gray-600 mb-1">
+          Palautuspäivä
+        </label>
+        <input
+          id={`returned-on-${externalId}`}
+          type="date"
+          required
+          value={returnedOn}
+          onChange={(event) => setReturnedOn(event.currentTarget.value)}
+          className="border border-gray-300 rounded px-2 py-1"
+        />
+      </div>
+
+      <fieldset>
+        <legend className="text-xs font-bold text-gray-600 mb-1">Palautustapa</legend>
+        <div className="flex items-center gap-4">
+          {returnMethodOptions.map((option) => (
+            <label key={option.value} className="inline-flex items-center gap-1">
+              <input
+                type="radio"
+                name={`return-method-${externalId}`}
+                value={option.value}
+                checked={method === option.value}
+                onChange={() => setMethod(option.value)}
+              />
+              {option.label}
+            </label>
+          ))}
+
+          <button
+            type="button"
+            // The method is nullable, so there has to be a way back to "not
+            // answered" once a radio has been picked.
+            disabled={method === null}
+            onClick={() => setMethod(null)}
+            className="text-xs underline text-gray-500 disabled:opacity-40 disabled:no-underline"
+          >
+            Tyhjennä
+          </button>
+        </div>
+      </fieldset>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="bg-green-700 hover:bg-green-800 disabled:opacity-40 text-white rounded px-3 py-1"
+        >
+          {isSaving ? 'Tallennetaan...' : 'Merkitse palautetuksi'}
+        </button>
+
+        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-gray-100 rounded px-3 py-1">
+          Peruuta
+        </button>
+      </div>
+
+      {error && <p className="basis-full text-red-700">{error}</p>}
+    </form>
+  );
+}
+
 type DeleteButtonProps = {
   row: Row;
   onDeleted?: () => void;
@@ -206,9 +321,12 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
   );
 }
 
-export default function DiscTable({ discs, onDeleted }: DiscTableProps): JSX.Element | null {
+export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Element | null {
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
+
+  // The disc whose return form is open, by external id.
+  const [returningId, setReturningId] = useState<string | null>(null);
 
   const rows = useMemo(() => mapToDataRows(discs), [discs]);
 
@@ -256,9 +374,9 @@ export default function DiscTable({ discs, onDeleted }: DiscTableProps): JSX.Ele
           </div>
         ),
       },
-      // A column of its own rather than an icon in the phone number cell: a
-      // disc with no phone number has an empty cell there, and it has to be
-      // deletable too.
+      // A column of its own rather than icons in the phone number cell: a disc
+      // with no phone number has an empty cell there, and it still has to be
+      // deletable and markable as returned.
       ...(isLoggedIn
         ? [
             {
@@ -266,12 +384,32 @@ export default function DiscTable({ discs, onDeleted }: DiscTableProps): JSX.Ele
               header: '',
               enableSorting: false,
               enableResizing: false,
-              cell: ({ row }) => <DeleteButton row={row.original} onDeleted={onDeleted} />,
+              cell: ({ row }) => (
+                <span className="inline-flex items-center gap-2">
+                  {row.original.externalId && (
+                    <button
+                      type="button"
+                      aria-label={`Merkitse kiekko ${row.original.discName} palautetuksi`}
+                      aria-expanded={returningId === row.original.externalId}
+                      onClick={() =>
+                        setReturningId((current) =>
+                          current === row.original.externalId ? null : (row.original.externalId ?? null),
+                        )
+                      }
+                      className="inline-flex text-gray-500 hover:text-green-700"
+                    >
+                      <CheckCircleIcon width={18} height={18} />
+                    </button>
+                  )}
+
+                  <DeleteButton row={row.original} onDeleted={onChanged} />
+                </span>
+              ),
             } satisfies ColumnDef<Row>,
           ]
         : []),
     ],
-    [isLoggedIn, onDeleted],
+    [isLoggedIn, onChanged, returningId],
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
@@ -335,22 +473,47 @@ export default function DiscTable({ discs, onDeleted }: DiscTableProps): JSX.Ele
         ))}
       </thead>
       <tbody>
-        {table.getRowModel().rows.map((row, index) => (
-          <tr key={row.id} {...stylex.props(index % 2 === 1 && styles.rowEven)}>
-            {row.getVisibleCells().map((cell) => {
-              const tight = cell.column.id === 'id' || cell.column.id === 'actions';
-              return (
-                <td
-                  key={cell.id}
-                  {...stylex.props(styles.td, tight && styles.tight)}
-                  style={tight ? undefined : { width: cell.column.getSize() }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              );
-            })}
-          </tr>
-        ))}
+        {table.getRowModel().rows.map((row, index) => {
+          const externalId = row.original.externalId;
+          const isReturning = externalId != null && externalId === returningId;
+
+          return (
+            <Fragment key={row.id}>
+              <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+                {row.getVisibleCells().map((cell) => {
+                  const tight = cell.column.id === 'id' || cell.column.id === 'actions';
+                  return (
+                    <td
+                      key={cell.id}
+                      {...stylex.props(styles.td, tight && styles.tight)}
+                      style={tight ? undefined : { width: cell.column.getSize() }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* The return form opens as a row of its own, under the disc it
+                  belongs to, rather than as a modal. */}
+              {isReturning && (
+                <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+                  <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
+                    <ReturnForm
+                      row={row.original}
+                      externalId={externalId}
+                      onCancel={() => setReturningId(null)}
+                      onDone={() => {
+                        setReturningId(null);
+                        onChanged?.();
+                      }}
+                    />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
+          );
+        })}
       </tbody>
     </table>
   );
