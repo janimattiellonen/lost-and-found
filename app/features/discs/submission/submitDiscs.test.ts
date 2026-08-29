@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { parseDiscText } from '~/features/discParser/parseDiscText';
+import { parseDiscText } from '~/features/discs/submission/parser/parseDiscText';
 
 import { submitDiscs, toSubmission } from './submitDiscs';
 

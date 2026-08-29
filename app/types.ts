@@ -1,5 +1,5 @@
-import type { DisposalMethodValue } from '~/features/discDisposal/disposalMethod';
-import type { ReturnMethodValue } from '~/features/discReturn/returnMethod';
+import type { DisposalMethodValue } from '~/features/discs/disposal/disposalMethod';
+import type { ReturnMethodValue } from '~/features/discs/return/returnMethod';
 
 export type clubType = {
   id: number;

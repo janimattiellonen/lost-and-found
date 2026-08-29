@@ -1,8 +1,8 @@
 import { Form, useActionData } from 'react-router';
 
-import Button from '~/routes/components/Button';
+import Button from '~/ui/Button';
 
-import H2 from './H2';
+import H2 from '~/ui/H2';
 
 import type { Course } from '~/config/courses';
 

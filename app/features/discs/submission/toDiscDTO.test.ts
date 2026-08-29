@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseDiscText } from '~/features/discParser/parseDiscText';
+import { parseDiscText } from '~/features/discs/submission/parser/parseDiscText';
 
 import { toSubmission } from './submitDiscs';
 import { MAX_BATCH_SIZE, parseBatch, toDiscDTO, toDiscName } from './toDiscDTO';

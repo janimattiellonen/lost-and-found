@@ -1,8 +1,8 @@
 import { useFetcher } from 'react-router';
 
-import Button from '~/routes/components/Button';
+import Button from '~/ui/Button';
 
-import { formatDate } from '~/routes/utils';
+import { formatDate } from '~/utils';
 import type { MessageTemplateDTO } from '~/types';
 
 import type { JSX } from 'react';

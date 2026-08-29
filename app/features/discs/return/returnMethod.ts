@@ -1,4 +1,4 @@
-import { methodEnum } from '~/features/methodEnum';
+import { methodEnum } from '~/lib/methodEnum';
 
 /**
  * How a disc got back to its owner.

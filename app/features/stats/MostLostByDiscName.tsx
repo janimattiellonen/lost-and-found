@@ -1,8 +1,8 @@
 import type { DiscDTO } from '~/types';
 
-import H3 from '../../H3';
+import H3 from '~/ui/H3';
 
-import HorizontalBarChart from '~/routes/components/admin/HorizontaBarChart';
+import HorizontalBarChart from '~/ui/HorizontalBarChart';
 
 import type { JSX } from 'react';
 

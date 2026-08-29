@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Button from '~/routes/components/Button';
+import Button from '~/ui/Button';
 import QRCode from 'qrcode';
 
 import type { Course } from '~/config/courses';

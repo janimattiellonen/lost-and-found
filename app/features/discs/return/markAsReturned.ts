@@ -1,4 +1,4 @@
-import { type ActionResult, postJson } from '~/features/api/postJson';
+import { type ActionResult, postJson } from '~/lib/api/postJson';
 
 import type { DiscReturnInput } from './discReturn';
 

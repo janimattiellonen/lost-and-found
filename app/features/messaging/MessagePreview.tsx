@@ -1,5 +1,5 @@
-import H3 from '../H3';
-import Paper from '~/routes/components/Paper';
+import H3 from '~/ui/H3';
+import Paper from '~/ui/Paper';
 
 import type { JSX } from 'react';
 

@@ -1,5 +1,5 @@
 import type { EmptyingLogDTO } from '~/types';
-import Button from '~/routes/components/Button';
+import Button from '~/ui/Button';
 
 import type { JSX } from 'react';
 

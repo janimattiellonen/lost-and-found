@@ -1,4 +1,4 @@
-import Button from '~/routes/components/Button';
+import Button from '~/ui/Button';
 
 import type { ClubDTO } from '~/types';
 

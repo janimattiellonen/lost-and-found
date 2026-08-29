@@ -6,8 +6,8 @@ import * as process from 'process';
 import type { DiscDTO } from '~/types';
 
 import { fromDTO, toDTO } from '~/models/DiscMapper';
-import type { DiscDisposalDetails } from '~/features/discDisposal/discDisposal';
-import type { DiscReturnDetails } from '~/features/discReturn/discReturn';
+import type { DiscDisposalDetails } from '~/features/discs/disposal/discDisposal';
+import type { DiscReturnDetails } from '~/features/discs/return/discReturn';
 
 export async function getDiscs(): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;

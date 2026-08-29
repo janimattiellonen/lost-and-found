@@ -1,62 +1,26 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { redirect } from 'react-router';
+import { redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
+import { runSync } from '~/features/discSync/runSync.server';
+import SyncPage from '~/features/discSync/SyncPage';
 import { fetchClubs } from '~/models/clubs.server';
-import { useLoaderData } from 'react-router';
-
-import SyncItem from '~/routes/discs.syncItem';
-import type { ClubDTO } from '~/types';
-
-import { syncAllDiscs, syncNewDiscs } from '~/models/syncDiscs.server';
-
 import { isUserLoggedIn } from '~/models/utils';
-
-import H2 from '~/routes/components/H2';
 
 import type { JSX } from 'react';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const isLoggedIn = await isUserLoggedIn(request);
-
-  if (!isLoggedIn) {
+  if (!(await isUserLoggedIn(request))) {
     return redirect('/sign-in');
   }
 
-  const data = await fetchClubs();
-  return { data };
+  return { data: (await fetchClubs()) ?? [] };
 };
 
 export async function action({ request }: ActionFunctionArgs) {
-  const body = await request.formData();
-
-  const clubId = body.get('clubId');
-
-  const allData = body.get('all');
-  const newData = body.get('new');
-
-  if (allData) {
-    await syncAllDiscs(parseInt(clubId ? clubId.toString() : '', 10), request);
-  } else if (newData) {
-    await syncNewDiscs(parseInt(clubId ? clubId.toString() : '', 10), request);
-  }
-
-  return { ok: true };
+  return runSync(request, await request.formData());
 }
 
-export default function SyncPage(): JSX.Element {
-  const { data } = useLoaderData();
+export default function SyncRoute(): JSX.Element {
+  const loaderData = useLoaderData<typeof loader>();
 
-  return (
-    <div>
-      <H2 className="mt-8 mb-8">Päivitä kiekkotiedot</H2>
-
-      {data.map((club: ClubDTO) => {
-        return (
-          <form key={club.id} method="post" action="/discs/sync">
-            <SyncItem club={club} />
-          </form>
-        );
-      })}
-    </div>
-  );
+  return <SyncPage {...loaderData} />;
 }

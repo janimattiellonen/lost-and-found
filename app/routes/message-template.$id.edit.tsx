@@ -1,127 +1,29 @@
-import { useEffect, useState, type JSX } from 'react';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { data, redirect } from 'react-router';
-import Checkbox from '~/routes/components/Checkbox';
-import FormControlLabel from '~/routes/components/FormControlLabel';
-import TextField from '~/routes/components/TextField';
-import Button from '~/routes/components/Button';
+import { redirect, useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
-import { Form, useActionData, useLoaderData } from 'react-router';
-
-import { getMessageTemplate, editMessageTemplate } from '~/models/messageTemplate.server';
-
+import EditMessageTemplatePage from '~/features/messaging/EditMessageTemplatePage';
+import { editMessageTemplateFromForm } from '~/features/messaging/editMessageTemplateFromForm.server';
+import { getMessageTemplate } from '~/models/messageTemplate.server';
 import { isUserLoggedIn } from '~/models/utils';
-import type { MessageTemplateDTO } from '~/types';
 
-import H2 from './components/H2';
-import Wrapper from '~/routes/components/Wrapper';
-import Label from '~/routes/components/Label';
-
-type MessageTemplateErrors = {
-  content?: string | null | undefined;
-};
-
-export async function action({ request, params }: ActionFunctionArgs) {
-  const errors: MessageTemplateErrors = {};
-
-  const id = parseInt(params.id || '', 10);
-  const form = await request.formData();
-  const content = form.get('content')!;
-
-  const isDefault = form.get('is-default')!;
-
-  if (typeof content !== 'string' || content.length === 0) {
-    errors.content = 'Sisältö on pakollinen';
-  }
-
-  if (Object.keys(errors).length) {
-    return data({ errors, ok: null }, { status: 422 });
-  }
-
-  await editMessageTemplate(id, content.toString(), isDefault ? Boolean(isDefault.toString()) : false, request);
-
-  return data({ errors: null, ok: true }, { status: 201 });
-}
+import type { JSX } from 'react';
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
-  const isLoggedIn = await isUserLoggedIn(request);
-
-  if (!isLoggedIn) {
+  if (!(await isUserLoggedIn(request))) {
     return redirect('/sign-in');
   }
 
-  const id = parseInt(params.id || '', 10);
-
-  const messageTemplate: MessageTemplateDTO | null = await getMessageTemplate(id, request);
+  const messageTemplate = await getMessageTemplate(parseInt(params.id || '', 10), request);
 
   return { messageTemplate, ok: null };
 };
 
-export default function EditMessageTemplate(): JSX.Element {
-  const [message, setMessage] = useState<string>('');
-  const [isDefault, setIsDefault] = useState<boolean>(false);
+export async function action({ request, params }: ActionFunctionArgs) {
+  return editMessageTemplateFromForm(request, parseInt(params.id || '', 10), await request.formData());
+}
 
-  const response = useActionData();
-  const { messageTemplate } = useLoaderData();
+export default function EditMessageTemplateRoute(): JSX.Element {
+  const { messageTemplate } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
-  const { errors } = response || {};
-
-  useEffect(() => {
-    if (messageTemplate) {
-      setMessage(messageTemplate.content);
-      setIsDefault(messageTemplate.isDefault);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div>
-      <H2 className="mt-8 mb-4">Muokkaa viestipohjaa</H2>
-
-      <Form method="post">
-        <Wrapper>
-          <Label htmlFor="content">Sisältö</Label>
-          <TextField
-            name="content"
-            id="content"
-            multiline
-            rows={9}
-            fullWidth
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-            }}
-          />
-
-          {errors?.content && <p className="text-red-500 text-xs italic">{errors.content}</p>}
-        </Wrapper>
-
-        <Wrapper>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="is-default"
-                value={isDefault}
-                checked={isDefault}
-                onChange={(e) => {
-                  setIsDefault(e.target.checked);
-                }}
-              />
-            }
-            label="Oletusviestipohja"
-          />
-        </Wrapper>
-
-        <div className="flex justify-start gap-4">
-          <Button color="error" variant="contained" to={`/message-templates`}>
-            Peru
-          </Button>
-
-          <Button name="action" value="create" variant="contained" type="submit">
-            Päivitä
-          </Button>
-        </div>
-      </Form>
-    </div>
-  );
+  return <EditMessageTemplatePage messageTemplate={messageTemplate} errors={actionData?.errors} />;
 }

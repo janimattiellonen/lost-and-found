@@ -1,4 +1,4 @@
-import { methodEnum } from '~/features/methodEnum';
+import { methodEnum } from '~/lib/methodEnum';
 
 /**
  * What is to happen to a disc the club is releasing.

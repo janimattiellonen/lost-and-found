@@ -2,7 +2,7 @@ import { useState, type JSX } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
-import H3 from '../H3';
+import H3 from '~/ui/H3';
 import { space } from '~/styles/tokens.stylex';
 
 const styles = stylex.create({

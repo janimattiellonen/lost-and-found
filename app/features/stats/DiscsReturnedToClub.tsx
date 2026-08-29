@@ -1,15 +1,15 @@
 import { useState, type JSX } from 'react';
-import { getMonth, getMonthName, getDayOfMonth, getYear } from '~/routes/utils';
-import BarChart from '~/routes/components/admin/BarChart';
+import { getMonth, getMonthName, getDayOfMonth, getYear } from '~/utils';
+import BarChart from '~/ui/BarChart';
 
-import type { LostDiscsProps } from '~/routes/components/admin/stats/stats-utils';
+import type { LostDiscsProps } from '~/features/stats/statsUtils';
 import {
   getAddedDiscCountByMonth,
   getAddedDiscCountByDaysInMonth,
   mapBarData,
   getLegendItems,
   getLegendItems2,
-} from '~/routes/components/admin/stats/stats-utils';
+} from '~/features/stats/statsUtils';
 import type { DiscDTO } from '~/types';
 
 function getMonthFromData(data: DiscDTO): Date | null {

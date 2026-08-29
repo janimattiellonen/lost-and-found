@@ -2,7 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 
 import { NavLink } from 'react-router';
 
-import Button from '~/routes/components/Button';
+import Button from '~/ui/Button';
 import { color, radius, space } from '~/styles/tokens.stylex';
 
 import type { JSX } from 'react';

@@ -1,6 +1,6 @@
 import type { DiscDTO } from '~/types';
-import type { BarValueType } from '~/routes/components/admin/BarChart';
-import { getMonthName } from '~/routes/utils';
+import type { BarValueType } from '~/ui/BarChart';
+import { getMonthName } from '~/utils';
 import { format, isWithinInterval, lastDayOfMonth } from 'date-fns';
 
 export type LostDiscsProps = {

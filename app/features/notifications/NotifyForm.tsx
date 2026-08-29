@@ -1,15 +1,15 @@
 import { useState, type JSX } from 'react';
 import { Form, useActionData } from 'react-router';
 
-import Collapse from '~/routes/components/Collapse';
-import { RadioGroup, Radio } from '~/routes/components/RadioGroup';
-import FormControlLabel from '~/routes/components/FormControlLabel';
-import TextField from '~/routes/components/TextField';
-import Button from '~/routes/components/Button';
+import Collapse from '~/ui/Collapse';
+import { RadioGroup, Radio } from '~/ui/RadioGroup';
+import FormControlLabel from '~/ui/FormControlLabel';
+import TextField from '~/ui/TextField';
+import Button from '~/ui/Button';
 
-import H2 from './H2';
-import Wrapper from './Wrapper';
-import Label from './Label';
+import H2 from '~/ui/H2';
+import Wrapper from '~/ui/Wrapper';
+import Label from '~/ui/Label';
 
 import type { Course } from '~/config/courses';
 import { courses } from '~/config/courses';

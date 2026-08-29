@@ -15,12 +15,12 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 
-import { deleteDisc } from '~/features/discDeletion/deleteDisc';
-import { disposalMethodOptions } from '~/features/discDisposal/disposalMethod';
-import { markForDisposal } from '~/features/discDisposal/markForDisposal';
-import { markAsReturned } from '~/features/discReturn/markAsReturned';
-import { returnMethodOptions } from '~/features/discReturn/returnMethod';
-import DateAndMethodForm from '~/routes/components/admin/DateAndMethodForm';
+import { deleteDisc } from '~/features/discs/deletion/deleteDisc';
+import { disposalMethodOptions } from '~/features/discs/disposal/disposalMethod';
+import { markForDisposal } from '~/features/discs/disposal/markForDisposal';
+import { markAsReturned } from '~/features/discs/return/markAsReturned';
+import { returnMethodOptions } from '~/features/discs/return/returnMethod';
+import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import {
   ArrowDownwardIcon,
   ArrowUpwardIcon,
@@ -29,7 +29,7 @@ import {
   SellIcon,
   TextsmsIcon,
   WarningIcon,
-} from '~/routes/components/icons';
+} from '~/ui/icons';
 import { space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';

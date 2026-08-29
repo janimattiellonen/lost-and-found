@@ -1,56 +1,26 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { redirect } from 'react-router';
-import { useLoaderData } from 'react-router';
+import { redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
-import { getEmptyingLogItems, markAsEmptied } from '~/models/emptyingLog.server';
-import type { EmptyingLogDTO } from '~/types';
-
+import EmptyingLogPage from '~/features/emptyingLog/EmptyingLogPage';
+import { markBinEmptied } from '~/features/emptyingLog/markBinEmptied.server';
+import { getEmptyingLogItems } from '~/models/emptyingLog.server';
 import { isUserLoggedIn } from '~/models/utils';
-
-import EmptyingLogItem from '~/routes/components/admin/EmptyingLogItem';
-
-import H2 from '~/routes/components/H2';
 
 import type { JSX } from 'react';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const isLoggedIn = await isUserLoggedIn(request);
-
-  if (!isLoggedIn) {
+  if (!(await isUserLoggedIn(request))) {
     return redirect('/sign-in');
   }
 
-  const emptyingLogItems = await getEmptyingLogItems(request);
-
-  return { emptyingLogItems };
+  return { emptyingLogItems: await getEmptyingLogItems(request) };
 };
 
 export async function action({ request }: ActionFunctionArgs) {
-  const body = await request.formData();
-
-  const item = body.get('item');
-
-  if (item) {
-    await markAsEmptied(parseInt(item.toString(), 10), request);
-  }
-
-  return {};
+  return markBinEmptied(request, await request.formData());
 }
-export default function EmptyingLogPage(): JSX.Element {
-  const { emptyingLogItems } = useLoaderData();
 
-  return (
-    <div>
-      <H2 className="mt-8 mb-8">Tyhjennysloki</H2>
+export default function EmptyingLogRoute(): JSX.Element {
+  const loaderData = useLoaderData<typeof loader>();
 
-      {emptyingLogItems.length &&
-        emptyingLogItems.map((item: EmptyingLogDTO) => {
-          return (
-            <form key={item.id} method="post" action="/emptying-log">
-              <EmptyingLogItem item={item} />
-            </form>
-          );
-        })}
-    </div>
-  );
+  return <EmptyingLogPage {...loaderData} />;
 }

@@ -1,5 +1,5 @@
-import { postJson } from '~/features/api/postJson';
-import type { ParsedDisc } from '~/features/discParser/parseDiscText';
+import { postJson } from '~/lib/api/postJson';
+import type { ParsedDisc } from '~/features/discs/submission/parser/parseDiscText';
 
 /** One disc as it will be sent to the server. */
 export type DiscSubmission = {

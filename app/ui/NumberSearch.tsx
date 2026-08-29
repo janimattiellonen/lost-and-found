@@ -1,6 +1,6 @@
 import type { ChangeEvent, JSX } from 'react';
 
-import TextField from '~/routes/components/TextField';
+import TextField from '~/ui/TextField';
 
 type NumberSearchProps = {
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
