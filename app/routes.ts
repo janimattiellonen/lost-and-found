@@ -21,5 +21,12 @@ export default flatRoutes({
     '**/Header.tsx',
     '**/utils.ts',
     '**/components/**',
+
+    // Disabled rather than deleted: discs are added through /discs/add now, so
+    // the Google Sheet sync is no longer used. Excluding the route file makes
+    // /discs/sync a 404 while discs.sync.tsx, discs.syncItem.tsx and
+    // models/syncDiscs.server.ts stay in place. Delete the line to bring it
+    // back.
+    '**/discs.sync.tsx',
   ],
 }) satisfies RouteConfig;
