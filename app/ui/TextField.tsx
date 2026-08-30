@@ -2,7 +2,7 @@ import type { ChangeEventHandler, InputHTMLAttributes, JSX } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
-import { color, radius } from '~/styles/tokens.stylex';
+import { color, radius, size } from '~/styles/tokens.stylex';
 
 // StyleX text input / textarea. Replaces MUI <TextField> for the app's form
 // fields (which use a separate <Label> above, not MUI's floating label). The
@@ -27,6 +27,8 @@ const styles = stylex.create({
     boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
     outline: 'none',
   },
+  // Single-line only: a textarea sizes itself from `rows`.
+  input: { height: size.control },
   fullWidth: { width: '100%' },
 });
 
@@ -56,7 +58,7 @@ export default function TextField({
   type,
   ...rest
 }: TextFieldProps): JSX.Element {
-  const sx = stylex.props(styles.base, fullWidth && styles.fullWidth);
+  const sx = stylex.props(styles.base, !multiline && styles.input, fullWidth && styles.fullWidth);
   const merged = [sx.className, className].filter(Boolean).join(' ');
 
   if (multiline) {

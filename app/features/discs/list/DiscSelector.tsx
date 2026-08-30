@@ -3,7 +3,7 @@ import { useMemo, useRef, useState, type JSX } from 'react';
 import { useCombobox } from 'downshift';
 import * as stylex from '@stylexjs/stylex';
 
-import { color, radius } from '~/styles/tokens.stylex';
+import { color, radius, size } from '~/styles/tokens.stylex';
 
 type DiscSelectorProps = {
   discNames: string[];
@@ -13,11 +13,14 @@ type DiscSelectorProps = {
 const MENU_MAX_HEIGHT = 240;
 
 const styles = stylex.create({
-  root: { width: '300px' },
+  // Full width on a phone, where the filters stack; a fixed 300px once they sit
+  // in a row, where shrinking squeezed the field down to the chevron alone.
+  root: { width: { default: '100%', '@media (min-width: 600px)': '300px' }, flexShrink: 0 },
   label: { display: 'block', fontWeight: 700, marginBottom: '4px', color: color.textSecondary },
   inputWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
   input: {
     width: '100%',
+    height: size.control,
     boxSizing: 'border-box',
     padding: '8px 36px 8px 12px',
     fontFamily: 'inherit',
