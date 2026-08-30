@@ -17,8 +17,8 @@ import { createBrowserClient } from '@supabase/ssr';
 
 import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
-import AdminMenu from '~/routes/AdminMenu';
-import Header from '~/routes/Header';
+import AdminMenu from '~/ui/AdminMenu';
+import Header from '~/ui/Header';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
 // directives unexpanded). React Router injects the resulting stylesheet for SSR.

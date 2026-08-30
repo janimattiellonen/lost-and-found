@@ -6,15 +6,15 @@ import * as process from 'process';
 import type { DiscDTO } from '~/types';
 
 import { fromDTO, toDTO } from '~/models/DiscMapper';
-import type { DiscDisposalDetails } from '~/features/discDisposal/discDisposal';
-import type { DiscReturnDetails } from '~/features/discReturn/discReturn';
+import type { DiscDisposalDetails } from '~/features/discs/disposal/discDisposal';
+import type { DiscReturnDetails } from '~/features/discs/return/discReturn';
 
 export async function getDiscs(): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
 
   const supabase = createConnection();
 
-  let { data } = await supabase
+  const { data } = await supabase
     .from('discs')
     .select(
       'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at',
@@ -39,7 +39,7 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
 
   const supabase = createConnection();
 
-  let { data } = await supabase
+  const { data } = await supabase
     .from('discs')
     .select(
       'internal_disc_id, disc_name, can_be_sold_or_donated, is_returned_to_owner, returned_to_owner_text, returned_to_owner_date, added_at',
@@ -62,7 +62,7 @@ export async function getDiscWithFullPhoneNumber(internalDiscId: number): Promis
 
   const supabase = createConnection();
 
-  let { data } = await supabase
+  const { data } = await supabase
     .from('discs')
     .select('internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
     .eq('club_id', clubId)

@@ -1,6 +1,6 @@
 import type { DbDiscType, DiscDTO } from '~/types';
-import { isDisposalMethod } from '~/features/discDisposal/disposalMethod';
-import { isReturnMethod } from '~/features/discReturn/returnMethod';
+import { isDisposalMethod } from '~/features/discs/disposal/disposalMethod';
+import { isReturnMethod } from '~/features/discs/return/returnMethod';
 
 function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;

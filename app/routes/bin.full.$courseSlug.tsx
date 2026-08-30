@@ -1,66 +1,34 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { createCookie, data } from 'react-router';
-import { useLoaderData } from 'react-router';
+import { useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
-import BinFullForm from './components/BinFullForm';
-
-import { createBinFullNotification } from '~/models/binFullNotification.server';
+import { wasRecentlySubmitted } from '~/features/notifications/binFullRateLimit.server';
+import BinFullForm from '~/features/notifications/BinFullForm';
+import { reportBinFull } from '~/features/notifications/reportBinFull.server';
 import { getCourseBySlug } from '~/config/courses';
 
 import type { JSX } from 'react';
 
-const RATE_LIMIT_MS = 10 * 60 * 1000;
-
-const cookieFor = (slug: string) =>
-  createCookie(`bin_full_rl_${slug}`, {
-    path: '/bin/full',
-    sameSite: 'lax',
-    maxAge: RATE_LIMIT_MS / 1000,
-    httpOnly: true,
-  });
-
-async function readRateLimitedAt(request: Request, slug: string): Promise<number | null> {
-  const cookie = cookieFor(slug);
-  const value = await cookie.parse(request.headers.get('Cookie'));
-  const ts = typeof value === 'number' ? value : null;
-  if (!ts) return null;
-  return Date.now() - ts < RATE_LIMIT_MS ? ts : null;
-}
-
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const course = getCourseBySlug(params.courseSlug!);
+  const course = requireCourse(params.courseSlug);
 
-  if (!course) {
-    throw new Response('Rataa ei löytynyt', { status: 404 });
-  }
-
-  const recentlySubmitted = (await readRateLimitedAt(request, course.slug)) != null;
-
-  return { course, recentlySubmitted };
+  return { course, recentlySubmitted: await wasRecentlySubmitted(request, course.slug) };
 };
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const course = getCourseBySlug(params.courseSlug!);
+  return reportBinFull(request, requireCourse(params.courseSlug));
+}
+
+export default function BinFullCourseSlugRoute(): JSX.Element {
+  const { course, recentlySubmitted } = useLoaderData<typeof loader>();
+
+  return <BinFullForm course={course} alreadySubmitted={recentlySubmitted} />;
+}
+
+function requireCourse(slug: string | undefined) {
+  const course = getCourseBySlug(slug!);
 
   if (!course) {
     throw new Response('Rataa ei löytynyt', { status: 404 });
   }
 
-  const recentlySubmitted = (await readRateLimitedAt(request, course.slug)) != null;
-
-  if (!recentlySubmitted) {
-    await createBinFullNotification({ courseName: course.name });
-  }
-
-  const cookie = cookieFor(course.slug);
-  const headers = new Headers();
-  headers.append('Set-Cookie', await cookie.serialize(Date.now()));
-
-  return data({ success: true }, { headers });
-}
-
-export default function BinFullCourseSlugPage(): JSX.Element {
-  const { course, recentlySubmitted } = useLoaderData<typeof loader>();
-
-  return <BinFullForm course={course} alreadySubmitted={recentlySubmitted} />;
+  return course;
 }

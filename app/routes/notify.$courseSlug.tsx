@@ -1,50 +1,31 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useLoaderData } from 'react-router';
+import { useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
-import NotifyForm from './components/NotifyForm';
-
-import { createDiscFoundNotification } from '~/models/discFoundNotification.server';
+import NotifyForm from '~/features/notifications/NotifyForm';
+import { reportDiscFound } from '~/features/notifications/reportDiscFound.server';
 import { getCourseBySlug } from '~/config/courses';
 
 import type { JSX } from 'react';
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const course = getCourseBySlug(params.courseSlug!);
-
-  if (!course) {
-    throw new Response('Rataa ei löytynyt', { status: 404 });
-  }
-
-  return { course };
+  return { course: requireCourse(params.courseSlug) };
 };
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const course = getCourseBySlug(params.courseSlug!);
+  return reportDiscFound(await request.formData(), requireCourse(params.courseSlug).name);
+}
+
+export default function NotifyCourseSlugRoute(): JSX.Element {
+  const { course } = useLoaderData<typeof loader>();
+
+  return <NotifyForm course={course} />;
+}
+
+function requireCourse(slug: string | undefined) {
+  const course = getCourseBySlug(slug!);
 
   if (!course) {
     throw new Response('Rataa ei löytynyt', { status: 404 });
   }
 
-  const form = await request.formData();
-
-  const contactName = form.get('contactName')?.toString() || null;
-  const contactPhone = form.get('contactPhone')?.toString() || null;
-  const contactEmail = form.get('contactEmail')?.toString() || null;
-  const message = form.get('message')?.toString() || null;
-
-  await createDiscFoundNotification({
-    courseName: course.name,
-    contactName,
-    contactPhone,
-    contactEmail,
-    message,
-  });
-
-  return { success: true };
-}
-
-export default function NotifyCourseSlugPage(): JSX.Element {
-  const { course } = useLoaderData<typeof loader>();
-
-  return <NotifyForm course={course} />;
+  return course;
 }

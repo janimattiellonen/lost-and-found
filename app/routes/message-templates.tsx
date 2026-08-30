@@ -1,72 +1,26 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { redirect } from 'react-router';
-import { useLoaderData } from 'react-router';
+import { redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
-import Paper from '~/routes/components/Paper';
-import Button from '~/routes/components/Button';
-
-import { getMessageTemplates, deleteMessageTemplate, markAsDefault } from '~/models/messageTemplate.server';
-
-import type { MessageTemplateDTO } from '~/types';
+import { handleMessageTemplateAction } from '~/features/messaging/handleMessageTemplateAction.server';
+import MessageTemplatesPage from '~/features/messaging/MessageTemplatesPage';
+import { getMessageTemplates } from '~/models/messageTemplate.server';
 import { isUserLoggedIn } from '~/models/utils';
-
-import H2 from './components/H2';
-import Wrapper from './components/Wrapper';
-
-import MessageTemplateItem from '~/routes/components/admin/MessageTemplateItem';
 
 import type { JSX } from 'react';
 
-export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const id = Number(formData.get('id'));
-  const action = formData.get('action');
-
-  if (action === 'delete') {
-    await deleteMessageTemplate(id, request);
-  } else if (action === 'default') {
-    await markAsDefault(id, request);
-  }
-
-  return { ok: true };
-}
-
-export const loader = async ({ params, request }: LoaderFunctionArgs) => {
-  const isLoggedIn = await isUserLoggedIn(request);
-
-  if (!isLoggedIn) {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  if (!(await isUserLoggedIn(request))) {
     return redirect('/sign-in');
   }
 
-  const messageTemplates: MessageTemplateDTO[] = await getMessageTemplates(request);
-
-  return { messageTemplates };
+  return { messageTemplates: await getMessageTemplates(request) };
 };
 
-export default function MessageTemplatesPage(): JSX.Element {
-  const { messageTemplates } = useLoaderData();
+export async function action({ request }: ActionFunctionArgs) {
+  return handleMessageTemplateAction(request, await request.formData());
+}
 
-  return (
-    <div>
-      <H2 className="mt-8 mb-4">Viestipohjat</H2>
+export default function MessageTemplatesRoute(): JSX.Element {
+  const loaderData = useLoaderData<typeof loader>();
 
-      <Button to="/message-template/create" variant="contained">
-        Luo uusi viestipohja
-      </Button>
-
-      <Wrapper>
-        {messageTemplates.map((messageTemplate: MessageTemplateDTO) => {
-          return (
-            <Paper
-              key={messageTemplate.id}
-              className={messageTemplate.isDefault ? 'mb-8 mt-8' : 'mt-8'}
-              style={messageTemplate.isDefault ? { border: 'solid rgba(2, 208, 232, 0.85) 4px' } : undefined}
-              elevation={messageTemplate.isDefault ? 7 : 1}
-              children={<MessageTemplateItem messageTemplate={messageTemplate} />}
-            />
-          );
-        })}
-      </Wrapper>
-    </div>
-  );
+  return <MessageTemplatesPage {...loaderData} />;
 }

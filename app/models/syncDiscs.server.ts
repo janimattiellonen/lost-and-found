@@ -94,7 +94,7 @@ export async function syncNewDiscs(clubId: number, request: Request) {
 export async function getLatestInternalDiscId(clubId: number): Promise<number | null> {
   const supabase = createConnection();
 
-  let { data } = await supabase
+  const { data } = await supabase
     .from('discs')
     .select('internal_disc_id')
     // Web-added discs have no row number. Postgres sorts NULLs first on a
