@@ -13,7 +13,8 @@
     "typecheck": "react-router typegen && tsc",
     "test:e2e": "playwright test",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "import:puskasoturit": "node --env-file=.env scripts/importPuskasoturitDiscs.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
