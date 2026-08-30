@@ -86,6 +86,10 @@ export default function DiscListPage(): JSX.Element {
     }
   }, [fetcher.data]);
 
+  // Only Puskasoturit collects from more than one course. Talin Tallaajat
+  // records no course at all, so neither the filter nor the column applies.
+  const isMultiCourseClub = clubId === 1;
+
   const hasDiscs = discs.length > 0;
   // A reload keeps the previous fetcher.data, so "loading with data already on
   // screen" is what separates a refresh from the very first load.
@@ -152,9 +156,11 @@ export default function DiscListPage(): JSX.Element {
 
           <NumberSearch onChange={debouncedHandler} />
 
-          {/* Only clubs whose discs come from more than one course have
-              anything to choose between. */}
-          {distinctCourses.length > 1 && <CourseFilter courses={distinctCourses} onChange={setCourseTerm} />}
+          {/* Nothing to choose between until the loaded discs name more than
+              one course. */}
+          {isMultiCourseClub && distinctCourses.length > 1 && (
+            <CourseFilter courses={distinctCourses} onChange={setCourseTerm} />
+          )}
 
           <Button
             variant="contained"
@@ -179,7 +185,7 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable discs={discs} showCourse={clubId === 1} onChanged={() => fetcher.load('/discs/data')} />
+            <DiscTable discs={discs} showCourse={isMultiCourseClub} onChanged={() => fetcher.load('/discs/data')} />
           </div>
         )}
         {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
