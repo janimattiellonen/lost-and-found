@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 
-import { TALIN_TALLAAJAT } from '~/config/clubs';
+import { getClubLostDiscsUrl } from '~/config/clubs';
 import { WarningIcon } from '~/ui/icons';
 
 type DiscListIntroProps = {
@@ -10,14 +10,17 @@ type DiscListIntroProps = {
 /**
  * What a club says above its disc list.
  *
- * Only Talin Tallaajat has written one; every other club (and the moment
- * before the club id has loaded) renders nothing. A second club's intro goes
- * here as another branch rather than back into the page.
+ * The text is the same for every club; only the link to the club's own
+ * lost-and-found page differs, and it is left out for a club that has none.
+ * Nothing renders until the club id has loaded, so the intro does not appear
+ * with a missing link and then gain one.
  */
 export default function DiscListIntro({ clubId }: DiscListIntroProps): JSX.Element | null {
-  if (clubId !== TALIN_TALLAAJAT) {
+  if (clubId === null) {
     return null;
   }
+
+  const lostDiscsUrl = getClubLostDiscsUrl(clubId);
 
   return (
     <div className="mt-8 max-w-4xl">
@@ -34,9 +37,11 @@ export default function DiscListIntro({ clubId }: DiscListIntroProps): JSX.Eleme
         vastaa viestiin "Kiekko haettu".
       </p>
 
-      <p>
-        Tarkemmat tiedot seuran <a href="https://www.tallaajat.org/loytokiekot/">löytökiekoista</a>.
-      </p>
+      {lostDiscsUrl && (
+        <p>
+          Tarkemmat tiedot seuran <a href={lostDiscsUrl}>löytökiekoista</a>.
+        </p>
+      )}
 
       <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
 
