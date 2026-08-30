@@ -175,7 +175,7 @@ export default function DiscListPage(): JSX.Element {
         <div className="mt-4 mb-4">
           {
             <Collapse in={isInfoBoxVisible}>
-              <Paper elevation={3} children={<InfoBox onClose={() => showInfoBox(false)} />} />
+              <Paper elevation={3} children={<InfoBox clubId={clubId} onClose={() => showInfoBox(false)} />} />
             </Collapse>
           }
         </div>

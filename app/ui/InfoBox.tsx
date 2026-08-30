@@ -1,5 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
 
+import { getClubContactEmail } from '~/config/clubs';
 import { font, space } from '~/styles/tokens.stylex';
 
 import type { JSX } from 'react';
@@ -34,8 +35,12 @@ const styles = stylex.create({
 
 type InfoBoxProps = {
   onClose: () => void;
+  /** Decides which club's contact address the text ends on. */
+  clubId: number | null;
 };
-export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
+export default function InfoBox({ onClose, clubId }: InfoBoxProps): JSX.Element {
+  const contactEmail = getClubContactEmail(clubId);
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
@@ -86,8 +91,7 @@ export default function InfoBox({ onClose }: InfoBoxProps): JSX.Element {
       </p>
 
       <p className="font-bold text-lg">
-        Tiedustelut sähköpostitse osoitteeseen{' '}
-        <a href="mailto:janimatti.ellonen@gmail.com">janimatti.ellonen@gmail.com</a>.
+        Tiedustelut sähköpostitse osoitteeseen <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
       </p>
     </div>
   );
