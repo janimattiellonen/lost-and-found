@@ -86,7 +86,7 @@ export default function App() {
     };
   }, [serverAccessToken, supabase, revalidate]);
 
-  const iconUrl = parseInt(env.CLUB_ID, 10) === 2 ? '/tt-sini-logo-32-32.jpg' : '';
+  const iconUrl = parseInt(env.CLUB_ID, 10) === 2 ? '/tt-sini-logo-32-32.jpg' : '/ps-logo.png';
   const isNotifyPage = location.pathname.startsWith('/notify');
   const isLoggedIn = !!session?.user;
   const showHeader = !isNotifyPage || isLoggedIn;
