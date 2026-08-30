@@ -8,12 +8,12 @@ import Collapse from '~/ui/Collapse';
 import Paper from '~/ui/Paper';
 import InfoBox from '~/ui/InfoBox';
 import EmptyingLogItem from '~/ui/EmptyingLogItem';
-import { WarningIcon } from '~/ui/icons';
 import CircularProgress from '~/ui/CircularProgress';
 
 import DiscTable from '~/features/discs/list/DiscTable';
 import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/features/discs/list/DiscSelector';
+import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
 
@@ -98,37 +98,7 @@ export default function DiscListPage(): JSX.Element {
 
   return (
     <div>
-      {clubId === 2 && (
-        <div className="mt-8 max-w-4xl">
-          <p>
-            Tällä sivulla luetellaan vain palauttamattomat kiekot, jotka ovat edelleen seuran hallussa. Kiekon tila
-            (onko palautettu/myyty/lahjoitettu) saattaa olla virheellinen, jolloin listalla voi näkyä kiekko, joka ei
-            enää ole seuralla.
-          </p>
-
-          <p>Jos kiekosta löytyy selkeästi luettava puhelinnumero, lähetetään siihen viestiä kiekon löytymisestä.</p>
-
-          <p>
-            Jos olet hakenut kopilta kiekkosi, jonka löytymisestä sait viestin puhelinnumerosta, joka päättyy{' '}
-            <b>3904</b>, vastaa viestiin "Kiekko haettu".
-          </p>
-
-          <p>
-            Tarkemmat tiedot seuran <a href="https://www.tallaajat.org/loytokiekot/">löytökiekoista</a>.
-          </p>
-
-          <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
-
-          <p>
-            <WarningIcon
-              title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
-              style={{ color: 'red', marginRight: '0.5rem' }}
-            />
-            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
-            pian myydä tai lahjoittaa.
-          </p>
-        </div>
-      )}
+      <DiscListIntro clubId={clubId} />
       <div className="mt-8">
         {emptyingLogItems.length > 0 && (
           <div>
