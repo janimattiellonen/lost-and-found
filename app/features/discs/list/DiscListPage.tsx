@@ -21,15 +21,16 @@ export default function DiscListPage(): JSX.Element {
   const fetcher = useFetcher();
 
   const [isInfoBoxVisible, showInfoBox] = useState<boolean>(false);
-  const [emptyingLogItems, setEmptyingLogItems] = useState<EmptyingLogDTO[]>([]);
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
   const [courseTerm, setCourseTerm] = useState<string | null>(null);
 
-  const [clubId, setClubId] = useState<number | null>(null);
-
-  const [distinctDiscNames, setDistinctDiscNames] = useState<string[]>([]);
-  const [distinctCourses, setDistinctCourses] = useState<string[]>([]);
+  // Read straight off the fetcher rather than copied into state by an effect:
+  // the copy bought nothing and cost a second render on every load.
+  const clubId: number | null = fetcher.data?.clubId ?? null;
+  const distinctDiscNames: string[] = fetcher.data?.distinctDiscNames ?? [];
+  const distinctCourses: string[] = fetcher.data?.distinctCourses ?? [];
+  const emptyingLogItems: EmptyingLogDTO[] = fetcher.data?.emptyingLogItems ?? [];
 
   const changeHandler = (e: any): void => {
     if (e.target.value.length > 2) {
@@ -67,24 +68,6 @@ export default function DiscListPage(): JSX.Element {
     fetcher.load('/discs/data');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (fetcher.data?.clubId) {
-      setClubId(fetcher.data?.clubId);
-    }
-
-    if (fetcher.data?.distinctDiscNames) {
-      setDistinctDiscNames(fetcher.data?.distinctDiscNames);
-    }
-
-    if (fetcher.data?.distinctCourses) {
-      setDistinctCourses(fetcher.data?.distinctCourses);
-    }
-
-    if (fetcher.data?.emptyingLogItems) {
-      setEmptyingLogItems(fetcher.data?.emptyingLogItems);
-    }
-  }, [fetcher.data]);
 
   // Only Puskasoturit collects from more than one course. Talin Tallaajat
   // records no course at all, so neither the filter nor the column applies.
@@ -145,7 +128,9 @@ export default function DiscListPage(): JSX.Element {
         <div className="mt-4 mb-4">
           {
             <Collapse in={isInfoBoxVisible}>
-              <Paper elevation={3} children={<InfoBox clubId={clubId} onClose={() => showInfoBox(false)} />} />
+              <Paper elevation={3}>
+                <InfoBox clubId={clubId} onClose={() => showInfoBox(false)} />
+              </Paper>
             </Collapse>
           }
         </div>

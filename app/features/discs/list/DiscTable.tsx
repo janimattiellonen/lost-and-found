@@ -413,6 +413,10 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
 
+  // TanStack Table returns functions the React Compiler cannot memoize, so it
+  // skips this component. Nothing here is passed to a memoized consumer, and
+  // the alternative is a table library change.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns,
