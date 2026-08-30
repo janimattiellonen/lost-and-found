@@ -79,11 +79,6 @@ export default function InfoBox({ onClose, clubId }: InfoBoxProps): JSX.Element 
         Nimettömän spessukiekkojen takaisin saanti on hieman helpompaa, jos vain osaat kuvaille stämpin ja muut
         yksityiskohdat.
       </p>
-      <p>
-        Haettuasi kiekon kopilta, vastaa tekstiviestiin “Kiekko haettu”, mikäli viesti löydetystä kiekosta on tullut
-        puhelinnumerosta, jonka 4 viimeistä numeroa ovat 3904. Tällöin voimme poistaa kiekkosi listalta, eikä se näy
-        siellä enää virheellisesti.
-      </p>
 
       <p>
         Emme julkaise tällä sivustolla omistajan koko nimeä, koko puhelinnumeroa, PDGA-numeroa, tai muita omistajaa

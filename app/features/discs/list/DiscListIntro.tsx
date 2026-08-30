@@ -32,11 +32,6 @@ export default function DiscListIntro({ clubId }: DiscListIntroProps): JSX.Eleme
 
       <p>Jos kiekosta löytyy selkeästi luettava puhelinnumero, lähetetään siihen viestiä kiekon löytymisestä.</p>
 
-      <p>
-        Jos olet hakenut kopilta kiekkosi, jonka löytymisestä sait viestin puhelinnumerosta, joka päättyy <b>3904</b>,
-        vastaa viestiin "Kiekko haettu".
-      </p>
-
       {lostDiscsUrl && (
         <p>
           Tarkemmat tiedot seuran <a href={lostDiscsUrl}>löytökiekoista</a>.
