@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test": "vitest run",
     "test:watch": "vitest",
-    "import:puskasoturit": "node --env-file=.env scripts/importPuskasoturitDiscs.ts"
+    "import:puskasoturit": "node --env-file=.env scripts/importPuskasoturitDiscs.ts",
+    "archive:discs": "node --env-file=.env scripts/archiveStaleDiscs.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",

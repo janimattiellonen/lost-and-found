@@ -22,6 +22,9 @@ export async function getDiscs(): Promise<DiscDTO[]> {
     .order('disc_name', { ascending: true })
     .eq('is_returned_to_owner', false)
     .eq('can_be_sold_or_donated', false)
+    // Archived discs are ones the club has stopped listing; they are still in
+    // the table, and still counted in the statistics.
+    .is('archived_at', null)
     .eq('club_id', clubId);
 
   return data
