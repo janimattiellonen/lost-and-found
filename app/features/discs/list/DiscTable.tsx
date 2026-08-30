@@ -38,6 +38,8 @@ type DiscTableProps = {
   discs: DiscDTO[];
   /** Called after a disc has been deleted or marked returned, to reload the list. */
   onChanged?: () => void;
+  /** Only clubs that collect from more than one course record a course per disc. */
+  showCourse?: boolean;
 };
 
 interface Row {
@@ -46,6 +48,7 @@ interface Row {
   discColour: string;
   owner: string;
   ownerPhoneNumber: string;
+  course: string;
   addedAt: string;
   internalDiscId: number | null;
   /** Only present for a signed-in visitor; the admin actions are keyed on it. */
@@ -66,7 +69,8 @@ function getComparator(sortColumn: string): Comparator {
     case 'discName':
     case 'discColour':
     case 'owner':
-    case 'ownerPhoneNumber': {
+    case 'ownerPhoneNumber':
+    case 'course': {
       return (a, b) => a[sortColumn].localeCompare(b[sortColumn]);
     }
     case 'addedAt': {
@@ -160,6 +164,7 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
     discColour: disc.discColour,
     owner: disc.ownerName ?? '',
     ownerPhoneNumber: disc.ownerPhoneNumber ?? '',
+    course: disc.course ?? '',
     addedAt: disc.addedAt ?? '',
     internalDiscId: disc.internalDiscId,
     externalId: disc.externalId,
@@ -300,7 +305,7 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
   );
 }
 
-export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Element | null {
+export default function DiscTable({ discs, onChanged, showCourse = false }: DiscTableProps): JSX.Element | null {
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
 
@@ -343,6 +348,7 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
             ''
           ),
       },
+      ...(showCourse ? [{ accessorKey: 'course', header: 'Rata', sortingFn: sortDiscs } satisfies ColumnDef<Row>] : []),
       {
         accessorKey: 'addedAt',
         header: 'Lisätty',
@@ -402,7 +408,7 @@ export default function DiscTable({ discs, onChanged }: DiscTableProps): JSX.Ele
           ]
         : []),
     ],
-    [isLoggedIn, onChanged, openForm],
+    [isLoggedIn, onChanged, openForm, showCourse],
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);

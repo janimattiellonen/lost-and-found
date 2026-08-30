@@ -1,7 +1,7 @@
 import { getDiscs } from '~/models/discs.server';
 import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
 import { isUserLoggedIn } from '~/models/utils';
-import { getDistinctDiscNames } from '~/utils';
+import { getDistinctCourses, getDistinctDiscNames } from '~/utils';
 
 /** Everything the public disc list renders, for the club this instance serves. */
 export async function loadDiscListData(request: Request) {
@@ -15,5 +15,11 @@ export async function loadDiscListData(request: Request) {
   const isLoggedIn = await isUserLoggedIn(request);
   const data = isLoggedIn ? discs : discs.map((disc) => ({ ...disc, externalId: undefined }));
 
-  return { clubId, data, distinctDiscNames: getDistinctDiscNames(data), emptyingLogItems };
+  return {
+    clubId,
+    data,
+    distinctDiscNames: getDistinctDiscNames(data),
+    distinctCourses: getDistinctCourses(data),
+    emptyingLogItems,
+  };
 }

@@ -14,6 +14,7 @@ import CircularProgress from '~/ui/CircularProgress';
 import DiscTable from '~/features/discs/list/DiscTable';
 import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/features/discs/list/DiscSelector';
+import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
 
 export default function DiscListPage(): JSX.Element {
@@ -23,10 +24,12 @@ export default function DiscListPage(): JSX.Element {
   const [emptyingLogItems, setEmptyingLogItems] = useState<EmptyingLogDTO[]>([]);
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
+  const [courseTerm, setCourseTerm] = useState<string | null>(null);
 
   const [clubId, setClubId] = useState<number | null>(null);
 
   const [distinctDiscNames, setDistinctDiscNames] = useState<string[]>([]);
+  const [distinctCourses, setDistinctCourses] = useState<string[]>([]);
 
   const changeHandler = (e: any): void => {
     if (e.target.value.length > 2) {
@@ -53,8 +56,12 @@ export default function DiscListPage(): JSX.Element {
       filtered = filtered.filter((disc: DiscDTO) => disc.ownerPhoneNumber?.endsWith(phoneNumberTerm));
     }
 
+    if (courseTerm) {
+      filtered = filtered.filter((disc: DiscDTO) => disc.course === courseTerm);
+    }
+
     return filtered;
-  }, [fetcher.data, discTerm, phoneNumberTerm]);
+  }, [fetcher.data, discTerm, phoneNumberTerm, courseTerm]);
 
   useEffect(() => {
     fetcher.load('/discs/data');
@@ -68,6 +75,10 @@ export default function DiscListPage(): JSX.Element {
 
     if (fetcher.data?.distinctDiscNames) {
       setDistinctDiscNames(fetcher.data?.distinctDiscNames);
+    }
+
+    if (fetcher.data?.distinctCourses) {
+      setDistinctCourses(fetcher.data?.distinctCourses);
     }
 
     if (fetcher.data?.emptyingLogItems) {
@@ -129,7 +140,9 @@ export default function DiscListPage(): JSX.Element {
         )}
       </div>
       <div className="mt-8">
-        <div className="flex gap-4 items-end">
+        {/* Stacked on a phone: side by side the fields were squeezed to a few
+            characters wide. From `sm` up they sit in a row that wraps. */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
           <DiscSelector
             discNames={distinctDiscNames}
             onChange={(selectedItem: string | null) => {
@@ -139,7 +152,16 @@ export default function DiscListPage(): JSX.Element {
 
           <NumberSearch onChange={debouncedHandler} />
 
-          <Button variant="contained" type="submit" onClick={() => showInfoBox(!isInfoBoxVisible)}>
+          {/* Only clubs whose discs come from more than one course have
+              anything to choose between. */}
+          {distinctCourses.length > 1 && <CourseFilter courses={distinctCourses} onChange={setCourseTerm} />}
+
+          <Button
+            variant="contained"
+            type="submit"
+            className="h-10 self-start sm:self-auto"
+            onClick={() => showInfoBox(!isInfoBoxVisible)}
+          >
             Ohjeet
           </Button>
         </div>
@@ -157,7 +179,7 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable discs={discs} onChanged={() => fetcher.load('/discs/data')} />
+            <DiscTable discs={discs} showCourse={clubId === 1} onChanged={() => fetcher.load('/discs/data')} />
           </div>
         )}
         {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
