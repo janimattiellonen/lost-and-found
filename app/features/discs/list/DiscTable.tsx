@@ -296,6 +296,7 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
     <button
       type="button"
       aria-label={`Poista kiekko ${row.discName}`}
+      title="Poista kiekko"
       disabled={isDeleting}
       onClick={handleClick}
       className="inline-flex text-gray-500 hover:text-red-600 disabled:opacity-40"
@@ -382,6 +383,7 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                       <button
                         type="button"
                         aria-label={`Merkitse kiekko ${row.original.discName} palautetuksi`}
+                        title="Merkitse palautetuksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'return'}
                         onClick={() => toggleForm(row.original.externalId!, 'return')}
                         className="inline-flex text-gray-500 hover:text-green-700"
@@ -392,6 +394,7 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                       <button
                         type="button"
                         aria-label={`Merkitse kiekko ${row.original.discName} myytäväksi tai lahjoitettavaksi`}
+                        title="Merkitse myytäväksi tai lahjoitettavaksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'disposal'}
                         onClick={() => toggleForm(row.original.externalId!, 'disposal')}
                         className="inline-flex text-gray-500 hover:text-blue-700"

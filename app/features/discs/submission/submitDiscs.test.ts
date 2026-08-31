@@ -5,6 +5,10 @@ import { parseDiscText } from '~/features/discs/submission/parser/parseDiscText'
 import { submitDiscs, toSubmission } from './submitDiscs';
 
 describe('toSubmission', () => {
+  it('keeps the course the row was filed under', () => {
+    expect(toSubmission({ ...parseDiscText('Mako3 keltainen'), course: 'Oittaa' }).course).toBe('Oittaa');
+  });
+
   it('keeps the fields the server needs and drops the rest', () => {
     const parsed = parseDiscText('Star Destroyer punainen 050 123 4567 Steve D.');
 
@@ -15,6 +19,7 @@ describe('toSubmission', () => {
       manufacturer: 'Innova',
       phoneNumber: '0501234567',
       ownerName: 'Steve D.',
+      course: null,
     });
   });
 

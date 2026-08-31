@@ -27,3 +27,13 @@ fit the new `discs` columns and persists the data to Supabase. The script must h
 displays the data to be saved, without actually trying to save.
 
 This script should be runnable using `npm run ...`.
+
+## Fixes to new disc form
+
+- use radio buttons instead of select list for course
+- the course is not a value that I enter in the text field. It should be obtained only form the filter
+  selection
+- I often add several discs for either Äijänpelto or Oittaa. If I fail to select a course when I add new
+  discs, show a subtle notice to remind me to choose a course
+- make it possible for me to select course for all discs added by the textfield, that are not yet
+  persisted in one click

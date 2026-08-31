@@ -5,7 +5,10 @@ import { parseDiscText } from '~/features/discs/submission/parser/parseDiscText'
 import { toSubmission } from './submitDiscs';
 import { MAX_BATCH_SIZE, parseBatch, toDiscDTO, toDiscName } from './toDiscDTO';
 
-const submission = (text: string) => toSubmission(parseDiscText(text));
+const submission = (text: string, course: string | null = null) => toSubmission({ ...parseDiscText(text), course });
+
+/** The courses the club in these tests files discs under. */
+const COURSES = ['Oittaa', 'Äijänpelto'];
 
 describe('toDiscName', () => {
   it('writes the name and plastic the way the sheet does', () => {
@@ -30,6 +33,7 @@ describe('toDiscDTO', () => {
       discManufacturer: 'Innova',
       ownerName: 'Steve D.',
       ownerPhoneNumber: '0501234567',
+      course: null,
       clubId: 2,
     });
   });
@@ -45,17 +49,21 @@ describe('toDiscDTO', () => {
   it('files the disc under the club it was given', () => {
     expect(toDiscDTO(submission('Mako3 keltainen'), 1).clubId).toBe(1);
   });
+
+  it('carries the chosen course through', () => {
+    expect(toDiscDTO(submission('Mako3 keltainen', 'Oittaa'), 1).course).toBe('Oittaa');
+  });
 });
 
 describe('parseBatch', () => {
   it('accepts a well-formed batch', () => {
-    expect(parseBatch({ discs: [submission('Mako3 keltainen')] })).toEqual({
+    expect(parseBatch({ discs: [submission('Mako3 keltainen')] }, COURSES)).toEqual({
       discs: [submission('Mako3 keltainen')],
     });
   });
 
   it('trims values and turns blanks into null', () => {
-    const result = parseBatch({ discs: [{ discName: '  Mako3  ', ownerName: '   ' }] });
+    const result = parseBatch({ discs: [{ discName: '  Mako3  ', ownerName: '   ' }] }, COURSES);
 
     expect(result).toMatchObject({ discs: [{ discName: 'Mako3', ownerName: null }] });
   });
@@ -69,13 +77,20 @@ describe('parseBatch', () => {
     { reason: 'a field that is not a string', body: { discs: [{ discName: 42 }] } },
     { reason: 'a field over the length cap', body: { discs: [{ discName: 'M'.repeat(201) }] } },
     { reason: 'a row with no name or plastic', body: { discs: [{ colour: 'Punainen' }] } },
+    { reason: 'a course this club does not have', body: { discs: [{ discName: 'Mako3', course: 'Tali' }] } },
   ])('rejects $reason', ({ body }) => {
-    expect(parseBatch(body)).toMatchObject({ error: expect.any(String) });
+    expect(parseBatch(body, COURSES)).toMatchObject({ error: expect.any(String) });
+  });
+
+  it('accepts a row with one of the club courses, and one with none', () => {
+    const result = parseBatch({ discs: [submission('Mako3 keltainen', 'Äijänpelto'), submission('Mako3')] }, COURSES);
+
+    expect(result).toMatchObject({ discs: [{ course: 'Äijänpelto' }, { course: null }] });
   });
 
   it('rejects a batch over the size cap', () => {
     const discs = Array.from({ length: MAX_BATCH_SIZE + 1 }, () => submission('Mako3 keltainen'));
 
-    expect(parseBatch({ discs })).toMatchObject({ error: expect.stringContaining('Liian monta') });
+    expect(parseBatch({ discs }, COURSES)).toMatchObject({ error: expect.stringContaining('Liian monta') });
   });
 });
