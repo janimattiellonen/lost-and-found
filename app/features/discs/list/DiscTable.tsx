@@ -15,11 +15,13 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 
+import { setDiscCourse } from '~/features/discs/courseChange/setDiscCourse';
 import { deleteDisc } from '~/features/discs/deletion/deleteDisc';
 import { disposalMethodOptions } from '~/features/discs/disposal/disposalMethod';
 import { markForDisposal } from '~/features/discs/disposal/markForDisposal';
 import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
+import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import {
   ArrowDownwardIcon,
@@ -27,6 +29,7 @@ import {
   CheckCircleIcon,
   DeleteIcon,
   InfoIcon,
+  PlaceIcon,
   SellIcon,
   TextsmsIcon,
   WarningIcon,
@@ -39,8 +42,12 @@ type DiscTableProps = {
   discs: DiscDTO[];
   /** Called after a disc has been deleted or marked returned, to reload the list. */
   onChanged?: () => void;
-  /** Only clubs that collect from more than one course record a course per disc. */
-  showCourse?: boolean;
+  /**
+   * The courses this club collects from; empty for a club that records none.
+   * Drives both the Rata column and the admin tool that sets it, so the two
+   * cannot disagree about whether this club files discs under a course.
+   */
+  courses?: string[];
 };
 
 interface Row {
@@ -179,7 +186,7 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
 type MarkKind = 'return' | 'disposal';
 
 /** What the row expanded under a disc is showing: a mark form, or its notes. */
-type PanelKind = MarkKind | 'info';
+type PanelKind = MarkKind | 'info' | 'course';
 
 type OpenPanel = { externalId: string; kind: PanelKind };
 
@@ -326,7 +333,9 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
   );
 }
 
-export default function DiscTable({ discs, onChanged, showCourse = false }: DiscTableProps): JSX.Element | null {
+export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableProps): JSX.Element | null {
+  const showCourse = courses.length > 0;
+
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
 
@@ -421,6 +430,23 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                       >
                         <SellIcon width={18} height={18} />
                       </button>
+
+                      {/* Only for a club that files discs under a course.
+                          The fix for a disc saved before the course was
+                          picked, which used to mean editing the row by hand
+                          in the SQL editor. */}
+                      {showCourse && (
+                        <button
+                          type="button"
+                          aria-label={`Aseta kiekon ${row.original.discName} rata`}
+                          title="Aseta rata"
+                          aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'course'}
+                          onClick={() => toggleForm(row.original.externalId!, 'course')}
+                          className="inline-flex text-violet-400 hover:text-violet-300"
+                        >
+                          <PlaceIcon width={18} height={18} />
+                        </button>
+                      )}
 
                       {/* Most discs carry no notes, so this one is often
                           disabled — which is why the icons around it are
@@ -542,6 +568,26 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                   <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
                     {open.kind === 'info' ? (
                       <AdditionalInfoPanel row={row.original} />
+                    ) : open.kind === 'course' ? (
+                      <CourseForm
+                        discName={row.original.discName}
+                        current={row.original.course || null}
+                        courses={courses}
+                        idPrefix={`course-${open.externalId}`}
+                        onCancel={() => setOpenForm(null)}
+                        onSubmit={async (course) => {
+                          const result = await setDiscCourse({ externalId: open.externalId, course });
+
+                          if (result.status === 'error') {
+                            return result.message;
+                          }
+
+                          setOpenForm(null);
+                          onChanged?.();
+
+                          return null;
+                        }}
+                      />
                     ) : (
                       <MarkForm
                         row={row.original}
