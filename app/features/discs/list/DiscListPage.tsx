@@ -8,25 +8,30 @@ import Collapse from '~/ui/Collapse';
 import Paper from '~/ui/Paper';
 import InfoBox from '~/ui/InfoBox';
 import EmptyingLogItem from '~/ui/EmptyingLogItem';
-import { WarningIcon } from '~/ui/icons';
 import CircularProgress from '~/ui/CircularProgress';
 
 import DiscTable from '~/features/discs/list/DiscTable';
 import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/features/discs/list/DiscSelector';
+import DiscListIntro from '~/features/discs/list/DiscListIntro';
+import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
+import { getDiscCourseNames } from '~/config/courses';
 
 export default function DiscListPage(): JSX.Element {
   const fetcher = useFetcher();
 
   const [isInfoBoxVisible, showInfoBox] = useState<boolean>(false);
-  const [emptyingLogItems, setEmptyingLogItems] = useState<EmptyingLogDTO[]>([]);
   const [discTerm, setDiscTerm] = useState<string | null>('');
   const [phoneNumberTerm, setPhoneNumberTerm] = useState<string | null>('');
+  const [courseTerm, setCourseTerm] = useState<string | null>(null);
 
-  const [clubId, setClubId] = useState<number | null>(null);
-
-  const [distinctDiscNames, setDistinctDiscNames] = useState<string[]>([]);
+  // Read straight off the fetcher rather than copied into state by an effect:
+  // the copy bought nothing and cost a second render on every load.
+  const clubId: number | null = fetcher.data?.clubId ?? null;
+  const distinctDiscNames: string[] = fetcher.data?.distinctDiscNames ?? [];
+  const distinctCourses: string[] = fetcher.data?.distinctCourses ?? [];
+  const emptyingLogItems: EmptyingLogDTO[] = fetcher.data?.emptyingLogItems ?? [];
 
   const changeHandler = (e: any): void => {
     if (e.target.value.length > 2) {
@@ -53,27 +58,23 @@ export default function DiscListPage(): JSX.Element {
       filtered = filtered.filter((disc: DiscDTO) => disc.ownerPhoneNumber?.endsWith(phoneNumberTerm));
     }
 
+    if (courseTerm) {
+      filtered = filtered.filter((disc: DiscDTO) => disc.course === courseTerm);
+    }
+
     return filtered;
-  }, [fetcher.data, discTerm, phoneNumberTerm]);
+  }, [fetcher.data, discTerm, phoneNumberTerm, courseTerm]);
 
   useEffect(() => {
     fetcher.load('/discs/data');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (fetcher.data?.clubId) {
-      setClubId(fetcher.data?.clubId);
-    }
-
-    if (fetcher.data?.distinctDiscNames) {
-      setDistinctDiscNames(fetcher.data?.distinctDiscNames);
-    }
-
-    if (fetcher.data?.emptyingLogItems) {
-      setEmptyingLogItems(fetcher.data?.emptyingLogItems);
-    }
-  }, [fetcher.data]);
+  // Only Puskasoturit collects from more than one course. Talin Tallaajat
+  // records no course at all, so neither the filter nor the column applies.
+  // Derived rather than a club id in a literal: the filter, the column and the
+  // add form then agree by construction, all reading the one course list.
+  const isMultiCourseClub = clubId !== null && getDiscCourseNames(clubId).length > 0;
 
   const hasDiscs = discs.length > 0;
   // A reload keeps the previous fetcher.data, so "loading with data already on
@@ -83,37 +84,7 @@ export default function DiscListPage(): JSX.Element {
 
   return (
     <div>
-      {clubId === 2 && (
-        <div className="mt-8 max-w-4xl">
-          <p>
-            Tällä sivulla luetellaan vain palauttamattomat kiekot, jotka ovat edelleen seuran hallussa. Kiekon tila
-            (onko palautettu/myyty/lahjoitettu) saattaa olla virheellinen, jolloin listalla voi näkyä kiekko, joka ei
-            enää ole seuralla.
-          </p>
-
-          <p>Jos kiekosta löytyy selkeästi luettava puhelinnumero, lähetetään siihen viestiä kiekon löytymisestä.</p>
-
-          <p>
-            Jos olet hakenut kopilta kiekkosi, jonka löytymisestä sait viestin puhelinnumerosta, joka päättyy{' '}
-            <b>3904</b>, vastaa viestiin "Kiekko haettu".
-          </p>
-
-          <p>
-            Tarkemmat tiedot seuran <a href="https://www.tallaajat.org/loytokiekot/">löytökiekoista</a>.
-          </p>
-
-          <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
-
-          <p>
-            <WarningIcon
-              title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
-              style={{ color: 'red', marginRight: '0.5rem' }}
-            />
-            Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
-            pian myydä tai lahjoittaa.
-          </p>
-        </div>
-      )}
+      <DiscListIntro clubId={clubId} />
       <div className="mt-8">
         {emptyingLogItems.length > 0 && (
           <div>
@@ -129,7 +100,9 @@ export default function DiscListPage(): JSX.Element {
         )}
       </div>
       <div className="mt-8">
-        <div className="flex gap-4 items-end">
+        {/* Stacked on a phone: side by side the fields were squeezed to a few
+            characters wide. From `sm` up they sit in a row that wraps. */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
           <DiscSelector
             discNames={distinctDiscNames}
             onChange={(selectedItem: string | null) => {
@@ -139,7 +112,18 @@ export default function DiscListPage(): JSX.Element {
 
           <NumberSearch onChange={debouncedHandler} />
 
-          <Button variant="contained" type="submit" onClick={() => showInfoBox(!isInfoBoxVisible)}>
+          {/* Nothing to choose between until the loaded discs name more than
+              one course. */}
+          {isMultiCourseClub && distinctCourses.length > 1 && (
+            <CourseFilter courses={distinctCourses} onChange={setCourseTerm} />
+          )}
+
+          <Button
+            variant="contained"
+            type="submit"
+            className="h-10 self-start sm:self-auto"
+            onClick={() => showInfoBox(!isInfoBoxVisible)}
+          >
             Ohjeet
           </Button>
         </div>
@@ -147,7 +131,9 @@ export default function DiscListPage(): JSX.Element {
         <div className="mt-4 mb-4">
           {
             <Collapse in={isInfoBoxVisible}>
-              <Paper elevation={3} children={<InfoBox onClose={() => showInfoBox(false)} />} />
+              <Paper elevation={3}>
+                <InfoBox clubId={clubId} onClose={() => showInfoBox(false)} />
+              </Paper>
             </Collapse>
           }
         </div>
@@ -157,7 +143,7 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable discs={discs} onChanged={() => fetcher.load('/discs/data')} />
+            <DiscTable discs={discs} showCourse={isMultiCourseClub} onChanged={() => fetcher.load('/discs/data')} />
           </div>
         )}
         {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}

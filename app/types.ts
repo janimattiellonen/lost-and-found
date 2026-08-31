@@ -59,6 +59,8 @@ export type DiscDTO = {
   ownerClubName?: string | null;
   addedAt?: string;
   course?: string | null;
+  /** When the club stopped listing the disc publicly; null while it is listed. */
+  archivedAt?: string | null;
 };
 
 export type MessageTemplateDTO = {
@@ -124,4 +126,5 @@ export type DbDiscType = {
   club_id: number;
   course?: string | null;
   notified_at?: string | null;
+  archived_at?: string | null;
 };

@@ -1,6 +1,7 @@
 import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { parseBatch, toDiscDTO } from '~/features/discs/submission/toDiscDTO';
 import { createDiscs } from '~/models/discs.server';
+import { getDiscCourseNames } from '~/config/courses';
 
 /**
  * Authorises, validates and stores a batch posted to /discs/create.
@@ -15,13 +16,13 @@ export async function handleCreateRequest(request: Request): Promise<Response> {
     return gate.response;
   }
 
-  const batch = parseBatch(gate.body);
+  const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
+
+  const batch = parseBatch(gate.body, getDiscCourseNames(clubId));
 
   if ('error' in batch) {
     return Response.json({ error: batch.error }, { status: 422 });
   }
-
-  const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
 
   try {
     const externalIds = await createDiscs(

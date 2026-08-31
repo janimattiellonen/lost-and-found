@@ -9,12 +9,14 @@ export type DiscSubmission = {
   manufacturer: string | null;
   phoneNumber: string | null;
   ownerName: string | null;
+  /** The course the disc was found on, or null when the club records none. */
+  course: string | null;
 };
 
 export type SubmitResult = { status: 'success'; savedCount: number } | { status: 'error'; message: string };
 
 /** Narrows a parsed row to the fields the server cares about. */
-export function toSubmission(disc: ParsedDisc): DiscSubmission {
+export function toSubmission(disc: ParsedDisc & { course?: string | null }): DiscSubmission {
   return {
     discName: disc.discName,
     plastic: disc.plastic,
@@ -22,6 +24,7 @@ export function toSubmission(disc: ParsedDisc): DiscSubmission {
     manufacturer: disc.manufacturer,
     phoneNumber: disc.phoneNumber,
     ownerName: disc.ownerName,
+    course: disc.course ?? null,
   };
 }
 

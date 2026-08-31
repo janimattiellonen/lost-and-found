@@ -34,6 +34,12 @@ export const font = stylex.defineVars({
   weightBold: '700',
 });
 
+// Shared control metrics, so a text field, a combobox and a row of radios line
+// up to the same height when they sit side by side in a filter row.
+export const size = stylex.defineVars({
+  control: '40px',
+});
+
 export const radius = stylex.defineVars({
   sm: '4px',
   md: '8px',

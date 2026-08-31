@@ -5,10 +5,25 @@ import * as stylex from '@stylexjs/stylex';
 import { parseDiscText, type ParsedDisc } from '~/features/discs/submission/parser/parseDiscText';
 import { submitDiscs, toSubmission } from '~/features/discs/submission/submitDiscs';
 import { DeleteIcon } from '~/ui/icons';
+import FormControlLabel from '~/ui/FormControlLabel';
+import { Radio, RadioGroup } from '~/ui/RadioGroup';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
 
-export default function AddDiscsPage(): JSX.Element {
+type AddDiscsPageProps = {
+  /** The courses this club files discs under; empty for a single-course club. */
+  courses: string[];
+};
+
+// The value the "no course" option carries. Empty so it can never collide with
+// a real course name.
+const NO_COURSE = '';
+
+export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Element {
   const [rows, setRows] = useState<Row[]>([]);
+  // The course new rows are filed under. Kept across entries, since a batch is
+  // normally one bin's worth. The course is never read out of the typed text:
+  // this selection is its only source.
+  const [course, setCourse] = useState<string>(NO_COURSE);
   const [editing, setEditing] = useState<EditTarget | null>(null);
   // The row whose delete button has been pressed and is awaiting a yes/no.
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
@@ -47,6 +62,14 @@ export default function AddDiscsPage(): JSX.Element {
     setEditing(null);
   }
 
+  /**
+   * Files every row still waiting to be saved under the selected course. The
+   * one-click fix for a batch typed in before the course was chosen.
+   */
+  function applyCourseToAll(): void {
+    updateRows((current) => current.map((row) => ({ ...row, course: course || null })));
+  }
+
   function remove(rowId: number): void {
     updateRows((current) => current.filter((row) => row.id !== rowId));
     setConfirmingDelete(null);
@@ -66,11 +89,23 @@ export default function AddDiscsPage(): JSX.Element {
       return;
     }
 
-    updateRows((current) => [...current, { id: nextId.current++, input: text, ...parseDiscText(text) }]);
+    updateRows((current) => [
+      ...current,
+      { id: nextId.current++, input: text, course: course || null, ...parseDiscText(text) },
+    ]);
 
     // Clear so the next disc can be typed straight away.
     form.reset();
   }
+
+  // Only worth nagging about for a club that records a course at all.
+  const missingCourseCount = courses.length > 0 ? rows.filter((row) => row.course == null).length : 0;
+  const isCourseMissing = missingCourseCount > 0;
+
+  // Offered whenever it would change something: setting a course needs a row
+  // that lacks it or carries another one, clearing needs a row that has one.
+  const isApplyToAllUseful =
+    course === NO_COURSE ? rows.some((row) => row.course != null) : rows.some((row) => row.course !== course);
 
   const isSending = submitState.status === 'sending';
 
@@ -115,7 +150,44 @@ export default function AddDiscsPage(): JSX.Element {
           {...stylex.props(styles.input)}
         />
         <p {...stylex.props(styles.hint)}>Paina Enter tunnistaaksesi tiedot.</p>
+
+        {courses.length > 0 && (
+          <div {...stylex.props(styles.courseField)}>
+            <span {...stylex.props(styles.label)}>Rata</span>
+            <RadioGroup row name="course" onChange={(event) => setCourse((event.target as HTMLInputElement).value)}>
+              {courses.map((name) => (
+                <FormControlLabel key={name} control={<Radio />} value={name} label={name} />
+              ))}
+              <FormControlLabel control={<Radio defaultChecked />} value={NO_COURSE} label="Ei radan tietoa" />
+            </RadioGroup>
+            <p {...stylex.props(styles.hint)}>Valinta koskee tästä eteenpäin lisättäviä kiekkoja.</p>
+
+            {/* The one-click fix when the batch was typed in before the course
+                was chosen, or when it was chosen wrong. "Ei radan tietoa"
+                clears the batch, which is the way back from applying the wrong
+                course to all of it. */}
+            {isApplyToAllUseful && (
+              <button type="button" onClick={applyCourseToAll} {...stylex.props(styles.applyButton)}>
+                {course === NO_COURSE ? (
+                  'Poista rata kaikilta riveiltä'
+                ) : (
+                  <>Aseta rata &quot;{course}&quot; kaikille riveille</>
+                )}
+              </button>
+            )}
+          </div>
+        )}
       </form>
+
+      {/* Subtle rather than blocking: a disc with no course is still worth
+          saving, it just will not show up under a course in the list. */}
+      {isCourseMissing && (
+        <div role="status" {...stylex.props(styles.reminder)}>
+          {missingCourseCount === rows.length
+            ? 'Radaksi ei ole valittu mitään. Valitse rata yltä.'
+            : `${missingCourseCount} kiekolta puuttuu rata. Valitse rata yltä.`}
+        </div>
+      )}
 
       <div {...stylex.props(styles.tableWrap)}>
         <table {...stylex.props(styles.table)}>
@@ -126,6 +198,11 @@ export default function AddDiscsPage(): JSX.Element {
                   {column.header}
                 </th>
               ))}
+              {courses.length > 0 && (
+                <th scope="col" {...stylex.props(styles.th)}>
+                  Rata
+                </th>
+              )}
               <th scope="col" {...stylex.props(styles.th)}>
                 Ohitettu
               </th>
@@ -137,7 +214,7 @@ export default function AddDiscsPage(): JSX.Element {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 2} {...stylex.props(styles.td, styles.none)}>
+                <td colSpan={columns.length + (courses.length > 0 ? 3 : 2)} {...stylex.props(styles.td, styles.none)}>
                   Ei vielä tunnistettuja kiekkoja.
                 </td>
               </tr>
@@ -169,6 +246,12 @@ export default function AddDiscsPage(): JSX.Element {
                     </td>
                   );
                 })}
+
+                {/* Not editable: the course comes from the radio buttons
+                    above, never from the typed text or from this cell. */}
+                {courses.length > 0 && (
+                  <td {...stylex.props(styles.td, row.course == null && styles.missingCourse)}>{row.course ?? '–'}</td>
+                )}
 
                 {/* What the parser could not place, so a typo or a dropped
                     word is visible rather than silently missing. */}
@@ -298,7 +381,7 @@ function Cell({ value, header, isEditing, onOpen, onCommit, onCancel }: CellProp
 /** The six fields shown in the table, all of them editable by hand. */
 type EditableField = 'discName' | 'plastic' | 'colour' | 'manufacturer' | 'phoneNumber' | 'ownerName';
 
-type Row = ParsedDisc & { id: number; input: string };
+type Row = ParsedDisc & { id: number; input: string; course: string | null };
 
 /** Which cell, if any, is currently open for editing. */
 type EditTarget = { rowId: number; field: EditableField };
@@ -329,6 +412,31 @@ const styles = stylex.create({
   intro: { marginBottom: space.lg, color: color.textSecondary },
   label: { display: 'block', fontWeight: font.weightBold, marginBottom: space.xs, color: color.textSecondary },
   form: { marginBottom: space.lg },
+  courseField: { marginTop: space.md },
+  // Quiet: a note in the margin, not an error box.
+  reminder: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: space.sm,
+    marginBottom: space.md,
+    fontSize: font.sizeSm,
+    color: '#8a6100',
+  },
+  applyButton: {
+    marginTop: space.sm,
+    padding: '6px 12px',
+    fontFamily: 'inherit',
+    fontSize: font.sizeSm,
+    color: color.textSecondary,
+    backgroundColor: { default: color.surface, ':hover': color.surfaceMuted },
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: color.border,
+    borderRadius: radius.sm,
+    cursor: 'pointer',
+  },
+  missingCourse: { color: color.textMuted },
   input: {
     width: '100%',
     maxWidth: '640px',

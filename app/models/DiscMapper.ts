@@ -38,6 +38,7 @@ export const toDTO = (raw: any): DiscDTO => {
     clubId: raw.club_id,
     course: raw.course,
     notifiedAt: raw.notified_at,
+    archivedAt: raw.archived_at,
   };
 };
 
@@ -67,5 +68,6 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     club_id: discDTO.clubId,
     course: discDTO.course,
     notified_at: discDTO.notifiedAt,
+    archived_at: discDTO.archivedAt,
   };
 };

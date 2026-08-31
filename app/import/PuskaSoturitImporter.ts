@@ -6,6 +6,21 @@ function isEmpty(str?: string | null): boolean {
   return !str || str.length === 0;
 }
 
+/**
+ * A dd/MM/y date from the sheet as y-MM-dd, or null when the cell holds
+ * something else. One row currently reads "9248", and throwing on it took the
+ * whole import down; callers can now skip or report the row instead.
+ */
+export function parseSheetDate(value?: string | null): string | null {
+  if (isEmpty(value)) {
+    return null;
+  }
+
+  const parsed = parse(value!, 'dd/MM/y', new Date());
+
+  return isNaN(parsed.getTime()) ? null : format(parsed, 'y-MM-dd');
+}
+
 const indexes = {
   DISC_NAME: 0,
   DISC_MANUFACTURER: 1,
@@ -29,6 +44,12 @@ export async function importDiscData(): Promise<DiscDTO[]> {
   const res = await fetch(url);
 
   const data = await res.json();
+
+  // Without this, an API error (a rejected key, say) surfaces further down as
+  // "Cannot read properties of undefined", which says nothing about the cause.
+  if (!data.values) {
+    throw new Error(`Reading the Puskasoturit sheet failed: ${data.error?.message ?? JSON.stringify(data)}`);
+  }
 
   const {
     DISC_NAME,
@@ -57,9 +78,7 @@ export async function importDiscData(): Promise<DiscDTO[]> {
       ownerPhoneNumber: item[OWNER_PHONE_NUMBER],
       additionalInfo: item[ADDITIONAL_INFO],
       //addedAt: '2023-02-023',
-      addedAt: item[ADDED_AT]
-        ? format(parse(item[ADDED_AT] ? item[ADDED_AT] : '', 'dd/MM/y', new Date()), 'y-MM-dd')
-        : null,
+      addedAt: parseSheetDate(item[ADDED_AT]),
       isReturnedToOwner: !isEmpty(item[IS_RETURNED_TO_OWNER]) ? true : false,
       returnedToOwnerText: item[IS_RETURNED_TO_OWNER],
       canBeSoldOrDonated: !isEmpty(item[CAN_BE_SOLD_OR_DONATED]) ? true : false,

@@ -17,11 +17,14 @@ export async function getDiscs(): Promise<DiscDTO[]> {
   const { data } = await supabase
     .from('discs')
     .select(
-      'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at',
+      'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at, course',
     )
     .order('disc_name', { ascending: true })
     .eq('is_returned_to_owner', false)
     .eq('can_be_sold_or_donated', false)
+    // Archived discs are ones the club has stopped listing; they are still in
+    // the table, and still counted in the statistics.
+    .is('archived_at', null)
     .eq('club_id', clubId);
 
   return data

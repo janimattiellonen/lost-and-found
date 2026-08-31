@@ -17,6 +17,24 @@ export function getDistinctDiscNames(discs: DiscDTO[]): string[] {
   return unique;
 }
 
+/**
+ * The course names actually present in the list, for the course filter. Clubs
+ * with a single course (or none recorded) yield fewer than two names, which is
+ * how the list page knows not to show the filter at all. Discs with no course
+ * recorded are left out of the options and only appear under "all courses".
+ */
+export function getDistinctCourses(discs: DiscDTO[]): string[] {
+  const unique = new Set<string>();
+
+  discs.forEach((disc: DiscDTO) => {
+    if (disc.course) {
+      unique.add(disc.course);
+    }
+  });
+
+  return [...unique].sort((a, b) => a.localeCompare(b, 'fi'));
+}
+
 type GroupedType = {
   [index: string]: string[];
 };

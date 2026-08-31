@@ -28,8 +28,9 @@ export default function MessageTemplatesPage({ messageTemplates }: Props): JSX.E
               className={messageTemplate.isDefault ? 'mb-8 mt-8' : 'mt-8'}
               style={messageTemplate.isDefault ? { border: 'solid rgba(2, 208, 232, 0.85) 4px' } : undefined}
               elevation={messageTemplate.isDefault ? 7 : 1}
-              children={<MessageTemplateItem messageTemplate={messageTemplate} />}
-            />
+            >
+              <MessageTemplateItem messageTemplate={messageTemplate} />
+            </Paper>
           );
         })}
       </Wrapper>

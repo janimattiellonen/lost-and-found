@@ -30,11 +30,12 @@ export function toDiscDTO(disc: DiscSubmission, clubId: number): DiscDTO {
     discManufacturer: disc.manufacturer,
     ownerName: disc.ownerName,
     ownerPhoneNumber: disc.phoneNumber ?? undefined,
+    course: disc.course,
     clubId,
   };
 }
 
-const fields = ['discName', 'plastic', 'colour', 'manufacturer', 'phoneNumber', 'ownerName'] as const;
+const fields = ['discName', 'plastic', 'colour', 'manufacturer', 'phoneNumber', 'ownerName', 'course'] as const;
 
 function readField(row: Record<string, unknown>, field: string): string | null | undefined {
   const value = row[field];
@@ -56,10 +57,15 @@ function readField(row: Record<string, unknown>, field: string): string | null |
  * Validates a batch as it arrives over the wire. The request body is untrusted,
  * so nothing is assumed about its shape.
  *
+ * `allowedCourses` are the course names this club may file a disc under; a row
+ * naming anything else is rejected rather than written to the course column,
+ * where a stray value would become an extra option in the list page's filter.
+ * No course at all is always accepted.
+ *
  * Returns the accepted rows, or a Finnish message ready to show in the error
  * box.
  */
-export function parseBatch(body: unknown): { discs: DiscSubmission[] } | { error: string } {
+export function parseBatch(body: unknown, allowedCourses: string[]): { discs: DiscSubmission[] } | { error: string } {
   if (typeof body !== 'object' || body === null || !Array.isArray((body as { discs?: unknown }).discs)) {
     return { error: 'Virheellinen pyyntö.' };
   }
@@ -91,6 +97,10 @@ export function parseBatch(body: unknown): { discs: DiscSubmission[] } | { error
       }
 
       disc[field] = value;
+    }
+
+    if (disc.course != null && !allowedCourses.includes(disc.course)) {
+      return { error: `Rivi ${index + 1}: tuntematon rata "${disc.course}".` };
     }
 
     // disc_name is what the public list is built around, so a nameless row is

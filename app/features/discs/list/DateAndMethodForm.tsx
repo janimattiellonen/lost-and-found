@@ -59,12 +59,15 @@ export default function DateAndMethodForm<V extends number>({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
-      <p className="basis-full text-xs text-gray-600">
+      {/* The form opens inside the dark disc table, so its text has to be
+          light: the gray-600 of a form on a white page all but disappeared
+          against the row behind it. */}
+      <p className="basis-full text-xs text-gray-300">
         {title}: <b>{discName}</b>
       </p>
 
       <div>
-        <label htmlFor={`${idPrefix}-date`} className="block text-xs font-bold text-gray-600 mb-1">
+        <label htmlFor={`${idPrefix}-date`} className="block text-xs font-bold text-gray-300 mb-1">
           {dateLabel}
         </label>
         <input
@@ -73,12 +76,12 @@ export default function DateAndMethodForm<V extends number>({
           required
           value={date}
           onChange={(event) => setDate(event.currentTarget.value)}
-          className="border border-gray-300 rounded px-2 py-1"
+          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900"
         />
       </div>
 
       <fieldset>
-        <legend className="text-xs font-bold text-gray-600 mb-1">{methodLabel}</legend>
+        <legend className="text-xs font-bold text-gray-300 mb-1">{methodLabel}</legend>
         <div className="flex items-center gap-4">
           {options.map((option) => (
             <label key={option.value} className="inline-flex items-center gap-1">
@@ -97,7 +100,7 @@ export default function DateAndMethodForm<V extends number>({
             type="button"
             disabled={method === null}
             onClick={() => setMethod(null)}
-            className="text-xs underline text-gray-500 disabled:opacity-40 disabled:no-underline"
+            className="text-xs underline text-gray-300 disabled:opacity-40 disabled:no-underline"
           >
             Tyhjennä
           </button>
@@ -113,12 +116,12 @@ export default function DateAndMethodForm<V extends number>({
           {isSaving ? 'Tallennetaan...' : submitLabel}
         </button>
 
-        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-gray-100 rounded px-3 py-1">
+        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-white/10 rounded px-3 py-1">
           Peruuta
         </button>
       </div>
 
-      {error && <p className="basis-full text-red-700">{error}</p>}
+      {error && <p className="basis-full text-red-300">{error}</p>}
     </form>
   );
 }
