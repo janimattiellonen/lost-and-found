@@ -11,6 +11,8 @@ export type DiscSubmission = {
   ownerName: string | null;
   /** The course the disc was found on, or null when the club records none. */
   course: string | null;
+  /** Club-internal notes; never sent to anonymous visitors. */
+  additionalInfo: string | null;
 };
 
 export type SubmitResult = { status: 'success'; savedCount: number } | { status: 'error'; message: string };
@@ -25,6 +27,7 @@ export function toSubmission(disc: ParsedDisc & { course?: string | null }): Dis
     phoneNumber: disc.phoneNumber,
     ownerName: disc.ownerName,
     course: disc.course ?? null,
+    additionalInfo: disc.additionalInfo,
   };
 }
 

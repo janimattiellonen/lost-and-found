@@ -8,11 +8,14 @@ export async function loadDiscListData(request: Request) {
   const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
 
   const emptyingLogItems = await getEmptyingLogItemsForClub(clubId, request);
-  const discs = await getDiscs();
 
-  // The external id is only needed for the admin actions in the table, so it is
-  // kept out of the payload anonymous visitors receive.
+  // The external id is only needed for the admin actions in the table, and the
+  // notes in additional_info are club-internal, so both are kept out of the
+  // payload anonymous visitors receive. Checked before the query, so the notes
+  // are never even read for an anonymous visitor.
   const isLoggedIn = await isUserLoggedIn(request);
+
+  const discs = await getDiscs(isLoggedIn);
   const data = isLoggedIn ? discs : discs.map((disc) => ({ ...disc, externalId: undefined }));
 
   return {

@@ -22,6 +22,8 @@ export type ParsedDisc = {
   colour: string | null;
   ownerName: string | null;
   phoneNumber: string | null;
+  /** Private notes typed after a '|'; never shown to anonymous visitors. */
+  additionalInfo: string | null;
   /** Words the parser could not place anywhere. */
   unmatched: string[];
   confidence: { manufacturer: Confidence };
@@ -278,9 +280,32 @@ function valueOf(entries: DictionaryEntry[] | null): string | null {
   return entries ? entries[0].value : null;
 }
 
+/**
+ * Splits the typed line at the first '|': what precedes it describes the disc,
+ * what follows it is a free-text note about it (PDGA number, weight, stamp
+ * colour). The note is kept verbatim — it is never tokenized or matched against
+ * the catalogue, so a word like "punainen" in a note cannot end up as the
+ * disc's colour.
+ *
+ * A later '|' is part of the note, so a note may itself contain one.
+ */
+export function splitAdditionalInfo(input: string): { discText: string; additionalInfo: string | null } {
+  const pipe = input.indexOf('|');
+
+  if (pipe === -1) {
+    return { discText: input, additionalInfo: null };
+  }
+
+  const note = input.slice(pipe + 1).trim();
+
+  return { discText: input.slice(0, pipe), additionalInfo: note.length > 0 ? note : null };
+}
+
 export function parseDiscText(input: string, dictionary: Dictionary = defaultDictionary): ParsedDisc {
-  const phone = findPhoneNumber(input);
-  const tokens = tokenize(stripPhoneNumber(input, phone));
+  const { discText, additionalInfo } = splitAdditionalInfo(input);
+
+  const phone = findPhoneNumber(discText);
+  const tokens = tokenize(stripPhoneNumber(discText, phone));
 
   const spans = segment(tokens, dictionary);
   const unknown = extractUnknownDisc(spans);
@@ -301,6 +326,7 @@ export function parseDiscText(input: string, dictionary: Dictionary = defaultDic
     colour: valueOf(slots[COLOUR]),
     ownerName,
     phoneNumber: phone ? phone.value : null,
+    additionalInfo,
     unmatched,
     confidence: { manufacturer: confidence },
   };

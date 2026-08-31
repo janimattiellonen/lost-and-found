@@ -20,7 +20,14 @@ describe('toSubmission', () => {
       phoneNumber: '0501234567',
       ownerName: 'Steve D.',
       course: null,
+      additionalInfo: null,
     });
+  });
+
+  it('carries the note typed after the pipe', () => {
+    expect(toSubmission(parseDiscText('Star Destroyer punainen | PDGA 12345, 175 g')).additionalInfo).toBe(
+      'PDGA 12345, 175 g',
+    );
   });
 
   it('passes unidentified fields through as null', () => {

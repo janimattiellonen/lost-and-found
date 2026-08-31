@@ -9,16 +9,26 @@ import { fromDTO, toDTO } from '~/models/DiscMapper';
 import type { DiscDisposalDetails } from '~/features/discs/disposal/discDisposal';
 import type { DiscReturnDetails } from '~/features/discs/return/discReturn';
 
-export async function getDiscs(): Promise<DiscDTO[]> {
+/** The columns the public disc list is built from. Safe for anyone to see. */
+const PUBLIC_DISC_COLUMNS =
+  'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at, course';
+
+/**
+ * The discs this club is currently listing.
+ *
+ * `additional_info` holds club-internal notes about a disc, so it is left out
+ * of the SELECT unless the caller has established that a user is signed in —
+ * kept out of the query rather than stripped afterwards, so it can never reach
+ * the response by way of a forgotten mapping.
+ */
+export async function getDiscs(includeAdditionalInfo = false): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
 
   const supabase = createConnection();
 
   const { data } = await supabase
     .from('discs')
-    .select(
-      'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at, course',
-    )
+    .select(includeAdditionalInfo ? `${PUBLIC_DISC_COLUMNS}, additional_info` : PUBLIC_DISC_COLUMNS)
     .order('disc_name', { ascending: true })
     .eq('is_returned_to_owner', false)
     .eq('can_be_sold_or_donated', false)
