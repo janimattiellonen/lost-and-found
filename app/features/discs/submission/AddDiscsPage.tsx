@@ -102,6 +102,11 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
   const missingCourseCount = courses.length > 0 ? rows.filter((row) => row.course == null).length : 0;
   const isCourseMissing = missingCourseCount > 0;
 
+  // Offered whenever it would change something: setting a course needs a row
+  // that lacks it or carries another one, clearing needs a row that has one.
+  const isApplyToAllUseful =
+    course === NO_COURSE ? rows.some((row) => row.course != null) : rows.some((row) => row.course !== course);
+
   const isSending = submitState.status === 'sending';
 
   async function handleSave(): Promise<void> {
@@ -158,10 +163,16 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
             <p {...stylex.props(styles.hint)}>Valinta koskee tästä eteenpäin lisättäviä kiekkoja.</p>
 
             {/* The one-click fix when the batch was typed in before the course
-                was chosen, or when it was chosen wrong. */}
-            {rows.length > 0 && course !== NO_COURSE && (
+                was chosen, or when it was chosen wrong. "Ei radan tietoa"
+                clears the batch, which is the way back from applying the wrong
+                course to all of it. */}
+            {isApplyToAllUseful && (
               <button type="button" onClick={applyCourseToAll} {...stylex.props(styles.applyButton)}>
-                Aseta rata &quot;{course}&quot; kaikille riveille
+                {course === NO_COURSE ? (
+                  'Poista rata kaikilta riveiltä'
+                ) : (
+                  <>Aseta rata &quot;{course}&quot; kaikille riveille</>
+                )}
               </button>
             )}
           </div>
