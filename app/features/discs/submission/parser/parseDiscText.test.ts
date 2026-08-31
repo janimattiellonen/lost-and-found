@@ -77,6 +77,53 @@ describe('parseDiscText — the examples from the brief', () => {
   });
 });
 
+describe('parseDiscText — the note after a pipe', () => {
+  it('stores everything after the pipe as additional info', () => {
+    expect(parseDiscText('Star Destroyer punainen | PDGA 12345, 175 g, sininen stamppi').additionalInfo).toBe(
+      'PDGA 12345, 175 g, sininen stamppi',
+    );
+  });
+
+  it('still parses the disc from the part before the pipe', () => {
+    expect(fields('Star Destroyer punainen 050 123 4567 Steve D. | PDGA 12345')).toEqual({
+      discName: 'Destroyer',
+      plastic: 'Star',
+      manufacturer: 'Innova',
+      colour: 'Punainen',
+      ownerName: 'Steve D.',
+      phoneNumber: '0501234567',
+    });
+  });
+
+  it('never lets the note reach the disc fields, even when it names a colour', () => {
+    const parsed = parseDiscText('Mako3 keltainen | musta stamppi, Innova');
+
+    expect(parsed.colour).toBe('Keltainen');
+    expect(parsed.ownerName).toBeNull();
+    expect(parsed.unmatched).toEqual([]);
+    expect(parsed.additionalInfo).toBe('musta stamppi, Innova');
+  });
+
+  it('reports no note when there is no pipe', () => {
+    expect(parseDiscText('Mako3 keltainen').additionalInfo).toBeNull();
+  });
+
+  it('reports no note when nothing but blanks follow the pipe', () => {
+    expect(parseDiscText('Mako3 keltainen |   ').additionalInfo).toBeNull();
+  });
+
+  it('keeps a later pipe as part of the note', () => {
+    expect(parseDiscText('Mako3 keltainen | 175 g | tarkista').additionalInfo).toBe('175 g | tarkista');
+  });
+
+  it('parses a disc with nothing but a note', () => {
+    const parsed = parseDiscText('Mako3 | 175 g');
+
+    expect(parsed.discName).toBe('Mako3');
+    expect(parsed.additionalInfo).toBe('175 g');
+  });
+});
+
 describe('parseDiscText — plain colours', () => {
   it.each([
     ['musta', 'Musta'],

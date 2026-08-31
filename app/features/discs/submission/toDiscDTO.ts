@@ -7,6 +7,10 @@ export const MAX_BATCH_SIZE = 100;
 
 const MAX_FIELD_LENGTH = 200;
 
+// The note is free text rather than one catalogue value, so it is allowed to
+// run longer than a disc name or a colour.
+const MAX_ADDITIONAL_INFO_LENGTH = 500;
+
 /**
  * Joins the disc name and the plastic the way the Google Sheet has always
  * written them: "Destroyer, Star". Existing rows use that shape, so the public
@@ -31,11 +35,21 @@ export function toDiscDTO(disc: DiscSubmission, clubId: number): DiscDTO {
     ownerName: disc.ownerName,
     ownerPhoneNumber: disc.phoneNumber ?? undefined,
     course: disc.course,
+    additionalInfo: disc.additionalInfo ?? undefined,
     clubId,
   };
 }
 
-const fields = ['discName', 'plastic', 'colour', 'manufacturer', 'phoneNumber', 'ownerName', 'course'] as const;
+const fields = [
+  'discName',
+  'plastic',
+  'colour',
+  'manufacturer',
+  'phoneNumber',
+  'ownerName',
+  'course',
+  'additionalInfo',
+] as const;
 
 function readField(row: Record<string, unknown>, field: string): string | null | undefined {
   const value = row[field];
@@ -44,7 +58,9 @@ function readField(row: Record<string, unknown>, field: string): string | null |
     return null;
   }
 
-  if (typeof value !== 'string' || value.length > MAX_FIELD_LENGTH) {
+  const maxLength = field === 'additionalInfo' ? MAX_ADDITIONAL_INFO_LENGTH : MAX_FIELD_LENGTH;
+
+  if (typeof value !== 'string' || value.length > maxLength) {
     return undefined;
   }
 

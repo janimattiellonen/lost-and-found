@@ -34,8 +34,13 @@ describe('toDiscDTO', () => {
       ownerName: 'Steve D.',
       ownerPhoneNumber: '0501234567',
       course: null,
+      additionalInfo: undefined,
       clubId: 2,
     });
+  });
+
+  it('carries the note through to the persisted field', () => {
+    expect(toDiscDTO(submission('Mako3 keltainen | PDGA 12345'), 2).additionalInfo).toBe('PDGA 12345');
   });
 
   it('leaves the identifiers to the model', () => {
@@ -78,8 +83,20 @@ describe('parseBatch', () => {
     { reason: 'a field over the length cap', body: { discs: [{ discName: 'M'.repeat(201) }] } },
     { reason: 'a row with no name or plastic', body: { discs: [{ colour: 'Punainen' }] } },
     { reason: 'a course this club does not have', body: { discs: [{ discName: 'Mako3', course: 'Tali' }] } },
+    {
+      reason: 'a note over its own, longer cap',
+      body: { discs: [{ discName: 'Mako3', additionalInfo: 'x'.repeat(501) }] },
+    },
   ])('rejects $reason', ({ body }) => {
     expect(parseBatch(body, COURSES)).toMatchObject({ error: expect.any(String) });
+  });
+
+  it('accepts a note longer than the cap the other fields have', () => {
+    const note = 'x'.repeat(300);
+
+    expect(parseBatch({ discs: [{ discName: 'Mako3', additionalInfo: note }] }, COURSES)).toMatchObject({
+      discs: [{ additionalInfo: note }],
+    });
   });
 
   it('accepts a row with one of the club courses, and one with none', () => {

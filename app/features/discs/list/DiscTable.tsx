@@ -26,6 +26,7 @@ import {
   ArrowUpwardIcon,
   CheckCircleIcon,
   DeleteIcon,
+  InfoIcon,
   SellIcon,
   TextsmsIcon,
   WarningIcon,
@@ -53,6 +54,8 @@ interface Row {
   internalDiscId: number | null;
   /** Only present for a signed-in visitor; the admin actions are keyed on it. */
   externalId?: string;
+  /** Club-internal notes. The loader only sends these to a signed-in visitor. */
+  additionalInfo?: string;
 }
 
 type OutletContext = {
@@ -168,13 +171,30 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
     addedAt: disc.addedAt ?? '',
     internalDiscId: disc.internalDiscId,
     externalId: disc.externalId,
+    additionalInfo: disc.additionalInfo,
   }));
 }
 
 /** Which of the two marks is open on a row. */
 type MarkKind = 'return' | 'disposal';
 
-type OpenForm = { externalId: string; kind: MarkKind };
+/** What the row expanded under a disc is showing: a mark form, or its notes. */
+type PanelKind = MarkKind | 'info';
+
+type OpenPanel = { externalId: string; kind: PanelKind };
+
+/**
+ * The club-internal notes on a disc, shown under it rather than in a column of
+ * their own: they are free text, and most discs have none.
+ */
+function AdditionalInfoPanel({ row }: { row: Row }): JSX.Element {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs uppercase tracking-wide text-gray-400">Lisätiedot – {row.discName}</span>
+      <span className="whitespace-pre-wrap">{row.additionalInfo}</span>
+    </div>
+  );
+}
 
 type MarkFormProps = {
   row: Row;
@@ -299,7 +319,7 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
       title="Poista kiekko"
       disabled={isDeleting}
       onClick={handleClick}
-      className="inline-flex text-gray-500 hover:text-red-600 disabled:opacity-40"
+      className="inline-flex text-red-400 hover:text-red-300 disabled:opacity-40"
     >
       <DeleteIcon width={18} height={18} />
     </button>
@@ -310,11 +330,11 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
   const { session } = useOutletContext<OutletContext>();
   const isLoggedIn = !!session?.user?.id;
 
-  // Which disc has one of the mark forms open, and which one.
-  const [openForm, setOpenForm] = useState<OpenForm | null>(null);
+  // Which disc has a panel open under it, and what that panel is showing.
+  const [openForm, setOpenForm] = useState<OpenPanel | null>(null);
 
-  /** Opens the given mark on the given disc, or closes it if already open. */
-  const toggleForm = (externalId: string, kind: MarkKind): void =>
+  /** Opens the given panel on the given disc, or closes it if already open. */
+  const toggleForm = (externalId: string, kind: PanelKind): void =>
     setOpenForm((current) =>
       current?.externalId === externalId && current.kind === kind ? null : { externalId, kind },
     );
@@ -386,7 +406,7 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                         title="Merkitse palautetuksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'return'}
                         onClick={() => toggleForm(row.original.externalId!, 'return')}
-                        className="inline-flex text-gray-500 hover:text-green-700"
+                        className="inline-flex text-green-400 hover:text-green-300"
                       >
                         <CheckCircleIcon width={18} height={18} />
                       </button>
@@ -397,9 +417,24 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                         title="Merkitse myytäväksi tai lahjoitettavaksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'disposal'}
                         onClick={() => toggleForm(row.original.externalId!, 'disposal')}
-                        className="inline-flex text-gray-500 hover:text-blue-700"
+                        className="inline-flex text-sky-400 hover:text-sky-300"
                       >
                         <SellIcon width={18} height={18} />
+                      </button>
+
+                      {/* Most discs carry no notes, so this one is often
+                          disabled — which is why the icons around it are
+                          coloured rather than grey. */}
+                      <button
+                        type="button"
+                        aria-label={`Näytä kiekon ${row.original.discName} lisätiedot`}
+                        title={row.original.additionalInfo ? 'Näytä lisätiedot' : 'Kiekolla ei ole lisätietoja'}
+                        disabled={!row.original.additionalInfo}
+                        aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'info'}
+                        onClick={() => toggleForm(row.original.externalId!, 'info')}
+                        className="inline-flex text-amber-400 hover:text-amber-300 disabled:text-gray-500 disabled:hover:text-gray-500 disabled:cursor-not-allowed"
+                      >
+                        <InfoIcon width={18} height={18} />
                       </button>
                     </>
                   )}
@@ -500,21 +535,25 @@ export default function DiscTable({ discs, onChanged, showCourse = false }: Disc
                 })}
               </tr>
 
-              {/* A mark form opens as a row of its own, under the disc it
-                  belongs to, rather than as a modal. */}
+              {/* A mark form, or a disc's notes, opens as a row of its own
+                  under the disc it belongs to, rather than as a modal. */}
               {open && (
                 <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
                   <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
-                    <MarkForm
-                      row={row.original}
-                      externalId={open.externalId}
-                      kind={open.kind}
-                      onCancel={() => setOpenForm(null)}
-                      onDone={() => {
-                        setOpenForm(null);
-                        onChanged?.();
-                      }}
-                    />
+                    {open.kind === 'info' ? (
+                      <AdditionalInfoPanel row={row.original} />
+                    ) : (
+                      <MarkForm
+                        row={row.original}
+                        externalId={open.externalId}
+                        kind={open.kind}
+                        onCancel={() => setOpenForm(null)}
+                        onDone={() => {
+                          setOpenForm(null);
+                          onChanged?.();
+                        }}
+                      />
+                    )}
                   </td>
                 </tr>
               )}

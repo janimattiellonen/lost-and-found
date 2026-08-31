@@ -201,3 +201,25 @@ Currently /demo is the route for adding new discs. Let's rename it to /discs/add
 and components if needed.
 
 Make sure the route is protected and requires login.
+
+## Phase 11 - allow additional information
+
+Create a new branch.
+
+The `discs` table contains `additional_info` column that can be used for storing private and misc info
+that can be found on the disc (PDG number, weight, stamp colour etc).
+
+I want to be able to provide such information using the same textfield.
+
+All text in the textfield followed by a '|' is 5o be identified as content to be stored in
+`additional_info`. Note that `additional_info` is never shown for unsigned people and must never be
+returned by the query and the response.
+
+For autheticated users, display a (i) icon in the admin tools columns, which open an inline row with the contents of
+`additional_info`. If the row contains no data for `additional_info`, then disable the (i) icon.
+
+This requirement forces the other the admin tool icons to have a different color, as the current gray
+color might be suitable to indicate a disabled icon.
+
+Remember to edit the query and the response that are used for authenticated users to include
+`additional_info`.

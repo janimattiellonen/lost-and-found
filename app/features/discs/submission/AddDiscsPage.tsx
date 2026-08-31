@@ -146,10 +146,13 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
           name="discText"
           type="text"
           autoComplete="off"
-          placeholder="Esim. Star Destroyer punainen 050 123 4567 Steve D."
+          placeholder="Esim. Star Destroyer punainen 050 123 4567 Steve D. | PDGA 12345, 175 g"
           {...stylex.props(styles.input)}
         />
-        <p {...stylex.props(styles.hint)}>Paina Enter tunnistaaksesi tiedot.</p>
+        <p {...stylex.props(styles.hint)}>
+          Paina Enter tunnistaaksesi tiedot. Pystyviivan (|) jälkeen kirjoitettu teksti tallennetaan lisätietoina, eikä
+          sitä näytetä julkisella listalla.
+        </p>
 
         {courses.length > 0 && (
           <div {...stylex.props(styles.courseField)}>
@@ -378,8 +381,15 @@ function Cell({ value, header, isEditing, onOpen, onCommit, onCancel }: CellProp
   );
 }
 
-/** The six fields shown in the table, all of them editable by hand. */
-type EditableField = 'discName' | 'plastic' | 'colour' | 'manufacturer' | 'phoneNumber' | 'ownerName';
+/** The fields shown in the table, all of them editable by hand. */
+type EditableField =
+  | 'discName'
+  | 'plastic'
+  | 'colour'
+  | 'manufacturer'
+  | 'phoneNumber'
+  | 'ownerName'
+  | 'additionalInfo';
 
 type Row = ParsedDisc & { id: number; input: string; course: string | null };
 
@@ -403,6 +413,7 @@ const columns: { header: string; field: EditableField }[] = [
   { header: 'Valmistaja', field: 'manufacturer' },
   { header: 'Puhelinnumero', field: 'phoneNumber' },
   { header: 'Omistaja', field: 'ownerName' },
+  { header: 'Lisätiedot', field: 'additionalInfo' },
 ];
 
 const styles = stylex.create({
