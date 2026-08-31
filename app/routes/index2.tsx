@@ -4,8 +4,8 @@ import { useFetcher } from 'react-router';
 import * as stylex from '@stylexjs/stylex';
 import { add, isAfter } from 'date-fns';
 
-import DiscSelector from '~/routes/DiscSelector';
-import { WarningIcon } from '~/routes/components/icons';
+import DiscSelector from '~/features/discs/list/DiscSelector';
+import { WarningIcon } from '~/ui/icons';
 import { color, radius, space, font } from '~/styles/tokens.stylex';
 import type { DiscDTO } from '~/types';
 
