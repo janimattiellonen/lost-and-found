@@ -82,15 +82,32 @@ export default function Index2Page(): JSX.Element {
         <label htmlFor="index2-search" {...stylex.props(styles.srOnly)}>
           4 viimeistä numeroa tai kiekon nimi
         </label>
-        <input
-          id="index2-search"
-          inputMode="search"
-          autoComplete="off"
-          placeholder="4 viimeistä numeroa tai kiekon nimi"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          {...stylex.props(styles.searchInput)}
-        />
+        <div {...stylex.props(styles.searchField)}>
+          <input
+            id="index2-search"
+            inputMode="search"
+            autoComplete="off"
+            placeholder="4 viimeistä numeroa tai kiekon nimi"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            {...stylex.props(styles.searchInput, query.length > 0 && styles.searchInputWithClear)}
+          />
+
+          {/* Backspacing a mistyped number on a phone is fiddly; one tap
+              beats holding delete. */}
+          {query.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Tyhjennä haku"
+              {...stylex.props(styles.clearButton)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+              </svg>
+            </button>
+          )}
+        </div>
 
         {isPhoneSearch && (
           <p {...stylex.props(styles.hint)}>
@@ -99,10 +116,20 @@ export default function Index2Page(): JSX.Element {
         )}
 
         <div {...stylex.props(styles.linkRow)}>
-          <button type="button" onClick={() => setShowMoreFilters((v) => !v)} {...stylex.props(styles.linkButton)}>
+          <button
+            type="button"
+            onClick={() => setShowMoreFilters((v) => !v)}
+            aria-expanded={showMoreFilters}
+            {...stylex.props(styles.toggleButton, showMoreFilters && styles.toggleButtonOn)}
+          >
             {showMoreFilters ? 'Piilota hakuehdot' : 'Lisää hakuehtoja…'}
           </button>
-          <button type="button" onClick={() => setShowInstructions((v) => !v)} {...stylex.props(styles.linkButton)}>
+          <button
+            type="button"
+            onClick={() => setShowInstructions((v) => !v)}
+            aria-expanded={showInstructions}
+            {...stylex.props(styles.toggleButton, showInstructions && styles.toggleButtonOn)}
+          >
             {showInstructions ? 'Piilota ohjeet' : 'Näytä ohjeet'}
           </button>
         </div>
@@ -119,6 +146,21 @@ export default function Index2Page(): JSX.Element {
       <div {...stylex.props(styles.results)}>
         {isLoading && <p {...stylex.props(styles.placeholderText)}>Ladataan kiekkoja…</p>}
 
+        {/* The page lists nothing until it is asked to, so without a word here
+            it just looks empty. Says what to type and why the list is hidden. */}
+        {!isLoading && !hasSearched && (
+          <div {...stylex.props(styles.emptyState)}>
+            <p {...stylex.props(styles.emptyStateLead)}>Kiekkoja ei näytetä ennen hakua.</p>
+            <p {...stylex.props(styles.placeholderText)}>
+              Useimmiten puhelinnumeron 4 viimeistä numeroa riittää. Jos numero on kiekossa epäselvä, hae kiekon
+              nimellä.
+            </p>
+            {!isLoading && discs.length > 0 && (
+              <p {...stylex.props(styles.placeholderText)}>Haettavana {discs.length} kiekkoa.</p>
+            )}
+          </div>
+        )}
+
         {!isLoading && hasSearched && results.length === 0 && (
           <p {...stylex.props(styles.placeholderText)}>
             Ei hakutuloksia. Kokeile kiekon nimellä, jos puhelinnumero on voinut tallentua väärin.
@@ -127,12 +169,19 @@ export default function Index2Page(): JSX.Element {
 
         {results.length > 0 && (
           <>
-            <p {...stylex.props(styles.resultCount)}>
+            {/* Announced politely so the count reaches a screen reader, which
+                otherwise gets no signal that the results changed. */}
+            <p role="status" aria-live="polite" {...stylex.props(styles.resultCount)}>
               {results.length} {results.length === 1 ? 'osuma' : 'osumaa'}
             </p>
             <ul {...stylex.props(styles.cardList)}>
-              {results.map((disc) => (
-                <li key={disc.internalDiscId}>
+              {results.map((disc, index) => (
+                // Neither id is dependable: a sheet-imported disc has no
+                // externalId in the public payload, and a disc added through
+                // the web app has no internalDiscId. Keying on either alone
+                // collided — every web-added disc came out as key={null}, and
+                // React rendered the wrong card under a search.
+                <li key={discKey(disc, index)}>
                   <DiscCard disc={disc} />
                 </li>
               ))}
@@ -165,7 +214,7 @@ function DiscCard(props: DiscCardProps): JSX.Element {
       </div>
 
       <dl {...stylex.props(styles.cardBody)}>
-        <Row label="Väri" value={disc.discColour} />
+        {disc.discColour && <Row label="Väri" value={disc.discColour} />}
         {disc.discManufacturer && <Row label="Valmistaja" value={disc.discManufacturer} />}
         {disc.ownerName && <Row label="Omistaja" value={disc.ownerName} />}
         {disc.ownerPhoneNumber && <Row label="Puhelin" value={`****${disc.ownerPhoneNumber.slice(-4)}`} />}
@@ -273,6 +322,20 @@ function Instructions(props: InstructionsProps): JSX.Element {
 
 // Returns the digits if `value` looks like a phone-number search (digits plus
 // the usual separators, at least 4 digits), otherwise null (treat as a name).
+/**
+ * A key that is unique across the whole result list.
+ *
+ * Prefers a real id where one survives into the public payload, and falls back
+ * to the position for the discs that carry neither.
+ */
+function discKey(disc: DiscDTO, index: number): string {
+  if (disc.externalId) {
+    return `x${disc.externalId}`;
+  }
+
+  return disc.internalDiscId != null ? `i${disc.internalDiscId}` : `n${index}`;
+}
+
 function extractPhoneDigits(value: string): string | null {
   const trimmed = value.trim();
   if (trimmed.length === 0) {
@@ -319,10 +382,42 @@ const styles = stylex.create({
     color: color.textSecondary,
     fontSize: font.sizeMd,
   },
+  // Sticky so the field stays reachable while a long result list scrolls: on a
+  // phone the alternative is thumbing back to the top to change one digit.
+  // Opaque, or the cards would show through it.
   searchBlock: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 1,
     display: 'flex',
     flexDirection: 'column',
     gap: space.sm,
+    paddingBottom: space.sm,
+    backgroundColor: color.surface,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: color.border,
+  },
+  searchField: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  clearButton: {
+    position: 'absolute',
+    insetInlineEnd: space.xs,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    // A full-size touch target rather than the icon's own 20px.
+    width: '44px',
+    height: '44px',
+    appearance: 'none',
+    border: 'none',
+    background: 'none',
+    borderRadius: radius.md,
+    color: { default: color.textMuted, ':hover': color.textPrimary },
+    cursor: 'pointer',
   },
   searchInput: {
     width: '100%',
@@ -338,6 +433,10 @@ const styles = stylex.create({
     borderRadius: radius.md,
     outline: 'none',
   },
+  // Keeps the typed value clear of the button sitting on top of it.
+  searchInputWithClear: {
+    paddingInlineEnd: '52px',
+  },
   hint: {
     margin: 0,
     fontSize: font.sizeSm,
@@ -346,18 +445,29 @@ const styles = stylex.create({
   linkRow: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: space.md,
+    gap: space.sm,
   },
-  linkButton: {
+  // Was a 14px underlined link, about 17px tall — too small to hit reliably
+  // with a thumb. A bordered control with a 44px target instead.
+  toggleButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    minHeight: '44px',
+    paddingInline: space.md,
     appearance: 'none',
-    border: 'none',
-    background: 'none',
-    padding: 0,
     fontFamily: 'inherit',
     fontSize: font.sizeSm,
     color: color.accent,
-    textDecoration: 'underline',
+    backgroundColor: { default: color.surface, ':hover': color.surfaceMuted },
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: color.border,
+    borderRadius: radius.md,
     cursor: 'pointer',
+  },
+  toggleButtonOn: {
+    borderColor: color.accent,
+    backgroundColor: color.surfaceMuted,
   },
   moreFilters: {
     display: 'flex',
@@ -381,9 +491,10 @@ const styles = stylex.create({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: space.xs,
-    marginTop: `calc(-1 * ${space.xs})`,
-    marginRight: `calc(-1 * ${space.xs})`,
+    width: '44px',
+    height: '44px',
+    marginTop: `calc(-1 * ${space.sm})`,
+    marginRight: `calc(-1 * ${space.sm})`,
     border: 'none',
     background: 'none',
     color: { default: color.textMuted, ':hover': color.textPrimary },
@@ -412,8 +523,17 @@ const styles = stylex.create({
     marginTop: space.lg,
   },
   placeholderText: {
+    marginBlock: space.sm,
     color: color.textMuted,
     fontSize: font.sizeMd,
+  },
+  emptyState: {
+    paddingBlock: space.md,
+  },
+  emptyStateLead: {
+    margin: 0,
+    fontWeight: font.weightBold,
+    color: color.textSecondary,
   },
   resultCount: {
     margin: 0,
