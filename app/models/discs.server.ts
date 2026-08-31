@@ -260,6 +260,21 @@ export async function markAsReturned(
 }
 
 /**
+ * Files one disc under a course, addressed by its external id.
+ *
+ * The fix for a disc saved before the course was picked, which otherwise meant
+ * editing the row by hand in the SQL editor. Null clears the course, so a disc
+ * filed under the wrong one can be put back to having none.
+ *
+ * The caller checks the name against the club's courses; this only writes it.
+ *
+ * Scoped to APP_CLUB_ID as well as the uuid.
+ */
+export async function setDiscCourse(externalId: string, course: string | null, request: Request): Promise<MarkOutcome> {
+  return updateDisc(externalId, { course }, request, 'Radan tallennus epäonnistui');
+}
+
+/**
  * Marks one disc as free to be sold or donated, addressed by its external id.
  *
  * The counterpart to markAsReturned: the same date-and-method pair, on the

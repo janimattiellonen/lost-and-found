@@ -74,7 +74,8 @@ export default function DiscListPage(): JSX.Element {
   // records no course at all, so neither the filter nor the column applies.
   // Derived rather than a club id in a literal: the filter, the column and the
   // add form then agree by construction, all reading the one course list.
-  const isMultiCourseClub = clubId !== null && getDiscCourseNames(clubId).length > 0;
+  const clubCourses = clubId === null ? [] : getDiscCourseNames(clubId);
+  const isMultiCourseClub = clubCourses.length > 0;
 
   const hasDiscs = discs.length > 0;
   // A reload keeps the previous fetcher.data, so "loading with data already on
@@ -143,7 +144,7 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable discs={discs} showCourse={isMultiCourseClub} onChanged={() => fetcher.load('/discs/data')} />
+            <DiscTable discs={discs} courses={clubCourses} onChanged={() => fetcher.load('/discs/data')} />
           </div>
         )}
         {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}

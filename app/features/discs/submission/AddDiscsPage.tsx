@@ -1,8 +1,17 @@
-import { useRef, useState, type FormEvent, type JSX, type KeyboardEvent } from 'react';
+import { useState, useSyncExternalStore, type FormEvent, type JSX, type KeyboardEvent } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
-import { parseDiscText, type ParsedDisc } from '~/features/discs/submission/parser/parseDiscText';
+import {
+  clearDraft,
+  getDraftSnapshot,
+  getServerDraftSnapshot,
+  nextDraftId,
+  subscribeToDraft,
+  updateDraft,
+  type DraftRow,
+} from '~/features/discs/submission/draftStorage';
+import { parseDiscText } from '~/features/discs/submission/parser/parseDiscText';
 import { submitDiscs, toSubmission } from '~/features/discs/submission/submitDiscs';
 import { DeleteIcon } from '~/ui/icons';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -19,7 +28,11 @@ type AddDiscsPageProps = {
 const NO_COURSE = '';
 
 export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Element {
-  const [rows, setRows] = useState<Row[]>([]);
+  // The rows live in a store backed by localStorage rather than in component
+  // state, so an accidental refresh before saving no longer throws the batch
+  // away. Read through useSyncExternalStore, which serves the empty server
+  // snapshot until hydration is done and so restores without a mismatch.
+  const rows = useSyncExternalStore(subscribeToDraft, getDraftSnapshot, getServerDraftSnapshot);
   // The course new rows are filed under. Kept across entries, since a batch is
   // normally one bin's worth. The course is never read out of the typed text:
   // this selection is its only source.
@@ -28,15 +41,17 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
   // The row whose delete button has been pressed and is awaiting a yes/no.
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
-  const nextId = useRef(1);
+  // Whether the "clear the draft" button has been pressed and is awaiting a yes/no.
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
 
   /**
    * Any change to the table makes an earlier "saved" or "failed" box stale, so
    * it is cleared as soon as the data moves on.
    */
   function updateRows(update: (current: Row[]) => Row[]): void {
-    setRows(update);
+    updateDraft(update);
     setSubmitState({ status: 'idle' });
+    setIsConfirmingClear(false);
   }
 
   /** Writes an edited cell back to the in-memory table and closes the editor. */
@@ -91,7 +106,7 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
 
     updateRows((current) => [
       ...current,
-      { id: nextId.current++, input: text, course: course || null, ...parseDiscText(text) },
+      { id: nextDraftId(current), input: text, course: course || null, ...parseDiscText(text) },
     ]);
 
     // Clear so the next disc can be typed straight away.
@@ -121,11 +136,13 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
 
     setSubmitState({ status: 'success', savedCount: result.savedCount });
 
-    // The batch is persisted, so clear the table for the next one. Done with
-    // setRows rather than updateRows, which would wipe the success box.
-    setRows([]);
+    // The batch is persisted, so the draft has done its job: clear the table
+    // and the stored copy alike. Done with clearDraft rather than updateRows,
+    // which would wipe the success box.
+    clearDraft();
     setEditing(null);
     setConfirmingDelete(null);
+    setIsConfirmingClear(false);
   }
 
   return (
@@ -134,7 +151,7 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
 
       <p {...stylex.props(styles.intro)}>
         Korjaa tietoja napsauttamalla solua; Enter tallentaa, Esc peruu. Tallennus vie kiekot tietokantaan ja julkiselle
-        listalle.
+        listalle. Tallentamattomat rivit säilyvät selaimessa, joten sivun vahinkolataus ei hukkaa niitä.
       </p>
 
       <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>
@@ -309,6 +326,36 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
             {rows.length} {rows.length === 1 ? 'kiekko' : 'kiekkoa'} tallennettavana.
           </span>
         )}
+
+        {/* Nothing cached, nothing to offer. Confirmed rather than immediate:
+            this throws away work the draft exists to protect. */}
+        {rows.length > 0 &&
+          !isSending &&
+          (isConfirmingClear ? (
+            <span {...stylex.props(styles.confirm)}>
+              Tyhjennetäänkö {rows.length} {rows.length === 1 ? 'kiekko' : 'kiekkoa'}?
+              <button
+                type="button"
+                onClick={() => {
+                  clearDraft();
+                  setEditing(null);
+                  setConfirmingDelete(null);
+                  setIsConfirmingClear(false);
+                  setSubmitState({ status: 'idle' });
+                }}
+                {...stylex.props(styles.confirmButton)}
+              >
+                Kyllä
+              </button>
+              <button type="button" onClick={() => setIsConfirmingClear(false)} {...stylex.props(styles.cancelButton)}>
+                Peruuta
+              </button>
+            </span>
+          ) : (
+            <button type="button" onClick={() => setIsConfirmingClear(true)} {...stylex.props(styles.applyButton)}>
+              Tyhjennä välimuisti
+            </button>
+          ))}
       </div>
 
       {/* Announced politely so the outcome reaches a screen reader too. */}
@@ -391,7 +438,7 @@ type EditableField =
   | 'ownerName'
   | 'additionalInfo';
 
-type Row = ParsedDisc & { id: number; input: string; course: string | null };
+type Row = DraftRow;
 
 /** Which cell, if any, is currently open for editing. */
 type EditTarget = { rowId: number; field: EditableField };

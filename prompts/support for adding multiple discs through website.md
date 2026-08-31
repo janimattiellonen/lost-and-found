@@ -223,3 +223,17 @@ color might be suitable to indicate a disabled icon.
 
 Remember to edit the query and the response that are used for authenticated users to include
 `additional_info`.
+
+## Phase 12 - UX issues
+
+Create a new branch.
+
+When adding multiple discs, if I accidentally refresh the page after adding 20 new discs but before
+persisting, all work is wasted. Store the added discs to localstorage so that they persists.
+Clear them when the discs are successfully persisted. Add a "Tyhjennä välimuisti" button that does
+the same manually (hide it if nothing to clear).
+
+I've managed to forget selecting the course a couple of times now. First time I opened supabase sql
+editor and manually updated the course info. I don't want to do this. Add a new admin tool for setting
+a course for the selected row. IF pressed, open an inline editor (as usual) that allows me to select the
+course.

@@ -47,8 +47,10 @@ test.describe('/discs/add disc text parsing', () => {
 
     await expect(cells).toHaveText(['Destroyer', 'Star', 'Punainen', 'Innova', '0501234567', 'Steve D.']);
 
-    // Nothing was left over, so the leftovers cell shows a dash.
-    await expect(page.locator('tbody tr').first().locator('td').nth(6)).toHaveText('–');
+    // Nothing was left over, so the leftovers cell shows a dash. Counted from
+    // the end: it sits before the actions column whether or not this club
+    // records a course, and however many editable columns precede it.
+    await expect(page.locator('tbody tr').first().locator('td:nth-last-child(2)')).toHaveText('–');
 
     // The field clears so the next disc can be typed straight away.
     await expect(input).toHaveValue('');
@@ -101,7 +103,7 @@ test.describe('/discs/add disc text parsing', () => {
     const row = page.locator('tbody tr').first();
 
     await expect(row.locator('td:nth-child(-n+6)').nth(2)).toHaveText('–');
-    await expect(row.locator('td').nth(6)).toHaveText('punaienn');
+    await expect(row.locator('td:nth-last-child(2)')).toHaveText('punaienn');
   });
 
   test('leaves unidentified columns empty and keeps earlier rows', async ({ page }) => {
@@ -346,5 +348,142 @@ test.describe('/discs/add disc text parsing', () => {
     await input.press('Enter');
 
     await expect(page.getByRole('status')).toBeEmpty();
+  });
+
+  test('stores a note typed after a pipe, and keeps it out of the disc fields', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen | PDGA 12345, 175 g');
+    await input.press('Enter');
+
+    const row = page.locator('tbody tr').first();
+
+    await expect(row.locator('td:nth-child(-n+6)')).toHaveText(['Mako3', '–', 'Keltainen', 'Innova', '–', '–']);
+    await expect(row.locator('td').nth(6)).toHaveText('PDGA 12345, 175 g');
+  });
+});
+
+test.describe('/discs/add unsaved rows', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(!EMAIL || !PASSWORD, 'Set E2E_EMAIL and E2E_PASSWORD to run these.');
+
+    await signIn(page);
+  });
+
+  test('keeps the typed rows across an accidental reload', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+
+    await input.fill('Star Destroyer punainen');
+    await input.press('Enter');
+
+    await expect(page.locator('tbody tr')).toHaveCount(2);
+
+    await page.reload();
+
+    const rows = page.locator('tbody tr');
+
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(0).locator('td:nth-child(-n+6)').nth(0)).toHaveText('Mako3');
+    await expect(rows.nth(1).locator('td:nth-child(-n+6)').nth(0)).toHaveText('Destroyer');
+  });
+
+  test('keeps an edit made before the reload, not just the parsed text', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+
+    await page.getByRole('button', { name: 'Väri: Keltainen' }).click();
+
+    const editor = page.getByRole('textbox', { name: 'Väri' });
+
+    await editor.fill('Sininen');
+    await editor.press('Enter');
+
+    await page.reload();
+
+    await expect(page.locator('tbody tr').first().locator('td:nth-child(-n+6)').nth(2)).toHaveText('Sininen');
+  });
+
+  test('drops the stored rows once the batch is saved', async ({ page }) => {
+    await stubSave(page, { json: { savedCount: 1, externalIds: [] } });
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+    await page.getByRole('button', { name: 'Tallenna kiekot' }).click();
+
+    await expect(page.getByRole('status')).toContainText('lisättiin');
+
+    await page.reload();
+
+    await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
+  });
+
+  test('keeps the rows stored when the save fails, so they can be retried', async ({ page }) => {
+    await stubSave(page, { status: 500, json: { error: 'Tallennus epäonnistui.' } });
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+    await page.getByRole('button', { name: 'Tallenna kiekot' }).click();
+
+    await expect(page.getByRole('status')).toContainText('Tallennus epäonnistui.');
+
+    await page.reload();
+
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+  });
+
+  test('offers the clear button only once there is something to clear', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    const clear = page.getByRole('button', { name: 'Tyhjennä välimuisti' });
+
+    await expect(clear).toHaveCount(0);
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+
+    await expect(clear).toBeVisible();
+  });
+
+  test('clears the stored rows only after the clear is confirmed', async ({ page }) => {
+    await page.goto('/discs/add');
+
+    const input = page.getByLabel('Kiekon tiedot');
+
+    await input.fill('Mako3 keltainen');
+    await input.press('Enter');
+
+    await page.getByRole('button', { name: 'Tyhjennä välimuisti' }).click();
+
+    // Backing out leaves the work alone.
+    await page.getByRole('button', { name: 'Peruuta' }).click();
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+
+    await page.getByRole('button', { name: 'Tyhjennä välimuisti' }).click();
+    await page.getByRole('button', { name: 'Kyllä' }).click();
+
+    await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
+
+    // Gone from storage too, not just from the table.
+    await page.reload();
+    await expect(page.getByText('Ei vielä tunnistettuja kiekkoja.')).toBeVisible();
   });
 });
