@@ -19,6 +19,7 @@ import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
+import { getClubFavicon } from '~/config/clubs';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
 // directives unexpanded). React Router injects the resulting stylesheet for SSR.
@@ -86,7 +87,7 @@ export default function App() {
     };
   }, [serverAccessToken, supabase, revalidate]);
 
-  const iconUrl = parseInt(env.CLUB_ID, 10) === 2 ? '/tt-sini-logo-32-32.jpg' : '/ps-logo.png';
+  const iconUrl = getClubFavicon(parseInt(env.CLUB_ID, 10));
   const isNotifyPage = location.pathname.startsWith('/notify');
   const isLoggedIn = !!session?.user;
   const showHeader = !isNotifyPage || isLoggedIn;
@@ -97,7 +98,7 @@ export default function App() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
-        <link rel="shortcut icon" href={iconUrl} />
+        {iconUrl && <link rel="shortcut icon" href={iconUrl} />}
         <Links />
         {/* StyleX dev CSS endpoint (DEV only). In production the unplugin folds
             StyleX's atomic CSS into the root stylesheet via cssInjectionTarget

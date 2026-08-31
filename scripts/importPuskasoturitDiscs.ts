@@ -18,8 +18,7 @@
 import { importDiscData } from '../app/import/PuskaSoturitImporter.ts';
 import { toDiscRow, type DiscRow } from '../app/import/puskasoturitDiscFields.ts';
 import { createReadConnection, createWriteConnection } from './supabaseClients.ts';
-
-const PUSKASOTURIT_CLUB_ID = 1;
+import { PUSKASOTURIT } from '../app/config/clubs.ts';
 
 /** Supabase caps a select at 1000 rows, so the existing ids come back in pages. */
 const PAGE_SIZE = 1000;
@@ -118,8 +117,8 @@ async function main(): Promise<void> {
   const discs = await importDiscData();
   console.log(`Sheet rows with a disc name, a date and an id: ${discs.length}`);
 
-  const persisted = await getPersistedInternalDiscIds(PUSKASOTURIT_CLUB_ID);
-  console.log(`Already in the database for club ${PUSKASOTURIT_CLUB_ID}: ${persisted.size}`);
+  const persisted = await getPersistedInternalDiscIds(PUSKASOTURIT);
+  console.log(`Already in the database for club ${PUSKASOTURIT}: ${persisted.size}`);
 
   const newDiscs = discs.filter((disc) => !persisted.has(Number(disc.internalDiscId)));
 

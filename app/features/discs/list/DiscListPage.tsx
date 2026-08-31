@@ -16,6 +16,7 @@ import DiscSelector from '~/features/discs/list/DiscSelector';
 import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
+import { getDiscCourseNames } from '~/config/courses';
 
 export default function DiscListPage(): JSX.Element {
   const fetcher = useFetcher();
@@ -71,7 +72,9 @@ export default function DiscListPage(): JSX.Element {
 
   // Only Puskasoturit collects from more than one course. Talin Tallaajat
   // records no course at all, so neither the filter nor the column applies.
-  const isMultiCourseClub = clubId === 1;
+  // Derived rather than a club id in a literal: the filter, the column and the
+  // add form then agree by construction, all reading the one course list.
+  const isMultiCourseClub = clubId !== null && getDiscCourseNames(clubId).length > 0;
 
   const hasDiscs = discs.length > 0;
   // A reload keeps the previous fetcher.data, so "loading with data already on

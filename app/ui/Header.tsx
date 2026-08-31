@@ -2,6 +2,8 @@ import * as stylex from '@stylexjs/stylex';
 
 import type { JSX } from 'react';
 
+import { getClubLogo } from '~/config/clubs';
+
 type HeaderProps = {
   clubId: number;
   clubName: string;
@@ -16,14 +18,9 @@ const styles = stylex.create({
   },
 });
 
-const CLUB_LOGOS: Record<number, string> = {
-  1: '/ps-logo.png',
-  2: '/tt-sini-logo.jpg',
-};
-
 export default function Header({ clubId, clubName }: HeaderProps): JSX.Element {
   const logo = stylex.props(styles.logo);
-  const logoUrl = CLUB_LOGOS[clubId];
+  const logoUrl = getClubLogo(clubId);
 
   return (
     <div className="flex items-center">

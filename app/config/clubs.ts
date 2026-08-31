@@ -12,6 +12,30 @@ const CONTACT_EMAILS: Record<number, string> = {
   [TALIN_TALLAAJAT]: 'janimatti.ellonen@gmail.com',
 };
 
+/**
+ * The club's images. `favicon` is a small square where the club has one and the
+ * full logo otherwise, since a browser scales it either way.
+ */
+type ClubImages = { logo: string; favicon: string };
+
+const CLUB_IMAGES: Record<number, ClubImages> = {
+  [PUSKASOTURIT]: { logo: '/ps-logo.png', favicon: '/ps-logo.png' },
+  [TALIN_TALLAAJAT]: { logo: '/tt-sini-logo.jpg', favicon: '/tt-sini-logo-32-32.jpg' },
+};
+
+/**
+ * The logo shown beside the page title, and the favicon. Null for a club with
+ * no image on file, so the caller can leave the element out rather than render
+ * one pointing nowhere.
+ */
+export function getClubLogo(clubId: number | null): string | null {
+  return clubId === null ? null : (CLUB_IMAGES[clubId]?.logo ?? null);
+}
+
+export function getClubFavicon(clubId: number | null): string | null {
+  return clubId === null ? null : (CLUB_IMAGES[clubId]?.favicon ?? null);
+}
+
 const LOST_DISCS_URLS: Record<number, string> = {
   [PUSKASOTURIT]: 'https://puskasoturit.com/index.php/loytokiekot/',
   [TALIN_TALLAAJAT]: 'https://www.tallaajat.org/loytokiekot/',
