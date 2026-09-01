@@ -365,7 +365,10 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
             // inline-flex keeps the SMS icon on the same line — Tailwind's
             // preflight sets `svg { display: block }`, which otherwise wraps it.
             <span className="inline-flex items-center gap-2">
-              ****{row.original.ownerPhoneNumber}
+              {/* A signed-in admin is sent the whole number and sees it; the
+                  loader only ever sends the last four to anyone else, so the
+                  mask stands in for the digits that never arrived. */}
+              {isLoggedIn ? row.original.ownerPhoneNumber : `****${row.original.ownerPhoneNumber}`}
               {/* Only sheet-imported discs can be messaged: /message/send is
                   keyed on internalDiscId, which web-added discs do not have. */}
               {isLoggedIn && row.original.internalDiscId !== null && (

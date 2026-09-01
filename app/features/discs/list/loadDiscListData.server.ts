@@ -9,10 +9,11 @@ export async function loadDiscListData(request: Request) {
 
   const emptyingLogItems = await getEmptyingLogItemsForClub(clubId, request);
 
-  // The external id is only needed for the admin actions in the table, and the
-  // notes in additional_info are club-internal, so both are kept out of the
-  // payload anonymous visitors receive. Checked before the query, so the notes
-  // are never even read for an anonymous visitor.
+  // What an anonymous visitor may receive is narrower on three counts: the
+  // external id is only needed for the admin actions in the table, the notes in
+  // additional_info are club-internal, and the owner's phone number is cut to
+  // its last four digits. Checked before the query, so the notes are never even
+  // read for an anonymous visitor.
   const isLoggedIn = await isUserLoggedIn(request);
 
   const discs = await getDiscs(isLoggedIn);

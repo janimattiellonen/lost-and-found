@@ -14,21 +14,53 @@ const PUBLIC_DISC_COLUMNS =
   'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at, course';
 
 /**
+ * How many digits of an owner's phone number the public list may show.
+ *
+ * Enough for an owner to recognise their own number, not enough for anyone
+ * else to dial it. The list page's phone search matches on these four whether
+ * or not the viewer is signed in.
+ */
+const PUBLIC_PHONE_DIGITS = 4;
+
+/**
+ * Maps the rows behind the disc list, cutting each owner's phone number down to
+ * its last digits unless the viewer is signed in.
+ *
+ * Separate from the query so the rule can be checked without a database, as
+ * with toInsertRows. Copies the row rather than editing it, so nothing else
+ * holding a reference sees a number shorten under it.
+ */
+export function toListedDiscs(rows: any[], includeAdminFields: boolean): DiscDTO[] {
+  return rows.map((row) => {
+    if (includeAdminFields || !row['owner_phone_number']) {
+      return toDTO(row);
+    }
+
+    return toDTO({ ...row, owner_phone_number: row['owner_phone_number'].slice(-PUBLIC_PHONE_DIGITS) });
+  });
+}
+
+/**
  * The discs this club is currently listing.
  *
- * `additional_info` holds club-internal notes about a disc, so it is left out
- * of the SELECT unless the caller has established that a user is signed in —
- * kept out of the query rather than stripped afterwards, so it can never reach
- * the response by way of a forgotten mapping.
+ * `includeAdminFields` covers everything only a signed-in user may see: the
+ * club-internal notes in `additional_info`, and the owner's full phone number.
+ * The caller establishes the session — passing true on an unauthenticated
+ * request hands out both.
+ *
+ * The notes are left out of the SELECT rather than stripped afterwards, so
+ * they cannot reach the response by way of a forgotten mapping. The phone
+ * number has to be read either way, since the public list shows its last four
+ * digits, so that one is truncated on the way out.
  */
-export async function getDiscs(includeAdditionalInfo = false): Promise<DiscDTO[]> {
+export async function getDiscs(includeAdminFields = false): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
 
   const supabase = createConnection();
 
   const { data } = await supabase
     .from('discs')
-    .select(includeAdditionalInfo ? `${PUBLIC_DISC_COLUMNS}, additional_info` : PUBLIC_DISC_COLUMNS)
+    .select(includeAdminFields ? `${PUBLIC_DISC_COLUMNS}, additional_info` : PUBLIC_DISC_COLUMNS)
     .order('disc_name', { ascending: true })
     .eq('is_returned_to_owner', false)
     .eq('can_be_sold_or_donated', false)
@@ -37,14 +69,9 @@ export async function getDiscs(includeAdditionalInfo = false): Promise<DiscDTO[]
     .is('archived_at', null)
     .eq('club_id', clubId);
 
-  return data
-    ? data.map((row: any) => {
-        if (row['owner_phone_number']) {
-          row['owner_phone_number'] = row['owner_phone_number'].slice(-4);
-        }
-        return toDTO(row);
-      })
-    : [];
+  // Truncated here rather than in the table: what is not sent cannot be read
+  // out of the page source or the loader's JSON payload.
+  return data ? toListedDiscs(data, includeAdminFields) : [];
 }
 
 export async function getDiscsForStats(): Promise<DiscDTO[]> {
