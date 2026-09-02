@@ -121,6 +121,38 @@ export async function getDiscWithFullPhoneNumber(externalId: string): Promise<Di
 }
 
 /**
+ * The same discs as getDiscWithFullPhoneNumber, for a batch of external ids.
+ *
+ * Returned in the order the ids were given, which is the order the admin saw
+ * them in the list, not the order the database happens to return. An id this
+ * club has no disc for is left out rather than held as a gap, so the caller
+ * can tell how many of the selection it actually has.
+ */
+export async function getDiscsWithFullPhoneNumbers(externalIds: string[]): Promise<DiscDTO[]> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  if (externalIds.length === 0) {
+    return [];
+  }
+
+  const supabase = createConnection();
+
+  const { data } = await supabase
+    .from('discs')
+    .select('external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
+    .eq('club_id', clubId)
+    .in('external_id', externalIds);
+
+  if (!data) {
+    return [];
+  }
+
+  const byExternalId = new Map(data.map((row: any) => [row.external_id, toDTO(row)]));
+
+  return externalIds.map((externalId) => byExternalId.get(externalId)).filter((disc): disc is DiscDTO => disc != null);
+}
+
+/**
  * Drops keys whose value is undefined.
  *
  * postgrest-js builds the insert's `columns=` parameter from Object.keys(), and
