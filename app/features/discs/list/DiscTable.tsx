@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type RowSelectionState,
   type SortingFn,
   type SortingState,
 } from '@tanstack/react-table';
@@ -23,6 +24,7 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
+import SelectedDiscsActions from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
   ArrowUpwardIcon,
@@ -34,6 +36,7 @@ import {
   TextsmsIcon,
   WarningIcon,
 } from '~/ui/icons';
+import Checkbox from '~/ui/Checkbox';
 import { space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
@@ -343,6 +346,9 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
   // Which disc has a panel open under it, and what that panel is showing.
   const [openForm, setOpenForm] = useState<OpenPanel | null>(null);
 
+  // Keyed on external id (see getRowId), so a tick survives re-sorting.
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
   /** Opens the given panel on the given disc, or closes it if already open. */
   const toggleForm = (externalId: string, kind: PanelKind): void =>
     setOpenForm((current) =>
@@ -353,6 +359,47 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
+      // Ticking rows is an admin affair, and only a signed-in visitor is sent
+      // the external ids the selection is keyed on.
+      ...(isLoggedIn
+        ? [
+            {
+              id: 'select',
+              enableSorting: false,
+              enableResizing: false,
+              header: ({ table }) => {
+                // Counted over the rows on screen rather than asked of the
+                // table, so the box agrees with the filtered list the admin is
+                // looking at.
+                const selectable = table.getRowModel().rows.filter((row) => row.getCanSelect());
+                const selected = selectable.filter((row) => row.getIsSelected());
+                const allSelected = selectable.length > 0 && selected.length === selectable.length;
+
+                return (
+                  <Checkbox
+                    aria-label={allSelected ? 'Poista kaikkien kiekkojen valinta' : 'Valitse kaikki kiekot'}
+                    checked={allSelected}
+                    indeterminate={selected.length > 0 && !allSelected}
+                    disabled={selectable.length === 0}
+                    onChange={() => table.toggleAllRowsSelected(!allSelected)}
+                  />
+                );
+              },
+              cell: ({ row }) => (
+                // A disc with no phone number cannot be messaged, so it cannot
+                // be part of a batch; the title says why the box is dead.
+                <span title={row.getCanSelect() ? undefined : 'Kiekolla ei ole puhelinnumeroa'}>
+                  <Checkbox
+                    aria-label={`Valitse kiekko ${row.original.discName}`}
+                    checked={row.getIsSelected()}
+                    disabled={!row.getCanSelect()}
+                    onChange={row.getToggleSelectedHandler()}
+                  />
+                </span>
+              ),
+            } satisfies ColumnDef<Row>,
+          ]
+        : []),
       { accessorKey: 'id', header: '#', enableResizing: false, sortingFn: sortDiscs },
       { accessorKey: 'discName', header: 'Kiekko', sortingFn: sortDiscs },
       { accessorKey: 'discColour', header: 'Väri', sortingFn: sortDiscs },
@@ -490,129 +537,151 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
   const table = useReactTable({
     data: rows,
     columns,
-    state: { sorting },
+    state: { sorting, rowSelection },
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
+    // The external id, so a tick follows its disc through a re-sort rather
+    // than sticking to a row position. Rows without one cannot be selected.
+    getRowId: (row) => row.externalId ?? `row-${row.id}`,
+    // Messaging is the point of a selection, and that needs a number to send
+    // to and an id to record against.
+    enableRowSelection: (row) => !!row.original.externalId && !!row.original.ownerPhoneNumber,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
   });
 
+  // Taken from the rows on screen, in the order they are shown: the batch then
+  // works through the discs the way the admin sees them, and the count in the
+  // bar can never stand for discs a filter has since hidden.
+  const selectedExternalIds = table
+    .getRowModel()
+    .rows.filter((row) => row.getIsSelected())
+    .map((row) => row.original.externalId)
+    .filter((externalId): externalId is string => externalId != null);
+
   return (
-    <table {...stylex.props(styles.table)}>
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
-              const sorted = header.column.getIsSorted();
-              const tight = header.column.id === 'id' || header.column.id === 'actions';
-              return (
-                <th
-                  key={header.id}
-                  {...stylex.props(
-                    styles.th,
-                    header.column.getCanSort() && styles.thSortable,
-                    sorted && styles.thSorted,
-                    tight && styles.tight,
-                  )}
-                  style={tight ? undefined : { width: header.getSize() }}
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                  {sorted && (
-                    <span {...stylex.props(styles.sortIcon)}>
-                      {sorted === 'asc' ? (
-                        <ArrowUpwardIcon width={16} height={16} />
-                      ) : (
-                        <ArrowDownwardIcon width={16} height={16} />
-                      )}
-                    </span>
-                  )}
-                  {header.column.getCanResize() && (
-                    // Pointer-only column resize handle, hidden from assistive
-                    // tech (resizing isn't keyboard-operated, as with the grid).
-                    <div
-                      aria-hidden="true"
-                      {...stylex.props(styles.resizer)}
-                      onMouseDown={header.getResizeHandler()}
-                      onTouchStart={header.getResizeHandler()}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
-                </th>
-              );
-            })}
-          </tr>
-        ))}
-      </thead>
-      <tbody>
-        {table.getRowModel().rows.map((row, index) => {
-          const externalId = row.original.externalId;
-          const open = externalId != null && openForm?.externalId === externalId ? openForm : null;
+    <>
+      <SelectedDiscsActions externalIds={selectedExternalIds} onClear={() => table.resetRowSelection()} />
 
-          return (
-            <Fragment key={row.id}>
-              <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
-                {row.getVisibleCells().map((cell) => {
-                  const tight = cell.column.id === 'id' || cell.column.id === 'actions';
-                  return (
-                    <td
-                      key={cell.id}
-                      {...stylex.props(styles.td, tight && styles.tight)}
-                      style={tight ? undefined : { width: cell.column.getSize() }}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
-              </tr>
-
-              {/* A mark form, or a disc's notes, opens as a row of its own
-                  under the disc it belongs to, rather than as a modal. */}
-              {open && (
-                <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
-                  <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
-                    {open.kind === 'info' ? (
-                      <AdditionalInfoPanel row={row.original} />
-                    ) : open.kind === 'course' ? (
-                      <CourseForm
-                        discName={row.original.discName}
-                        current={row.original.course || null}
-                        courses={courses}
-                        idPrefix={`course-${open.externalId}`}
-                        onCancel={() => setOpenForm(null)}
-                        onSubmit={async (course) => {
-                          const result = await setDiscCourse({ externalId: open.externalId, course });
-
-                          if (result.status === 'error') {
-                            return result.message;
-                          }
-
-                          setOpenForm(null);
-                          onChanged?.();
-
-                          return null;
-                        }}
-                      />
-                    ) : (
-                      <MarkForm
-                        row={row.original}
-                        externalId={open.externalId}
-                        kind={open.kind}
-                        onCancel={() => setOpenForm(null)}
-                        onDone={() => {
-                          setOpenForm(null);
-                          onChanged?.();
-                        }}
+      <table {...stylex.props(styles.table)}>
+        <thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const sorted = header.column.getIsSorted();
+                const tight =
+                  header.column.id === 'id' || header.column.id === 'actions' || header.column.id === 'select';
+                return (
+                  <th
+                    key={header.id}
+                    {...stylex.props(
+                      styles.th,
+                      header.column.getCanSort() && styles.thSortable,
+                      sorted && styles.thSorted,
+                      tight && styles.tight,
+                    )}
+                    style={tight ? undefined : { width: header.getSize() }}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {sorted && (
+                      <span {...stylex.props(styles.sortIcon)}>
+                        {sorted === 'asc' ? (
+                          <ArrowUpwardIcon width={16} height={16} />
+                        ) : (
+                          <ArrowDownwardIcon width={16} height={16} />
+                        )}
+                      </span>
+                    )}
+                    {header.column.getCanResize() && (
+                      // Pointer-only column resize handle, hidden from assistive
+                      // tech (resizing isn't keyboard-operated, as with the grid).
+                      <div
+                        aria-hidden="true"
+                        {...stylex.props(styles.resizer)}
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        onClick={(e) => e.stopPropagation()}
                       />
                     )}
-                  </td>
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row, index) => {
+            const externalId = row.original.externalId;
+            const open = externalId != null && openForm?.externalId === externalId ? openForm : null;
+
+            return (
+              <Fragment key={row.id}>
+                <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+                  {row.getVisibleCells().map((cell) => {
+                    const tight =
+                      cell.column.id === 'id' || cell.column.id === 'actions' || cell.column.id === 'select';
+                    return (
+                      <td
+                        key={cell.id}
+                        {...stylex.props(styles.td, tight && styles.tight)}
+                        style={tight ? undefined : { width: cell.column.getSize() }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    );
+                  })}
                 </tr>
-              )}
-            </Fragment>
-          );
-        })}
-      </tbody>
-    </table>
+
+                {/* A mark form, or a disc's notes, opens as a row of its own
+                  under the disc it belongs to, rather than as a modal. */}
+                {open && (
+                  <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
+                    <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
+                      {open.kind === 'info' ? (
+                        <AdditionalInfoPanel row={row.original} />
+                      ) : open.kind === 'course' ? (
+                        <CourseForm
+                          discName={row.original.discName}
+                          current={row.original.course || null}
+                          courses={courses}
+                          idPrefix={`course-${open.externalId}`}
+                          onCancel={() => setOpenForm(null)}
+                          onSubmit={async (course) => {
+                            const result = await setDiscCourse({ externalId: open.externalId, course });
+
+                            if (result.status === 'error') {
+                              return result.message;
+                            }
+
+                            setOpenForm(null);
+                            onChanged?.();
+
+                            return null;
+                          }}
+                        />
+                      ) : (
+                        <MarkForm
+                          row={row.original}
+                          externalId={open.externalId}
+                          kind={open.kind}
+                          onCancel={() => setOpenForm(null)}
+                          onDone={() => {
+                            setOpenForm(null);
+                            onChanged?.();
+                          }}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
   );
 }
