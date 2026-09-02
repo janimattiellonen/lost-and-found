@@ -4,7 +4,7 @@ import { Form, useFetcher } from 'react-router';
 
 import { convertLineBreaks, lineBreakToBr, replaceTokensWithValues } from '~/features/messaging/messageContent';
 import type { DiscDTO, MessageLogDTO, MessageTemplateDTO } from '~/types';
-import { formatDate } from '~/utils';
+import { formatDate, formatPhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import H3 from '~/ui/H3';
@@ -20,6 +20,14 @@ type Props = {
   sentMessages: MessageLogDTO[];
 };
 
+/**
+ * The number as the phone should receive it: no grouping spaces, which an
+ * sms: target does not take.
+ */
+function toDiallable(phoneNumber: string): string {
+  return phoneNumber.replace(/\s/g, '');
+}
+
 export default function SendMessagePage({ data, messageTemplates, sentMessages }: Props): JSX.Element {
   const fetcher = useFetcher();
 
@@ -27,7 +35,10 @@ export default function SendMessagePage({ data, messageTemplates, sentMessages }
   // per disc, so there is nothing to sync afterwards.
   const defaultTemplate = messageTemplates.find((messageTemplate) => messageTemplate.isDefault === true);
 
-  const [phoneNumber, setPhoneNumber] = useState<string>(data.ownerPhoneNumber ?? '');
+  // Grouped for reading, the way the disc list shows it. The field stays
+  // editable, so what is typed into it is left alone — the sms: link takes the
+  // grouping back out rather than this reformatting as the admin types.
+  const [phoneNumber, setPhoneNumber] = useState<string>(formatPhoneNumber(data.ownerPhoneNumber));
   const [message, setMessage] = useState<string>(defaultTemplate?.content ?? '');
   const [selected, setSelected] = useState<number>(defaultTemplate?.id ?? -1);
   const ok: boolean = fetcher.data?.ok || false;
@@ -117,7 +128,7 @@ export default function SendMessagePage({ data, messageTemplates, sentMessages }
         </Button>
         <Button
           variant="contained"
-          to={`sms:${phoneNumber}&body=${convertLineBreaks(replaceTokensWithValues(message, data))}`}
+          to={`sms:${toDiallable(phoneNumber)}&body=${convertLineBreaks(replaceTokensWithValues(message, data))}`}
         >
           Lähetä tekstiviesti
         </Button>
