@@ -37,6 +37,7 @@ import {
 import { space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
+import { formatPhoneNumber } from '~/utils';
 
 type DiscTableProps = {
   discs: DiscDTO[];
@@ -365,10 +366,11 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
             // inline-flex keeps the SMS icon on the same line — Tailwind's
             // preflight sets `svg { display: block }`, which otherwise wraps it.
             <span className="inline-flex items-center gap-2">
-              {/* A signed-in admin is sent the whole number and sees it; the
-                  loader only ever sends the last four to anyone else, so the
-                  mask stands in for the digits that never arrived. */}
-              {isLoggedIn ? row.original.ownerPhoneNumber : `****${row.original.ownerPhoneNumber}`}
+              {/* A signed-in admin is sent the whole number and sees it,
+                  grouped for reading; the loader only ever sends the last four
+                  to anyone else, so the mask stands in for the digits that
+                  never arrived — and four digits need no grouping. */}
+              {isLoggedIn ? formatPhoneNumber(row.original.ownerPhoneNumber) : `****${row.original.ownerPhoneNumber}`}
               {/* /message/send is keyed on the external id, which every disc
                   has — a web-added disc can be messaged too. Only a signed-in
                   visitor is sent the id at all. */}
