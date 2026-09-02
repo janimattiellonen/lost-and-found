@@ -75,7 +75,7 @@ export type MessageTemplateDTO = {
 export type MessageLogDTO = {
   id?: number;
   sentAt?: string | null;
-  internalDiscId: number;
+  externalId: string;
   clubId: number;
   content: string;
 };

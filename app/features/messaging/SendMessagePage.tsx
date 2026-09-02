@@ -1,6 +1,6 @@
 import { useState, type JSX } from 'react';
 
-import { Form, useFetcher, useParams } from 'react-router';
+import { Form, useFetcher } from 'react-router';
 
 import { convertLineBreaks, lineBreakToBr, replaceTokensWithValues } from '~/features/messaging/messageContent';
 import type { DiscDTO, MessageLogDTO, MessageTemplateDTO } from '~/types';
@@ -21,7 +21,6 @@ type Props = {
 };
 
 export default function SendMessagePage({ data, messageTemplates, sentMessages }: Props): JSX.Element {
-  const params = useParams();
   const fetcher = useFetcher();
 
   // Seeded from the loader data, then owned by the form: the page is remounted
@@ -124,7 +123,10 @@ export default function SendMessagePage({ data, messageTemplates, sentMessages }
         </Button>
 
         <fetcher.Form method="post">
-          <input type="hidden" name="id" value={params.discId} />
+          {/* From the loaded disc rather than the URL: the two are the same
+              external id, and this way the form cannot post one the loader
+              never resolved. */}
+          <input type="hidden" name="externalId" value={data.externalId} />
           <input type="hidden" name="content" value={lineBreakToBr(replaceTokensWithValues(message, data))} />
           <Button type="submit" disabled={ok === true}>
             {getStatusText()}

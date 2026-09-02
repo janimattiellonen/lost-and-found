@@ -97,19 +97,27 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
     : [];
 }
 
-export async function getDiscWithFullPhoneNumber(internalDiscId: number): Promise<DiscDTO> {
+/**
+ * One disc for the send-message page, phone number and all.
+ *
+ * Addressed by external_id rather than internal_disc_id: the latter is a
+ * Google Sheet row number, which a disc added through the web app does not
+ * have. Null when the club has no such disc, so the caller can answer 404
+ * rather than map an absent row.
+ */
+export async function getDiscWithFullPhoneNumber(externalId: string): Promise<DiscDTO | null> {
   const clubId = process.env.APP_CLUB_ID;
 
   const supabase = createConnection();
 
   const { data } = await supabase
     .from('discs')
-    .select('internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
+    .select('external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
     .eq('club_id', clubId)
-    .eq('internal_disc_id', internalDiscId)
-    .single();
+    .eq('external_id', externalId)
+    .maybeSingle();
 
-  return toDTO(data);
+  return data ? toDTO(data) : null;
 }
 
 /**

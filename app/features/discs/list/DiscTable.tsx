@@ -369,10 +369,11 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
                   loader only ever sends the last four to anyone else, so the
                   mask stands in for the digits that never arrived. */}
               {isLoggedIn ? row.original.ownerPhoneNumber : `****${row.original.ownerPhoneNumber}`}
-              {/* Only sheet-imported discs can be messaged: /message/send is
-                  keyed on internalDiscId, which web-added discs do not have. */}
-              {isLoggedIn && row.original.internalDiscId !== null && (
-                <Link to={`/message/send/${row.original.internalDiscId}`} className="inline-flex">
+              {/* /message/send is keyed on the external id, which every disc
+                  has — a web-added disc can be messaged too. Only a signed-in
+                  visitor is sent the id at all. */}
+              {isLoggedIn && row.original.externalId && (
+                <Link to={`/message/send/${row.original.externalId}`} className="inline-flex">
                   <TextsmsIcon width={18} height={18} />
                 </Link>
               )}

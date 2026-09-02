@@ -5,26 +5,26 @@ import process from 'process';
 import type { MessageLogDTO } from '~/types';
 import { toDTO } from '~/models/MessageLogMapper';
 
-export async function markAsSent(internalDiscId: number, content: string, request: Request): Promise<void> {
+export async function markAsSent(externalId: string, content: string, request: Request): Promise<void> {
   const supabase = createSupabaseServerClient(request);
   const clubId = process.env.APP_CLUB_ID;
 
   const { error } = await supabase
     .from('message_log')
-    .insert({ sent_at: 'now()', internal_disc_id: internalDiscId, club_id: clubId, content: content })
+    .insert({ sent_at: 'now()', external_id: externalId, club_id: clubId, content: content })
     .select();
 
   console.log(`Error: ${JSON.stringify(error, null, 2)}`);
 }
 
-export async function getSentMessages(internalDiscId: number, request: Request): Promise<MessageLogDTO[]> {
+export async function getSentMessages(externalId: string, request: Request): Promise<MessageLogDTO[]> {
   const supabase = createSupabaseServerClient(request);
   const clubId = process.env.APP_CLUB_ID;
 
   const { data } = await supabase
     .from('message_log')
-    .select('id, sent_at, internal_disc_id, club_id, content')
-    .eq('internal_disc_id', internalDiscId)
+    .select('id, sent_at, external_id, club_id, content')
+    .eq('external_id', externalId)
     .eq('club_id', clubId);
 
   return data

@@ -4,7 +4,7 @@ export function toDTO(raw: any): MessageLogDTO {
   return {
     id: raw.id,
     sentAt: raw.sent_at,
-    internalDiscId: raw.internal_disc_id,
+    externalId: raw.external_id,
     clubId: raw.club_id,
     content: raw.content,
   };
