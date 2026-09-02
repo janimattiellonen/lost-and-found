@@ -3,6 +3,7 @@ import { redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionAr
 import { loadSendMessagePage } from '~/features/messaging/loadSendMessagePage.server';
 import { recordMessageSent } from '~/features/messaging/recordMessageSent.server';
 import SendMessagePage from '~/features/messaging/SendMessagePage';
+import { isExternalId } from '~/lib/api/validate';
 import { isUserLoggedIn } from '~/models/utils';
 
 import type { JSX } from 'react';
@@ -12,7 +13,13 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     return redirect('/sign-in');
   }
 
-  return loadSendMessagePage(request, parseInt(params.discId || '', 10));
+  // Checked before the query so a malformed uuid is a 404 rather than a
+  // PostgREST error on the way through.
+  if (!isExternalId(params.externalId)) {
+    throw new Response('Kiekkoa ei löytynyt.', { status: 404 });
+  }
+
+  return loadSendMessagePage(request, params.externalId);
 };
 
 export async function action({ request }: ActionFunctionArgs) {
