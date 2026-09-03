@@ -27,12 +27,19 @@ export function isBatchAction(value: unknown): value is BatchAction {
 export type MarkAction = Exclude<BatchAction, 'delete'>;
 
 /**
- * How many discs one batch may carry.
+ * The most discs that may be ticked at once.
  *
- * Generous enough that a whole club's list fits, so the cap is a bound on the
- * query rather than something the admin runs into.
+ * Small on purpose. These actions are irreversible from the UI — a delete
+ * especially — and the number stands between a mis-click and real damage: it is
+ * how much a wrong action can cost. Twenty is more than a normal batch and
+ * still a set the admin can read down and check before confirming.
+ *
+ * Enforced twice. The list stops the twenty-first tick, so the limit is
+ * something the admin meets while choosing rather than a refusal after
+ * confirming; the route refuses a longer body regardless, since the list is not
+ * the only thing that can post one.
  */
-export const MAX_BATCH_ACTION_SIZE = 500;
+export const MAX_SELECTED_DISCS = 20;
 
 /**
  * Which fate a release records, and how a return got there, read off the action

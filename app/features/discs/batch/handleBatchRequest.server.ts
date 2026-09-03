@@ -5,7 +5,7 @@ import { deleteDiscs, markDiscsAsReturned, markDiscsForDisposal } from '~/models
 import {
   disposalMethodFor,
   isBatchAction,
-  MAX_BATCH_ACTION_SIZE,
+  MAX_SELECTED_DISCS,
   returnMethodFor,
   type MarkAction,
 } from './batchAction';
@@ -26,8 +26,8 @@ function readSelection(value: unknown): Selection {
 
   const externalIds = [...new Set(value)];
 
-  if (externalIds.length > MAX_BATCH_ACTION_SIZE) {
-    return { error: `Yhdellä kertaa voi käsitellä enintään ${MAX_BATCH_ACTION_SIZE} kiekkoa.` };
+  if (externalIds.length > MAX_SELECTED_DISCS) {
+    return { error: `Yhdellä kertaa voi käsitellä enintään ${MAX_SELECTED_DISCS} kiekkoa.` };
   }
 
   return { externalIds };

@@ -24,6 +24,7 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
+import { MAX_SELECTED_DISCS } from '~/features/discs/batch/batchAction';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -170,6 +171,17 @@ const styles = stylex.create({
     touchAction: 'none',
   },
 });
+
+/**
+ * Why a row's box will not take a tick, when it will not.
+ *
+ * Only the cap is explained: a row with no external id is unselectable for a
+ * different reason, and a signed-in admin is sent an id for every disc, so that
+ * case is not one anybody sees.
+ */
+function selectionTitle(canSelect: boolean, hasExternalId: boolean): string | undefined {
+  return !canSelect && hasExternalId ? `Kerralla voi valita enintään ${MAX_SELECTED_DISCS} kiekkoa` : undefined;
+}
 
 /** Columns sized by their content rather than by a resizable width. */
 function isTightColumn(columnId: string): boolean {
@@ -354,6 +366,10 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
   // Keyed on external id (see getRowId), so a tick survives re-sorting.
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
+  // Read off the selection state rather than asked of the table: the cap is
+  // part of the table's own configuration, which cannot query itself.
+  const selectedCount = Object.values(rowSelection).filter(Boolean).length;
+
   /** Opens the given panel on the given disc, or closes it if already open. */
   const toggleForm = (externalId: string, kind: PanelKind): void =>
     setOpenForm((current) =>
@@ -372,31 +388,35 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
               id: 'select',
               enableSorting: false,
               enableResizing: false,
+              // Clears the selection, and does nothing else. There is
+              // deliberately no way to tick every disc: the actions behind a
+              // selection cannot be undone, and one click that arms all of
+              // them is the mis-click worth designing out. Emptying a
+              // selection is safe, so that half stays.
               header: ({ table }) => {
-                // Counted over the rows on screen rather than asked of the
-                // table, so the box agrees with the filtered list the admin is
-                // looking at.
-                const selectable = table.getRowModel().rows.filter((row) => row.getCanSelect());
-                const selected = selectable.filter((row) => row.getIsSelected());
-                const allSelected = selectable.length > 0 && selected.length === selectable.length;
+                const selected = table.getRowModel().rows.filter((row) => row.getIsSelected()).length;
+
+                if (selected === 0) {
+                  return null;
+                }
 
                 return (
                   <Checkbox
-                    aria-label={allSelected ? 'Poista kaikkien kiekkojen valinta' : 'Valitse kaikki kiekot'}
-                    checked={allSelected}
-                    indeterminate={selected.length > 0 && !allSelected}
-                    disabled={selectable.length === 0}
-                    onChange={() => table.toggleAllRowsSelected(!allSelected)}
+                    aria-label="Poista kaikkien kiekkojen valinta"
+                    checked
+                    onChange={() => table.resetRowSelection()}
                   />
                 );
               },
               cell: ({ row }) => (
-                <Checkbox
-                  aria-label={`Valitse kiekko ${row.original.discName}`}
-                  checked={row.getIsSelected()}
-                  disabled={!row.getCanSelect()}
-                  onChange={row.getToggleSelectedHandler()}
-                />
+                <span title={selectionTitle(row.getCanSelect(), !!row.original.externalId)}>
+                  <Checkbox
+                    aria-label={`Valitse kiekko ${row.original.discName}`}
+                    checked={row.getIsSelected()}
+                    disabled={!row.getCanSelect()}
+                    onChange={row.getToggleSelectedHandler()}
+                  />
+                </span>
               ),
             } satisfies ColumnDef<Row>,
           ]
@@ -547,7 +567,12 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
     // An id to address the disc by is all a selection needs. A missing number
     // only rules out the message batch, which leaves those discs out itself —
     // marking a disc returned or deleting it has no use for one.
-    enableRowSelection: (row) => !!row.original.externalId,
+    //
+    // Past the cap only the discs already ticked stay selectable, so unticking
+    // still works and the limit is met while choosing rather than after
+    // confirming.
+    enableRowSelection: (row) =>
+      !!row.original.externalId && (row.getIsSelected() || selectedCount < MAX_SELECTED_DISCS),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     columnResizeMode: 'onChange',

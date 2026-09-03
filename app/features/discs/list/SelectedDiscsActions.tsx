@@ -7,6 +7,7 @@ import {
   batchActionOrder,
   batchActionOutcome,
   confirmBatchAction,
+  MAX_SELECTED_DISCS,
   type BatchAction,
 } from '~/features/discs/batch/batchAction';
 import { runBatchAction } from '~/features/discs/batch/runBatchAction';
@@ -169,6 +170,12 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
       </Button>
 
       {messageableIds.length === 0 && <span className="text-sm">Valituilla kiekoilla ei ole puhelinnumeroa.</span>}
+
+      {/* Said here as well as on the boxes it disables: the admin who has just
+          hit the cap is looking at the count, not hovering a checkbox. */}
+      {selected.length >= MAX_SELECTED_DISCS && (
+        <span className="text-sm">Enimmäismäärä {MAX_SELECTED_DISCS} kiekkoa valittu.</span>
+      )}
 
       {notice?.kind === 'error' && (
         <p className="basis-full text-sm" aria-live="polite">
