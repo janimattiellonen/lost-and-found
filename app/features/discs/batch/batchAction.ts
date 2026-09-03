@@ -42,19 +42,22 @@ export function markFor(action: BatchAction): BatchMark | null {
 }
 
 /**
- * The most discs that may be ticked at once.
+ * The most discs one of these actions may write to at once.
  *
- * Small on purpose. These actions are irreversible from the UI — a delete
- * especially — and the number stands between a mis-click and real damage: it is
- * how much a wrong action can cost. Twenty is more than a normal batch and
- * still a set the admin can read down and check before confirming.
+ * Small on purpose. They are irreversible from the UI — a delete especially —
+ * and the number is what a mis-click can cost: twenty is more than a normal
+ * batch and still a set the admin can read down before confirming.
  *
- * Enforced twice. The list stops the twenty-first tick, so the limit is
- * something the admin meets while choosing rather than a refusal after
- * confirming; the route refuses a longer body regardless, since the list is not
- * the only thing that can post one.
+ * The cap is on the action, not on the selection. Ticking discs harms nothing,
+ * and the other thing a selection is for — walking through the owners to text
+ * them — writes nothing either, so there is no reason for it to inherit a limit
+ * that exists to bound a delete.
+ *
+ * Enforced twice: the dropdown withholds these actions from a larger selection
+ * and says why, and the route refuses a longer body regardless, since the list
+ * is not the only thing that can post one.
  */
-export const MAX_SELECTED_DISCS = 20;
+export const MAX_DISCS_PER_WRITE = 20;
 
 /** A count of discs, with the noun in the case Finnish puts it in. */
 function discCount(count: number): string {

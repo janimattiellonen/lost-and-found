@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import {
   batchActionLabel,
   batchActionOrder,
-  MAX_SELECTED_DISCS,
+  MAX_DISCS_PER_WRITE,
   type BatchAction,
 } from '~/features/discs/batch/batchAction';
 import { useBatchAction } from '~/features/discs/batch/useBatchAction';
@@ -78,6 +78,16 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
   const messageableIds = selected.filter((disc) => disc.hasPhoneNumber).map((disc) => disc.externalId);
   const withoutNumber = selected.length - messageableIds.length;
 
+  // Two reasons an action is left out rather than offered and then refused:
+  // there is nobody to text, or the selection is larger than a write may
+  // cover. Either way the note beside the dropdown says which.
+  const tooManyToWrite = selected.length > MAX_DISCS_PER_WRITE;
+
+  const options = actionOrder.filter((option) => (option === 'message' ? messageableIds.length > 0 : !tooManyToWrite));
+
+  const labelFor = (option: SelectedAction): string =>
+    option === 'message' ? `Lähetä sms ${messageableIds.length} henkilölle` : batchActionLabel(option);
+
   const startMessaging = (): void => {
     const href = `/message/send-batch?ids=${messageableIds.join(',')}`;
 
@@ -91,7 +101,9 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
   };
 
   const handleRun = (): void => {
-    if (action === '') {
+    // The chosen action can have left the dropdown between choosing it and
+    // pressing the button — a tick past the write cap does that.
+    if (action === '' || !options.includes(action)) {
       return;
     }
 
@@ -114,13 +126,6 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
       </p>
     ) : null;
   }
-
-  // Left out rather than offered and refused when not one selected disc has a
-  // number: there would be nobody to send to.
-  const options = messageableIds.length > 0 ? actionOrder : actionOrder.filter((option) => option !== 'message');
-
-  const labelFor = (option: SelectedAction): string =>
-    option === 'message' ? `Lähetä sms ${messageableIds.length} henkilölle` : batchActionLabel(option);
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-4">
@@ -161,10 +166,12 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
         </span>
       )}
 
-      {/* Said here as well as on the boxes it disables: the admin who has just
-          hit the cap is looking at the count, not hovering a checkbox. */}
-      {selected.length >= MAX_SELECTED_DISCS && (
-        <span className="text-sm">Enimmäismäärä {MAX_SELECTED_DISCS} kiekkoa valittu.</span>
+      {/* The selection itself is not limited — only what may be written to at
+          once, so this says what is missing from the dropdown and why. */}
+      {tooManyToWrite && (
+        <span className="text-sm">
+          Merkintä ja poisto koskevat enintään {MAX_DISCS_PER_WRITE} kiekkoa kerralla – valitse pienempi joukko.
+        </span>
       )}
 
       {notice?.kind === 'error' && (

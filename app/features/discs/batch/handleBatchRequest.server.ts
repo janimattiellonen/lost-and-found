@@ -2,7 +2,7 @@ import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
 import { deleteDiscs, markDiscsAsReturned, markDiscsForDisposal } from '~/models/discs.server';
 
-import { isBatchAction, markFor, MAX_SELECTED_DISCS, type BatchMark } from './batchAction';
+import { isBatchAction, markFor, MAX_DISCS_PER_WRITE, type BatchMark } from './batchAction';
 
 /** The ids a batch may act on, or the reason this selection is not one. */
 type Selection = { externalIds: string[] } | { error: string };
@@ -20,8 +20,8 @@ function readSelection(value: unknown): Selection {
 
   const externalIds = [...new Set(value)];
 
-  if (externalIds.length > MAX_SELECTED_DISCS) {
-    return { error: `Yhdellä kertaa voi käsitellä enintään ${MAX_SELECTED_DISCS} kiekkoa.` };
+  if (externalIds.length > MAX_DISCS_PER_WRITE) {
+    return { error: `Yhdellä kertaa voi käsitellä enintään ${MAX_DISCS_PER_WRITE} kiekkoa.` };
   }
 
   return { externalIds };

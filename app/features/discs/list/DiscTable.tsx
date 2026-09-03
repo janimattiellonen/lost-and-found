@@ -24,7 +24,6 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
-import { MAX_SELECTED_DISCS } from '~/features/discs/batch/batchAction';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -171,17 +170,6 @@ const styles = stylex.create({
     touchAction: 'none',
   },
 });
-
-/**
- * Why a row's box will not take a tick, when it will not.
- *
- * Only the cap is explained: a row with no external id is unselectable for a
- * different reason, and a signed-in admin is sent an id for every disc, so that
- * case is not one anybody sees.
- */
-function selectionTitle(canSelect: boolean, hasExternalId: boolean): string | undefined {
-  return !canSelect && hasExternalId ? `Kerralla voi valita enintään ${MAX_SELECTED_DISCS} kiekkoa` : undefined;
-}
 
 /** Columns sized by their content rather than by a resizable width. */
 function isTightColumn(columnId: string): boolean {
@@ -368,21 +356,6 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
 
   const rows = useMemo(() => mapToDataRows(discs), [discs]);
 
-  /**
-   * How many of the discs on screen are ticked.
-   *
-   * Counted over the discs this table was given, not over every key in the
-   * selection state: the list arrives already filtered, and a tick survives a
-   * filter that hides its disc. Counting the hidden ones would let the cap
-   * block a tick while the bar showed room for it, and the bar, the
-   * confirmation and the request all count what is on screen — one number for
-   * all four, or they contradict each other.
-   *
-   * Read off the selection state rather than asked of the table because the cap
-   * is part of the table's own configuration, which cannot query itself.
-   */
-  const selectedCount = rows.filter((row) => row.externalId != null && rowSelection[row.externalId]).length;
-
   /** Opens the given panel on the given disc, or closes it if already open. */
   const toggleForm = (externalId: string, kind: PanelKind): void =>
     setOpenForm((current) =>
@@ -420,14 +393,12 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
                 );
               },
               cell: ({ row }) => (
-                <span title={selectionTitle(row.getCanSelect(), !!row.original.externalId)}>
-                  <Checkbox
-                    aria-label={`Valitse kiekko ${row.original.discName}`}
-                    checked={row.getIsSelected()}
-                    disabled={!row.getCanSelect()}
-                    onChange={row.getToggleSelectedHandler()}
-                  />
-                </span>
+                <Checkbox
+                  aria-label={`Valitse kiekko ${row.original.discName}`}
+                  checked={row.getIsSelected()}
+                  disabled={!row.getCanSelect()}
+                  onChange={row.getToggleSelectedHandler()}
+                />
               ),
             } satisfies ColumnDef<Row>,
           ]
@@ -579,11 +550,9 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
     // only rules out the message batch, which leaves those discs out itself —
     // marking a disc returned or deleting it has no use for one.
     //
-    // Past the cap only the discs already ticked stay selectable, so unticking
-    // still works and the limit is met while choosing rather than after
-    // confirming.
-    enableRowSelection: (row) =>
-      !!row.original.externalId && (row.getIsSelected() || selectedCount < MAX_SELECTED_DISCS),
+    // Unlimited on purpose: ticking a disc changes nothing, and the actions
+    // that do are capped where they are chosen.
+    enableRowSelection: (row) => !!row.original.externalId,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     columnResizeMode: 'onChange',
