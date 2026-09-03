@@ -2,7 +2,7 @@ import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
 import { deleteDiscs, markDiscsAsReturned, markDiscsForDisposal } from '~/models/discs.server';
 
-import { isBatchAction, MAX_BATCH_ACTION_SIZE, type BatchAction } from './batchAction';
+import { disposalMethodFor, isBatchAction, MAX_BATCH_ACTION_SIZE, type BatchAction } from './batchAction';
 
 /** The ids a batch may act on, or the reason this selection is not one. */
 type Selection = { externalIds: string[] } | { error: string };
@@ -28,12 +28,14 @@ function readSelection(value: unknown): Selection {
 }
 
 /**
- * The two actions that record a date: returned to its owner, and free to be
- * sold or donated.
+ * The three actions that record a date: returned to its owner, up for sale, and
+ * up for donation.
  *
- * Both are dated but carry no method: over a selection there is no one method
- * that would be true of every disc in it, so the method is left unanswered —
- * which is what the column holds for any disc marked without one.
+ * A release carries its method, because which of the two it is comes from the
+ * action itself. A return does not: how a disc got back to its owner is a
+ * per-disc detail, and over a selection there is no one answer to it, so it is
+ * left unanswered — which is what the column holds for any disc marked without
+ * one.
  */
 function applyMark(
   action: Exclude<BatchAction, 'delete'>,
@@ -45,7 +47,14 @@ function applyMark(
     return markDiscsAsReturned(externalIds, { returnedToOwnerDate: date, returnMethod: null }, request);
   }
 
-  return markDiscsForDisposal(externalIds, { canBeSoldOrDonatedDate: date, canBeSoldOrDonatedMethod: null }, request);
+  return markDiscsForDisposal(
+    externalIds,
+    {
+      canBeSoldOrDonatedDate: date,
+      canBeSoldOrDonatedMethod: disposalMethodFor(action),
+    },
+    request,
+  );
 }
 
 /** Answers with how many discs the action reached, or with why it could not. */

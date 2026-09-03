@@ -1,10 +1,18 @@
+import { DisposalMethod, type DisposalMethodValue } from '~/features/discs/disposal/disposalMethod';
+
 /**
  * The actions that can be applied to a whole selection of discs at once.
+ *
+ * Releasing a disc is two of them rather than one with a method beside it.
+ * Sale and donation are the whole point of that mark — a disc released without
+ * saying which is a row nobody can act on — and asking in a second step for
+ * something the admin has already decided is a step to click past. The single
+ * disc form still asks, because there the method can be left unanswered.
  *
  * Messaging is not one of them: it is a walk through the selection one owner at
  * a time (see the send-batch page), not a single write.
  */
-export const batchActions = ['delete', 'return', 'disposal'] as const;
+export const batchActions = ['delete', 'return', 'sell', 'donate'] as const;
 
 export type BatchAction = (typeof batchActions)[number];
 
@@ -29,8 +37,21 @@ export const MAX_BATCH_ACTION_SIZE = 500;
 export const batchActionLabels: Record<BatchAction, string> = {
   delete: 'Poista',
   return: 'Merkitse palautetuiksi',
-  disposal: 'Merkitse myytäviksi tai lahjoitettaviksi',
+  sell: 'Merkitse myytäviksi',
+  donate: 'Merkitse lahjoitettaviksi',
 };
+
+/**
+ * Which fate a release records, read off the action itself.
+ *
+ * The two are a smallint in the database and nothing in the UI shows the
+ * number, so an inverted mapping here would write "donate" on every disc the
+ * club means to sell without anything looking wrong. Pinned by a test against
+ * the label.
+ */
+export function disposalMethodFor(action: 'sell' | 'donate'): DisposalMethodValue {
+  return action === 'sell' ? DisposalMethod.Sold : DisposalMethod.Donated;
+}
 
 /** A count of discs, with the noun in the case Finnish puts it in. */
 function discCount(count: number): string {
@@ -53,8 +74,11 @@ export function confirmBatchAction(action: BatchAction, count: number): string {
     case 'return': {
       return `Merkitäänkö ${discCount(count)} palautetuksi?`;
     }
-    case 'disposal': {
-      return `Merkitäänkö ${discCount(count)} myytäväksi tai lahjoitettavaksi?`;
+    case 'sell': {
+      return `Merkitäänkö ${discCount(count)} myytäväksi?`;
+    }
+    case 'donate': {
+      return `Merkitäänkö ${discCount(count)} lahjoitettavaksi?`;
     }
   }
 }
@@ -63,7 +87,8 @@ export function confirmBatchAction(action: BatchAction, count: number): string {
 const pastTense: Record<BatchAction, string> = {
   delete: 'Poistettiin',
   return: 'Merkittiin palautetuksi',
-  disposal: 'Merkittiin myytäväksi tai lahjoitettavaksi',
+  sell: 'Merkittiin myytäväksi',
+  donate: 'Merkittiin lahjoitettavaksi',
 };
 
 /**

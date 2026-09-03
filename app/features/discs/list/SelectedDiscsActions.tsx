@@ -46,7 +46,7 @@ type Props = {
 type SelectedAction = BatchAction | 'message';
 
 /** The order the dropdown offers them in, messaging first as the most used. */
-const actionOrder: SelectedAction[] = ['message', 'return', 'disposal', 'delete'];
+const actionOrder: SelectedAction[] = ['message', 'return', 'sell', 'donate', 'delete'];
 
 /**
  * What can be done with the discs ticked in the list.
