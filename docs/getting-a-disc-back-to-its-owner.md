@@ -237,7 +237,10 @@ already uses.
   clubs. See open question 1.
 - **The flag page** — no login, reached from the sms link, for both clubs. Shows
   the disc and the last four digits of the owner's phone number, and offers the
-  options from section 3.
+  options from section 3. Each option carries what it asks of the owner, inside
+  the option itself: posting shows the fee, how to pay it and the address
+  fields; collecting from the admin names the district and promises a message.
+  A contact address closes the page, and the dead-link screen too.
 - **The disc list** — where an answer is acted on: mark returned, or mark for
   sale or donation. Should show that an owner has answered, and what they said.
 
@@ -288,15 +291,33 @@ is **not applied**, so this is all still free to change:
    reads as being in the storage. The cost of that gap is one owner offered a
    collection from a storage the disc has left, which the admin sees on the
    answer and can sort out by message.
-4. **Should "collected from the storage" (2) be offered when the disc has an open
-   request already fetched?** i.e. the owner changing their mind after you have
-   already carried it home. Presumably not.
+4. ~~**Should "collected from the storage" (2) be offered when the disc has an
+   open request already fetched?**~~ **Answered by section 5's derivation: no,
+   and in two places.** `disc_is_in_storage(disc_id)` is false as soon as a
+   retrieval row has a `retrieved_at`, so the option is absent from the owner's
+   page; `submit_owner_response` refuses method 2 for a disc that is not in the
+   storage, so a page left open before the fetch cannot submit it either. The
+   owner is left with post and collecting from the admin, which is what the disc
+   being at the admin's house actually allows.
+
+   What stays open is the same case running the other way in time: the owner
+   answers "I will collect it from the storage" and the disc is fetched home
+   _afterwards_. Their answer now names a place the disc has left, and nothing
+   tells them. It shows on `/vastaukset` and the admin sorts it out by message.
+   Whether that deserves more — a flag on the answer, or a message to the owner
+   — is the live part of this question.
+
 5. **Does the shipping address live on the response row or in a table of its
    own?** On the row is simpler and matches "the answer is one event". A table
    would only earn its place if an address outlives the request it came with,
    which rule 2 of section 5 says it should not.
-6. **Does the page hand out your home address for a collection?** Explicitly
-   deferred. Nothing else in this document depends on the answer.
+6. **Does the page hand out your home address for a collection?** **Partly
+   settled by what shipped:** the page names the district ("Espoon
+   Lintuvaarasta") and says a message with the details follows. So a forwarded
+   link gives away a district, not a street, and the exact address and time are
+   still agreed by message. Whether the page should go further — the full
+   address, once an owner has chosen collection — is still deferred, and nothing
+   else in this document depends on it.
 7. **What closes a request that nobody ever acts on?** Today: nothing, and the
    lists stop showing it once the disc is returned, released or archived. Good
    enough, or do you want to see stale requests?
