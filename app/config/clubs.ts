@@ -62,6 +62,28 @@ export function getClubContactEmail(clubId: number | null): string {
 }
 
 /**
+ * Where an owner may pay the club the voluntary thank-you for a posted disc.
+ *
+ * A MobilePay number and the name it answers to, which is what the owner sees
+ * in their payment app and what tells them they are paying the right club.
+ * Separate from the postage itself, which goes to the admin.
+ */
+export type ClubPayment = { number: string; name: string };
+
+const CLUB_PAYMENTS: Record<number, ClubPayment> = {
+  [PUSKASOTURIT]: { number: '80603', name: 'Puskasoturit ry' },
+  [TALIN_TALLAAJAT]: { number: '808226', name: 'Talin Tallaajat / Myynti' },
+};
+
+/**
+ * Null for a club with no number on file, so the instruction can be left out
+ * rather than sending an owner's money to another club.
+ */
+export function getClubPayment(clubId: number | null): ClubPayment | null {
+  return clubId === null ? null : (CLUB_PAYMENTS[clubId] ?? null);
+}
+
+/**
  * Whether this club's admin keeps a retrieval list.
  *
  * Only Talin Tallaajat stores its discs somewhere the admin has to travel to,

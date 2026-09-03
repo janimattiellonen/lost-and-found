@@ -3,6 +3,7 @@ import { useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunct
 import { handleOwnerLinkSubmit } from '~/features/discs/ownerResponse/handleOwnerLinkSubmit.server';
 import { loadOwnerLinkPage } from '~/features/discs/ownerResponse/loadOwnerLinkPage.server';
 import OwnerLinkPage from '~/features/discs/ownerResponse/OwnerLinkPage';
+import { getClubContactEmail } from '~/config/clubs';
 import { isExternalId } from '~/lib/api/validate';
 
 import type { JSX } from 'react';
@@ -19,7 +20,12 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   // A token that is not even a uuid never reaches the database.
   if (!isExternalId(token)) {
-    return { disc: null, token };
+    return {
+      disc: null,
+      clubPayment: null,
+      contactEmail: getClubContactEmail(parseInt(process.env.APP_CLUB_ID!, 10)),
+      token,
+    };
   }
 
   return { ...(await loadOwnerLinkPage(token)), token };
@@ -45,8 +51,10 @@ export const headers = () => ({
 });
 
 export default function OwnerLinkRoute(): JSX.Element {
-  const { disc, token } = useLoaderData<typeof loader>();
+  const { disc, clubPayment, contactEmail, token } = useLoaderData<typeof loader>();
   const result = useActionData<typeof action>();
 
-  return <OwnerLinkPage disc={disc} token={token} result={result} />;
+  return (
+    <OwnerLinkPage disc={disc} clubPayment={clubPayment} contactEmail={contactEmail} token={token} result={result} />
+  );
 }
