@@ -1,8 +1,8 @@
 import { redirect } from 'react-router';
 
-import { currentClubId, isRetrievalListEnabled } from '~/config/clubs';
+import { isRetrievalListEnabled } from '~/config/clubs';
 import { isExternalId } from '~/lib/api/validate';
-import { queryCompleteRetrieval } from '~/features/discs/retrieval/queryCompleteRetrieval.server';
+import { queryCompleteRetrieval } from './queryCompleteRetrieval.server';
 import { createSupabaseServerClient } from '~/models/utils';
 import { isUserLoggedIn } from '~/models/utils';
 
@@ -18,7 +18,7 @@ export async function handleRetrievedRequest(request: Request, formData: FormDat
     return redirect('/sign-in');
   }
 
-  if (!isRetrievalListEnabled(currentClubId())) {
+  if (!isRetrievalListEnabled()) {
     return new Response('Not Found', { status: 404 });
   }
 

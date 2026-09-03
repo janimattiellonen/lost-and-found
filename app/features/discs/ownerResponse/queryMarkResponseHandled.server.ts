@@ -1,6 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { currentClubId } from '~/config/clubs';
 
+/** The one column the read is for: whether there is an address to wipe. */
+type Row = { id: number; shipping_street: string | null };
+
 /** Whether the answer was there to be marked, for the caller to answer with. */
 export type HandledOutcome = 'done' | 'not-found';
 
@@ -35,7 +38,7 @@ export async function queryMarkResponseHandled(supabase: SupabaseClient, respons
 
   const now = new Date().toISOString();
 
-  const wipe = (existing as any).shipping_street
+  const wipe = (existing as unknown as Row).shipping_street
     ? {
         shipping_name: null,
         shipping_street: null,

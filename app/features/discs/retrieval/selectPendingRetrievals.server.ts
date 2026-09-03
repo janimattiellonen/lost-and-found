@@ -1,4 +1,3 @@
-import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { currentClubId } from '~/config/clubs';
 
@@ -22,7 +21,7 @@ export function selectPendingRetrievals(
   supabase: SupabaseClient,
   select: string,
   options?: { head?: boolean; count?: 'exact' },
-): PostgrestFilterBuilder<any, any, any, any, any> {
+) {
   return supabase
     .from('disc_retrievals')
     .select(select, options)

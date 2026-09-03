@@ -1,8 +1,8 @@
 import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId } from '~/lib/api/validate';
-import { currentClubId, isRetrievalListEnabled } from '~/config/clubs';
-import { isRetrievalMethod } from '~/features/discs/retrieval/retrievalMethod';
-import { queryRequestRetrieval } from '~/features/discs/retrieval/queryRequestRetrieval.server';
+import { isRetrievalListEnabled } from '~/config/clubs';
+import { isRetrievalMethod } from './retrievalMethod';
+import { queryRequestRetrieval } from './queryRequestRetrieval.server';
 import { createSupabaseServerClient } from '~/models/utils';
 
 /** Authorises, validates and applies a retrieval request posted to /discs/retrieval. */
@@ -15,7 +15,7 @@ export async function handleRetrievalRequest(request: Request): Promise<Response
 
   // The list is one club's way of working, and this instance serves one club.
   // Checked here as well as in the UI: the route is reachable without it.
-  if (!isRetrievalListEnabled(currentClubId())) {
+  if (!isRetrievalListEnabled()) {
     return Response.json({ error: 'Noutolista ei ole käytössä.' }, { status: 404 });
   }
 

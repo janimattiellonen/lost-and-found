@@ -1,5 +1,5 @@
-import type { HandoverMethodValue } from '~/features/discs/handoverMethod';
-import type { OwnerChoiceValue } from './ownerChoice';
+import type { HandoverMethod, HandoverMethodValue } from '~/features/discs/handoverMethod';
+import type { OwnerChoice, OwnerChoiceValue } from './ownerChoice';
 
 /** Where a posted disc goes. Only ever collected for a posting. */
 export type ShippingAddress = {
@@ -19,13 +19,18 @@ export type ShippingAddress = {
  * without one — the same pairing the CHECK constraints hold at the database
  * end.
  */
+type GivesUp = typeof OwnerChoice.GivesUp;
+type WantsItBack = typeof OwnerChoice.WantsItBack;
+type ByMail = typeof HandoverMethod.ByMail;
+type Collected = typeof HandoverMethod.PickedUpFromHome | typeof HandoverMethod.PickedUpFromStorage;
+
 export type OwnerResponse =
-  | { choice: 0 }
-  | { choice: 1; handoverMethod: 1 | 2 }
-  | { choice: 1; handoverMethod: 0; address: ShippingAddress }
+  | { choice: GivesUp }
+  | { choice: WantsItBack; handoverMethod: Collected }
+  | { choice: WantsItBack; handoverMethod: ByMail; address: ShippingAddress }
   // Several discs waiting: what goes in the parcel, and so the postage and the
   // address, are settled by message instead.
-  | { choice: 1; handoverMethod: 0; hasMoreDiscs: true };
+  | { choice: WantsItBack; handoverMethod: ByMail; hasMoreDiscs: true };
 
 /**
  * What the owner-facing page may show. Everything here is already on the club's

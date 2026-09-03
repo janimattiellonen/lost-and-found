@@ -9,6 +9,26 @@ const LIST_COLUMNS =
   'requested_at, retrieval_method, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number, added_at)';
 
 /**
+ * What the select above reads back.
+ *
+ * A select built from a string cannot be typed by supabase-js, so declaring the
+ * columns asked for and casting once puts the checking back where the shape is
+ * known — beside the select that names them.
+ */
+type Row = {
+  requested_at: string;
+  retrieval_method: number;
+  discs: {
+    external_id: string;
+    disc_name: string;
+    disc_colour: string;
+    owner_name: string | null;
+    owner_phone_number: string | null;
+    added_at: string | null;
+  };
+};
+
+/**
  * The discs waiting to be fetched out of storage, oldest request first — the
  * order the admin works through them in.
  *
@@ -24,7 +44,7 @@ export async function queryRetrievalList(supabase: SupabaseClient): Promise<Retr
     throw new Error(`Noutolistan haku epäonnistui: ${error.message}`);
   }
 
-  return ((data ?? []) as any[]).map((row) => ({
+  return ((data ?? []) as unknown as Row[]).map((row) => ({
     externalId: row.discs.external_id,
     discName: row.discs.disc_name,
     discColour: row.discs.disc_colour,

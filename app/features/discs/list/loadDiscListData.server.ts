@@ -25,7 +25,7 @@ export async function loadDiscListData(request: Request) {
   // row action can say so rather than putting one on the list twice. Null when
   // there is no retrieval list to be on -- another club, or nobody signed in.
   const pendingRetrievals =
-    isLoggedIn && isRetrievalListEnabled(clubId)
+    isLoggedIn && isRetrievalListEnabled()
       ? await queryPendingRetrievalMethods(createSupabaseServerClient(request))
       : null;
 

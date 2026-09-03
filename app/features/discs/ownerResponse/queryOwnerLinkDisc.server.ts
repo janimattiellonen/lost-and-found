@@ -4,6 +4,21 @@ import { handoverMethodsFor } from './handoverMethodsFor';
 import type { OwnerLinkDisc } from './ownerResponse';
 
 /**
+ * What the function above reads back.
+ *
+ * A select built from a string cannot be typed by supabase-js, so declaring the
+ * columns asked for and casting once puts the checking back where the shape is
+ * known — beside the select that names them.
+ */
+type Row = {
+  disc_name: string;
+  disc_colour: string;
+  disc_manufacturer: string | null;
+  phone_number_ending: string | null;
+  in_storage: boolean | null;
+};
+
+/**
  * The disc behind an owner link, or null when the token resolves to nothing the
  * club is still listing.
  *
@@ -27,7 +42,7 @@ export async function queryOwnerLinkDisc(
     throw new Error(`Kiekon haku epäonnistui: ${error.message}`);
   }
 
-  const row = (data as any[])?.[0];
+  const row = (data as unknown as Row[] | null)?.[0];
 
   if (!row) {
     return null;

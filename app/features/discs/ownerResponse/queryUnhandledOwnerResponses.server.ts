@@ -10,6 +10,33 @@ const RESPONSE_COLUMNS =
   'shipping_city, shipping_country, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number)';
 
 /**
+ * What the select above reads back.
+ *
+ * A select built from a string cannot be typed by supabase-js, so declaring the
+ * columns asked for and casting once puts the checking back where the shape is
+ * known — beside the select that names them.
+ */
+type Row = {
+  id: number;
+  responded_at: string;
+  choice: number;
+  handover_method: number | null;
+  has_more_discs: boolean | null;
+  shipping_name: string | null;
+  shipping_street: string | null;
+  shipping_postal_code: string | null;
+  shipping_city: string | null;
+  shipping_country: string | null;
+  discs: {
+    external_id: string;
+    disc_name: string;
+    disc_colour: string;
+    owner_name: string | null;
+    owner_phone_number: string | null;
+  };
+};
+
+/**
  * The answers the admin has not dealt with yet, newest first.
  *
  * Scoped to this instance's club through the join, so one club's admin never
@@ -28,7 +55,7 @@ export async function queryUnhandledOwnerResponses(supabase: SupabaseClient): Pr
     throw new Error(`Vastausten haku epäonnistui: ${error.message}`);
   }
 
-  return ((data ?? []) as any[]).flatMap((row) => {
+  return ((data ?? []) as unknown as Row[]).flatMap((row) => {
     // A choice outside the enum should be impossible: the CHECK constraint
     // covers it. If one appears, leaving it out beats rendering a card that
     // says nothing.

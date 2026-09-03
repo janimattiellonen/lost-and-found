@@ -20,9 +20,8 @@ import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
 import { getClubFavicon } from '~/config/clubs';
-import { queryUnhandledOwnerResponseCount } from '~/features/discs/ownerResponse/queryUnhandledOwnerResponseCount.server';
+import { loadResponseCount } from '~/features/discs/ownerResponse/loadResponseCount.server';
 import { loadRetrievalCount } from '~/features/discs/retrieval/loadRetrievalCount.server';
-import { menuCount } from '~/lib/menuCount.server';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
 // directives unexpanded). React Router injects the resulting stylesheet for SSR.
@@ -47,7 +46,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       env,
       session,
       retrievalCount: await loadRetrievalCount(supabase, session != null),
-      responseCount: await menuCount(supabase, session != null, queryUnhandledOwnerResponseCount),
+      responseCount: await loadResponseCount(supabase, session != null),
     },
     {
       headers,

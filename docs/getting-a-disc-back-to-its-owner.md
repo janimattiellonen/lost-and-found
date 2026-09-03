@@ -4,7 +4,7 @@ Status: **2026-09-03.** Written because the pieces — the retrieval list, the
 owner-facing flag page, and the existing return and disposal marks — turned out
 to overlap, and the overlap is where the mistakes would be.
 
-Built in PR #79, all of it behind an unapplied migration:
+Built in PR #79, behind four migrations, **all applied 2026-09-04**:
 
 - the retrieval list ("Noutolista"), as `disc_retrievals`
 - one shared handover method (section 5), replacing the retrieval list's own
@@ -15,10 +15,15 @@ Built in PR #79, all of it behind an unapplied migration:
 - the admin's page of answers at `/vastaukset`
 - `clubs.stores_discs_offsite`, which is what section 1's table now lives in
 
+Also built, after the first review: `has_more_discs` (section 10b), and
+`p_club_id` on both owner-facing functions, so a token only resolves against the
+club whose deployment it was opened on.
+
 Not built: the section 10 renaming of `disc_retrievals`, `discs.return_method`
-gaining the third value, and anything that turns an answer into a retrieval-list
-row by itself. Open questions 1, 4, 5, 6 and 7 are still open; 2 and 3 were
-decided for this first version, and say so below.
+gaining the third value, anything that turns an answer into a retrieval-list row
+by itself, and any sign on the disc list that an owner has answered — which
+section 8 asks for and nothing yet does. Open questions 1, 5, 6, 7, 8 and 9 are
+open; 2, 3 and 4 are decided and say so below.
 
 ## 1. Where a disc physically is
 
@@ -161,10 +166,14 @@ these three rules, all of which follow from the link being forwardable:
    address off it. This is the whole reason the token needs no further guarding:
    there is nothing else behind it worth reading. A typo is corrected by answering again — answers are
    append-only and the latest wins — not by showing the old value in a form.
-2. **The address is deleted once the disc has been posted.** It is needed to
-   write a parcel label and for nothing else afterwards. Nulling it when the
-   disc is marked returned costs one line and means the database is not a
-   standing list of members' home addresses.
+2. **The address is deleted once it has served its purpose.** It is needed to
+   write a parcel label and for nothing else afterwards, and the database should
+   not become a standing list of members' home addresses. **What is built wipes
+   it when the answer is marked handled on `/vastaukset`** — the only event the
+   app has. That is not quite the event this rule wants, and an answer never
+   marked keeps its address indefinitely; open question 7 is where that gets
+   settled, and until it does this rule is honoured by habit rather than by the
+   code.
 3. **It is never part of any public payload.** Only the admin pages see it,
    like the full phone number.
 
@@ -255,6 +264,14 @@ already uses.
    making it irrelevant — every list filters on the disc's own state, so nothing
    has to be ticked off twice.
 6. The options offered come from the disc's location, never from its club.
+7. **Whether a club keeps a retrieval list is a hardcode, and stays one.**
+   `isRetrievalListEnabled()` in `~/config/clubs` answers `club === TALIN`,
+   while `clubs.stores_discs_offsite` says the same thing in the database, where
+   `disc_is_in_storage()` reads it. Two facts, one truth, kept deliberately: the
+   gate decides whether to render a page and a menu item on every request, and
+   reading a column for that costs a query on every page load. What it can drift
+   into is a menu item, never a wrong option offered to an owner — rule 6 holds
+   regardless, because the options come from `disc_is_in_storage()`.
 
 ## 10. What this costs PR #79
 

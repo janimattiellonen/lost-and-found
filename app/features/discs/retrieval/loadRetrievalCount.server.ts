@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { currentClubId, isRetrievalListEnabled } from '~/config/clubs';
+import { isRetrievalListEnabled } from '~/config/clubs';
 import { queryRetrievalCount } from './queryRetrievalCount.server';
 import { menuCount } from '~/lib/menuCount.server';
 
@@ -12,7 +12,7 @@ import { menuCount } from '~/lib/menuCount.server';
  * retrieval list.
  */
 export async function loadRetrievalCount(supabase: SupabaseClient, isSignedIn: boolean): Promise<number | null> {
-  if (!isRetrievalListEnabled(currentClubId())) {
+  if (!isRetrievalListEnabled()) {
     return null;
   }
 

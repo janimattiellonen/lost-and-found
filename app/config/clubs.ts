@@ -97,11 +97,15 @@ export function getClubPayment(clubId: number | null): ClubPayment | null {
 /**
  * Whether this club's admin keeps a retrieval list.
  *
+ * Reads the club itself rather than taking one: every caller asked about the
+ * instance it is serving, and `isRetrievalListEnabled(currentClubId())` said
+ * that in four places at once.
+ *
  * Only Talin Tallaajat stores its discs somewhere the admin has to travel to,
  * so only there does "the owner asked for this one" mean an errand worth
  * writing down. For every other club the page, the menu item and the row
  * action are simply absent.
  */
-export function isRetrievalListEnabled(clubId: number | null): boolean {
-  return clubId === TALIN_TALLAAJAT;
+export function isRetrievalListEnabled(): boolean {
+  return currentClubId() === TALIN_TALLAAJAT;
 }

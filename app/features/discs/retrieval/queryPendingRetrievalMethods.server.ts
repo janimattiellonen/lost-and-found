@@ -4,6 +4,15 @@ import { selectPendingRetrievals } from './selectPendingRetrievals.server';
 import { isRetrievalMethod, type RetrievalMethodValue } from './retrievalMethod';
 
 /**
+ * What the select above reads back.
+ *
+ * A select built from a string cannot be typed by supabase-js, so declaring the
+ * columns asked for and casting once puts the checking back where the shape is
+ * known — beside the select that names them.
+ */
+type Row = { retrieval_method: number; discs: { external_id: string } };
+
+/**
  * Which of the club's listed discs are already on the retrieval list, and what
  * each was asked for.
  *
@@ -27,7 +36,7 @@ export async function queryPendingRetrievalMethods(
 
   const methods: Record<string, RetrievalMethodValue> = {};
 
-  for (const row of (data ?? []) as any[]) {
+  for (const row of (data ?? []) as unknown as Row[]) {
     if (isRetrievalMethod(row.retrieval_method)) {
       methods[row.discs.external_id] = row.retrieval_method;
     }
