@@ -24,7 +24,7 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
-import SelectedDiscsActions from '~/features/discs/list/SelectedDiscsActions';
+import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
   ArrowUpwardIcon,
@@ -391,16 +391,12 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
                 );
               },
               cell: ({ row }) => (
-                // A disc with no phone number cannot be messaged, so it cannot
-                // be part of a batch; the title says why the box is dead.
-                <span title={row.getCanSelect() ? undefined : 'Kiekolla ei ole puhelinnumeroa'}>
-                  <Checkbox
-                    aria-label={`Valitse kiekko ${row.original.discName}`}
-                    checked={row.getIsSelected()}
-                    disabled={!row.getCanSelect()}
-                    onChange={row.getToggleSelectedHandler()}
-                  />
-                </span>
+                <Checkbox
+                  aria-label={`Valitse kiekko ${row.original.discName}`}
+                  checked={row.getIsSelected()}
+                  disabled={!row.getCanSelect()}
+                  onChange={row.getToggleSelectedHandler()}
+                />
               ),
             } satisfies ColumnDef<Row>,
           ]
@@ -548,27 +544,29 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
     // The external id, so a tick follows its disc through a re-sort rather
     // than sticking to a row position. Rows without one cannot be selected.
     getRowId: (row) => row.externalId ?? `row-${row.id}`,
-    // Messaging is the point of a selection, and that needs a number to send
-    // to and an id to record against.
-    enableRowSelection: (row) => !!row.original.externalId && !!row.original.ownerPhoneNumber,
+    // An id to address the disc by is all a selection needs. A missing number
+    // only rules out the message batch, which leaves those discs out itself —
+    // marking a disc returned or deleting it has no use for one.
+    enableRowSelection: (row) => !!row.original.externalId,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
   });
 
-  // Taken from the rows on screen, in the order they are shown: the batch then
+  // Taken from the rows on screen, in the order they are shown: a batch then
   // works through the discs the way the admin sees them, and the count in the
   // bar can never stand for discs a filter has since hidden.
-  const selectedExternalIds = table
+  const selectedDiscs: SelectedDisc[] = table
     .getRowModel()
     .rows.filter((row) => row.getIsSelected())
-    .map((row) => row.original.externalId)
-    .filter((externalId): externalId is string => externalId != null);
+    .map((row) => row.original)
+    .filter((disc): disc is Row & { externalId: string } => disc.externalId != null)
+    .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: !!disc.ownerPhoneNumber }));
 
   return (
     <>
-      <SelectedDiscsActions externalIds={selectedExternalIds} onClear={() => table.resetRowSelection()} />
+      <SelectedDiscsActions selected={selectedDiscs} onClear={() => table.resetRowSelection()} onChanged={onChanged} />
 
       <table {...stylex.props(styles.table)}>
         <thead>

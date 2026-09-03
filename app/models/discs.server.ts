@@ -225,6 +225,20 @@ export async function createDiscs(discs: DiscDTO[], request: Request): Promise<s
  * another club — so the caller can tell "already gone" from "deleted".
  */
 export async function deleteDisc(externalId: string, request: Request): Promise<boolean> {
+  return (await deleteDiscs([externalId], request)) > 0;
+}
+
+/**
+ * Deletes several discs at once, addressed by their external ids.
+ *
+ * Scoped to APP_CLUB_ID like the single-disc delete, so an id belonging to
+ * another club is simply not among the rows that go.
+ *
+ * Returns how many rows were deleted, which the caller compares with how many
+ * it asked for: an id that no longer resolves is not an error, but a shortfall
+ * is worth reporting.
+ */
+export async function deleteDiscs(externalIds: string[], request: Request): Promise<number> {
   const clubId = process.env.APP_CLUB_ID;
 
   const supabase = createSupabaseServerClient(request);
@@ -232,15 +246,15 @@ export async function deleteDisc(externalId: string, request: Request): Promise<
   const { data, error } = await supabase
     .from('discs')
     .delete()
-    .eq('external_id', externalId)
+    .in('external_id', externalIds)
     .eq('club_id', clubId)
     .select('external_id');
 
   if (error) {
-    throw new Error(`Kiekon poisto epäonnistui: ${error.message}`);
+    throw new Error(`Kiekkojen poisto epäonnistui: ${error.message}`);
   }
 
-  return (data?.length ?? 0) > 0;
+  return data?.length ?? 0;
 }
 
 /**
@@ -309,16 +323,7 @@ export async function markAsReturned(
   details: DiscReturnDetails,
   request: Request,
 ): Promise<MarkOutcome> {
-  return updateDisc(
-    externalId,
-    {
-      is_returned_to_owner: true,
-      returned_to_owner_date: details.returnedToOwnerDate,
-      return_method: details.returnMethod,
-    },
-    request,
-    'Kiekon merkitseminen palautetuksi epäonnistui',
-  );
+  return updateDisc(externalId, returnPatch(details), request, RETURN_FAILURE);
 }
 
 /**
@@ -351,14 +356,82 @@ export async function markForDisposal(
   details: DiscDisposalDetails,
   request: Request,
 ): Promise<MarkOutcome> {
-  return updateDisc(
-    externalId,
-    {
-      can_be_sold_or_donated: true,
-      can_be_sold_or_donated_date: details.canBeSoldOrDonatedDate,
-      can_be_sold_or_donated_method: details.canBeSoldOrDonatedMethod,
-    },
-    request,
-    'Kiekon merkitseminen myytäväksi tai lahjoitettavaksi epäonnistui',
-  );
+  return updateDisc(externalId, disposalPatch(details), request, DISPOSAL_FAILURE);
+}
+
+const RETURN_FAILURE = 'Kiekon merkitseminen palautetuksi epäonnistui';
+
+const DISPOSAL_FAILURE = 'Kiekon merkitseminen myytäväksi tai lahjoitettavaksi epäonnistui';
+
+/**
+ * The columns a return writes, and the ones a disposal writes.
+ *
+ * Written once and used by both the single-disc mark and the batch one, so the
+ * two cannot drift into recording a return differently.
+ */
+function returnPatch(details: DiscReturnDetails): Record<string, unknown> {
+  return {
+    is_returned_to_owner: true,
+    returned_to_owner_date: details.returnedToOwnerDate,
+    return_method: details.returnMethod,
+  };
+}
+
+function disposalPatch(details: DiscDisposalDetails): Record<string, unknown> {
+  return {
+    can_be_sold_or_donated: true,
+    can_be_sold_or_donated_date: details.canBeSoldOrDonatedDate,
+    can_be_sold_or_donated_method: details.canBeSoldOrDonatedMethod,
+  };
+}
+
+/**
+ * Applies one patch to several discs at once, addressed by their external ids
+ * and scoped to APP_CLUB_ID, and reports how many rows it changed.
+ *
+ * A count rather than the three outcomes the single-disc update reports: over a
+ * selection, a missing disc and one a policy refused both come out as the same
+ * shortfall, and telling them apart would mean a second query per id that says
+ * nothing the admin can act on differently.
+ */
+async function updateDiscs(
+  externalIds: string[],
+  patch: Record<string, unknown>,
+  request: Request,
+  failureMessage: string,
+): Promise<number> {
+  const clubId = process.env.APP_CLUB_ID;
+
+  const supabase = createSupabaseServerClient(request);
+
+  const { data, error } = await supabase
+    .from('discs')
+    .update(patch)
+    .in('external_id', externalIds)
+    .eq('club_id', clubId)
+    .select('external_id');
+
+  if (error) {
+    throw new Error(`${failureMessage}: ${error.message}`);
+  }
+
+  return data?.length ?? 0;
+}
+
+/** Marks several discs as returned to their owners, all on the same date. */
+export async function markDiscsAsReturned(
+  externalIds: string[],
+  details: DiscReturnDetails,
+  request: Request,
+): Promise<number> {
+  return updateDiscs(externalIds, returnPatch(details), request, RETURN_FAILURE);
+}
+
+/** Marks several discs as free to be sold or donated, all on the same date. */
+export async function markDiscsForDisposal(
+  externalIds: string[],
+  details: DiscDisposalDetails,
+  request: Request,
+): Promise<number> {
+  return updateDiscs(externalIds, disposalPatch(details), request, DISPOSAL_FAILURE);
 }
