@@ -26,6 +26,8 @@ const styles = stylex.create({
 type SelectProps = {
   id?: string;
   name?: string;
+  /** For a select with no visible label of its own. */
+  'aria-label'?: string;
   value?: string;
   defaultValue?: string;
   disabled?: boolean;

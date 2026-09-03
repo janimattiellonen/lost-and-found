@@ -24,7 +24,7 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
-import SelectedDiscsActions from '~/features/discs/list/SelectedDiscsActions';
+import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
   ArrowUpwardIcon,
@@ -354,13 +354,13 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
   // Keyed on external id (see getRowId), so a tick survives re-sorting.
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
+  const rows = useMemo(() => mapToDataRows(discs), [discs]);
+
   /** Opens the given panel on the given disc, or closes it if already open. */
   const toggleForm = (externalId: string, kind: PanelKind): void =>
     setOpenForm((current) =>
       current?.externalId === externalId && current.kind === kind ? null : { externalId, kind },
     );
-
-  const rows = useMemo(() => mapToDataRows(discs), [discs]);
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
@@ -372,35 +372,33 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
               id: 'select',
               enableSorting: false,
               enableResizing: false,
+              // Clears the selection, and does nothing else. There is
+              // deliberately no way to tick every disc: the actions behind a
+              // selection cannot be undone, and one click that arms all of
+              // them is the mis-click worth designing out. Emptying a
+              // selection is safe, so that half stays.
               header: ({ table }) => {
-                // Counted over the rows on screen rather than asked of the
-                // table, so the box agrees with the filtered list the admin is
-                // looking at.
-                const selectable = table.getRowModel().rows.filter((row) => row.getCanSelect());
-                const selected = selectable.filter((row) => row.getIsSelected());
-                const allSelected = selectable.length > 0 && selected.length === selectable.length;
+                const selected = table.getRowModel().rows.filter((row) => row.getIsSelected()).length;
+
+                if (selected === 0) {
+                  return null;
+                }
 
                 return (
                   <Checkbox
-                    aria-label={allSelected ? 'Poista kaikkien kiekkojen valinta' : 'Valitse kaikki kiekot'}
-                    checked={allSelected}
-                    indeterminate={selected.length > 0 && !allSelected}
-                    disabled={selectable.length === 0}
-                    onChange={() => table.toggleAllRowsSelected(!allSelected)}
+                    aria-label="Poista kaikkien kiekkojen valinta"
+                    checked
+                    onChange={() => table.resetRowSelection()}
                   />
                 );
               },
               cell: ({ row }) => (
-                // A disc with no phone number cannot be messaged, so it cannot
-                // be part of a batch; the title says why the box is dead.
-                <span title={row.getCanSelect() ? undefined : 'Kiekolla ei ole puhelinnumeroa'}>
-                  <Checkbox
-                    aria-label={`Valitse kiekko ${row.original.discName}`}
-                    checked={row.getIsSelected()}
-                    disabled={!row.getCanSelect()}
-                    onChange={row.getToggleSelectedHandler()}
-                  />
-                </span>
+                <Checkbox
+                  aria-label={`Valitse kiekko ${row.original.discName}`}
+                  checked={row.getIsSelected()}
+                  disabled={!row.getCanSelect()}
+                  onChange={row.getToggleSelectedHandler()}
+                />
               ),
             } satisfies ColumnDef<Row>,
           ]
@@ -548,27 +546,32 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
     // The external id, so a tick follows its disc through a re-sort rather
     // than sticking to a row position. Rows without one cannot be selected.
     getRowId: (row) => row.externalId ?? `row-${row.id}`,
-    // Messaging is the point of a selection, and that needs a number to send
-    // to and an id to record against.
-    enableRowSelection: (row) => !!row.original.externalId && !!row.original.ownerPhoneNumber,
+    // An id to address the disc by is all a selection needs. A missing number
+    // only rules out the message batch, which leaves those discs out itself —
+    // marking a disc returned or deleting it has no use for one.
+    //
+    // Unlimited on purpose: ticking a disc changes nothing, and the actions
+    // that do are capped where they are chosen.
+    enableRowSelection: (row) => !!row.original.externalId,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
   });
 
-  // Taken from the rows on screen, in the order they are shown: the batch then
+  // Taken from the rows on screen, in the order they are shown: a batch then
   // works through the discs the way the admin sees them, and the count in the
   // bar can never stand for discs a filter has since hidden.
-  const selectedExternalIds = table
+  const selectedDiscs: SelectedDisc[] = table
     .getRowModel()
     .rows.filter((row) => row.getIsSelected())
-    .map((row) => row.original.externalId)
-    .filter((externalId): externalId is string => externalId != null);
+    .map((row) => row.original)
+    .filter((disc): disc is Row & { externalId: string } => disc.externalId != null)
+    .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: !!disc.ownerPhoneNumber }));
 
   return (
     <>
-      <SelectedDiscsActions externalIds={selectedExternalIds} onClear={() => table.resetRowSelection()} />
+      <SelectedDiscsActions selected={selectedDiscs} onClear={() => table.resetRowSelection()} onChanged={onChanged} />
 
       <table {...stylex.props(styles.table)}>
         <thead>
