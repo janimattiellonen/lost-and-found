@@ -22,6 +22,10 @@ const PUBLIC_DISC_COLUMNS =
  */
 const PUBLIC_PHONE_DIGITS = 4;
 
+/** What the send-message pages read of a disc, phone number included. */
+const MESSAGING_DISC_COLUMNS =
+  'external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at';
+
 /**
  * Maps the rows behind the disc list, cutting each owner's phone number down to
  * its last digits unless the viewer is signed in.
@@ -106,18 +110,41 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
  * rather than map an absent row.
  */
 export async function getDiscWithFullPhoneNumber(externalId: string): Promise<DiscDTO | null> {
+  const [disc] = await getDiscsWithFullPhoneNumbers([externalId]);
+
+  return disc ?? null;
+}
+
+/**
+ * The same discs as getDiscWithFullPhoneNumber, for a batch of external ids.
+ *
+ * Returned in the order the ids were given, which is the order the admin saw
+ * them in the list, not the order the database happens to return. An id this
+ * club has no disc for is left out rather than held as a gap, so the caller
+ * can tell how many of the selection it actually has.
+ */
+export async function getDiscsWithFullPhoneNumbers(externalIds: string[]): Promise<DiscDTO[]> {
   const clubId = process.env.APP_CLUB_ID;
+
+  if (externalIds.length === 0) {
+    return [];
+  }
 
   const supabase = createConnection();
 
   const { data } = await supabase
     .from('discs')
-    .select('external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
+    .select(MESSAGING_DISC_COLUMNS)
     .eq('club_id', clubId)
-    .eq('external_id', externalId)
-    .maybeSingle();
+    .in('external_id', externalIds);
 
-  return data ? toDTO(data) : null;
+  if (!data) {
+    return [];
+  }
+
+  const byExternalId = new Map(data.map((row: any) => [row.external_id, toDTO(row)]));
+
+  return externalIds.map((externalId) => byExternalId.get(externalId)).filter((disc): disc is DiscDTO => disc != null);
 }
 
 /**
