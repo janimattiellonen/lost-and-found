@@ -5,6 +5,9 @@ import process from 'process';
 import type { MessageLogDTO } from '~/types';
 import { toDTO } from '~/models/MessageLogMapper';
 
+/** The columns behind a disc's sent-message history. */
+const MESSAGE_LOG_COLUMNS = 'id, sent_at, external_id, club_id, content';
+
 export async function markAsSent(externalId: string, content: string, request: Request): Promise<void> {
   const supabase = createSupabaseServerClient(request);
   const clubId = process.env.APP_CLUB_ID;
@@ -23,7 +26,7 @@ export async function getSentMessages(externalId: string, request: Request): Pro
 
   const { data } = await supabase
     .from('message_log')
-    .select('id, sent_at, external_id, club_id, content')
+    .select(MESSAGE_LOG_COLUMNS)
     .eq('external_id', externalId)
     .eq('club_id', clubId);
 
@@ -53,7 +56,7 @@ export async function getSentMessagesByDisc(
 
   const { data } = await supabase
     .from('message_log')
-    .select('id, sent_at, external_id, club_id, content')
+    .select(MESSAGE_LOG_COLUMNS)
     .in('external_id', externalIds)
     .eq('club_id', clubId);
 

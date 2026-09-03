@@ -171,6 +171,11 @@ const styles = stylex.create({
   },
 });
 
+/** Columns sized by their content rather than by a resizable width. */
+function isTightColumn(columnId: string): boolean {
+  return columnId === 'id' || columnId === 'actions' || columnId === 'select';
+}
+
 function mapToDataRows(discs: DiscDTO[]): Row[] {
   return discs.map((disc, index) => ({
     id: index + 1,
@@ -571,8 +576,7 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 const sorted = header.column.getIsSorted();
-                const tight =
-                  header.column.id === 'id' || header.column.id === 'actions' || header.column.id === 'select';
+                const tight = isTightColumn(header.column.id);
                 return (
                   <th
                     key={header.id}
@@ -621,8 +625,7 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
               <Fragment key={row.id}>
                 <tr {...stylex.props(index % 2 === 1 && styles.rowEven)}>
                   {row.getVisibleCells().map((cell) => {
-                    const tight =
-                      cell.column.id === 'id' || cell.column.id === 'actions' || cell.column.id === 'select';
+                    const tight = isTightColumn(cell.column.id);
                     return (
                       <td
                         key={cell.id}

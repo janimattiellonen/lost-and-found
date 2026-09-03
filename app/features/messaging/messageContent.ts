@@ -8,7 +8,7 @@ export function lineBreakToBr(value: string): string {
   return value.replaceAll('\n', '<br/>');
 }
 
-export function replaceTokensWithValues(message: string, disc: DiscDTO): string {
+export function replaceTokensWithValues(message: string, disc: Pick<DiscDTO, 'discColour' | 'discName'>): string {
   return message
     .replace('[colour]', disc.discColour ? disc.discColour : '')
     .replace('[disc]', disc.discName ? disc.discName : '');

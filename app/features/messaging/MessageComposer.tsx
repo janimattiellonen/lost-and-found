@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, type JSX } from 'react';
 
 import { Form, useFetcher } from 'react-router';
 
+import type { ComposerDisc, ComposerMessage } from '~/features/messaging/composerData';
 import { convertLineBreaks, lineBreakToBr, replaceTokensWithValues } from '~/features/messaging/messageContent';
-import type { DiscDTO, MessageLogDTO, MessageTemplateDTO } from '~/types';
+import type { MessageTemplateDTO } from '~/types';
 import { formatDate, formatPhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
@@ -15,9 +16,9 @@ import TextField from '~/ui/TextField';
 import Wrapper from '~/ui/Wrapper';
 
 type Props = {
-  disc: DiscDTO;
+  disc: ComposerDisc;
   messageTemplates: MessageTemplateDTO[];
-  sentMessages: MessageLogDTO[];
+  sentMessages: ComposerMessage[];
   /** Peru: one disc's message abandoned. */
   onCancel: () => void;
   /**
@@ -29,14 +30,6 @@ type Props = {
   /** Where this disc sits in a selection. Absent for a single disc. */
   progress?: { position: number; total: number };
 };
-
-/**
- * The number as the phone should receive it: no grouping spaces, which an
- * sms: target does not take.
- */
-function toDiallable(phoneNumber: string): string {
-  return phoneNumber.replace(/\s/g, '');
-}
 
 /**
  * Composing one message to one disc's owner.
@@ -202,7 +195,7 @@ export default function MessageComposer({
         <Wrapper>
           <H2 className="mt-8">Lähetetyt viestit</H2>
 
-          {sentMessages.map((sentMessage: MessageLogDTO, index: number) => {
+          {sentMessages.map((sentMessage: ComposerMessage, index: number) => {
             return (
               <PaperItem key={index}>
                 <div dangerouslySetInnerHTML={{ __html: sentMessage.content }} />
@@ -215,4 +208,12 @@ export default function MessageComposer({
       )}
     </div>
   );
+}
+
+/**
+ * The number as the phone should receive it: no grouping spaces, which an
+ * sms: target does not take.
+ */
+function toDiallable(phoneNumber: string): string {
+  return phoneNumber.replace(/\s/g, '');
 }

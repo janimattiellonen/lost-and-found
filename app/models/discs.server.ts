@@ -22,6 +22,10 @@ const PUBLIC_DISC_COLUMNS =
  */
 const PUBLIC_PHONE_DIGITS = 4;
 
+/** What the send-message pages read of a disc, phone number included. */
+const MESSAGING_DISC_COLUMNS =
+  'external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at';
+
 /**
  * Maps the rows behind the disc list, cutting each owner's phone number down to
  * its last digits unless the viewer is signed in.
@@ -106,18 +110,9 @@ export async function getDiscsForStats(): Promise<DiscDTO[]> {
  * rather than map an absent row.
  */
 export async function getDiscWithFullPhoneNumber(externalId: string): Promise<DiscDTO | null> {
-  const clubId = process.env.APP_CLUB_ID;
+  const [disc] = await getDiscsWithFullPhoneNumbers([externalId]);
 
-  const supabase = createConnection();
-
-  const { data } = await supabase
-    .from('discs')
-    .select('external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
-    .eq('club_id', clubId)
-    .eq('external_id', externalId)
-    .maybeSingle();
-
-  return data ? toDTO(data) : null;
+  return disc ?? null;
 }
 
 /**
@@ -139,7 +134,7 @@ export async function getDiscsWithFullPhoneNumbers(externalIds: string[]): Promi
 
   const { data } = await supabase
     .from('discs')
-    .select('external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at')
+    .select(MESSAGING_DISC_COLUMNS)
     .eq('club_id', clubId)
     .in('external_id', externalIds);
 

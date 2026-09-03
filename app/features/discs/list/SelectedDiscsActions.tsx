@@ -1,6 +1,5 @@
 import type { JSX } from 'react';
 
-import { buildSendBatchHref, MAX_BATCH_SIZE } from '~/lib/messageBatchUrl';
 import Button from '~/ui/Button';
 
 type Props = {
@@ -14,13 +13,18 @@ type Props = {
  *
  * Shown only once something is selected: an empty bar above the table would be
  * clutter for the far more common case of just reading the list.
+ *
+ * The link is written out here, as the row's own message icon writes out
+ * /message/send/:externalId. How many discs one batch may carry is the send
+ * page's rule, and it says so itself rather than being second-guessed from
+ * this side.
  */
 export default function SelectedDiscsActions({ externalIds, onClear }: Props): JSX.Element | null {
   if (externalIds.length === 0) {
     return null;
   }
 
-  const isTooMany = externalIds.length > MAX_BATCH_SIZE;
+  const href = `/message/send-batch?ids=${externalIds.join(',')}`;
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-4">
@@ -28,13 +32,9 @@ export default function SelectedDiscsActions({ externalIds, onClear }: Props): J
         {externalIds.length} {externalIds.length === 1 ? 'kiekko' : 'kiekkoa'} valittu
       </span>
 
-      {isTooMany ? (
-        <span className="text-sm">Valitse enintään {MAX_BATCH_SIZE} kiekkoa kerrallaan.</span>
-      ) : (
-        <Button variant="contained" to={buildSendBatchHref(externalIds)}>
-          Lähetä sms valituille henkilöille
-        </Button>
-      )}
+      <Button variant="contained" to={href}>
+        Lähetä sms valituille henkilöille
+      </Button>
 
       <Button variant="outlined" onClick={onClear}>
         Tyhjennä valinta
