@@ -1,19 +1,29 @@
 import { describe, expect, it } from 'vitest';
 
 import { disposalMethodLabel } from '~/features/discs/disposal/disposalMethod';
+import { returnMethodLabel } from '~/features/discs/return/returnMethod';
 
-import { batchActionOutcome, confirmBatchAction, disposalMethodFor, isBatchAction } from './batchAction';
+import {
+  batchActionOutcome,
+  batchActionOrder,
+  confirmBatchAction,
+  disposalMethodFor,
+  isBatchAction,
+  returnMethodFor,
+} from './batchAction';
 
 describe('isBatchAction', () => {
-  it('accepts the four actions the bar offers', () => {
-    expect(isBatchAction('delete')).toBe(true);
-    expect(isBatchAction('return')).toBe(true);
-    expect(isBatchAction('sell')).toBe(true);
-    expect(isBatchAction('donate')).toBe(true);
+  it('accepts the five actions the dropdown offers', () => {
+    expect(batchActionOrder.every(isBatchAction)).toBe(true);
+    expect(batchActionOrder).toHaveLength(5);
   });
 
   it('rejects anything else a request might carry', () => {
+    // 'message' is the dropdown's sixth entry but not a batch write, and
+    // 'return' and 'disposal' are the names from before either mark carried
+    // its method.
     expect(isBatchAction('message')).toBe(false);
+    expect(isBatchAction('return')).toBe(false);
     expect(isBatchAction('disposal')).toBe(false);
     expect(isBatchAction('')).toBe(false);
     expect(isBatchAction(undefined)).toBe(false);
@@ -24,21 +34,22 @@ describe('isBatchAction', () => {
 describe('confirmBatchAction', () => {
   it('says what is about to happen and to how many discs', () => {
     expect(confirmBatchAction('delete', 12)).toBe('Poistetaanko 12 kiekkoa? Poistoa ei voi peruuttaa.');
-    expect(confirmBatchAction('return', 12)).toBe('Merkitäänkö 12 kiekkoa palautetuksi?');
+    expect(confirmBatchAction('returnByMail', 12)).toBe('Merkitäänkö 12 kiekkoa palautetuksi (postitettu)?');
+    expect(confirmBatchAction('returnPickedUp', 12)).toBe('Merkitäänkö 12 kiekkoa palautetuksi (noudettu)?');
     expect(confirmBatchAction('sell', 12)).toBe('Merkitäänkö 12 kiekkoa myytäväksi?');
     expect(confirmBatchAction('donate', 12)).toBe('Merkitäänkö 12 kiekkoa lahjoitettavaksi?');
   });
 
   it('counts one disc in the singular', () => {
     expect(confirmBatchAction('delete', 1)).toBe('Poistetaanko 1 kiekko? Poistoa ei voi peruuttaa.');
-    expect(confirmBatchAction('return', 1)).toBe('Merkitäänkö 1 kiekko palautetuksi?');
+    expect(confirmBatchAction('returnByMail', 1)).toBe('Merkitäänkö 1 kiekko palautetuksi (postitettu)?');
   });
 });
 
 describe('batchActionOutcome', () => {
   it('reports what was done when every disc was reached', () => {
     expect(batchActionOutcome('delete', 12, 12)).toBe('Poistettiin 12 kiekkoa.');
-    expect(batchActionOutcome('return', 1, 1)).toBe('Merkittiin palautetuksi 1 kiekko.');
+    expect(batchActionOutcome('returnPickedUp', 1, 1)).toBe('Merkittiin palautetuksi (noudettu) 1 kiekko.');
     expect(batchActionOutcome('sell', 3, 3)).toBe('Merkittiin myytäväksi 3 kiekkoa.');
     expect(batchActionOutcome('donate', 3, 3)).toBe('Merkittiin lahjoitettavaksi 3 kiekkoa.');
   });
@@ -47,17 +58,24 @@ describe('batchActionOutcome', () => {
     expect(batchActionOutcome('delete', 10, 12)).toBe(
       'Poistettiin 10 kiekkoa. 2 kiekkoa jäi käsittelemättä – kiekkoja ei löytynyt tai niitä ei voitu muuttaa.',
     );
-    expect(batchActionOutcome('return', 1, 2)).toBe(
-      'Merkittiin palautetuksi 1 kiekko. 1 kiekko jäi käsittelemättä – kiekkoja ei löytynyt tai niitä ei voitu muuttaa.',
+    expect(batchActionOutcome('returnByMail', 1, 2)).toBe(
+      'Merkittiin palautetuksi (postitettu) 1 kiekko. 1 kiekko jäi käsittelemättä – kiekkoja ei löytynyt tai niitä ei voitu muuttaa.',
     );
   });
 });
 
-describe('disposalMethodFor', () => {
-  // Against the label rather than the number: the point is that a disc the
-  // club means to sell is not recorded as one it means to give away.
-  it('records the fate the action names', () => {
+// Against the labels rather than the numbers: the point is that a disc the club
+// means to sell is not recorded as one it means to give away, and one handed
+// over at the course is not recorded as posted. Nothing in the UI shows the
+// stored smallint, so an inversion would be invisible.
+describe('the method each action records', () => {
+  it('records the fate a release names', () => {
     expect(disposalMethodLabel(disposalMethodFor('sell'))).toBe('Myydään');
     expect(disposalMethodLabel(disposalMethodFor('donate'))).toBe('Lahjoitetaan');
+  });
+
+  it('records the way a return names', () => {
+    expect(returnMethodLabel(returnMethodFor('returnByMail'))).toBe('Postitettu');
+    expect(returnMethodLabel(returnMethodFor('returnPickedUp'))).toBe('Noudettu');
   });
 });

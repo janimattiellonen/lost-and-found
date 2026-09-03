@@ -2,7 +2,13 @@ import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
 import { deleteDiscs, markDiscsAsReturned, markDiscsForDisposal } from '~/models/discs.server';
 
-import { disposalMethodFor, isBatchAction, MAX_BATCH_ACTION_SIZE, type BatchAction } from './batchAction';
+import {
+  disposalMethodFor,
+  isBatchAction,
+  MAX_BATCH_ACTION_SIZE,
+  returnMethodFor,
+  type MarkAction,
+} from './batchAction';
 
 /** The ids a batch may act on, or the reason this selection is not one. */
 type Selection = { externalIds: string[] } | { error: string };
@@ -28,31 +34,21 @@ function readSelection(value: unknown): Selection {
 }
 
 /**
- * The three actions that record a date: returned to its owner, up for sale, and
- * up for donation.
- *
- * A release carries its method, because which of the two it is comes from the
- * action itself. A return does not: how a disc got back to its owner is a
- * per-disc detail, and over a selection there is no one answer to it, so it is
- * left unanswered — which is what the column holds for any disc marked without
- * one.
+ * The four actions that record a date, each carrying the method its own name
+ * gives: returned by post or in person, up for sale or up for donation.
  */
-function applyMark(
-  action: Exclude<BatchAction, 'delete'>,
-  externalIds: string[],
-  date: string,
-  request: Request,
-): Promise<number> {
-  if (action === 'return') {
-    return markDiscsAsReturned(externalIds, { returnedToOwnerDate: date, returnMethod: null }, request);
+function applyMark(action: MarkAction, externalIds: string[], date: string, request: Request): Promise<number> {
+  if (action === 'returnByMail' || action === 'returnPickedUp') {
+    return markDiscsAsReturned(
+      externalIds,
+      { returnedToOwnerDate: date, returnMethod: returnMethodFor(action) },
+      request,
+    );
   }
 
   return markDiscsForDisposal(
     externalIds,
-    {
-      canBeSoldOrDonatedDate: date,
-      canBeSoldOrDonatedMethod: disposalMethodFor(action),
-    },
+    { canBeSoldOrDonatedDate: date, canBeSoldOrDonatedMethod: disposalMethodFor(action) },
     request,
   );
 }

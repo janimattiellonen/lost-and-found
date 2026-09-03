@@ -3,7 +3,8 @@ import { useState, type JSX } from 'react';
 import { useNavigate } from 'react-router';
 
 import {
-  batchActionLabels,
+  batchActionLabel,
+  batchActionOrder,
   batchActionOutcome,
   confirmBatchAction,
   type BatchAction,
@@ -45,8 +46,8 @@ type Props = {
  */
 type SelectedAction = BatchAction | 'message';
 
-/** The order the dropdown offers them in, messaging first as the most used. */
-const actionOrder: SelectedAction[] = ['message', 'return', 'sell', 'donate', 'delete'];
+/** Messaging first, as the most used; the writes in the order they are listed. */
+const actionOrder: SelectedAction[] = ['message', ...batchActionOrder];
 
 /**
  * What can be done with the discs ticked in the list.
@@ -137,7 +138,7 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
   const options = messageableIds.length > 0 ? actionOrder : actionOrder.filter((option) => option !== 'message');
 
   const labelFor = (option: SelectedAction): string =>
-    option === 'message' ? `Lähetä sms ${messageableIds.length} henkilölle` : batchActionLabels[option];
+    option === 'message' ? `Lähetä sms ${messageableIds.length} henkilölle` : batchActionLabel(option);
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-4">
