@@ -16,6 +16,23 @@ const links = [
   { to: '/notifications', label: 'Ilmoitukset' },
 ];
 
+/**
+ * The menu, with the retrieval list in it for the one club that keeps one.
+ *
+ * The count is what the item is for: it says at a glance whether there is
+ * anything to fetch on the next trip to the storage. An empty list carries no
+ * number rather than a "(0)", which would read as something to act on.
+ */
+function menuLinks(retrievalCount: number | null): { to: string; label: string }[] {
+  if (retrievalCount === null) {
+    return links;
+  }
+
+  const label = retrievalCount > 0 ? `Noutolista (${retrievalCount})` : 'Noutolista';
+
+  return [...links, { to: '/retrieval', label }];
+}
+
 // StyleX has no descendant selectors, so hover/active styling is applied to the
 // links themselves rather than through the surrounding <nav>.
 const styles = stylex.create({
@@ -61,7 +78,17 @@ const styles = stylex.create({
   },
 });
 
-export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
+type AdminMenuProps = {
+  supabase: any;
+  user: any;
+  /**
+   * Discs waiting to be fetched from the club's storage, or null when this club
+   * keeps no retrieval list -- and so has no menu item for it.
+   */
+  retrievalCount: number | null;
+};
+
+export default function AdminMenu({ supabase, user, retrievalCount }: AdminMenuProps): JSX.Element | null {
   const handleLogout = async () => {
     if (!window.confirm('Haluatko varmasti kirjautua ulos?')) {
       return;
@@ -77,7 +104,7 @@ export default function AdminMenu({ supabase, user }: any): JSX.Element | null {
   return (
     <nav {...stylex.props(styles.nav)}>
       <ul {...stylex.props(styles.list)}>
-        {links.map(({ to, label }) => (
+        {menuLinks(retrievalCount).map(({ to, label }) => (
           <li key={to}>
             <NavLink
               to={to}

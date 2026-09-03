@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type JSX } from 'react';
-import { useFetcher } from 'react-router';
+import { useFetcher, useRevalidator } from 'react-router';
 import debounce from 'lodash.debounce';
 
 import H2 from '~/ui/H2';
@@ -17,9 +17,20 @@ import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
 import { getDiscCourseNames } from '~/config/courses';
+import { isRetrievalListEnabled } from '~/config/clubs';
 
 export default function DiscListPage(): JSX.Element {
   const fetcher = useFetcher();
+  // The list itself is loaded by the fetcher, but the retrieval count beside
+  // the menu item comes from the root loader -- and a mark posted with fetch()
+  // revalidates neither. This reloads both, so the count cannot claim a disc is
+  // still waiting to be fetched right after it was marked returned.
+  const { revalidate } = useRevalidator();
+
+  const reload = (): void => {
+    fetcher.load('/discs/data');
+    void revalidate();
+  };
 
   const [isInfoBoxVisible, showInfoBox] = useState<boolean>(false);
   const [discTerm, setDiscTerm] = useState<string | null>('');
@@ -144,7 +155,12 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable discs={discs} courses={clubCourses} onChanged={() => fetcher.load('/discs/data')} />
+            <DiscTable
+              discs={discs}
+              courses={clubCourses}
+              canRequestRetrieval={isRetrievalListEnabled(clubId)}
+              onChanged={reload}
+            />
           </div>
         )}
         {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}

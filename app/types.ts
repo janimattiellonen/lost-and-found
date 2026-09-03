@@ -1,4 +1,5 @@
 import type { DisposalMethodValue } from '~/features/discs/disposal/disposalMethod';
+import type { RetrievalMethodValue } from '~/features/discs/retrieval/retrievalMethod';
 import type { ReturnMethodValue } from '~/features/discs/return/returnMethod';
 
 export type clubType = {
@@ -61,6 +62,12 @@ export type DiscDTO = {
   course?: string | null;
   /** When the club stopped listing the disc publicly; null while it is listed. */
   archivedAt?: string | null;
+  /** When the owner asked for the disc, putting it on the retrieval list. Null when it is not on it. */
+  retrievalRequestedAt?: string | null;
+  /** When the admin took the disc out of the club's storage; null while it is still there. */
+  retrievedAt?: string | null;
+  /** How the owner asked to get the disc back. */
+  retrievalMethod?: RetrievalMethodValue | null;
 };
 
 export type MessageTemplateDTO = {
@@ -127,4 +134,7 @@ export type DbDiscType = {
   course?: string | null;
   notified_at?: string | null;
   archived_at?: string | null;
+  retrieval_requested_at?: string | null;
+  retrieved_at?: string | null;
+  retrieval_method?: number | null;
 };

@@ -1,5 +1,6 @@
 import type { DbDiscType, DiscDTO } from '~/types';
 import { isDisposalMethod } from '~/features/discs/disposal/disposalMethod';
+import { isRetrievalMethod } from '~/features/discs/retrieval/retrievalMethod';
 import { isReturnMethod } from '~/features/discs/return/returnMethod';
 
 function isEmpty(str?: string | null): boolean {
@@ -39,6 +40,9 @@ export const toDTO = (raw: any): DiscDTO => {
     course: raw.course,
     notifiedAt: raw.notified_at,
     archivedAt: raw.archived_at,
+    retrievalRequestedAt: raw.retrieval_requested_at,
+    retrievedAt: raw.retrieved_at,
+    retrievalMethod: isRetrievalMethod(raw.retrieval_method) ? raw.retrieval_method : null,
   };
 };
 
@@ -69,5 +73,8 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     course: discDTO.course,
     notified_at: discDTO.notifiedAt,
     archived_at: discDTO.archivedAt,
+    retrieval_requested_at: discDTO.retrievalRequestedAt,
+    retrieved_at: discDTO.retrievedAt,
+    retrieval_method: discDTO.retrievalMethod,
   };
 };

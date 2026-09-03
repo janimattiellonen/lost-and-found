@@ -60,3 +60,15 @@ export function getClubLostDiscsUrl(clubId: number | null): string | null {
 export function getClubContactEmail(clubId: number | null): string {
   return CONTACT_EMAILS[clubId ?? TALIN_TALLAAJAT] ?? CONTACT_EMAILS[TALIN_TALLAAJAT];
 }
+
+/**
+ * Whether this club's admin keeps a retrieval list.
+ *
+ * Only Talin Tallaajat stores its discs somewhere the admin has to travel to,
+ * so only there does "the owner asked for this one" mean an errand worth
+ * writing down. For every other club the page, the menu item and the row
+ * action are simply absent.
+ */
+export function isRetrievalListEnabled(clubId: number | null): boolean {
+  return clubId === TALIN_TALLAAJAT;
+}

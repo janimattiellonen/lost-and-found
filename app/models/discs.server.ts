@@ -7,11 +7,23 @@ import type { DiscDTO } from '~/types';
 
 import { fromDTO, toDTO } from '~/models/DiscMapper';
 import type { DiscDisposalDetails } from '~/features/discs/disposal/discDisposal';
+import type { RetrievalListDisc } from '~/features/discs/retrieval/discRetrieval';
+import { isRetrievalMethod, type RetrievalMethodValue } from '~/features/discs/retrieval/retrievalMethod';
 import type { DiscReturnDetails } from '~/features/discs/return/discReturn';
 
 /** The columns the public disc list is built from. Safe for anyone to see. */
 const PUBLIC_DISC_COLUMNS =
   'external_id, internal_disc_id, disc_name, disc_colour, disc_manufacturer, owner_name, owner_phone_number, owner_club_name, added_at, course';
+
+/**
+ * Whether a disc is already waiting to be fetched out of storage.
+ *
+ * Sent to a signed-in visitor only, so the row action in the list can say that
+ * this disc is on the retrieval list rather than silently putting it there
+ * twice. Nothing about the retrieval list is any of an anonymous visitor's
+ * business.
+ */
+const RETRIEVAL_STATE_COLUMNS = 'retrieval_requested_at, retrieved_at, retrieval_method';
 
 /**
  * How many digits of an owner's phone number the public list may show.
@@ -64,7 +76,9 @@ export async function getDiscs(includeAdminFields = false): Promise<DiscDTO[]> {
 
   const { data } = await supabase
     .from('discs')
-    .select(includeAdminFields ? `${PUBLIC_DISC_COLUMNS}, additional_info` : PUBLIC_DISC_COLUMNS)
+    .select(
+      includeAdminFields ? `${PUBLIC_DISC_COLUMNS}, additional_info, ${RETRIEVAL_STATE_COLUMNS}` : PUBLIC_DISC_COLUMNS,
+    )
     .order('disc_name', { ascending: true })
     .eq('is_returned_to_owner', false)
     .eq('can_be_sold_or_donated', false)
@@ -448,3 +462,111 @@ type MarkDiscsInput<D> = {
   externalIds: string[];
   details: D;
 };
+
+/**
+ * The retrieval list: discs whose owners have asked for them, and which are
+ * still sitting in the club's storage.
+ *
+ * The columns the admin used to copy into a notepad app, plus the id the two
+ * actions on the page are addressed by. The owner's phone number is the point
+ * of the list, so this is only ever read behind the signed-in page route.
+ */
+const RETRIEVAL_LIST_COLUMNS =
+  'external_id, disc_name, disc_colour, owner_name, owner_phone_number, added_at, retrieval_method';
+
+/**
+ * The discs currently waiting to be fetched out of storage, oldest request
+ * first — the order the admin works through them in.
+ *
+ * Narrowed the same way the public list is: a disc that has since been returned,
+ * released for sale or donation, or archived has no errand left in it, so it
+ * drops off the list without anyone having to tick it off.
+ */
+export async function getDiscsForRetrieval(request: Request): Promise<RetrievalListDisc[]> {
+  const supabase = createSupabaseServerClient(request);
+
+  const { data, error } = await supabase
+    .from('discs')
+    .select(RETRIEVAL_LIST_COLUMNS)
+    .eq('club_id', process.env.APP_CLUB_ID)
+    .not('retrieval_requested_at', 'is', null)
+    .is('retrieved_at', null)
+    .eq('is_returned_to_owner', false)
+    .eq('can_be_sold_or_donated', false)
+    .is('archived_at', null)
+    .order('retrieval_requested_at', { ascending: true });
+
+  if (error) {
+    throw new Error(`Noutolistan haku epäonnistui: ${error.message}`);
+  }
+
+  return (data ?? []).map((row: any) => ({
+    externalId: row.external_id,
+    discName: row.disc_name,
+    discColour: row.disc_colour,
+    addedAt: row.added_at ?? null,
+    ownerName: row.owner_name ?? null,
+    ownerPhoneNumber: row.owner_phone_number ?? null,
+    retrievalMethod: isRetrievalMethod(row.retrieval_method) ? row.retrieval_method : null,
+  }));
+}
+
+/**
+ * How many discs are on the retrieval list.
+ *
+ * Read on every page load for the count beside the menu item, so it counts in
+ * the database rather than fetching the rows to measure them — and never reads
+ * a phone number to do it.
+ */
+export async function countDiscsForRetrieval(request: Request): Promise<number> {
+  const supabase = createSupabaseServerClient(request);
+
+  const { count, error } = await supabase
+    .from('discs')
+    .select('external_id', { count: 'exact', head: true })
+    .eq('club_id', process.env.APP_CLUB_ID)
+    .not('retrieval_requested_at', 'is', null)
+    .is('retrieved_at', null)
+    .eq('is_returned_to_owner', false)
+    .eq('can_be_sold_or_donated', false)
+    .is('archived_at', null);
+
+  if (error) {
+    throw new Error(`Noutolistan laskenta epäonnistui: ${error.message}`);
+  }
+
+  return count ?? 0;
+}
+
+/**
+ * Puts one disc on the retrieval list, addressed by its external id.
+ *
+ * Clears retrieved_at as well, so a disc that was fetched once and then found
+ * its way back into storage can be put on the list again rather than being
+ * stuck as already retrieved.
+ *
+ * Scoped to APP_CLUB_ID as well as the uuid.
+ */
+export async function markDiscForRetrieval(
+  externalId: string,
+  retrievalMethod: RetrievalMethodValue,
+  request: Request,
+): Promise<MarkOutcome> {
+  return updateDisc(
+    externalId,
+    { retrieval_requested_at: new Date().toISOString(), retrieved_at: null, retrieval_method: retrievalMethod },
+    request,
+    'Noutolistalle lisääminen epäonnistui',
+  );
+}
+
+/**
+ * Records that the disc is out of the club's storage, which takes it off the
+ * retrieval list.
+ *
+ * Says nothing about the owner having it: the handover is the return mark, and
+ * it can be days later.
+ */
+export async function markDiscRetrieved(externalId: string, request: Request): Promise<MarkOutcome> {
+  return updateDisc(externalId, { retrieved_at: new Date().toISOString() }, request, 'Noudetuksi merkintä epäonnistui');
+}

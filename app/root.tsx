@@ -19,7 +19,8 @@ import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
-import { getClubFavicon } from '~/config/clubs';
+import { getClubFavicon, isRetrievalListEnabled } from '~/config/clubs';
+import { countDiscsForRetrieval } from '~/models/discs.server';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
 // directives unexpanded). React Router injects the resulting stylesheet for SSR.
@@ -43,11 +44,33 @@ export async function loader({ request }: LoaderFunctionArgs) {
     {
       env,
       session,
+      retrievalCount: await loadRetrievalCount(request, session != null),
     },
     {
       headers,
     },
   );
+}
+
+/**
+ * How many discs are waiting to be fetched from the club's storage, for the
+ * count beside the menu item. Null when there is no menu item: nobody is
+ * signed in, or this club keeps no retrieval list.
+ *
+ * Read on every page load, so a failure gives back null rather than an error
+ * page for the whole app -- the menu item is then simply absent, which is the
+ * same thing every other club sees.
+ */
+async function loadRetrievalCount(request: Request, isSignedIn: boolean): Promise<number | null> {
+  if (!isSignedIn || !isRetrievalListEnabled(parseInt(process.env.APP_CLUB_ID!, 10))) {
+    return null;
+  }
+
+  try {
+    return await countDiscsForRetrieval(request);
+  } catch {
+    return null;
+  }
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -65,7 +88,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function App() {
-  const { env, session } = useLoaderData();
+  const { env, session, retrievalCount } = useLoaderData();
   const { revalidate } = useRevalidator();
   const location = useLocation();
   const [supabase] = useState(() => createBrowserClient(env.SUPABASE_URL, env.SUPABASE_KEY));
@@ -106,7 +129,7 @@ export default function App() {
         {import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" suppressHydrationWarning />}
       </head>
       <body>
-        {showHeader && <AdminMenu supabase={supabase} user={session?.user} />}
+        {showHeader && <AdminMenu supabase={supabase} user={session?.user} retrievalCount={retrievalCount} />}
         {/* The menu spans the viewport edges; everything below keeps the page inset
             that used to come from the body margin. */}
         <div style={{ margin: '1rem' }}>
