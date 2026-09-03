@@ -225,7 +225,7 @@ export async function createDiscs(discs: DiscDTO[], request: Request): Promise<s
  * another club — so the caller can tell "already gone" from "deleted".
  */
 export async function deleteDisc(externalId: string, request: Request): Promise<boolean> {
-  return (await deleteDiscs([externalId], request)) > 0;
+  return (await deleteDiscs(request, [externalId])) > 0;
 }
 
 /**
@@ -238,7 +238,7 @@ export async function deleteDisc(externalId: string, request: Request): Promise<
  * it asked for: an id that no longer resolves is not an error, but a shortfall
  * is worth reporting.
  */
-export async function deleteDiscs(externalIds: string[], request: Request): Promise<number> {
+export async function deleteDiscs(request: Request, externalIds: string[]): Promise<number> {
   const clubId = process.env.APP_CLUB_ID;
 
   const supabase = createSupabaseServerClient(request);
@@ -394,11 +394,15 @@ function disposalPatch(details: DiscDisposalDetails): Record<string, unknown> {
  * shortfall, and telling them apart would mean a second query per id that says
  * nothing the admin can act on differently.
  */
+type UpdateDiscsInput = {
+  externalIds: string[];
+  patch: Record<string, unknown>;
+  failureMessage: string;
+};
+
 async function updateDiscs(
-  externalIds: string[],
-  patch: Record<string, unknown>,
   request: Request,
-  failureMessage: string,
+  { externalIds, patch, failureMessage }: UpdateDiscsInput,
 ): Promise<number> {
   const clubId = process.env.APP_CLUB_ID;
 
@@ -418,20 +422,29 @@ async function updateDiscs(
   return data?.length ?? 0;
 }
 
-/** Marks several discs as returned to their owners, all on the same date. */
+/**
+ * Marks several discs as returned to their owners, or as free to be sold or
+ * donated, all on the same date.
+ *
+ * These take the request first and their arguments in an object, which is the
+ * documented shape for anything past two parameters; the single-disc marks
+ * above predate it and are left as they are rather than migrated from here.
+ */
 export async function markDiscsAsReturned(
-  externalIds: string[],
-  details: DiscReturnDetails,
   request: Request,
+  { externalIds, details }: MarkDiscsInput<DiscReturnDetails>,
 ): Promise<number> {
-  return updateDiscs(externalIds, returnPatch(details), request, RETURN_FAILURE);
+  return updateDiscs(request, { externalIds, patch: returnPatch(details), failureMessage: RETURN_FAILURE });
 }
 
-/** Marks several discs as free to be sold or donated, all on the same date. */
 export async function markDiscsForDisposal(
-  externalIds: string[],
-  details: DiscDisposalDetails,
   request: Request,
+  { externalIds, details }: MarkDiscsInput<DiscDisposalDetails>,
 ): Promise<number> {
-  return updateDiscs(externalIds, disposalPatch(details), request, DISPOSAL_FAILURE);
+  return updateDiscs(request, { externalIds, patch: disposalPatch(details), failureMessage: DISPOSAL_FAILURE });
 }
+
+type MarkDiscsInput<D> = {
+  externalIds: string[];
+  details: D;
+};

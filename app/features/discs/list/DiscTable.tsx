@@ -366,17 +366,28 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
   // Keyed on external id (see getRowId), so a tick survives re-sorting.
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  // Read off the selection state rather than asked of the table: the cap is
-  // part of the table's own configuration, which cannot query itself.
-  const selectedCount = Object.values(rowSelection).filter(Boolean).length;
+  const rows = useMemo(() => mapToDataRows(discs), [discs]);
+
+  /**
+   * How many of the discs on screen are ticked.
+   *
+   * Counted over the discs this table was given, not over every key in the
+   * selection state: the list arrives already filtered, and a tick survives a
+   * filter that hides its disc. Counting the hidden ones would let the cap
+   * block a tick while the bar showed room for it, and the bar, the
+   * confirmation and the request all count what is on screen — one number for
+   * all four, or they contradict each other.
+   *
+   * Read off the selection state rather than asked of the table because the cap
+   * is part of the table's own configuration, which cannot query itself.
+   */
+  const selectedCount = rows.filter((row) => row.externalId != null && rowSelection[row.externalId]).length;
 
   /** Opens the given panel on the given disc, or closes it if already open. */
   const toggleForm = (externalId: string, kind: PanelKind): void =>
     setOpenForm((current) =>
       current?.externalId === externalId && current.kind === kind ? null : { externalId, kind },
     );
-
-  const rows = useMemo(() => mapToDataRows(discs), [discs]);
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [

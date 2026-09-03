@@ -23,8 +23,23 @@ export function isBatchAction(value: unknown): value is BatchAction {
   return typeof value === 'string' && (batchActions as readonly string[]).includes(value);
 }
 
-/** The marks: everything but a delete records a date and a method. */
-export type MarkAction = Exclude<BatchAction, 'delete'>;
+/**
+ * What an action writes beyond the date: which pair of columns, and the method
+ * that goes in them. Null for a delete, which records nothing.
+ *
+ * The method is a smallint in the database and nothing in the UI shows the
+ * number, so a mapping that had sale and donation the wrong way round — or
+ * posted and collected — would be invisible. It is declared once, in the table
+ * below beside the action's own wording, and pinned by tests against the
+ * labels.
+ */
+export type BatchMark =
+  | { columns: 'return'; method: ReturnMethodValue }
+  | { columns: 'disposal'; method: DisposalMethodValue };
+
+export function markFor(action: BatchAction): BatchMark | null {
+  return copy[action].mark;
+}
 
 /**
  * The most discs that may be ticked at once.
@@ -41,34 +56,21 @@ export type MarkAction = Exclude<BatchAction, 'delete'>;
  */
 export const MAX_SELECTED_DISCS = 20;
 
-/**
- * Which fate a release records, and how a return got there, read off the action
- * itself.
- *
- * Both are a smallint in the database and nothing in the UI shows the number,
- * so an inverted mapping would write "donate" on every disc the club means to
- * sell, or "posted" on every one handed over in person, without anything
- * looking wrong. Pinned by tests against the labels.
- */
-export function disposalMethodFor(action: 'sell' | 'donate'): DisposalMethodValue {
-  return action === 'sell' ? DisposalMethod.Sold : DisposalMethod.Donated;
-}
-
-export function returnMethodFor(action: 'returnByMail' | 'returnPickedUp'): ReturnMethodValue {
-  return action === 'returnByMail' ? ReturnMethod.ByMail : ReturnMethod.PickedUp;
-}
-
 /** A count of discs, with the noun in the case Finnish puts it in. */
 function discCount(count: number): string {
   return count === 1 ? '1 kiekko' : `${count} kiekkoa`;
 }
 
 /**
- * What each action is called where it is offered, what it asks before it runs,
- * and what it calls what it did afterwards.
+ * Everything that varies per action: what it is called where it is offered,
+ * what it asks before it runs, what it calls what it did afterwards, and what
+ * it writes.
  *
- * The three kept together per action rather than in a table each: they are the
- * same sentence in three tenses, and apart they drifted.
+ * One row per action rather than a table per field. The three wordings are the
+ * same sentence in three tenses and had already drifted apart when they were
+ * separate; the mark belongs with them because an action's name and what it
+ * writes are the same decision, and a reader checking that "myytäviksi" really
+ * records a sale should not have to hold two files open.
  *
  * The labels say nothing about a selection — the dropdown they sit in is beside
  * the count of ticked discs, which is what says what they act on. What the
@@ -76,31 +78,39 @@ function discCount(count: number): string {
  * behind the dialog, and naming a dozen of them would be read as noise and
  * clicked past.
  */
-const copy: Record<BatchAction, { label: string; asks: (discs: string) => string; did: string }> = {
+const copy: Record<
+  BatchAction,
+  { label: string; asks: (discs: string) => string; did: string; mark: BatchMark | null }
+> = {
   returnByMail: {
     label: 'Merkitse palautetuiksi (postitettu)',
     asks: (discs) => `Merkitäänkö ${discs} palautetuksi (postitettu)?`,
     did: 'Merkittiin palautetuksi (postitettu)',
+    mark: { columns: 'return', method: ReturnMethod.ByMail },
   },
   returnPickedUp: {
     label: 'Merkitse palautetuiksi (noudettu)',
     asks: (discs) => `Merkitäänkö ${discs} palautetuksi (noudettu)?`,
     did: 'Merkittiin palautetuksi (noudettu)',
+    mark: { columns: 'return', method: ReturnMethod.PickedUp },
   },
   sell: {
     label: 'Merkitse myytäviksi',
     asks: (discs) => `Merkitäänkö ${discs} myytäväksi?`,
     did: 'Merkittiin myytäväksi',
+    mark: { columns: 'disposal', method: DisposalMethod.Sold },
   },
   donate: {
     label: 'Merkitse lahjoitettaviksi',
     asks: (discs) => `Merkitäänkö ${discs} lahjoitettavaksi?`,
     did: 'Merkittiin lahjoitettavaksi',
+    mark: { columns: 'disposal', method: DisposalMethod.Donated },
   },
   delete: {
     label: 'Poista',
     asks: (discs) => `Poistetaanko ${discs}? Poistoa ei voi peruuttaa.`,
     did: 'Poistettiin',
+    mark: null,
   },
 };
 

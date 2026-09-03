@@ -5,12 +5,10 @@ import { useNavigate } from 'react-router';
 import {
   batchActionLabel,
   batchActionOrder,
-  batchActionOutcome,
-  confirmBatchAction,
   MAX_SELECTED_DISCS,
   type BatchAction,
 } from '~/features/discs/batch/batchAction';
-import { runBatchAction } from '~/features/discs/batch/runBatchAction';
+import { useBatchAction } from '~/features/discs/batch/useBatchAction';
 import Button from '~/ui/Button';
 import Select, { MenuItem } from '~/ui/Select';
 
@@ -19,9 +17,8 @@ import Select, { MenuItem } from '~/ui/Select';
  *
  * The selection rides in the query string, and a request line past about eight
  * kilobytes is refused by the server with a 431 before any of this app's code
- * runs — a selection of every disc in the list reaches fourteen. Well clear of
- * that, and still far more than the send page will accept, so a batch it would
- * take is never blocked here.
+ * runs. A selection is capped well below that now, so this is a backstop rather
+ * than something reachable.
  */
 const MAX_HREF_LENGTH = 6000;
 
@@ -41,9 +38,9 @@ type Props = {
 /**
  * What the bar can be asked to do.
  *
- * Messaging sits alongside the three writes here because it is a fourth thing
- * to do with a selection, but it is not one of them: it navigates to a walk
- * through the owners one at a time, and the server knows nothing of it.
+ * Messaging sits alongside the writes here because it is another thing to do
+ * with a selection, but it is not one of them: it navigates to a walk through
+ * the owners one at a time, and the server knows nothing of it.
  */
 type SelectedAction = BatchAction | 'message';
 
@@ -58,58 +55,39 @@ const actionOrder: SelectedAction[] = ['message', ...batchActionOrder];
  * one more render after an action, with the selection cleared, so its report of
  * what happened does not vanish with the ticks.
  *
- * One dropdown and a button rather than a button per action: four of them side
+ * One dropdown and a button rather than a button per action: five of them side
  * by side filled the width above the table and gave a delete the same weight as
- * the one action that is used daily.
+ * the one action used daily.
  */
 export default function SelectedDiscsActions({ selected, onClear, onChanged }: Props): JSX.Element | null {
   const navigate = useNavigate();
 
   const [action, setAction] = useState<SelectedAction | ''>('');
-  const [isBusy, setIsBusy] = useState(false);
-  const [notice, setNotice] = useState<Notice | null>(null);
+
+  const { isBusy, notice, run, fail } = useBatchAction({
+    onDone: () => {
+      setAction('');
+      onClear();
+      onChanged?.();
+    },
+  });
 
   // Texting needs a number to send to, and a disc can be ticked without one:
-  // those are simply left out of the message batch rather than kept out of the
-  // selection, which the other three actions have no use for a number in.
+  // those are left out of the message batch rather than kept out of the
+  // selection, which the writes have no use for a number in.
   const messageableIds = selected.filter((disc) => disc.hasPhoneNumber).map((disc) => disc.externalId);
+  const withoutNumber = selected.length - messageableIds.length;
 
   const startMessaging = (): void => {
     const href = `/message/send-batch?ids=${messageableIds.join(',')}`;
 
     if (href.length > MAX_HREF_LENGTH) {
-      setNotice({ kind: 'error', text: TOO_LARGE_TO_SEND });
+      fail(TOO_LARGE_TO_SEND);
 
       return;
     }
 
     navigate(href);
-  };
-
-  const runWrite = async (write: BatchAction): Promise<void> => {
-    const externalIds = selected.map((disc) => disc.externalId);
-
-    if (!window.confirm(confirmBatchAction(write, externalIds.length))) {
-      return;
-    }
-
-    setIsBusy(true);
-    setNotice(null);
-
-    const result = await runBatchAction(write, externalIds);
-
-    setIsBusy(false);
-
-    if (result.status === 'error') {
-      setNotice({ kind: 'error', text: result.message });
-
-      return;
-    }
-
-    setNotice({ kind: 'done', text: batchActionOutcome(write, result.affected, externalIds.length) });
-    setAction('');
-    onClear();
-    onChanged?.();
   };
 
   const handleRun = (): void => {
@@ -123,7 +101,10 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
       return;
     }
 
-    void runWrite(action);
+    void run(
+      action,
+      selected.map((disc) => disc.externalId),
+    );
   };
 
   if (selected.length === 0) {
@@ -169,7 +150,16 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
         Tyhjennä valinta
       </Button>
 
-      {messageableIds.length === 0 && <span className="text-sm">Valituilla kiekoilla ei ole puhelinnumeroa.</span>}
+      {/* Said outright rather than left to be inferred from an sms count that
+          is lower than the number of ticks. The writes still cover every
+          selected disc, so this only qualifies the message option. */}
+      {withoutNumber > 0 && (
+        <span className="text-sm">
+          {messageableIds.length === 0
+            ? 'Valituilla kiekoilla ei ole puhelinnumeroa.'
+            : `${withoutNumber} valitulla kiekolla ei ole puhelinnumeroa – ne jäävät viestin ulkopuolelle.`}
+        </span>
+      )}
 
       {/* Said here as well as on the boxes it disables: the admin who has just
           hit the cap is looking at the count, not hovering a checkbox. */}
@@ -185,13 +175,3 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
     </div>
   );
 }
-
-/**
- * What the bar has to say, and which of the two moments it belongs to.
- *
- * A report of what was done belongs to a finished action, and the selection is
- * empty behind it; ticking the next batch is what makes it stale, so it is only
- * rendered while nothing is selected. An error belongs to a selection that is
- * still there to try again, so it is rendered beside the buttons.
- */
-type Notice = { kind: 'done' | 'error'; text: string };

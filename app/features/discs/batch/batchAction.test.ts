@@ -3,14 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { disposalMethodLabel } from '~/features/discs/disposal/disposalMethod';
 import { returnMethodLabel } from '~/features/discs/return/returnMethod';
 
-import {
-  batchActionOutcome,
-  batchActionOrder,
-  confirmBatchAction,
-  disposalMethodFor,
-  isBatchAction,
-  returnMethodFor,
-} from './batchAction';
+import { batchActionOrder, batchActionOutcome, confirmBatchAction, isBatchAction, markFor } from './batchAction';
 
 describe('isBatchAction', () => {
   it('accepts the five actions the dropdown offers', () => {
@@ -68,14 +61,44 @@ describe('batchActionOutcome', () => {
 // means to sell is not recorded as one it means to give away, and one handed
 // over at the course is not recorded as posted. Nothing in the UI shows the
 // stored smallint, so an inversion would be invisible.
-describe('the method each action records', () => {
+// Two readers that also assert which columns the action writes: a mark of the
+// wrong kind cannot reach the label call.
+function disposalLabelFor(action: 'sell' | 'donate'): string | null {
+  const mark = markFor(action);
+
+  if (mark?.columns !== 'disposal') {
+    throw new Error(`${action} should record a disposal, got ${JSON.stringify(mark)}`);
+  }
+
+  return disposalMethodLabel(mark.method);
+}
+
+function returnLabelFor(action: 'returnByMail' | 'returnPickedUp'): string | null {
+  const mark = markFor(action);
+
+  if (mark?.columns !== 'return') {
+    throw new Error(`${action} should record a return, got ${JSON.stringify(mark)}`);
+  }
+
+  return returnMethodLabel(mark.method);
+}
+
+describe('markFor', () => {
   it('records the fate a release names', () => {
-    expect(disposalMethodLabel(disposalMethodFor('sell'))).toBe('Myydään');
-    expect(disposalMethodLabel(disposalMethodFor('donate'))).toBe('Lahjoitetaan');
+    expect(disposalLabelFor('sell')).toBe('Myydään');
+    expect(disposalLabelFor('donate')).toBe('Lahjoitetaan');
   });
 
   it('records the way a return names', () => {
-    expect(returnMethodLabel(returnMethodFor('returnByMail'))).toBe('Postitettu');
-    expect(returnMethodLabel(returnMethodFor('returnPickedUp'))).toBe('Noudettu');
+    expect(returnLabelFor('returnByMail')).toBe('Postitettu');
+    expect(returnLabelFor('returnPickedUp')).toBe('Noudettu');
+  });
+
+  it('has no mark for a delete, which records nothing', () => {
+    expect(markFor('delete')).toBeNull();
+  });
+
+  it('has a mark for every action that is not a delete', () => {
+    expect(batchActionOrder.filter((action) => markFor(action) === null)).toEqual(['delete']);
   });
 });
