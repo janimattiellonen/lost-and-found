@@ -20,11 +20,16 @@ export function isBatchAction(value: unknown): value is BatchAction {
  */
 export const MAX_BATCH_ACTION_SIZE = 500;
 
-/** The button that starts each action. */
+/**
+ * What each action is called where it is offered.
+ *
+ * They say nothing about a selection: the dropdown these sit in is beside the
+ * count of ticked discs, which is what they act on.
+ */
 export const batchActionLabels: Record<BatchAction, string> = {
-  delete: 'Poista valitut',
-  return: 'Merkitse valitut palautetuiksi',
-  disposal: 'Merkitse valitut myytäviksi tai lahjoitettaviksi',
+  delete: 'Poista',
+  return: 'Merkitse palautetuiksi',
+  disposal: 'Merkitse myytäviksi tai lahjoitettaviksi',
 };
 
 /** A count of discs, with the noun in the case Finnish puts it in. */
