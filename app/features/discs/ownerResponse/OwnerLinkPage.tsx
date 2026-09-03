@@ -2,6 +2,7 @@ import { useState, type JSX, type ReactNode } from 'react';
 import { Form } from 'react-router';
 
 import type { ClubPayment } from '~/config/clubs';
+import { formatPostageFee, POSTAGE_PAYEE_NAME, POSTAGE_PAYEE_NUMBER } from '~/config/shipping';
 import { HandoverMethod, type HandoverMethodValue } from '~/features/discs/handoverMethod';
 import { OwnerChoice, type OwnerChoiceValue } from './ownerChoice';
 import type { OwnerLinkDisc } from './ownerResponse';
@@ -28,9 +29,8 @@ type Props = {
  *
  * Fuller than the club's own shorthand ("Postitus", "Nouto varastolta"): this
  * is read once, on a phone, by someone who has not seen the admin pages. The
- * collection option deliberately promises no address — whether the page hands
- * one out is still an open question, and the club may prefer to agree it by
- * message.
+ * collection options name no street address: collecting from the admin says
+ * only the district, with the rest agreed by message (see followUp).
  */
 const OWNER_LABELS: Record<HandoverMethodValue, string> = {
   [HandoverMethod.ByMail]: 'Postita kiekko minulle',
@@ -121,7 +121,7 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
                   onChange={setHandoverMethod}
                   label={OWNER_LABELS[method]}
                 >
-                  {method === HandoverMethod.ByMail && <ShippingAddress clubPayment={clubPayment} />}
+                  {followUp(method, clubPayment)}
                 </Choice>
               ))}
             </fieldset>
@@ -147,15 +147,36 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
 }
 
 /**
- * What posting a disc costs, and the number to pay it to.
+ * What each way of getting the disc back asks of the owner next, or null for
+ * one that asks nothing.
  *
- * The postage goes to the admin whichever club the disc belongs to, since it is
- * the admin who queues at the post office. The club's own thank-you number
- * differs per club and comes from ~/config/clubs.
+ * Returned rather than written as a chain of `&&` inside the option, so a
+ * method with no follow-up gives back nothing at all: an empty panel would
+ * still draw its own outline under the option.
  */
-const POSTAGE_FEE = '6,30 €';
-const ADMIN_PHONE_NUMBER = '050 464 3904';
-const ADMIN_NAME = 'Janimatti Ellonen';
+function followUp(method: HandoverMethodValue, clubPayment: ClubPayment | null): ReactNode {
+  switch (method) {
+    case HandoverMethod.ByMail:
+      return <ShippingAddress clubPayment={clubPayment} />;
+    case HandoverMethod.PickedUpFromHome:
+      return <PickupNote />;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Collecting the disc from the admin.
+ *
+ * Names the district and no more: the exact address and a time are agreed by
+ * message, which is also what keeps this page from handing a street address to
+ * anyone holding a forwarded link.
+ */
+function PickupNote(): JSX.Element {
+  return (
+    <p className="text-gray-700">Kiekon voi noutaa Espoon Lintuvaarasta. Saat pian viestin, jossa tarkemmat ohjeet.</p>
+  );
+}
 
 /**
  * Where to post the disc, and what the owner has to do for it to be posted.
@@ -172,7 +193,8 @@ function ShippingAddress({ clubPayment }: { clubPayment: ClubPayment | null }): 
 
       <ul className="mb-6 list-disc space-y-2 pl-5 text-gray-700">
         <li>
-          Maksa MobilePaylla {POSTAGE_FEE} numeroon <strong>{ADMIN_PHONE_NUMBER}</strong> ({ADMIN_NAME}).
+          Maksa MobilePaylla {formatPostageFee()} numeroon <strong>{POSTAGE_PAYEE_NUMBER}</strong> ({POSTAGE_PAYEE_NAME}
+          ).
         </li>
         {clubPayment && (
           <li>
@@ -181,7 +203,7 @@ function ShippingAddress({ clubPayment }: { clubPayment: ClubPayment | null }): 
           </li>
         )}
         <li>
-          Ilmoita tekstiviestitse numeroon <strong>{ADMIN_PHONE_NUMBER}</strong> kun olet maksanut.
+          Ilmoita tekstiviestitse numeroon <strong>{POSTAGE_PAYEE_NUMBER}</strong> kun olet maksanut.
         </li>
         <li>Muista antaa koko osoite!</li>
       </ul>
