@@ -61,6 +61,8 @@ export type DiscDTO = {
   course?: string | null;
   /** When the club stopped listing the disc publicly; null while it is listed. */
   archivedAt?: string | null;
+  /** What the owner-facing link in a message is built on. */
+  ownerLinkToken?: string;
 };
 
 export type MessageTemplateDTO = {
@@ -127,4 +129,5 @@ export type DbDiscType = {
   course?: string | null;
   notified_at?: string | null;
   archived_at?: string | null;
+  owner_link_token?: string;
 };

@@ -7,7 +7,9 @@ import { color, radius, space } from '~/styles/tokens.stylex';
 
 import type { JSX } from 'react';
 
-const links = [
+type MenuLink = { to: string; label: string };
+
+const links: MenuLink[] = [
   { to: '/', label: 'Kiekot' },
   { to: '/discs/add', label: 'Lisää kiekkoja' },
   { to: '/emptying-log', label: 'Tyhjennysloki' },
@@ -17,20 +19,34 @@ const links = [
 ];
 
 /**
- * The menu, with the retrieval list in it for the one club that keeps one.
+ * A count in parentheses, or nothing.
  *
- * The count is what the item is for: it says at a glance whether there is
- * anything to fetch on the next trip to the storage. An empty list carries no
- * number rather than a "(0)", which would read as something to act on.
+ * An empty list carries no number rather than a "(0)", which reads as
+ * something to act on.
  */
-function menuLinks(retrievalCount: number | null): { to: string; label: string }[] {
-  if (retrievalCount === null) {
-    return links;
-  }
+function withCount(label: string, count: number): string {
+  return count > 0 ? `${label} (${count})` : label;
+}
 
-  const label = retrievalCount > 0 ? `Noutolista (${retrievalCount})` : 'Noutolista';
+/**
+ * The menu, with the two counted items in it when they apply.
+ *
+ * The counts are what those items are for: whether anyone has answered about
+ * their disc, and whether the next trip to the storage has anything in it. Both
+ * are null when there is nothing to count -- nobody signed in, or a club that
+ * keeps no retrieval list -- and the item is then absent rather than empty.
+ *
+ * Answers come before the errand they may become, and the retrieval list stays
+ * last, where it has been.
+ */
+function menuLinks(retrievalCount: number | null, responseCount: number | null): MenuLink[] {
+  const responses: MenuLink[] =
+    responseCount === null ? [] : [{ to: '/vastaukset', label: withCount('Vastaukset', responseCount) }];
 
-  return [...links, { to: '/retrieval', label }];
+  const retrieval: MenuLink[] =
+    retrievalCount === null ? [] : [{ to: '/retrieval', label: withCount('Noutolista', retrievalCount) }];
+
+  return [...links.slice(0, 2), ...responses, ...links.slice(2), ...retrieval];
 }
 
 // StyleX has no descendant selectors, so hover/active styling is applied to the
@@ -86,9 +102,16 @@ type AdminMenuProps = {
    * keeps no retrieval list -- and so has no menu item for it.
    */
   retrievalCount: number | null;
+  /** Owners' answers not yet dealt with, or null when nobody is signed in. */
+  responseCount: number | null;
 };
 
-export default function AdminMenu({ supabase, user, retrievalCount }: AdminMenuProps): JSX.Element | null {
+export default function AdminMenu({
+  supabase,
+  user,
+  retrievalCount,
+  responseCount,
+}: AdminMenuProps): JSX.Element | null {
   const handleLogout = async () => {
     if (!window.confirm('Haluatko varmasti kirjautua ulos?')) {
       return;
@@ -104,7 +127,7 @@ export default function AdminMenu({ supabase, user, retrievalCount }: AdminMenuP
   return (
     <nav {...stylex.props(styles.nav)}>
       <ul {...stylex.props(styles.list)}>
-        {menuLinks(retrievalCount).map(({ to, label }) => (
+        {menuLinks(retrievalCount, responseCount).map(({ to, label }) => (
           <li key={to}>
             <NavLink
               to={to}

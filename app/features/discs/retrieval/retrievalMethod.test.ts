@@ -1,43 +1,45 @@
 import { describe, expect, it } from 'vitest';
 
 import { RetrievalMethod, isRetrievalMethod, retrievalMethodLabel, retrievalMethodOptions } from './retrievalMethod';
-import { ReturnMethod } from '~/features/discs/return/returnMethod';
+import { HandoverMethod } from '~/features/discs/handoverMethod';
 
 describe('retrievalMethod', () => {
-  it('offers the two methods in form order', () => {
+  it('offers the two methods that need a trip to the storage, in form order', () => {
     expect(retrievalMethodOptions).toEqual([
       { value: 0, label: 'Postitus' },
-      { value: 1, label: 'Nouto' },
+      { value: 1, label: 'Nouto (minulta)' },
     ]);
   });
 
   it.each([
     [RetrievalMethod.ByMail, 'Postitus'],
-    [RetrievalMethod.PickedUp, 'Nouto'],
+    [RetrievalMethod.PickedUp, 'Nouto (minulta)'],
   ])('labels %i as %s', (value, label) => {
     expect(retrievalMethodLabel(value)).toBe(label);
   });
 
-  it.each([null, undefined, 2, -1])('has no label for %s', (value) => {
+  it.each([null, undefined, 3, -1])('has no label for %s', (value) => {
     expect(retrievalMethodLabel(value)).toBeNull();
   });
 
-  // The two columns are separate but their numbers are meant to line up, so a
-  // wish recorded as "postitus" cannot come back out of the return column as
-  // "noudettu". Renumbering either without the other would be invisible in the
-  // UI, which shows only the labels.
-  it('numbers the methods the same way the return method does', () => {
-    expect(RetrievalMethod.ByMail).toBe(ReturnMethod.ByMail);
-    expect(RetrievalMethod.PickedUp).toBe(ReturnMethod.PickedUp);
+  it('is the shared handover method, narrowed — not an enum of its own', () => {
+    expect(RetrievalMethod.ByMail).toBe(HandoverMethod.ByMail);
+    expect(RetrievalMethod.PickedUp).toBe(HandoverMethod.PickedUpFromHome);
   });
 
   it.each([0, 1])('accepts %i', (value) => {
     expect(isRetrievalMethod(value)).toBe(true);
   });
 
+  // The one a disc list must not offer: nothing has to be fetched for an owner
+  // who collects from the storage himself.
+  it('rejects collecting from the storage, which is no errand', () => {
+    expect(isRetrievalMethod(HandoverMethod.PickedUpFromStorage)).toBe(false);
+  });
+
   it.each<[string, unknown]>([
     ['a string digit', '0'],
-    ['an unknown method', 2],
+    ['an unknown method', 3],
     ['a negative number', -1],
     ['a fraction', 0.5],
     ['null', null],

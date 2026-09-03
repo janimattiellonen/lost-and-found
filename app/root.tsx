@@ -21,6 +21,7 @@ import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
 import { getClubFavicon, isRetrievalListEnabled } from '~/config/clubs';
+import { queryUnhandledOwnerResponseCount } from '~/features/discs/ownerResponse/queryUnhandledOwnerResponses.server';
 import { queryRetrievalCount } from '~/features/discs/retrieval/queryRetrievalCount.server';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
@@ -46,6 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       env,
       session,
       retrievalCount: await loadRetrievalCount(supabase, session != null),
+      responseCount: await countOrNull(supabase, session != null, queryUnhandledOwnerResponseCount),
     },
     {
       headers,
@@ -63,12 +65,31 @@ export async function loader({ request }: LoaderFunctionArgs) {
  * same thing every other club sees.
  */
 async function loadRetrievalCount(supabase: SupabaseClient, isSignedIn: boolean): Promise<number | null> {
-  if (!isSignedIn || !isRetrievalListEnabled(parseInt(process.env.APP_CLUB_ID!, 10))) {
+  if (!isRetrievalListEnabled(parseInt(process.env.APP_CLUB_ID!, 10))) {
+    return null;
+  }
+
+  return countOrNull(supabase, isSignedIn, queryRetrievalCount);
+}
+
+/**
+ * A count for the menu, or null when there is no item to put one beside.
+ *
+ * Read on every page load, so a failure gives back null rather than an error
+ * page for the whole app -- the item is then simply absent, which is what a
+ * signed-out visitor sees anyway.
+ */
+async function countOrNull(
+  supabase: SupabaseClient,
+  isSignedIn: boolean,
+  count: (supabase: SupabaseClient) => Promise<number>,
+): Promise<number | null> {
+  if (!isSignedIn) {
     return null;
   }
 
   try {
-    return await queryRetrievalCount(supabase);
+    return await count(supabase);
   } catch {
     return null;
   }
@@ -89,7 +110,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function App() {
-  const { env, session, retrievalCount } = useLoaderData();
+  const { env, session, retrievalCount, responseCount } = useLoaderData();
   const { revalidate } = useRevalidator();
   const location = useLocation();
   const [supabase] = useState(() => createBrowserClient(env.SUPABASE_URL, env.SUPABASE_KEY));
@@ -130,7 +151,14 @@ export default function App() {
         {import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" suppressHydrationWarning />}
       </head>
       <body>
-        {showHeader && <AdminMenu supabase={supabase} user={session?.user} retrievalCount={retrievalCount} />}
+        {showHeader && (
+          <AdminMenu
+            supabase={supabase}
+            user={session?.user}
+            retrievalCount={retrievalCount}
+            responseCount={responseCount}
+          />
+        )}
         {/* The menu spans the viewport edges; everything below keeps the page inset
             that used to come from the body margin. */}
         <div style={{ margin: '1rem' }}>

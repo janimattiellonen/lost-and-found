@@ -1,9 +1,24 @@
 # Getting a disc back to its owner
 
-Status: **draft for review, 2026-09-03.** Nothing below is built except where it
-says so. Written because the pieces — the retrieval list in PR #79, the planned
+Status: **2026-09-03.** Written because the pieces — the retrieval list, the
 owner-facing flag page, and the existing return and disposal marks — turned out
 to overlap, and the overlap is where the mistakes would be.
+
+Built in PR #79, all of it behind an unapplied migration:
+
+- the retrieval list ("Noutolista"), as `disc_retrievals`
+- one shared handover method (section 5), replacing the retrieval list's own
+  two-value enum
+- `discs.owner_link_token`, `disc_owner_responses`, and the flag page at
+  `/kiekko/<token>`
+- `[link]` as a message-template token, beside `[disc]` and `[colour]`
+- the admin's page of answers at `/vastaukset`
+- `clubs.stores_discs_offsite`, which is what section 1's table now lives in
+
+Not built: the section 10 renaming of `disc_retrievals`, `discs.return_method`
+gaining the third value, and anything that turns an answer into a retrieval-list
+row by itself. Open questions 1, 4, 5, 6 and 7 are still open; 2 and 3 were
+decided for this first version, and say so below.
 
 ## 1. Where a disc physically is
 
@@ -259,13 +274,20 @@ is **not applied**, so this is all still free to change:
    from the storage". Do you also want a list of every open request — including
    the ones you only have to post from home, which is all of Puskasoturit's —
    or is the disc list enough for those?
-2. **Does an owner's "I want it back" create the request row by itself**, or
-   land as an answer you confirm first? Automatic is less work; confirm-first
-   means a stray click cannot send you to the storage for nothing.
-3. **Is `discs.location` a stored column or derived?** Derived costs nothing
-   (Talin, and no fetch recorded yet ⇒ in the storage) but cannot record a disc
-   you took home straight from the bin without a request. Stored can be
-   corrected, at the price of a column that can drift.
+2. ~~**Does an owner's "I want it back" create the request row by itself**, or
+   land as an answer you confirm first?~~ **Decided for the first version:** it
+   lands as an answer, on `/vastaukset`, and the admin acts. A stray click then
+   cannot send anyone to the storage for nothing, and nothing an owner submits
+   changes what the public list shows. Revisit once there is a feel for how many
+   answers arrive and how many are acted on unchanged.
+3. ~~**Is `discs.location` a stored column or derived?**~~ **Decided for the
+   first version: derived**, by `disc_is_in_storage(disc_id)` — the club keeps a
+   storage (`clubs.stores_discs_offsite`) and no fetch of this disc has been
+   recorded. No `discs.location` column, so nothing can drift; the known gap
+   stays, that a disc taken home straight from the bin without a request still
+   reads as being in the storage. The cost of that gap is one owner offered a
+   collection from a storage the disc has left, which the admin sees on the
+   answer and can sort out by message.
 4. **Should "collected from the storage" (2) be offered when the disc has an open
    request already fetched?** i.e. the owner changing their mind after you have
    already carried it home. Presumably not.

@@ -1,24 +1,31 @@
-import { methodEnum } from '~/lib/methodEnum';
+import {
+  handoverMethodLabel,
+  handoverMethodOptions,
+  HandoverMethod,
+  needsFetchingFromStorage,
+  type FetchingHandoverMethod,
+} from '~/features/discs/handoverMethod';
 
 /**
- * How the owner asked to get their disc back.
+ * What the retrieval list may be asked for: the handover methods that need the
+ * admin to fetch the disc out of the club's storage first.
  *
- * Stored as a smallint in discs.retrieval_method; see methodEnum for what that
- * means for changing these numbers.
- *
- * The same two choices as ReturnMethod, and the same numbers, but a wish rather
- * than a record: this is what the owner asked for when the disc was put on the
- * retrieval list, which is why the labels name the act ("Postitus") instead of
- * reporting it as done ("Postitettu").
+ * Not an enum of its own — this is the shared handover method, narrowed. A disc
+ * the owner is collecting from the storage never comes to the house, so it is
+ * not an errand and cannot be put on this list; the CHECK constraint on
+ * disc_retrievals says the same thing in the database.
  */
-const retrievalMethod = methodEnum({
-  ByMail: { value: 0, label: 'Postitus' },
-  PickedUp: { value: 1, label: 'Nouto' },
-});
+export const RetrievalMethod = {
+  ByMail: HandoverMethod.ByMail,
+  PickedUp: HandoverMethod.PickedUpFromHome,
+} as const;
 
-export const RetrievalMethod = retrievalMethod.values;
-export const retrievalMethodOptions = retrievalMethod.options;
-export const isRetrievalMethod = retrievalMethod.is;
-export const retrievalMethodLabel = retrievalMethod.label;
+export const retrievalMethodOptions = handoverMethodOptions.filter(
+  (option): option is { value: RetrievalMethodValue; label: string } => needsFetchingFromStorage(option.value),
+);
 
-export type RetrievalMethodValue = (typeof RetrievalMethod)[keyof typeof RetrievalMethod];
+export const isRetrievalMethod = needsFetchingFromStorage;
+
+export const retrievalMethodLabel = handoverMethodLabel;
+
+export type RetrievalMethodValue = FetchingHandoverMethod;

@@ -20,5 +20,7 @@ export async function loadSendMessagePage(request: Request, externalId: string) 
     throw new Response('Kiekkoa ei löytynyt.', { status: 404 });
   }
 
-  return { data, messageTemplates, sentMessages };
+  // The origin the admin actually loaded the page from, so a link pasted into
+  // an sms points at the same host rather than at a configured guess.
+  return { data, messageTemplates, sentMessages, baseUrl: new URL(request.url).origin };
 }
