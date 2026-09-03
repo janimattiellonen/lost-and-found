@@ -14,15 +14,15 @@ import {
 } from 'react-router';
 
 import { createBrowserClient } from '@supabase/ssr';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
-import { getClubFavicon, isRetrievalListEnabled } from '~/config/clubs';
-import { queryUnhandledOwnerResponseCount } from '~/features/discs/ownerResponse/queryUnhandledOwnerResponses.server';
-import { queryRetrievalCount } from '~/features/discs/retrieval/queryRetrievalCount.server';
+import { getClubFavicon } from '~/config/clubs';
+import { queryUnhandledOwnerResponseCount } from '~/features/discs/ownerResponse/queryUnhandledOwnerResponseCount.server';
+import { loadRetrievalCount } from '~/features/discs/retrieval/loadRetrievalCount.server';
+import { menuCount } from '~/lib/menuCount.server';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
 // directives unexpanded). React Router injects the resulting stylesheet for SSR.
@@ -47,52 +47,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
       env,
       session,
       retrievalCount: await loadRetrievalCount(supabase, session != null),
-      responseCount: await countOrNull(supabase, session != null, queryUnhandledOwnerResponseCount),
+      responseCount: await menuCount(supabase, session != null, queryUnhandledOwnerResponseCount),
     },
     {
       headers,
     },
   );
-}
-
-/**
- * How many discs are waiting to be fetched from the club's storage, for the
- * count beside the menu item. Null when there is no menu item: nobody is
- * signed in, or this club keeps no retrieval list.
- *
- * Read on every page load, so a failure gives back null rather than an error
- * page for the whole app -- the menu item is then simply absent, which is the
- * same thing every other club sees.
- */
-async function loadRetrievalCount(supabase: SupabaseClient, isSignedIn: boolean): Promise<number | null> {
-  if (!isRetrievalListEnabled(parseInt(process.env.APP_CLUB_ID!, 10))) {
-    return null;
-  }
-
-  return countOrNull(supabase, isSignedIn, queryRetrievalCount);
-}
-
-/**
- * A count for the menu, or null when there is no item to put one beside.
- *
- * Read on every page load, so a failure gives back null rather than an error
- * page for the whole app -- the item is then simply absent, which is what a
- * signed-out visitor sees anyway.
- */
-async function countOrNull(
-  supabase: SupabaseClient,
-  isSignedIn: boolean,
-  count: (supabase: SupabaseClient) => Promise<number>,
-): Promise<number | null> {
-  if (!isSignedIn) {
-    return null;
-  }
-
-  try {
-    return await count(supabase);
-  } catch {
-    return null;
-  }
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

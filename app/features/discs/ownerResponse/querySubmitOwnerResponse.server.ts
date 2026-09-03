@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { currentClubId } from '~/config/clubs';
 import { HandoverMethod } from '~/features/discs/handoverMethod';
+import { OwnerChoice } from './ownerChoice';
 import type { OwnerResponse } from './ownerResponse';
 
 type Input = {
@@ -20,14 +22,15 @@ export async function querySubmitOwnerResponse(
   supabase: SupabaseClient,
   { token, response }: Input,
 ): Promise<'saved' | 'unknown-token'> {
-  const isPosting = response.choice === 1 && response.handoverMethod === HandoverMethod.ByMail;
+  const isPosting = response.choice === OwnerChoice.WantsItBack && response.handoverMethod === HandoverMethod.ByMail;
   const address = isPosting && 'address' in response ? response.address : null;
   const hasMoreDiscs = isPosting && 'hasMoreDiscs' in response;
 
   const { error } = await supabase.rpc('submit_owner_response', {
     p_token: token,
+    p_club_id: currentClubId(),
     p_choice: response.choice,
-    p_handover_method: response.choice === 1 ? response.handoverMethod : null,
+    p_handover_method: response.choice === OwnerChoice.WantsItBack ? response.handoverMethod : null,
     p_shipping_name: address?.name ?? null,
     p_shipping_street: address?.street ?? null,
     p_shipping_postal_code: address?.postalCode ?? null,

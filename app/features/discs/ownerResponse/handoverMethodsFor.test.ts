@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { handoverMethodsFor } from './queryOwnerLinkDisc.server';
+import { handoverMethodsFor } from './handoverMethodsFor';
 import { HandoverMethod } from '~/features/discs/handoverMethod';
 
 describe('handoverMethodsFor', () => {

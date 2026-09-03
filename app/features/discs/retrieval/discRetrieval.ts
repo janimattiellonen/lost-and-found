@@ -8,17 +8,6 @@ export type DiscRetrievalInput = {
 };
 
 /**
- * Who asked for the disc.
- *
- * Stored in disc_retrievals.requested_by. Nothing sets Owner yet — the
- * owner-facing page is its own feature — but a request that arrives without
- * anyone at the club reading an sms is worth telling apart from one that was.
- */
-export const RequestedBy = { Club: 0, Owner: 1 } as const;
-
-export type RequestedByValue = (typeof RequestedBy)[keyof typeof RequestedBy];
-
-/**
  * One line of the retrieval list.
  *
  * The same things that used to be written down by hand: what the disc looks

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { currentClubId } from '~/config/clubs';
 import { isHandoverMethod } from '~/features/discs/handoverMethod';
 import { isOwnerChoice } from './ownerChoice';
 import type { OwnerResponseSummary } from './ownerResponse';
@@ -20,7 +21,7 @@ export async function queryUnhandledOwnerResponses(supabase: SupabaseClient): Pr
     .from('disc_owner_responses')
     .select(RESPONSE_COLUMNS)
     .is('handled_at', null)
-    .eq('discs.club_id', process.env.APP_CLUB_ID)
+    .eq('discs.club_id', currentClubId())
     .order('responded_at', { ascending: false });
 
   if (error) {
@@ -59,24 +60,4 @@ export async function queryUnhandledOwnerResponses(supabase: SupabaseClient): Pr
       },
     ];
   });
-}
-
-/**
- * How many answers are waiting, for the count beside the menu item.
- *
- * Counts in the database rather than fetching the rows to measure them, and so
- * reads neither a phone number nor an address to do it.
- */
-export async function queryUnhandledOwnerResponseCount(supabase: SupabaseClient): Promise<number> {
-  const { count, error } = await supabase
-    .from('disc_owner_responses')
-    .select('id, discs!inner(id)', { head: true, count: 'exact' })
-    .is('handled_at', null)
-    .eq('discs.club_id', process.env.APP_CLUB_ID);
-
-  if (error) {
-    throw new Error(`Vastausten laskenta epäonnistui: ${error.message}`);
-  }
-
-  return count ?? 0;
 }

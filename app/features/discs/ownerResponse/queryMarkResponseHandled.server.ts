@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { currentClubId } from '~/config/clubs';
 
 /** Whether the answer was there to be marked, for the caller to answer with. */
 export type HandledOutcome = 'done' | 'not-found';
@@ -21,7 +22,7 @@ export async function queryMarkResponseHandled(supabase: SupabaseClient, respons
     .from('disc_owner_responses')
     .select('id, shipping_street, discs!inner(club_id)')
     .eq('id', responseId)
-    .eq('discs.club_id', process.env.APP_CLUB_ID)
+    .eq('discs.club_id', currentClubId())
     .maybeSingle();
 
   if (readError) {

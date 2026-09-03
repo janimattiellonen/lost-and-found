@@ -1,5 +1,6 @@
 import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { currentClubId } from '~/config/clubs';
 
 /**
  * The one filter chain behind every read of the retrieval list: the page, the
@@ -26,7 +27,7 @@ export function selectPendingRetrievals(
     .from('disc_retrievals')
     .select(select, options)
     .is('retrieved_at', null)
-    .eq('discs.club_id', process.env.APP_CLUB_ID)
+    .eq('discs.club_id', currentClubId())
     .eq('discs.is_returned_to_owner', false)
     .eq('discs.can_be_sold_or_donated', false)
     .is('discs.archived_at', null);

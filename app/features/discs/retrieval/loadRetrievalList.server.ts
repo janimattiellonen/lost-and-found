@@ -1,6 +1,6 @@
 import { redirect } from 'react-router';
 
-import { isRetrievalListEnabled } from '~/config/clubs';
+import { currentClubId, isRetrievalListEnabled } from '~/config/clubs';
 import { queryRetrievalList } from '~/features/discs/retrieval/queryRetrievalList.server';
 import { createSupabaseServerClient, isUserLoggedIn } from '~/models/utils';
 
@@ -16,7 +16,7 @@ export async function loadRetrievalList(request: Request) {
     throw redirect('/sign-in');
   }
 
-  if (!isRetrievalListEnabled(parseInt(process.env.APP_CLUB_ID!, 10))) {
+  if (!isRetrievalListEnabled(currentClubId())) {
     throw new Response('Not Found', { status: 404 });
   }
 

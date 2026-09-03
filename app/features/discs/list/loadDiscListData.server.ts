@@ -1,4 +1,4 @@
-import { isRetrievalListEnabled } from '~/config/clubs';
+import { currentClubId, isRetrievalListEnabled } from '~/config/clubs';
 import { queryPendingRetrievalMethods } from '~/features/discs/retrieval/queryPendingRetrievalMethods.server';
 import { getDiscs } from '~/models/discs.server';
 import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
@@ -7,7 +7,7 @@ import { getDistinctCourses, getDistinctDiscNames } from '~/utils';
 
 /** Everything the public disc list renders, for the club this instance serves. */
 export async function loadDiscListData(request: Request) {
-  const clubId = parseInt(process.env.APP_CLUB_ID!, 10);
+  const clubId = currentClubId();
 
   const emptyingLogItems = await getEmptyingLogItemsForClub(clubId, request);
 

@@ -1,14 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { queryDiscIdByExternalId } from './queryDiscIdByExternalId.server';
-import { RequestedBy, type RequestedByValue, type RetrievalOutcome } from './discRetrieval';
+import type { RetrievalOutcome } from './discRetrieval';
 import type { RetrievalMethodValue } from './retrievalMethod';
 
 type Input = {
   externalId: string;
   retrievalMethod: RetrievalMethodValue;
-  /** The club by default; the owner once the link in the sms can do this. */
-  requestedBy?: RequestedByValue;
 };
 
 /**
@@ -22,7 +20,7 @@ type Input = {
  */
 export async function queryRequestRetrieval(
   supabase: SupabaseClient,
-  { externalId, retrievalMethod, requestedBy = RequestedBy.Club }: Input,
+  { externalId, retrievalMethod }: Input,
 ): Promise<RetrievalOutcome> {
   const discId = await queryDiscIdByExternalId(supabase, externalId);
 
@@ -32,7 +30,7 @@ export async function queryRequestRetrieval(
 
   const { data: updated, error: updateError } = await supabase
     .from('disc_retrievals')
-    .update({ retrieval_method: retrievalMethod, requested_by: requestedBy })
+    .update({ retrieval_method: retrievalMethod })
     .eq('disc_id', discId)
     .is('retrieved_at', null)
     .select('id');
@@ -47,7 +45,7 @@ export async function queryRequestRetrieval(
 
   const { error: insertError } = await supabase
     .from('disc_retrievals')
-    .insert({ disc_id: discId, retrieval_method: retrievalMethod, requested_by: requestedBy });
+    .insert({ disc_id: discId, retrieval_method: retrievalMethod });
 
   if (insertError) {
     throw new Error(`Noutolistalle lisääminen epäonnistui: ${insertError.message}`);

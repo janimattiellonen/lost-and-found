@@ -7,6 +7,17 @@
 export const PUSKASOTURIT = 1;
 export const TALIN_TALLAAJAT = 2;
 
+/**
+ * The club this instance serves.
+ *
+ * One reading of APP_CLUB_ID rather than a parseInt in every loader that needs
+ * it: the env var is the only place the club comes from, and a parse repeated
+ * a dozen times is a dozen places to get the radix or the `!` wrong.
+ */
+export function currentClubId(): number {
+  return parseInt(process.env.APP_CLUB_ID!, 10);
+}
+
 const CONTACT_EMAILS: Record<number, string> = {
   [PUSKASOTURIT]: 'loytokiekot@puskasoturit.com',
   [TALIN_TALLAAJAT]: 'janimatti.ellonen@gmail.com',

@@ -3,8 +3,6 @@ import { useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunct
 import { handleOwnerLinkSubmit } from '~/features/discs/ownerResponse/handleOwnerLinkSubmit.server';
 import { loadOwnerLinkPage } from '~/features/discs/ownerResponse/loadOwnerLinkPage.server';
 import OwnerLinkPage from '~/features/discs/ownerResponse/OwnerLinkPage';
-import { getClubContactEmail } from '~/config/clubs';
-import { isExternalId } from '~/lib/api/validate';
 
 import type { JSX } from 'react';
 
@@ -18,27 +16,11 @@ import type { JSX } from 'react';
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const token = params.token ?? '';
 
-  // A token that is not even a uuid never reaches the database.
-  if (!isExternalId(token)) {
-    return {
-      disc: null,
-      clubPayment: null,
-      contactEmail: getClubContactEmail(parseInt(process.env.APP_CLUB_ID!, 10)),
-      token,
-    };
-  }
-
   return { ...(await loadOwnerLinkPage(token)), token };
 };
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const token = params.token ?? '';
-
-  if (!isExternalId(token)) {
-    return { error: 'Linkki ei ole enää käytössä.' };
-  }
-
-  return handleOwnerLinkSubmit(token, await request.formData());
+  return handleOwnerLinkSubmit(params.token ?? '', await request.formData());
 }
 
 /**

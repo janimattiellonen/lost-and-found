@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { currentClubId } from '~/config/clubs';
 
 /**
  * The numeric id of one of this club's discs, or null when it has no such disc.
@@ -13,7 +14,7 @@ export async function queryDiscIdByExternalId(supabase: SupabaseClient, external
     .from('discs')
     .select('id')
     .eq('external_id', externalId)
-    .eq('club_id', process.env.APP_CLUB_ID)
+    .eq('club_id', currentClubId())
     .maybeSingle();
 
   if (error) {

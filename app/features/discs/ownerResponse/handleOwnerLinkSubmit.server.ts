@@ -1,3 +1,5 @@
+import { currentClubId } from '~/config/clubs';
+import { isExternalId } from '~/lib/api/validate';
 import { parseOwnerResponse } from './parseOwnerResponse';
 import { queryOwnerLinkDisc } from './queryOwnerLinkDisc.server';
 import { querySubmitOwnerResponse } from './querySubmitOwnerResponse.server';
@@ -17,9 +19,13 @@ const STALE = 'Tätä linkkiä ei voi enää käyttää. Kiekko on ehkä jo pala
  * refuses the same thing independently.
  */
 export async function handleOwnerLinkSubmit(token: string, formData: FormData): Promise<OwnerLinkActionResult> {
+  if (!isExternalId(token)) {
+    return { error: STALE };
+  }
+
   const supabase = createConnection();
 
-  const disc = await queryOwnerLinkDisc(supabase, token);
+  const disc = await queryOwnerLinkDisc(supabase, token, currentClubId());
 
   if (!disc) {
     return { error: STALE };

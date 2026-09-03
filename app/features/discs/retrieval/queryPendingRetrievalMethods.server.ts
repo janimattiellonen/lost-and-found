@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { selectPendingRetrievals } from './pendingRetrievals.server';
+import { selectPendingRetrievals } from './selectPendingRetrievals.server';
 import { isRetrievalMethod, type RetrievalMethodValue } from './retrievalMethod';
 
 /**

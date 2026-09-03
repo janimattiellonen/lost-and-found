@@ -266,10 +266,31 @@ is **not applied**, so this is all still free to change:
 - `retrieval_method` → `handover_method`, with the third value.
 - `retrieved_at` → `fetched_at`, and a CHECK that only methods 0 and 1 may have
   one.
-- `requested_by` (already removed) stays gone; provenance becomes
-  `owner_response_id` when the flag page lands.
+- `requested_by` is **gone as of 20260904010000**, which is what this document
+  claimed before it was true: the column survived the reshape and every row held
+  0 (the club). An owner's answer is a row in `disc_owner_responses`, not a
+  retrieval anyone asked for, so provenance would be `owner_response_id` — still
+  not built, and nothing needs it while an answer is acted on by hand.
 - The row action in the disc list offers three options rather than two, and
   offers the third only for a disc still in the storage.
+
+## 10b. An owner with several discs waiting
+
+The prompt asked for the discs to be listed and the postage to grow with the
+count. **The first version does neither, on purpose.** The posting option opens
+with one checkbox — "minulla on useampia kiekkoja" — and ticking it submits the
+answer without an address, saying only that the club will be in touch.
+
+Why: listing the owner's other discs means matching owners by a free-text phone
+number (`050-123 45 67`, `+358 50 …`), widening what one leaked link exposes
+from a disc to a person's whole set, and a submit that must re-derive the owner
+server-side and refuse ids that are not theirs. The tiered postage is the easy
+half; the basket is not. Against that, the admin sends one message and settles
+it — which is what happened before this page existed.
+
+What that leaves for later, if the messages get tiresome: the sibling lookup
+(question 8), and `postageFeeCents(count)` in `~/config/shipping`, whose
+`formatPostageFee` already takes an amount for exactly that reason.
 
 ## 11. Open questions
 
@@ -318,7 +339,16 @@ is **not applied**, so this is all still free to change:
    still agreed by message. Whether the page should go further — the full
    address, once an owner has chosen collection — is still deferred, and nothing
    else in this document depends on it.
-7. **What closes a request that nobody ever acts on?** Today: nothing, and the
+7. **When exactly is a shipping address wiped?** Rule 2 of section 6 says "once
+   the disc has been posted". What is built wipes it when the answer is marked
+   handled on `/vastaukset`, which is the only event the app has — and it is not
+   the same event. Marked handled too early and the label data is gone before
+   the parcel is made up; never marked, and the address is kept for ever. Either
+   the admin's habit makes them the same event, or the wipe belongs on "marked
+   returned" instead.
+8. **Does the page list an owner's other discs?** See section 10b: not in the
+   first version. Turning it on means matching owners by phone number.
+9. **What closes a request that nobody ever acts on?** Today: nothing, and the
    lists stop showing it once the disc is returned, released or archived. Good
    enough, or do you want to see stale requests?
 
