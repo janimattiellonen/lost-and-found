@@ -20,7 +20,9 @@ export async function querySubmitOwnerResponse(
   supabase: SupabaseClient,
   { token, response }: Input,
 ): Promise<'saved' | 'unknown-token'> {
-  const address = response.choice === 1 && response.handoverMethod === HandoverMethod.ByMail ? response.address : null;
+  const isPosting = response.choice === 1 && response.handoverMethod === HandoverMethod.ByMail;
+  const address = isPosting && 'address' in response ? response.address : null;
+  const hasMoreDiscs = isPosting && 'hasMoreDiscs' in response;
 
   const { error } = await supabase.rpc('submit_owner_response', {
     p_token: token,
@@ -33,6 +35,7 @@ export async function querySubmitOwnerResponse(
     // Empty means Finland, and a column of empty strings is worse than a column
     // of nulls.
     p_shipping_country: address?.country || null,
+    p_has_more_discs: hasMoreDiscs,
   });
 
   if (error) {

@@ -38,6 +38,13 @@ export function parseOwnerResponse(form: FormData, allowed: HandoverMethodValue[
     return { response: { choice: OwnerChoice.WantsItBack, handoverMethod } };
   }
 
+  // Several discs waiting: the parcel's contents decide the postage, so the
+  // club agrees both by message and asks for the address then. Nothing to
+  // validate here, which is the point of the checkbox.
+  if (form.get('hasMoreDiscs') !== null) {
+    return { response: { choice: OwnerChoice.WantsItBack, handoverMethod, hasMoreDiscs: true } };
+  }
+
   const address = readAddress(form);
 
   if ('error' in address) {

@@ -22,7 +22,10 @@ export type ShippingAddress = {
 export type OwnerResponse =
   | { choice: 0 }
   | { choice: 1; handoverMethod: 1 | 2 }
-  | { choice: 1; handoverMethod: 0; address: ShippingAddress };
+  | { choice: 1; handoverMethod: 0; address: ShippingAddress }
+  // Several discs waiting: what goes in the parcel, and so the postage and the
+  // address, are settled by message instead.
+  | { choice: 1; handoverMethod: 0; hasMoreDiscs: true };
 
 /**
  * What the owner-facing page may show. Everything here is already on the club's
@@ -52,4 +55,6 @@ export type OwnerResponseSummary = {
   respondedAt: string;
   /** Present only for a posting whose address has not been wiped. */
   address: ShippingAddress | null;
+  /** The owner has several discs waiting, so no address was asked for. */
+  hasMoreDiscs: boolean;
 };

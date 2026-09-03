@@ -187,6 +187,40 @@ function PickupNote(): JSX.Element {
  * is part of choosing this option, not an afterthought once it is chosen.
  */
 function ShippingAddress({ clubPayment }: { clubPayment: ClubPayment | null }): JSX.Element {
+  const [hasMoreDiscs, setHasMoreDiscs] = useState(false);
+
+  return (
+    <div>
+      {/* First, because it decides whether any of the rest applies: postage
+          depends on how many discs go in the parcel, and that is settled by
+          message rather than here. */}
+      <label className="mb-4 flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          name="hasMoreDiscs"
+          checked={hasMoreDiscs}
+          onChange={(event) => setHasMoreDiscs(event.target.checked)}
+        />
+        <span>Minulla on useampia kiekkoja</span>
+      </label>
+
+      {hasMoreDiscs ? (
+        <p className="text-gray-700">Sinuun otetaan pian yhteyttä.</p>
+      ) : (
+        <PostingDetails clubPayment={clubPayment} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * What posting one disc asks of the owner: what it costs, and where it goes.
+ *
+ * Unmounted rather than hidden when the owner has several discs, so the
+ * `required` fields leave the form with it — a hidden required field blocks a
+ * submit with no visible explanation.
+ */
+function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): JSX.Element {
   return (
     <div>
       <p className="mb-2 font-bold">Ohjeet</p>

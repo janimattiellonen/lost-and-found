@@ -5,7 +5,7 @@ import { isOwnerChoice } from './ownerChoice';
 import type { OwnerResponseSummary } from './ownerResponse';
 
 const RESPONSE_COLUMNS =
-  'id, responded_at, choice, handover_method, shipping_name, shipping_street, shipping_postal_code, ' +
+  'id, responded_at, choice, handover_method, has_more_discs, shipping_name, shipping_street, shipping_postal_code, ' +
   'shipping_city, shipping_country, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number)';
 
 /**
@@ -46,6 +46,7 @@ export async function queryUnhandledOwnerResponses(supabase: SupabaseClient): Pr
         choice: row.choice,
         handoverMethod: isHandoverMethod(row.handover_method) ? row.handover_method : null,
         respondedAt: row.responded_at,
+        hasMoreDiscs: row.has_more_discs === true,
         address: row.shipping_street
           ? {
               name: row.shipping_name ?? '',

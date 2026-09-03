@@ -65,6 +65,14 @@ function ResponseItem({ response }: { response: OwnerResponseSummary }): JSX.Ele
             </a>
           )}
 
+          {/* No address to show, and a reason: this one needs a message before
+              anything can be posted. */}
+          {response.hasMoreDiscs && (
+            <span className="mt-2 text-sm font-bold text-amber-700">
+              Useampia kiekkoja – sovi sisällöstä ja postikuluista viestitse.
+            </span>
+          )}
+
           {response.address && (
             <span className="mt-2 whitespace-pre-line text-sm">
               {[
@@ -85,7 +93,11 @@ function ResponseItem({ response }: { response: OwnerResponseSummary }): JSX.Ele
         <Form
           method="post"
           onSubmit={(event) => {
-            if (!window.confirm('Merkitäänkö vastaus käsitellyksi? Postitusosoite poistetaan.')) {
+            const warning = response.address
+              ? 'Merkitäänkö vastaus käsitellyksi? Postitusosoite poistetaan.'
+              : 'Merkitäänkö vastaus käsitellyksi?';
+
+            if (!window.confirm(warning)) {
               event.preventDefault();
             }
           }}

@@ -56,6 +56,41 @@ describe('parseOwnerResponse', () => {
     });
   });
 
+  describe('an owner with several discs waiting', () => {
+    it('reads a posting that asks for no address', () => {
+      expect(parseOwnerResponse(form({ choice: '1', handoverMethod: '0', hasMoreDiscs: 'on' }), AT_HOME)).toEqual({
+        response: { choice: OwnerChoice.WantsItBack, handoverMethod: HandoverMethod.ByMail, hasMoreDiscs: true },
+      });
+    });
+
+    // The page unmounts the address fields with the checkbox, but a stale form
+    // could still carry them. The parcel's contents are being agreed by
+    // message, so an address typed before the box was ticked means nothing.
+    it('drops an address sent alongside it', () => {
+      const parsed = parseOwnerResponse(
+        form({ choice: '1', handoverMethod: '0', hasMoreDiscs: 'on', ...address }),
+        AT_HOME,
+      );
+
+      expect(parsed).toEqual({
+        response: { choice: OwnerChoice.WantsItBack, handoverMethod: HandoverMethod.ByMail, hasMoreDiscs: true },
+      });
+    });
+
+    // An unticked checkbox is absent from the form data entirely.
+    it('is off when the box is not ticked', () => {
+      const parsed = parseOwnerResponse(form({ choice: '1', handoverMethod: '0', ...address }), AT_HOME);
+
+      expect(parsed).not.toHaveProperty('response.hasMoreDiscs');
+    });
+
+    it('does not apply to a collection', () => {
+      expect(parseOwnerResponse(form({ choice: '1', handoverMethod: '1', hasMoreDiscs: 'on' }), AT_HOME)).toEqual({
+        response: { choice: OwnerChoice.WantsItBack, handoverMethod: HandoverMethod.PickedUpFromHome },
+      });
+    });
+  });
+
   it('trims what was typed', () => {
     const parsed = parseOwnerResponse(
       form({ choice: '1', handoverMethod: '0', ...address, shippingCity: '  Helsinki  ' }),
