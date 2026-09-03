@@ -35,6 +35,34 @@ CREATE POLICY "Allow authenticated delete"
   USING (true);
 ```
 
+## disc_retrievals
+
+Only the club's own admin has anything to do with the retrieval list: it is read
+behind a signed-in page, and both writes come from admin actions. Deliberately
+nothing for `anon` — the owner-facing page that lets a disc's owner say what they
+want is a separate feature, and will bring its own, narrower way in rather than
+widening this.
+
+The `UPDATE` policy carries `USING` as well as `WITH CHECK`, for the reason given
+under `discs` below.
+
+Applied by `supabase/migrations/20260903000000_disc_retrievals.sql`, which also
+enables RLS on the table.
+
+```sql
+CREATE POLICY "Allow authenticated select" ON public.disc_retrievals
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Allow authenticated insert" ON public.disc_retrievals
+  FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated update" ON public.disc_retrievals
+  FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated delete" ON public.disc_retrievals
+  FOR DELETE TO authenticated USING (true);
+```
+
 ## discs
 
 The UPDATE policy needs a `USING` clause as well as `WITH CHECK`. `USING`

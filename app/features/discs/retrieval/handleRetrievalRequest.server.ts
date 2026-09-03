@@ -1,8 +1,9 @@
-import { markRefusal, requireAdminJson } from '~/lib/api/resourceRoute.server';
+import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId } from '~/lib/api/validate';
 import { isRetrievalListEnabled } from '~/config/clubs';
 import { isRetrievalMethod } from '~/features/discs/retrieval/retrievalMethod';
-import { markDiscForRetrieval } from '~/models/discs.server';
+import { queryRequestRetrieval } from '~/features/discs/retrieval/queryRequestRetrieval.server';
+import { createSupabaseServerClient } from '~/models/utils';
 
 /** Authorises, validates and applies a retrieval request posted to /discs/retrieval. */
 export async function handleRetrievalRequest(request: Request): Promise<Response> {
@@ -32,10 +33,10 @@ export async function handleRetrievalRequest(request: Request): Promise<Response
   }
 
   try {
-    const refusal = markRefusal(await markDiscForRetrieval(externalId, retrievalMethod, request));
+    const outcome = await queryRequestRetrieval(createSupabaseServerClient(request), { externalId, retrievalMethod });
 
-    if (refusal) {
-      return refusal;
+    if (outcome === 'not-found') {
+      return Response.json({ error: 'Kiekkoa ei löytynyt.' }, { status: 404 });
     }
 
     return Response.json({ onRetrievalList: true });

@@ -55,6 +55,10 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             {method && ` · ${method}`}
           </span>
 
+          {/* What the notepad never recorded. Worth having on the card: a
+              request from three weeks ago is one to ask about. */}
+          <span className="text-sm text-gray-600">Pyydetty {formatDate(disc.requestedAt)}</span>
+
           {/* A link rather than plain digits: the number is here to be called
               or texted from the same phone the list is read on. */}
           {disc.ownerPhoneNumber && (

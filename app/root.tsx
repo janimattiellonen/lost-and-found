@@ -14,13 +14,14 @@ import {
 } from 'react-router';
 
 import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
 import { getClubFavicon, isRetrievalListEnabled } from '~/config/clubs';
-import { countDiscsForRetrieval } from '~/models/discs.server';
+import { queryRetrievalCount } from '~/features/discs/retrieval/queryRetrievalCount.server';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
 // dev and build (a `?url` import is served raw in dev, leaving @tailwind
 // directives unexpanded). React Router injects the resulting stylesheet for SSR.
@@ -44,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     {
       env,
       session,
-      retrievalCount: await loadRetrievalCount(request, session != null),
+      retrievalCount: await loadRetrievalCount(supabase, session != null),
     },
     {
       headers,
@@ -61,13 +62,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
  * page for the whole app -- the menu item is then simply absent, which is the
  * same thing every other club sees.
  */
-async function loadRetrievalCount(request: Request, isSignedIn: boolean): Promise<number | null> {
+async function loadRetrievalCount(supabase: SupabaseClient, isSignedIn: boolean): Promise<number | null> {
   if (!isSignedIn || !isRetrievalListEnabled(parseInt(process.env.APP_CLUB_ID!, 10))) {
     return null;
   }
 
   try {
-    return await countDiscsForRetrieval(request);
+    return await queryRetrievalCount(supabase);
   } catch {
     return null;
   }

@@ -1,8 +1,8 @@
 import { redirect } from 'react-router';
 
 import { isRetrievalListEnabled } from '~/config/clubs';
-import { getDiscsForRetrieval } from '~/models/discs.server';
-import { isUserLoggedIn } from '~/models/utils';
+import { queryRetrievalList } from '~/features/discs/retrieval/queryRetrievalList.server';
+import { createSupabaseServerClient, isUserLoggedIn } from '~/models/utils';
 
 /**
  * Everything the retrieval page renders.
@@ -20,5 +20,5 @@ export async function loadRetrievalList(request: Request) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  return { discs: await getDiscsForRetrieval(request) };
+  return { discs: await queryRetrievalList(createSupabaseServerClient(request)) };
 }

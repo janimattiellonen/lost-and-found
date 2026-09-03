@@ -2,7 +2,8 @@ import { redirect } from 'react-router';
 
 import { isRetrievalListEnabled } from '~/config/clubs';
 import { isExternalId } from '~/lib/api/validate';
-import { markDiscRetrieved } from '~/models/discs.server';
+import { queryCompleteRetrieval } from '~/features/discs/retrieval/queryCompleteRetrieval.server';
+import { createSupabaseServerClient } from '~/models/utils';
 import { isUserLoggedIn } from '~/models/utils';
 
 /**
@@ -27,9 +28,9 @@ export async function handleRetrievedRequest(request: Request, formData: FormDat
     return new Response('Virheellinen kiekon tunniste.', { status: 422 });
   }
 
-  await markDiscRetrieved(externalId, request);
+  await queryCompleteRetrieval(createSupabaseServerClient(request), externalId);
 
-  // An id that no longer resolves is not worth an error page: the disc is off
-  // the list either way, which is what the admin asked for.
+  // A disc that is no longer on the list is not worth an error page: it is off
+  // it either way, which is what the admin asked for.
   return null;
 }

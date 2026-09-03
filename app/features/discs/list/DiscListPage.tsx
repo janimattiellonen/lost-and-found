@@ -17,7 +17,7 @@ import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
 import { getDiscCourseNames } from '~/config/courses';
-import { isRetrievalListEnabled } from '~/config/clubs';
+import type { RetrievalMethodValue } from '~/features/discs/retrieval/retrievalMethod';
 
 export default function DiscListPage(): JSX.Element {
   const fetcher = useFetcher();
@@ -43,6 +43,8 @@ export default function DiscListPage(): JSX.Element {
   const distinctDiscNames: string[] = fetcher.data?.distinctDiscNames ?? [];
   const distinctCourses: string[] = fetcher.data?.distinctCourses ?? [];
   const emptyingLogItems: EmptyingLogDTO[] = fetcher.data?.emptyingLogItems ?? [];
+  // Null both before the first load and for anyone who has no retrieval list.
+  const pendingRetrievals: Record<string, RetrievalMethodValue> | null = fetcher.data?.pendingRetrievals ?? null;
 
   const changeHandler = (e: any): void => {
     if (e.target.value.length > 2) {
@@ -155,12 +157,7 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable
-              discs={discs}
-              courses={clubCourses}
-              canRequestRetrieval={isRetrievalListEnabled(clubId)}
-              onChanged={reload}
-            />
+            <DiscTable discs={discs} courses={clubCourses} pendingRetrievals={pendingRetrievals} onChanged={reload} />
           </div>
         )}
         {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
