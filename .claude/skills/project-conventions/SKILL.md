@@ -1,10 +1,19 @@
 ---
 name: project-conventions
-description: Project architecture and code conventions — route structure, feature organization, database query naming, and file organization.
+description: Project architecture and code conventions — route structure, feature organization, database query naming, and file organization. Note that feature work also requires a spec in specs/; see the separate specs skill.
 user-invocable: false
 ---
 
 # Project conventions
+
+## Specs come first
+
+Every major feature has a specification in `specs/`. Write or update the spec
+**before** implementing a feature or changing behaviour, and verify it against
+the code once lint, typecheck and tests are green.
+
+The full workflow and the writing rules live in the `specs` skill — read it
+before touching anything in `specs/`.
 
 ## Slim routes
 
