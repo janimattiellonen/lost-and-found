@@ -19,6 +19,7 @@ per feature, linking to its own spec once written.
 | 10 | [Statistics](10-statistics.md) | Returned-to-owner vs. club, most-lost disc names, trends over time. | `features/stats/`, `routes/stats.tsx` |
 | 11 | [Auth & authorization](11-auth-and-authorization.md) | Supabase sign-in, cookie sessions, admin-only routes, RLS policies. | `features/auth/`, `routes/sign-in.tsx`, `docs/rls.md` |
 | 12 | [Multi-club configuration](12-multi-club-configuration.md) | One deployment per club: club-scoped data, course catalog, per-club feature flags. | `APP_CLUB_ID`, `config/courses`, `models/clubs.server.ts` |
+| 13 | [Admin navigation menu](13-admin-navigation.md) | The top bar of admin links and its phone layout: hamburger button, slide-in panel, focus trap, scroll lock, waiting counts. | `ui/AdminMenu.tsx`, `root.tsx` |
 
 All paths are relative to `app/`.
 

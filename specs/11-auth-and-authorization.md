@@ -18,7 +18,7 @@ cookie sessions, with row-level security in Postgres as the second line.
 2. When either field is empty or Supabase rejects the credentials, then the form re-renders with a Finnish error and HTTP 422.
 3. When a signed-out visitor requests an admin page, then its loader redirects to `/sign-in`.
 4. When a signed-out client POSTs to a disc resource route, then it gets `401` with `Kirjautuminen on vanhentunut. Kirjaudu uudelleen.`
-5. When signed in, then `AdminMenu` appears above every page and the disc list gains admin-only columns and row actions.
+5. When signed in, then `AdminMenu` appears above every page and the disc list gains admin-only columns and row actions. What that menu contains and how it behaves on a phone is [13](13-admin-navigation.md).
 6. When "Kirjaudu ulos" is confirmed, then `supabase.auth.signOut()` runs in the browser; `root.tsx` sees the auth-state change and revalidates.
 
 ## Data
