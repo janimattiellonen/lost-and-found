@@ -14,11 +14,16 @@ type Props = {
 };
 
 /**
- * The discs to fetch out of the club's storage, read in the storage itself.
+ * The discs still to be fetched, read where they are kept.
  *
  * Cards rather than a table: this is read on a phone, standing in front of the
  * shelf, and the four things it carries are the four things that used to be
  * typed into a notepad app.
+ *
+ * The text says nothing about *where* the disc is. One club keeps its discs in
+ * a koppi the admin drives to and the other on his own shelf, and a wording per
+ * club would be a second place recording which -- `clubs.stores_discs_offsite`
+ * is the first, and it is the one the owner-facing page reads.
  */
 export default function RetrievalListPage({ discs }: Props): JSX.Element {
   return (
@@ -26,8 +31,8 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
       <H2 className="mt-8 mb-2">Noutolista</H2>
 
       <p className="mb-6 max-w-2xl text-sm text-gray-600">
-        Kiekot, joita omistajat ovat pyytäneet ja jotka ovat vielä seuran varastossa. Merkitse kiekko noudetuksi, kun
-        olet hakenut sen varastosta – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
+        Kiekot, joita omistajat ovat pyytäneet ja joita ei ole vielä haettu. Merkitse kiekko noudetuksi, kun se on
+        sinulla – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
       </p>
 
       {discs.length === 0 && <p className="text-gray-500">Noutolistalla ei ole kiekkoja.</p>}

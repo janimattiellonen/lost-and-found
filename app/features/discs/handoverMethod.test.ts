@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  FETCHING_HANDOVER_METHODS,
   HandoverMethod,
   handoverMethodLabel,
   handoverMethodOptions,
@@ -55,6 +56,15 @@ describe('handoverMethod', () => {
     // the storage is not an errand for the admin.
     it('is false for collecting from the storage', () => {
       expect(needsFetchingFromStorage(HandoverMethod.PickedUpFromStorage)).toBe(false);
+    });
+
+    // submit_owner_response() decides the same thing in SQL, and cannot import
+    // this module: 20260904020000_owner_answer_creates_retrieval.sql writes the
+    // numbers out as `p_handover_method IN (0, 1)`. Renumbering the enum would
+    // leave that condition pointing at the wrong methods with nothing to say
+    // so, which is what this pins. Change the migration alongside.
+    it('is the two numbers the retrieval migration hardcodes', () => {
+      expect(FETCHING_HANDOVER_METHODS).toEqual([0, 1]);
     });
   });
 });

@@ -1,6 +1,5 @@
 import { redirect } from 'react-router';
 
-import { isRetrievalListEnabled } from '~/config/clubs';
 import { isExternalId } from '~/lib/api/validate';
 import { queryCompleteRetrieval } from './queryCompleteRetrieval.server';
 import { createSupabaseServerClient } from '~/models/utils';
@@ -16,10 +15,6 @@ import { isUserLoggedIn } from '~/models/utils';
 export async function handleRetrievedRequest(request: Request, formData: FormData): Promise<Response | null> {
   if (!(await isUserLoggedIn(request))) {
     return redirect('/sign-in');
-  }
-
-  if (!isRetrievalListEnabled()) {
-    return new Response('Not Found', { status: 404 });
   }
 
   const externalId = formData.get('externalId');

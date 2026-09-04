@@ -1,6 +1,5 @@
 import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId } from '~/lib/api/validate';
-import { isRetrievalListEnabled } from '~/config/clubs';
 import { isRetrievalMethod } from './retrievalMethod';
 import { queryRequestRetrieval } from './queryRequestRetrieval.server';
 import { createSupabaseServerClient } from '~/models/utils';
@@ -11,12 +10,6 @@ export async function handleRetrievalRequest(request: Request): Promise<Response
 
   if ('response' in gate) {
     return gate.response;
-  }
-
-  // The list is one club's way of working, and this instance serves one club.
-  // Checked here as well as in the UI: the route is reachable without it.
-  if (!isRetrievalListEnabled()) {
-    return Response.json({ error: 'Noutolista ei ole käytössä.' }, { status: 404 });
   }
 
   const { externalId, retrievalMethod } = (gate.body ?? {}) as Record<string, unknown>;

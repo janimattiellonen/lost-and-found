@@ -51,9 +51,9 @@ type DiscTableProps = {
   /** Called after a disc has been deleted or marked returned, to reload the list. */
   onChanged?: () => void;
   /**
-   * The discs already waiting to be fetched from storage, keyed by external id,
-   * with what their owners asked for. Null when there is no retrieval list to
-   * be on, which is what leaves the row action out.
+   * The discs already waiting to be fetched, keyed by external id, with what
+   * their owners asked for. Null for a visitor who is not signed in, which is
+   * what leaves the row action out.
    */
   pendingRetrievals?: Record<string, RetrievalMethodValue> | null;
   /**
@@ -78,8 +78,8 @@ interface Row {
   /** Club-internal notes. The loader only sends these to a signed-in visitor. */
   additionalInfo?: string;
   /**
-   * What the owner asked for, when the disc is waiting to be fetched out of the
-   * club's storage. Null when it is not on the retrieval list.
+   * What the owner asked for, when the disc is waiting to be fetched. Null when
+   * it is not on the retrieval list.
    */
   retrievalMethod: RetrievalMethodValue | null;
 }

@@ -5,6 +5,10 @@ import { currentClubId } from '~/config/clubs';
  * The one filter chain behind every read of the retrieval list: the page, the
  * count beside the menu item, and the state of the icons in the disc list.
  *
+ * This, not the absence of a per-club feature flag, is what keeps one club's
+ * errands off the other's list: both deployments share a database, and the
+ * club filter below is the whole of the separation.
+ *
  * "Pending" is two things at once. The request is open — nothing has been
  * fetched — and the disc is one the club still lists: a disc since returned,
  * released for sale or donation, or archived has no errand left in it, so it
