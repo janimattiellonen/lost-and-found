@@ -139,9 +139,10 @@ its links point at routes owned by other features:
   component unmounts, so signing out from inside the panel cannot leave the next
   page permanently unscrollable.
 - **Everything the panel does to the rest of the page is undone in one place**,
-  in a fixed order: the background stops being inert, the scroll position is
+  in a fixed order: the background stops being inert, the scroll lock is
   released, and only then does focus go back to the hamburger — focusing a button
-  that is still inert would silently do nothing.
+  that is still inert would silently do nothing. Nothing is done about the scroll
+  _position_; it is never moved, so it needs no restoring.
 - **Touch targets in the phone layout are at least 44 by 44 pixels** (the
   hamburger, the close button, each link row), the smallest size that is reliably
   hittable with a thumb.
@@ -163,6 +164,17 @@ its links point at routes owned by other features:
   skips itself unless `E2E_EMAIL` and `E2E_PASSWORD` are set, like the other
   signed-in E2E tests. There is no unit test, because this repo has no test setup
   for rendering React components.
+- **Widening the window past 768 pixels is the one close path that returns focus
+  nowhere.** The panel closes as it should, but at that width the hamburger is
+  `display: none`, so focusing it does nothing and focus stays on the document —
+  the outcome the rule above otherwise avoids. Nobody resizing a window with a
+  mouse is likely to notice; nothing was added for it.
+- **The `inert` background is decided once, when the panel opens.** The children
+  of `<body>` are read at that moment, so an element added to `<body>` while the
+  panel is open is never made inert, and closing only clears the ones that were.
+  In practice nothing does that here — navigating closes the panel — but the rule
+  above is stated as if it held for the whole time the panel is open, and it does
+  not.
 - Nested menu items are deliberately out of scope: no admin page has children.
 
 ## Open questions

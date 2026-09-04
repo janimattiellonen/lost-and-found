@@ -27,10 +27,9 @@ const links: MenuLink[] = [
 // width would sit twice in the tab order.
 const DESKTOP_MEDIA_QUERY = '(min-width: 768px)';
 
-// What the Tab key can reach. Wider than the panel currently contains, so
-// adding a field to it later does not quietly punch a hole in the focus trap.
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+// What the Tab key can reach inside the panel: its links, and its two buttons.
+// That is everything the panel contains; widen this if it ever grows a field.
+const FOCUSABLE = 'a[href], button:not([disabled])';
 
 /**
  * A count in parentheses, or nothing.
@@ -91,73 +90,28 @@ export default function AdminMenu({
 
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
 
-  // Everything the panel does to the rest of the page, in one effect, because
-  // the order of the undoing matters: the background stops being inert before
-  // focus is put back into it, and the scroll position it had is what it gets
-  // back.
+  // The three things the panel does to the rest of the page. They are set up
+  // independently, but undone in one place and in one order, because focusing a
+  // button that is still inert would silently do nothing.
   useEffect(() => {
     const panel = panelRef.current;
-    const backdrop = backdropRef.current;
 
     if (!isPanelOpen || panel == null) {
       return;
     }
 
-    const toggle = toggleRef.current;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    // `inert` is what actually makes the page behind the panel unreachable: no
-    // Tab, no click, and no screen-reader cursor either. `aria-modal` alone asks
-    // the screen reader nicely; this tells the browser. Anything that contains
-    // the panel or its backdrop is left alone, so the two survive being moved
-    // deeper into the page some day.
-    const background = Array.from(document.body.children).filter(
-      (element) => !element.contains(panel) && !(backdrop != null && element.contains(backdrop)),
-    );
-    background.forEach((element) => element.setAttribute('inert', ''));
+    const releaseBackground = makeBackgroundInert(panel, backdropRef.current);
+    const releaseScroll = lockScroll();
+    const releaseKeyboard = trapKeyboard(panel, closePanel);
 
     closeRef.current?.focus();
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closePanel();
-        return;
-      }
-
-      if (event.key !== 'Tab') {
-        return;
-      }
-
-      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE);
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (first == null) {
-        return;
-      }
-
-      // Focus that is somehow outside the panel is pulled back into it, not
-      // only wrapped around at the two ends.
-      if (!panel.contains(document.activeElement)) {
-        first.focus();
-        event.preventDefault();
-      } else if (event.shiftKey && document.activeElement === first) {
-        last.focus();
-        event.preventDefault();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        first.focus();
-        event.preventDefault();
-      }
-    };
-
-    document.addEventListener('keydown', onKeyDown);
+    const toggle = toggleRef.current;
 
     return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      background.forEach((element) => element.removeAttribute('inert'));
-      document.body.style.overflow = previousOverflow;
+      releaseKeyboard();
+      releaseBackground();
+      releaseScroll();
 
       // Closing anything -- the button, Escape, the backdrop, a navigation --
       // ends here, so focus comes back to the hamburger from every one of them.
@@ -172,6 +126,10 @@ export default function AdminMenu({
   // The panel only exists below the breakpoint. Widening the window past it
   // hides the panel by CSS, so the state has to follow -- otherwise the scroll
   // lock and the inert background would outlive the thing that asked for them.
+  //
+  // This is the one close path that returns focus nowhere: at that width the
+  // hamburger is `display: none`, so focusing it does nothing and focus stays on
+  // the document. See the spec's known gaps.
   useEffect(() => {
     if (!isPanelOpen) {
       return;
@@ -289,6 +247,83 @@ export default function AdminMenu({
       )}
     </>
   );
+}
+
+/**
+ * Makes everything except the panel unreachable, and gives back the undo.
+ *
+ * `inert` is what actually does it: no Tab, no click, and no screen-reader
+ * cursor either. `aria-modal` alone asks the screen reader nicely; this tells
+ * the browser. Anything that contains the panel or its backdrop is left alone,
+ * so the two survive being moved deeper into the page some day.
+ *
+ * The children are looked at once, on opening. See the spec's known gaps.
+ */
+function makeBackgroundInert(panel: HTMLElement, backdrop: HTMLElement | null): () => void {
+  const background = Array.from(document.body.children).filter(
+    (element) => !element.contains(panel) && !(backdrop != null && element.contains(backdrop)),
+  );
+
+  background.forEach((element) => element.setAttribute('inert', ''));
+
+  return () => background.forEach((element) => element.removeAttribute('inert'));
+}
+
+/**
+ * Stops the page behind the panel scrolling, and gives back the undo.
+ *
+ * The undo puts back whatever `overflow` was there before rather than blanking
+ * it, so the lock cannot quietly discard someone else's value.
+ */
+function lockScroll(): () => void {
+  const previous = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  return () => {
+    document.body.style.overflow = previous;
+  };
+}
+
+/**
+ * Keeps Tab inside the panel and makes Escape close it; gives back the undo.
+ *
+ * Focus that is somehow outside the panel is pulled back into it, not only
+ * wrapped around at the two ends.
+ */
+function trapKeyboard(panel: HTMLElement, close: () => void): () => void {
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      close();
+      return;
+    }
+
+    if (event.key !== 'Tab') {
+      return;
+    }
+
+    const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE);
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (first == null) {
+      return;
+    }
+
+    if (!panel.contains(document.activeElement)) {
+      first.focus();
+      event.preventDefault();
+    } else if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  };
+
+  document.addEventListener('keydown', onKeyDown);
+
+  return () => document.removeEventListener('keydown', onKeyDown);
 }
 
 const PANEL_ID = 'admin-menu-panel';
