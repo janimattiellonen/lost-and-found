@@ -5,6 +5,7 @@ import type { ClubPayment } from '~/config/clubs';
 import { formatPostageFee, POSTAGE_PAYEE_NAME, POSTAGE_PAYEE_NUMBER } from '~/config/shipping';
 import { HandoverMethod, type HandoverMethodValue } from '~/features/discs/handoverMethod';
 import { OwnerChoice, type OwnerChoiceValue } from './ownerChoice';
+import { ADDRESS_LIMITS } from './parseOwnerResponse';
 import type { OwnerLinkDisc } from './ownerResponse';
 import type { OwnerLinkActionResult } from './handleOwnerLinkSubmit.server';
 import Button from '~/ui/Button';
@@ -246,23 +247,53 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
 
       <Wrapper>
         <Label htmlFor="shippingName">Nimi</Label>
-        <TextField id="shippingName" name="shippingName" fullWidth required />
+        <TextField
+          id="shippingName"
+          name="shippingName"
+          fullWidth
+          required
+          inputProps={{ maxLength: ADDRESS_LIMITS.shippingName.max }}
+        />
       </Wrapper>
       <Wrapper>
         <Label htmlFor="shippingStreet">Katuosoite</Label>
-        <TextField id="shippingStreet" name="shippingStreet" fullWidth required />
+        <TextField
+          id="shippingStreet"
+          name="shippingStreet"
+          fullWidth
+          required
+          inputProps={{ maxLength: ADDRESS_LIMITS.shippingStreet.max }}
+        />
       </Wrapper>
       <Wrapper>
         <Label htmlFor="shippingPostalCode">Postinumero</Label>
-        <TextField id="shippingPostalCode" name="shippingPostalCode" fullWidth required />
+        <TextField
+          id="shippingPostalCode"
+          name="shippingPostalCode"
+          fullWidth
+          required
+          inputProps={{ maxLength: ADDRESS_LIMITS.shippingPostalCode.max }}
+        />
       </Wrapper>
       <Wrapper>
         <Label htmlFor="shippingCity">Postitoimipaikka</Label>
-        <TextField id="shippingCity" name="shippingCity" fullWidth required />
+        <TextField
+          id="shippingCity"
+          name="shippingCity"
+          fullWidth
+          required
+          inputProps={{ maxLength: ADDRESS_LIMITS.shippingCity.max }}
+        />
       </Wrapper>
       <Wrapper>
         <Label htmlFor="shippingCountry">Maa</Label>
-        <TextField id="shippingCountry" name="shippingCountry" fullWidth placeholder="Suomi" />
+        <TextField
+          id="shippingCountry"
+          name="shippingCountry"
+          fullWidth
+          placeholder="Suomi"
+          inputProps={{ maxLength: ADDRESS_LIMITS.shippingCountry.max }}
+        />
       </Wrapper>
 
       <p className="mt-2 text-sm text-gray-600">

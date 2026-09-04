@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseOwnerResponse } from './parseOwnerResponse';
+import { ADDRESS_LIMITS, parseOwnerResponse } from './parseOwnerResponse';
 import { HandoverMethod } from '~/features/discs/handoverMethod';
 import { OwnerChoice } from './ownerChoice';
 
@@ -88,6 +88,49 @@ describe('parseOwnerResponse', () => {
       expect(parseOwnerResponse(form({ choice: '1', handoverMethod: '1', hasMoreDiscs: 'on' }), AT_HOME)).toEqual({
         response: { choice: OwnerChoice.WantsItBack, handoverMethod: HandoverMethod.PickedUpFromHome },
       });
+    });
+  });
+
+  // The link may have been forwarded to anyone, and the columns behind these
+  // fields are unbounded text.
+  describe('the length of an address line', () => {
+    it('refuses a line over its limit, naming it', () => {
+      const parsed = parseOwnerResponse(
+        form({ choice: '1', handoverMethod: '0', ...address, shippingStreet: 'x'.repeat(151) }),
+        AT_HOME,
+      );
+
+      expect(parsed).toEqual({ error: 'Katuosoite on liian pitkä – enintään 150 merkkiä.' });
+    });
+
+    it('accepts a line exactly at its limit', () => {
+      const street = 'x'.repeat(ADDRESS_LIMITS.shippingStreet.max);
+
+      expect(
+        parseOwnerResponse(form({ choice: '1', handoverMethod: '0', ...address, shippingStreet: street }), AT_HOME),
+      ).toMatchObject({ response: { address: { street } } });
+    });
+
+    // Optional, so it is not covered by the required-fields check above.
+    it('checks the country too', () => {
+      const parsed = parseOwnerResponse(
+        form({ choice: '1', handoverMethod: '0', ...address, shippingCountry: 'x'.repeat(61) }),
+        AT_HOME,
+      );
+
+      expect(parsed).toEqual({ error: 'Maa on liian pitkä – enintään 60 merkkiä.' });
+    });
+
+    // Whitespace is not length: the value stored is the trimmed one.
+    it('measures what is left after trimming', () => {
+      const city = 'x'.repeat(ADDRESS_LIMITS.shippingCity.max);
+
+      expect(
+        parseOwnerResponse(
+          form({ choice: '1', handoverMethod: '0', ...address, shippingCity: `   ${city}   ` }),
+          AT_HOME,
+        ),
+      ).toMatchObject({ response: { address: { city } } });
     });
   });
 
