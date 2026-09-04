@@ -16,7 +16,7 @@ admins only ever see the one club their instance serves.
 1. When a page loads, then the header shows the club's logo and name and the tab shows the club's favicon.
 2. When the disc list renders, then it contains only that club's discs, and links to that club's own lost-discs page.
 3. When an admin adds a disc, then it is filed under `APP_CLUB_ID` — the club never comes from the request.
-4. When the instance is Talin Tallaajat, then the "Noutolista" menu item, the `/retrieval` page and the row action exist; on Puskasoturit they are absent everywhere.
+4. When an admin signs in on either instance, then the "Noutolista" (retrieval list) menu item, the `/retrieval` page and the row action are there, listing only that instance's club's discs. It was Talin Tallaajat only until 2026-09-04; both admins have to fetch the disc before an owner can have it — out of the club's koppi (storage shed) at Tali, off the admin's own shelf at Puskasoturit — so the retrieval list is no longer a per-club feature at all.
 5. When an owner opens their SMS link, then the page works on both clubs and shows that club's MobilePay number and contact email.
 6. When an admin adds a disc on Puskasoturit, then a course picker is offered (Oittaa / Äijänpelto); on Talin Tallaajat there is none.
 
@@ -31,7 +31,7 @@ admins only ever see the one club their instance serves.
 |---|---|---|---|
 | `/notify/:courseSlug` | GET, POST | public | Found-disc form for the course resolved by `getCourseBySlug` |
 | `/bin/full/:courseSlug` | GET, POST | public | Bin-full form, same slug resolution |
-| `/retrieval` | GET, POST | admin | Talin Tallaajat only; `isRetrievalListEnabled()` gates loader and action |
+| `/retrieval` | GET, POST | admin | Both clubs; scoped by `queryPendingRetrievals`' `.eq('discs.club_id', currentClubId())` |
 | `/kiekko/:token` | GET, POST | token | Owner link — both clubs; club taken from `currentClubId()` and passed into the RPC |
 | `/discs/sync` | — | 404 | Per-club Sheets importers; route excluded in `app/routes.ts` |
 
@@ -40,7 +40,7 @@ admins only ever see the one club their instance serves.
 - `APP_CLUB_NAME` is a separate, free-text env var; it is what the header and the `<title>` show. Nothing checks that it matches `APP_CLUB_ID`.
 - `root.tsx` forwards `CLUB_ID` and `CLUB_NAME` to the browser in the loader's `env` object, so client components take the club as a prop rather than reading the env.
 - Every write scopes on the club so that an id belonging to the other club cannot be acted on: disc create, delete, batch delete, the mark-* updates, retrieval errands (`queryDiscIdByExternalId.server.ts`), and owner-response handling all add `.eq('club_id', currentClubId())` or pass `p_club_id`.
-- `isRetrievalListEnabled()` reads the club itself rather than taking one, and returns true only for `TALIN_TALLAAJAT`. It is checked in four places: `loadRetrievalList`, `loadRetrievalCount`, `handleRetrievalRequest`, `handleRetrievedRequest`, plus the disc list's pending-retrieval lookup.
+- `isRetrievalListEnabled()` was a per-club gate on the retrieval list, checked in `loadRetrievalList`, `loadRetrievalCount`, `handleRetrievalRequest`, `handleRetrievedRequest` and the disc list's pending-retrieval lookup. Removed on 2026-09-04 along with all five checks. `clubs.stores_discs_offsite` is now the one place recording where a club keeps its discs, and it decides only whether an owner is offered "Nouto varastolta" (collect from the koppi) on the sms link.
 - Course slugs are **global, not club-scoped**: `getCourseBySlug` searches the whole catalog, and `/notify/:courseSlug` and `/bin/full/:courseSlug` do not check `course.clubId === currentClubId()`.
 - `getDiscCourseNames(clubId)` returns the club's course names only when there is more than one; a single-course club gets `[]`, which is how the add form knows not to ask.
 - Per-club lookups all fall back rather than throw: `getClubLogo`/`getClubFavicon`/`getClubLostDiscsUrl`/`getClubPayment` return `null` for an unknown club so the element is left out, while `getClubContactEmail` falls back to Talin Tallaajat's address.
@@ -56,7 +56,7 @@ admins only ever see the one club their instance serves.
 | Club's own lost-discs page URL | `LOST_DISCS_URLS` |
 | MobilePay number + payee name | `CLUB_PAYMENTS` |
 | Courses, slugs, and whether a disc records a course | `app/config/courses.ts` |
-| Retrieval list (Tali only) | `isRetrievalListEnabled()` |
+| Whether the club stores discs offsite, i.e. whether an owner may collect from the koppi | `clubs.stores_discs_offsite` (true for club 2) |
 | Google Sheets importer, spreadsheet and API key | `app/import/`, `getImporter()` |
 | Which discs, notifications, templates and message log rows are visible | `club_id` filters in `app/models/*.server.ts` |
 

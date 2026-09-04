@@ -5,14 +5,21 @@
 ## Purpose
 Once a disc is in the club's inventory, an admin records what became of it: it went back
 to its owner, it was released for sale or donation, it was filed under the wrong course,
-or it was entered by mistake. Talin Tallaajat additionally keeps a *noutolista*
-("retrieval list") of discs that have to be fetched out of the club's storage before an
-owner can get them.
+or it was entered by mistake. The admin also keeps a *noutolista* ("retrieval list")
+of discs that have to be brought to hand before an owner can get them — out of the
+club's koppi (its storage shed) at Talin Tallaajat, off the admin's own shelf at
+Puskasoturit. Either way it is a trip the admin has to remember to make, which is why
+it is worth writing down.
 
 ## Actors
-- **Club admin** (signed in) — the only actor. Every action below is behind
+- **Club admin** (signed in) — the actor for every action below, each behind
   `requireAdminJson` or an `isUserLoggedIn` check.
-- No anonymous or cron path writes any of these.
+- **A disc's owner** (anonymous, holding an sms link) — can put a disc on the retrieval
+  list, and nothing else here. Never by writing to the table:
+  the only way in is `submit_owner_response()`, a `SECURITY DEFINER` function (one that
+  runs with its creator's rights rather than the caller's, so `anon` needs no privilege
+  on the tables it touches). See spec 05.
+- No cron path writes any of these.
 
 ## Disc state model
 
@@ -41,7 +48,10 @@ Transitions:
      +----- (archive:discs script) archived_at set -----> Archived
 
    Listed --- request retrieval ---> on retrieval list (open row)
-                  ^        |
+     |            ^        |
+     +-- owner answers "I want it back, post it / I'll collect it from you"
+     |   on the sms link --> the same open row, owner_response_id set
+     |            |
                   |        +-- change method (updates the same open row)
                   |        |
                   |        +-- "Merkitse noudetuksi" --> retrieved_at set, row closes
@@ -65,15 +75,29 @@ Course is not a state; `setDiscCourse` can run in any state.
    "Poistetaanko kiekko X (owner)? Poistoa ei voi peruuttaa." precedes a hard delete.
 4. When a club has courses configured, a course icon opens `CourseForm`; "Ei rataa"
    (no course) is a real option that clears `discs.course`.
-5. When the club is Talin Tallaajat, a storage icon opens `RetrievalMethodForm`; the
-   method is **required** ("Postitus"/"Nouto (minulta)"). The icon turns orange once the
-   disc is on the list, and reopening the form preselects the current method.
+5. When an admin clicks the storage icon, `RetrievalMethodForm` opens; the method is
+   **required** ("Postitus" (by post) / "Nouto (minulta)" (collect from me)). The icon
+   turns orange once the disc is on the list, and reopening the form preselects the
+   current method. Offered on both clubs.
 6. When an admin opens `/retrieval`, "Noutolista" lists the pending errands oldest first
    as phone-sized cards: colour + name, date entered, method, request date, a `tel:` link
    and the owner's name. "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes
    the row.
 7. When the retrieval list has pending rows, the admin menu item shows the count
-   (`loadRetrievalCount.server.ts`); the item is absent entirely for other clubs.
+   (`loadRetrievalCount.server.ts`); it is absent only when nobody is signed in.
+8. When a disc's owner answers "haluan kiekkoni takaisin" (I want my disc
+   back) on the sms link and asks for either post or collection from the admin, the disc
+   appears on the retrieval list by itself, with no admin step in between. An owner who
+   says they will collect it from the koppi themselves creates no row — the disc never
+   comes to the admin, so there is no errand — and neither does an owner who gives the
+   disc up. The answer still lands in the "Vastaukset" (answers) inbox either way; the
+   retrieval row is in addition to it, not instead of it.
+9. The intro paragraph on `/retrieval` names no place: "Kiekot, joita omistajat ovat
+   pyytäneet ja joita ei ole vielä haettu. Merkitse kiekko noudetuksi, kun se on
+   sinulla…" (discs owners have asked for and that have not been fetched yet; mark one
+   as fetched when you have it). On Puskasoturit the disc is on the admin's own shelf,
+   and a wording per club would be a second place recording where a club keeps its
+   discs.
 
 ## Data
 
@@ -98,9 +122,21 @@ not columns on `discs`:
 - `requested_at`, `retrieved_at` (nullable — NULL is what puts the row on the list)
 - `retrieval_method SMALLINT NOT NULL`, CHECK in (0,1)
 - CHECK `retrieved_at >= requested_at`; partial UNIQUE index on `disc_id WHERE retrieved_at IS NULL`
-- RLS: `authenticated` only, all four verbs; nothing for `anon`
-- `requested_by` existed in the original migration and was dropped again in
-  `20260904010000_owner_link_club_scope.sql` — provenance lives in `disc_owner_responses`.
+- RLS (row level security — the PostgreSQL feature that decides, row by row, whether a
+  database role may read or write it): `authenticated` only, all four verbs; nothing for
+  `anon`. Still true now that an owner's answer can create a row: it reaches this table
+  only from inside `submit_owner_response()`, which runs as its creator.
+- `owner_response_id BIGINT NULL REFERENCES disc_owner_responses(id) ON DELETE SET NULL`
+  (`20260904030000_owner_answer_creates_retrieval.sql`) — which answer put the disc on
+  the list. NULL means the admin did, by hand. `SET NULL` rather than `CASCADE`: losing
+  the answer must not silently lose the errand, since the disc still has to be fetched.
+- `requested_by SMALLINT` (0 = the club, 1 = the owner) existed in the original migration
+  and was dropped again in `20260904010000_owner_link_club_scope.sql`, because nothing
+  ever wrote anything but 0 and a column with one value reads like a fact that is being
+  kept. That migration's own comment says provenance should come back as
+  `owner_response_id` if an answer ever creates a retrieval; this is that case, and
+  follows it. A foreign key to the answer beats an enum: it says *which* answer,
+  so the admin can read the address and the phone number the request came with.
 
 ### Three distinct method enums
 
@@ -125,9 +161,12 @@ add, never renumber, and extend the CHECK alongside.
 | `/discs/disposal` | POST JSON | admin | `{externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod\|null}` → `{marked:true}` |
 | `/discs/delete` | POST JSON | admin | `{externalId}` → `{deleted:true}` |
 | `/discs/course` | POST JSON | admin | `{externalId, course\|null}` → `{marked:true}` |
-| `/discs/retrieval` | POST JSON | admin + Talin only | `{externalId, retrievalMethod}` → `{onRetrievalList:true}` |
-| `/retrieval` | GET | signed in + Talin only | the "Noutolista" page |
-| `/retrieval` | POST form | signed in + Talin only | `externalId` → closes the open row, revalidates |
+| `/discs/retrieval` | POST JSON | admin | `{externalId, retrievalMethod}` → `{onRetrievalList:true}` |
+| `/retrieval` | GET | signed in | the "Noutolista" page |
+| `/retrieval` | POST form | signed in | `externalId` → closes the open row, revalidates |
+
+No route of this feature is reachable without a session. The one non-admin entry point
+is the database function `submit_owner_response()`, described in spec 05.
 
 All five JSON routes are resource routes (no component) delegating to a
 `handle*Request.server.ts`.
@@ -148,9 +187,29 @@ All five JSON routes are resource routes (no component) delegating to a
 - `queryPendingRetrievals.server.ts` is the single filter chain behind the page, the menu
   count and the row icons: open row **and** disc still listed (not returned, not released,
   not archived), club-scoped through the `discs!inner` join.
-- The retrieval list is gated by `isRetrievalListEnabled()` in `app/config/clubs.ts` —
-  hardcoded `currentClubId() === TALIN_TALLAAJAT` — checked in the loader, the action and
-  the list loader, not only in the UI.
+- **The retrieval list is not gated on the club.** It was until 2026-09-04, by
+  `isRetrievalListEnabled()` in `app/config/clubs.ts`; that function and all five of its
+  call sites are gone. The reasoning it was built on — that only Talin stores discs
+  somewhere the admin has to travel to — was wrong about what the list is for: a
+  Puskasoturit disc is on the admin's shelf rather than in a shed, but it still has to be
+  found, packed and posted, and the same four facts (what it looks like, when it arrived,
+  who to call, what they asked for) are what the admin needs in front of them. What keeps
+  one club's errands off the other's list is `queryPendingRetrievals`, not a feature flag.
+- What an owner's answer does to the retrieval list is decided entirely by the answer's
+  own fields, inside `submit_owner_response()` after the answer row is inserted:
+  a row is created when `choice = 1` (wants it back) **and** `handover_method` is 0 (post)
+  or 1 (collect from the admin). `handover_method = 2` (collect from the koppi) and
+  `choice = 0` (gives it up) create nothing. This is the same narrowing
+  `needsFetchingFromStorage` and the `disc_retrievals` CHECK already apply — a disc the
+  owner collects from the koppi is not an errand for anybody.
+- An answer for a disc that is **already** on the list updates the open row
+  rather than failing — `ON CONFLICT (disc_id) WHERE retrieved_at IS NULL DO UPDATE`,
+  using the partial unique index as the arbiter — setting `retrieval_method` to what the
+  owner asked for and `owner_response_id` to the new answer, and leaving `requested_at`
+  alone, because the errand is as old as the first request. Without this the whole
+  `submit_owner_response()` call would raise and the owner would be told their link is
+  unknown, which is both untrue and unfixable from their side. The owner is the authority
+  on what they want, so their later word wins over an earlier transcription.
 - Dates are formatted in the browser (`format(new Date(), 'y-MM-dd')`), because the server
   runs in UTC and a Finnish evening is already the next day there.
 
@@ -173,12 +232,33 @@ All five JSON routes are resource routes (no component) delegating to a
   lives in `queryDiscIdByExternalId`, and a `not-found` outcome is discarded.
 - `queryRetrievalList` falls back to `RetrievalMethod.PickedUp` for an out-of-range
   smallint — a wasted trip rather than a wasted stamp.
-- Two sources of truth for "this club stores discs offsite": `isRetrievalListEnabled()`
-  hardcodes club 2 in TypeScript, while `clubs.stores_discs_offsite` (set for club 2 in
-  `20260903010000_owner_responses.sql`) says the same thing in SQL for the owner-link
-  functions. They can drift.
+- ~~Two sources of truth for "this club stores discs offsite".~~ Closed on 2026-09-04
+  with `isRetrievalListEnabled()`. `clubs.stores_discs_offsite` (set for club 2 in
+  `20260903010000_owner_responses.sql`) is now the one place, and it decides one thing:
+  whether "Nouto varastolta" is offered to an owner.
+- An owner can put a disc on the list repeatedly by answering the link again
+  with a different method, and nothing tells the admin the line changed under them. The
+  list shows the current method and the original request date; a disc whose method flipped
+  from "Postitus" to "Nouto (minulta)" after the admin already bought a stamp looks the
+  same as one that always said so. The answers inbox is where the history is.
+- `owner_response_id` is only as durable as the answer row. Nothing deletes answers
+  today, but the shipping-address wipe (spec 05) empties the address fields of a handled
+  answer in place, so a retrieval row can end up pointing at an answer that no longer says
+  where to post the disc.
+- **The SQL has no automated test.** The rule deciding which answers become errands lives
+  in `submit_owner_response()`, and this repo's tests are Vitest unit tests over TypeScript
+  modules with no database — nothing exercises the function, the `ON CONFLICT` branch or
+  the club scoping inside it. `handoverMethod.test.ts` pins the two numbers the migration
+  hardcodes (`FETCHING_HANDOVER_METHODS` equals `[0, 1]`), which is as close as the current
+  setup gets; the rest was checked by reading.
 - The delete is a hard delete; `disc_retrievals` cascades, message log rows do not go with it.
 
 ## Open questions
 - Whether a return mark should close the open retrieval row rather than let it be
   filtered out.
+- Whether the list should show that a line came from an owner's own answer rather than
+  from the admin's transcription. `owner_response_id` makes it possible; nothing in the UI
+  reads it, on the grounds that the errand is the same either way.
+- Whether an owner asking for a disc that is already marked returned, released or archived
+  should be able to reopen it. Today `submit_owner_response()` refuses such a token
+  outright, so the question never reaches the retrieval list.

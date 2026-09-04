@@ -33,6 +33,12 @@ admin's inbox at `/vastaukset`. Background: `docs/getting-a-disc-back-to-its-own
    nothing further.
 7. After a submit: "Kiitos vastauksesta!" plus a link back to the same page —
    answering again is how a choice or a typo is changed.
+   - An answer of "I want it back" that asks for post or for collection from
+     the admin also puts the disc straight onto the admin's retrieval list
+     (spec 03), so the admin does not have to copy it across. The
+     owner sees no sign of this; the page says the same thing either way.
+     Collecting from the koppi puts nothing on the list — the disc stays where it
+     is and the owner comes to it — and neither does giving the disc up.
 8. A token that is unknown, malformed, belongs to another club, or names a disc
    already returned / released / archived → "Linkki ei ole enää käytössä" (this
    link is no longer in use), with the club's contact email. Same screen for all
@@ -71,9 +77,11 @@ CHECK constraints: choice in (0,1); method in (0,1,2) or NULL; `(choice = 1) =
 `has_more_discs`; an address only ever with post; `has_more_discs` only with
 post; and the address length limits below.
 
-Not enforced by the schema: nothing stops two answers for one disc (deliberate),
-and nothing turns an answer into a `disc_retrievals` row or a `discs` update —
-the admin acts by hand.
+Not enforced by the schema: nothing stops two answers for one disc (deliberate).
+An answer never becomes a `discs` update — the club's own decisions stay the
+admin's to make. It does become a `disc_retrievals` row, which is a to-do item
+for the admin rather than a fact about the disc: see "Rules & constraints" below
+and spec 03 for the shape.
 
 ## Routes & entry points
 | Route | Method(s) | Auth | Purpose |
@@ -111,6 +119,20 @@ only called from inside those two.
   own `APP_CLUB_ID` as `p_club_id`, so a Talin token opened on the Puskasoturit
   deployment is simply not found. Every admin query joins `discs!inner` and
   filters `club_id`.
+- **The retrieval row is created inside `submit_owner_response()`, in the same
+  transaction as the answer.** Not from the route, and not by giving
+  `anon` any privilege on `disc_retrievals` — the table still has no `anon`
+  policy. Doing it in the function keeps the two writes atomic: an answer that
+  says "post it to me" and no matching errand would be exactly the failure the
+  feature exists to prevent, and a half-written pair is worse than neither.
+  Which answers create a row (`choice = 1` and `handover_method` 0 or 1), and
+  what happens when the disc is already on the list, are specified in spec 03.
+- **An answer still changes nothing about the disc itself.** The row
+  it may create is the admin's errand, not a decision: `can_be_sold_or_donated`,
+  `is_returned_to_owner` and `return_method` stay the admin's to set, with the
+  answer as evidence beside them. A forwarded link can therefore add a trip to
+  the admin's list, which is visible and reversible, but cannot take a disc off
+  the public list or mark it returned.
 - **The page never renders a stored address back.** A forwarded link must not
   read out someone's home address; a typo is fixed by answering again.
 - **Handover options come from the disc's location, not its club.**
@@ -149,7 +171,14 @@ only called from inside those two.
   and the address is kept indefinitely (open question 7 of the doc).
 - An answer changes nothing about the disc. Nothing on the public list shows
   that an owner has answered, and a "gives it up" answer does not release the
-  disc — the admin still marks it.
+  disc — the admin still marks it. True of `discs` only; the answer may add a
+  `disc_retrievals` row.
+- The two tables can disagree and nothing reconciles them. An owner
+  who answers "post it", then answers again "I'll collect it from the koppi",
+  leaves two answers in the inbox and one open retrieval row that the second
+  answer does not remove — a row is only ever created or updated, never
+  withdrawn. The admin closes it with "Merkitse noudetuksi" (mark as fetched) or
+  leaves it; there is no "this was a mistake" action anywhere in the feature.
 - `disc_is_in_storage()` is false as soon as *any* retrieval row has a
   `retrieved_at`, and nothing records a disc going back. A disc fetched, not
   collected and returned to the koppi reads as out of it for good.
@@ -167,4 +196,11 @@ only called from inside those two.
 Carried from `docs/getting-a-disc-back-to-its-owner.md`: when exactly a shipping
 address is wiped (7); whether the page hands out the admin's full address for a
 collection (6); whether the page lists an owner's other discs (8); whether an
-answer should ever create a retrieval row by itself (2, decided "no" for now).
+answer should ever create a retrieval row by itself (2 — reopened and decided
+"yes" on 2026-09-04, and implemented in
+`20260904030000_owner_answer_creates_retrieval.sql`).
+
+New with that decision: whether answering a second time should be able to take a
+disc back **off** the retrieval list, and whether the answers inbox should show
+that a card already has an open errand attached so the admin does not fetch the
+same disc twice.

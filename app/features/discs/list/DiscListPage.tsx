@@ -43,7 +43,7 @@ export default function DiscListPage(): JSX.Element {
   const distinctDiscNames: string[] = fetcher.data?.distinctDiscNames ?? [];
   const distinctCourses: string[] = fetcher.data?.distinctCourses ?? [];
   const emptyingLogItems: EmptyingLogDTO[] = fetcher.data?.emptyingLogItems ?? [];
-  // Null both before the first load and for anyone who has no retrieval list.
+  // Null both before the first load and for a visitor who is not signed in.
   const pendingRetrievals: Record<string, RetrievalMethodValue> | null = fetcher.data?.pendingRetrievals ?? null;
 
   const changeHandler = (e: any): void => {
