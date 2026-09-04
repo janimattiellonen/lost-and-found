@@ -59,7 +59,7 @@ describe('handoverMethod', () => {
     });
 
     // submit_owner_response() decides the same thing in SQL, and cannot import
-    // this module: 20260904020000_owner_answer_creates_retrieval.sql writes the
+    // this module: 20260904030000_owner_answer_creates_retrieval.sql writes the
     // numbers out as `p_handover_method IN (0, 1)`. Renumbering the enum would
     // leave that condition pointing at the wrong methods with nothing to say
     // so, which is what this pins. Change the migration alongside.

@@ -127,7 +127,7 @@ not columns on `discs`:
   `anon`. Still true now that an owner's answer can create a row: it reaches this table
   only from inside `submit_owner_response()`, which runs as its creator.
 - `owner_response_id BIGINT NULL REFERENCES disc_owner_responses(id) ON DELETE SET NULL`
-  (`20260904020000_owner_answer_creates_retrieval.sql`) — which answer put the disc on
+  (`20260904030000_owner_answer_creates_retrieval.sql`) — which answer put the disc on
   the list. NULL means the admin did, by hand. `SET NULL` rather than `CASCADE`: losing
   the answer must not silently lose the errand, since the disc still has to be fetched.
 - `requested_by SMALLINT` (0 = the club, 1 = the owner) existed in the original migration

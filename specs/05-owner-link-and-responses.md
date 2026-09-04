@@ -198,7 +198,7 @@ address is wiped (7); whether the page hands out the admin's full address for a
 collection (6); whether the page lists an owner's other discs (8); whether an
 answer should ever create a retrieval row by itself (2 — reopened and decided
 "yes" on 2026-09-04, and implemented in
-`20260904020000_owner_answer_creates_retrieval.sql`).
+`20260904030000_owner_answer_creates_retrieval.sql`).
 
 New with that decision: whether answering a second time should be able to take a
 disc back **off** the retrieval list, and whether the answers inbox should show
