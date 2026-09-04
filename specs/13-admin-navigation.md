@@ -61,7 +61,9 @@ Below 768 pixels (the phone layout):
    a small round badge with the total of the two counts, and its accessible name
    says so: "Avaa valikko, 3 odottaa käsittelyä" (open menu, 3 awaiting
    handling). Without the badge the counts would be invisible while the menu is
-   shut, which is the whole reason those two links carry numbers.
+   shut, which is the whole reason those two links carry numbers. This goes
+   beyond making the menu work on a phone, and was kept deliberately for that
+   reason.
 8. When the admin presses the hamburger, then a panel slides in from the right
    over the page, holding the title "Valikko" (menu), a close button, the same
    links one per row, and the sign-out button. The rest of the page dims behind
@@ -175,6 +177,10 @@ its links point at routes owned by other features:
   In practice nothing does that here — navigating closes the panel — but the rule
   above is stated as if it held for the whole time the panel is open, and it does
   not.
+- **The focus trap knows only about links and buttons.** Its selector is
+  `'a[href], button:not([disabled])'`, which is everything the panel contains
+  today. A field added to the panel later would sit outside the trap until the
+  selector is widened; nothing enforces that but the comment beside it.
 - Nested menu items are deliberately out of scope: no admin page has children.
 
 ## Open questions

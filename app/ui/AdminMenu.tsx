@@ -90,9 +90,9 @@ export default function AdminMenu({
 
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
 
-  // The three things the panel does to the rest of the page. They are set up
-  // independently, but undone in one place and in one order, because focusing a
-  // button that is still inert would silently do nothing.
+  // What the panel does to the rest of the page while it is open. Each piece is
+  // set up independently, but they are undone in one place and in one order,
+  // because focusing a button that is still inert would silently do nothing.
   useEffect(() => {
     const panel = panelRef.current;
 
@@ -102,7 +102,7 @@ export default function AdminMenu({
 
     const releaseBackground = makeBackgroundInert(panel, backdropRef.current);
     const releaseScroll = lockScroll();
-    const releaseKeyboard = trapKeyboard(panel, closePanel);
+    const releaseKeyboard = handlePanelKeys(panel, closePanel);
 
     closeRef.current?.focus();
 
@@ -285,12 +285,14 @@ function lockScroll(): () => void {
 }
 
 /**
- * Keeps Tab inside the panel and makes Escape close it; gives back the undo.
+ * Takes over the two keys a dialog owns, and gives back the undo.
+ *
+ * Tab is kept inside the panel; Escape closes it.
  *
  * Focus that is somehow outside the panel is pulled back into it, not only
  * wrapped around at the two ends.
  */
-function trapKeyboard(panel: HTMLElement, close: () => void): () => void {
+function handlePanelKeys(panel: HTMLElement, close: () => void): () => void {
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       close();
