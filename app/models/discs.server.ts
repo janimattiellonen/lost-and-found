@@ -24,7 +24,8 @@ const PUBLIC_PHONE_DIGITS = 4;
 
 /** What the send-message pages read of a disc, phone number included. */
 const MESSAGING_DISC_COLUMNS =
-  'external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at';
+  'external_id, internal_disc_id, owner_phone_number, owner_name, disc_name, disc_colour, notified_at, ' +
+  'owner_link_token';
 
 /**
  * Maps the rows behind the disc list, cutting each owner's phone number down to

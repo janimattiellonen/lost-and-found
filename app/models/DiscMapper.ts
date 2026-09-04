@@ -39,6 +39,7 @@ export const toDTO = (raw: any): DiscDTO => {
     course: raw.course,
     notifiedAt: raw.notified_at,
     archivedAt: raw.archived_at,
+    ownerLinkToken: raw.owner_link_token,
   };
 };
 
@@ -69,5 +70,7 @@ export const fromDTO = (discDTO: DiscDTO): DbDiscType => {
     course: discDTO.course,
     notified_at: discDTO.notifiedAt,
     archived_at: discDTO.archivedAt,
+    // Assigned by the database on insert; only ever read back.
+    owner_link_token: undefined,
   };
 };

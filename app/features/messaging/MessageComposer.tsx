@@ -29,6 +29,12 @@ type Props = {
   onRecorded?: () => void;
   /** Where this disc sits in a selection. Absent for a single disc. */
   progress?: { position: number; total: number };
+  /**
+   * The site's own origin, from the loader. What `[link]` in a template is
+   * built on — read from the request rather than from window, so the server
+   * render and the browser's agree.
+   */
+  baseUrl: string;
 };
 
 /**
@@ -49,6 +55,7 @@ export default function MessageComposer({
   onCancel,
   onRecorded,
   progress,
+  baseUrl,
 }: Props): JSX.Element {
   const fetcher = useFetcher();
 
@@ -166,7 +173,7 @@ export default function MessageComposer({
         </Button>
         <Button
           variant="contained"
-          to={`sms:${toDiallable(phoneNumber)}&body=${convertLineBreaks(replaceTokensWithValues(message, disc))}`}
+          to={`sms:${toDiallable(phoneNumber)}&body=${convertLineBreaks(replaceTokensWithValues(message, disc, baseUrl))}`}
         >
           Lähetä tekstiviesti
         </Button>
@@ -176,7 +183,7 @@ export default function MessageComposer({
               external id, and this way the form cannot post one the loader
               never resolved. */}
           <input type="hidden" name="externalId" value={disc.externalId} />
-          <input type="hidden" name="content" value={lineBreakToBr(replaceTokensWithValues(message, disc))} />
+          <input type="hidden" name="content" value={lineBreakToBr(replaceTokensWithValues(message, disc, baseUrl))} />
           <Button type="submit" disabled={ok === true}>
             {getStatusText()}
           </Button>
@@ -186,7 +193,7 @@ export default function MessageComposer({
         <PaperItem>
           <>
             <H3 className="mb-2">Esikatselu</H3>
-            <div dangerouslySetInnerHTML={{ __html: lineBreakToBr(replaceTokensWithValues(message, disc)) }} />
+            <div dangerouslySetInnerHTML={{ __html: lineBreakToBr(replaceTokensWithValues(message, disc, baseUrl)) }} />
           </>
         </PaperItem>
       </Wrapper>

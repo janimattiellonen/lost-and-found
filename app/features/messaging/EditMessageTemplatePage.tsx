@@ -4,6 +4,7 @@ import { Form } from 'react-router';
 
 import type { MessageTemplateErrors } from '~/features/messaging/createMessageTemplateFromForm.server';
 import type { MessageTemplateDTO } from '~/types';
+import TemplateTokenHelp from '~/features/messaging/TemplateTokenHelp';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -26,6 +27,8 @@ export default function EditMessageTemplatePage({ messageTemplate, errors }: Pro
   return (
     <div>
       <H2 className="mt-8 mb-4">Muokkaa viestipohjaa</H2>
+
+      <TemplateTokenHelp />
 
       <Form method="post">
         <Wrapper>

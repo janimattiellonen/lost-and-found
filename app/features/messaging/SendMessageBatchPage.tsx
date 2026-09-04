@@ -14,6 +14,7 @@ type Props = {
   sentMessagesByDisc: Record<string, ComposerMessage[]>;
   /** Set when the selection was larger than one batch may carry. */
   tooMany: { selected: number; max: number } | null;
+  baseUrl: string;
 };
 
 /** A batch that cannot be started, and what to do about it. */
@@ -46,6 +47,7 @@ export default function SendMessageBatchPage({
   messageTemplates,
   sentMessagesByDisc,
   tooMany,
+  baseUrl,
 }: Props): JSX.Element {
   const navigate = useNavigate();
   const [position, setPosition] = useState<number>(0);
@@ -85,6 +87,7 @@ export default function SendMessageBatchPage({
       messageTemplates={messageTemplates}
       sentMessages={(disc.externalId && sentMessagesByDisc[disc.externalId]) || []}
       progress={{ position: position + 1, total: discs.length }}
+      baseUrl={baseUrl}
       onCancel={moveOn}
       onRecorded={moveOn}
     />

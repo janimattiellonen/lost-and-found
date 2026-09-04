@@ -7,6 +7,17 @@
 export const PUSKASOTURIT = 1;
 export const TALIN_TALLAAJAT = 2;
 
+/**
+ * The club this instance serves.
+ *
+ * One reading of APP_CLUB_ID rather than a parseInt in every loader that needs
+ * it: the env var is the only place the club comes from, and a parse repeated
+ * a dozen times is a dozen places to get the radix or the `!` wrong.
+ */
+export function currentClubId(): number {
+  return parseInt(process.env.APP_CLUB_ID!, 10);
+}
+
 const CONTACT_EMAILS: Record<number, string> = {
   [PUSKASOTURIT]: 'loytokiekot@puskasoturit.com',
   [TALIN_TALLAAJAT]: 'janimatti.ellonen@gmail.com',
@@ -59,4 +70,42 @@ export function getClubLostDiscsUrl(clubId: number | null): string | null {
  */
 export function getClubContactEmail(clubId: number | null): string {
   return CONTACT_EMAILS[clubId ?? TALIN_TALLAAJAT] ?? CONTACT_EMAILS[TALIN_TALLAAJAT];
+}
+
+/**
+ * Where an owner may pay the club the voluntary thank-you for a posted disc.
+ *
+ * A MobilePay number and the name it answers to, which is what the owner sees
+ * in their payment app and what tells them they are paying the right club.
+ * Separate from the postage itself, which goes to the admin.
+ */
+export type ClubPayment = { number: string; name: string };
+
+const CLUB_PAYMENTS: Record<number, ClubPayment> = {
+  [PUSKASOTURIT]: { number: '80603', name: 'Puskasoturit ry' },
+  [TALIN_TALLAAJAT]: { number: '808226', name: 'Talin Tallaajat / Myynti' },
+};
+
+/**
+ * Null for a club with no number on file, so the instruction can be left out
+ * rather than sending an owner's money to another club.
+ */
+export function getClubPayment(clubId: number | null): ClubPayment | null {
+  return clubId === null ? null : (CLUB_PAYMENTS[clubId] ?? null);
+}
+
+/**
+ * Whether this club's admin keeps a retrieval list.
+ *
+ * Reads the club itself rather than taking one: every caller asked about the
+ * instance it is serving, and `isRetrievalListEnabled(currentClubId())` said
+ * that in four places at once.
+ *
+ * Only Talin Tallaajat stores its discs somewhere the admin has to travel to,
+ * so only there does "the owner asked for this one" mean an errand worth
+ * writing down. For every other club the page, the menu item and the row
+ * action are simply absent.
+ */
+export function isRetrievalListEnabled(): boolean {
+  return currentClubId() === TALIN_TALLAAJAT;
 }

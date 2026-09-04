@@ -19,7 +19,8 @@ import { getMessageTemplates } from '~/models/messageTemplate.server';
  * this needs.
  */
 export async function loadSendMessageBatchPage(request: Request) {
-  const externalIds = parseBatchIds(new URL(request.url).searchParams.get('ids'));
+  const url = new URL(request.url);
+  const externalIds = parseBatchIds(url.searchParams.get('ids'));
 
   if (externalIds.length === 0) {
     throw redirect('/');
@@ -31,6 +32,7 @@ export async function loadSendMessageBatchPage(request: Request) {
       discs: [] as ComposerDisc[],
       messageTemplates: [],
       sentMessagesByDisc: {} as Record<string, ComposerMessage[]>,
+      baseUrl: url.origin,
     };
   }
 
@@ -62,7 +64,8 @@ export async function loadSendMessageBatchPage(request: Request) {
     ownerName: disc.ownerName,
     ownerPhoneNumber: disc.ownerPhoneNumber,
     notifiedAt: disc.notifiedAt,
+    ownerLinkToken: disc.ownerLinkToken,
   }));
 
-  return { tooMany: null, discs, messageTemplates, sentMessagesByDisc };
+  return { tooMany: null, discs, messageTemplates, sentMessagesByDisc, baseUrl: url.origin };
 }

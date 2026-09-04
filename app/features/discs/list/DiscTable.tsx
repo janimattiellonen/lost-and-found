@@ -20,6 +20,9 @@ import { setDiscCourse } from '~/features/discs/courseChange/setDiscCourse';
 import { deleteDisc } from '~/features/discs/deletion/deleteDisc';
 import { disposalMethodOptions } from '~/features/discs/disposal/disposalMethod';
 import { markForDisposal } from '~/features/discs/disposal/markForDisposal';
+import { markForRetrieval } from '~/features/discs/retrieval/markForRetrieval';
+import RetrievalMethodForm from '~/features/discs/retrieval/RetrievalMethodForm';
+import type { RetrievalMethodValue } from '~/features/discs/retrieval/retrievalMethod';
 import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
@@ -31,6 +34,7 @@ import {
   CheckCircleIcon,
   DeleteIcon,
   InfoIcon,
+  InventoryIcon,
   PlaceIcon,
   SellIcon,
   TextsmsIcon,
@@ -46,6 +50,12 @@ type DiscTableProps = {
   discs: DiscDTO[];
   /** Called after a disc has been deleted or marked returned, to reload the list. */
   onChanged?: () => void;
+  /**
+   * The discs already waiting to be fetched from storage, keyed by external id,
+   * with what their owners asked for. Null when there is no retrieval list to
+   * be on, which is what leaves the row action out.
+   */
+  pendingRetrievals?: Record<string, RetrievalMethodValue> | null;
   /**
    * The courses this club collects from; empty for a club that records none.
    * Drives both the Rata column and the admin tool that sets it, so the two
@@ -67,6 +77,11 @@ interface Row {
   externalId?: string;
   /** Club-internal notes. The loader only sends these to a signed-in visitor. */
   additionalInfo?: string;
+  /**
+   * What the owner asked for, when the disc is waiting to be fetched out of the
+   * club's storage. Null when it is not on the retrieval list.
+   */
+  retrievalMethod: RetrievalMethodValue | null;
 }
 
 type OutletContext = {
@@ -176,7 +191,7 @@ function isTightColumn(columnId: string): boolean {
   return columnId === 'id' || columnId === 'actions' || columnId === 'select';
 }
 
-function mapToDataRows(discs: DiscDTO[]): Row[] {
+function mapToDataRows(discs: DiscDTO[], pendingRetrievals: Record<string, RetrievalMethodValue> | null): Row[] {
   return discs.map((disc, index) => ({
     id: index + 1,
     discName: disc.discName,
@@ -188,6 +203,9 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
     internalDiscId: disc.internalDiscId,
     externalId: disc.externalId,
     additionalInfo: disc.additionalInfo,
+    // The open requests come from a query of their own, which the loader runs
+    // for a signed-in admin of a club that keeps a list and for nobody else.
+    retrievalMethod: disc.externalId ? (pendingRetrievals?.[disc.externalId] ?? null) : null,
   }));
 }
 
@@ -195,7 +213,7 @@ function mapToDataRows(discs: DiscDTO[]): Row[] {
 type MarkKind = 'return' | 'disposal';
 
 /** What the row expanded under a disc is showing: a mark form, or its notes. */
-type PanelKind = MarkKind | 'info' | 'course';
+type PanelKind = MarkKind | 'info' | 'course' | 'retrieval';
 
 type OpenPanel = { externalId: string; kind: PanelKind };
 
@@ -342,7 +360,12 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
   );
 }
 
-export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableProps): JSX.Element | null {
+export default function DiscTable({
+  discs,
+  onChanged,
+  courses = [],
+  pendingRetrievals = null,
+}: DiscTableProps): JSX.Element | null {
   const showCourse = courses.length > 0;
 
   const { session } = useOutletContext<OutletContext>();
@@ -354,7 +377,7 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
   // Keyed on external id (see getRowId), so a tick survives re-sorting.
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const rows = useMemo(() => mapToDataRows(discs), [discs]);
+  const rows = useMemo(() => mapToDataRows(discs, pendingRetrievals), [discs, pendingRetrievals]);
 
   /** Opens the given panel on the given disc, or closes it if already open. */
   const toggleForm = (externalId: string, kind: PanelKind): void =>
@@ -487,6 +510,37 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
                         <SellIcon width={18} height={18} />
                       </button>
 
+                      {/* Only for the club that stores its discs somewhere
+                          the admin has to travel to. A disc already on the
+                          list keeps the action, which is how a change of
+                          mind about posting it is recorded. */}
+                      {pendingRetrievals !== null && (
+                        <button
+                          type="button"
+                          aria-label={
+                            row.original.retrievalMethod !== null
+                              ? `Muuta kiekon ${row.original.discName} noutotapaa`
+                              : `Lisää kiekko ${row.original.discName} noutolistalle`
+                          }
+                          title={
+                            row.original.retrievalMethod !== null
+                              ? 'Kiekko on noutolistalla – muuta noutotapaa'
+                              : 'Lisää noutolistalle'
+                          }
+                          aria-expanded={
+                            openForm?.externalId === row.original.externalId && openForm.kind === 'retrieval'
+                          }
+                          onClick={() => toggleForm(row.original.externalId!, 'retrieval')}
+                          className={
+                            row.original.retrievalMethod !== null
+                              ? 'inline-flex text-orange-400 hover:text-orange-300'
+                              : 'inline-flex text-gray-300 hover:text-white'
+                          }
+                        >
+                          <InventoryIcon width={18} height={18} />
+                        </button>
+                      )}
+
                       {/* Only for a club that files discs under a course.
                           The fix for a disc saved before the course was
                           picked, which used to mean editing the row by hand
@@ -528,7 +582,7 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
           ]
         : []),
     ],
-    [isLoggedIn, onChanged, openForm, showCourse],
+    [isLoggedIn, onChanged, openForm, pendingRetrievals, showCourse],
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'addedAt', desc: true }]);
@@ -648,6 +702,25 @@ export default function DiscTable({ discs, onChanged, courses = [] }: DiscTableP
                     <td colSpan={row.getVisibleCells().length} {...stylex.props(styles.td)}>
                       {open.kind === 'info' ? (
                         <AdditionalInfoPanel row={row.original} />
+                      ) : open.kind === 'retrieval' ? (
+                        <RetrievalMethodForm
+                          discName={row.original.discName}
+                          idPrefix={`retrieval-${open.externalId}`}
+                          current={row.original.retrievalMethod}
+                          onCancel={() => setOpenForm(null)}
+                          onSubmit={async (retrievalMethod) => {
+                            const result = await markForRetrieval({ externalId: open.externalId, retrievalMethod });
+
+                            if (result.status === 'error') {
+                              return result.message;
+                            }
+
+                            setOpenForm(null);
+                            onChanged?.();
+
+                            return null;
+                          }}
+                        />
                       ) : open.kind === 'course' ? (
                         <CourseForm
                           discName={row.original.discName}
