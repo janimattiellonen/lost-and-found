@@ -62,6 +62,37 @@ test.describe('admin menu on a phone-sized screen', () => {
     await expect(hamburger).toBeFocused();
   });
 
+  test('gives focus back to the hamburger when closed by tapping outside', async ({ page }) => {
+    const hamburger = page.getByRole('button', { name: /^Avaa valikko/ });
+
+    await hamburger.click();
+    await expect(page.getByRole('dialog', { name: 'Valikko' })).toBeVisible();
+
+    // The dimmed area covers the whole viewport, so the top-left corner is
+    // outside the panel, which sits on the right.
+    await page.mouse.click(10, 300);
+
+    await expect(page.getByRole('dialog', { name: 'Valikko' })).toHaveCount(0);
+    await expect(hamburger).toBeFocused();
+  });
+
+  test('makes the page behind the panel inert', async ({ page }) => {
+    const inertCount = () => page.locator('body > [inert]').count();
+
+    expect(await inertCount()).toBe(0);
+
+    await page.getByRole('button', { name: /^Avaa valikko/ }).click();
+
+    // The bar and the page content are both direct children of <body>; neither
+    // the panel nor its backdrop may be inert.
+    expect(await inertCount()).toBeGreaterThan(0);
+    await expect(page.getByRole('dialog', { name: 'Valikko' })).not.toHaveAttribute('inert', '');
+
+    await page.keyboard.press('Escape');
+
+    expect(await inertCount()).toBe(0);
+  });
+
   test('blocks scrolling of the page behind the panel', async ({ page }) => {
     const overflow = () => page.evaluate(() => document.body.style.overflow);
 

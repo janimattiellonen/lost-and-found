@@ -65,15 +65,18 @@ Below 768 pixels (the phone layout):
 8. When the admin presses the hamburger, then a panel slides in from the right
    over the page, holding the title "Valikko" (menu), a close button, the same
    links one per row, and the sign-out button. The rest of the page dims behind
-   it and cannot be scrolled or clicked.
+   it and, for as long as the panel is open, cannot be scrolled, clicked, tabbed
+   into or reached by a screen reader's cursor.
 9. When the panel is open, then keyboard focus is inside it: it moves to the
-   close button, Tab and Shift+Tab cycle within the panel and never reach the
-   page behind, and Escape closes it. On closing, focus returns to the hamburger
-   button, so a keyboard user is not dropped at the top of the document.
-10. When the admin follows a link, presses Escape, presses the close button, or
-    taps the dimmed area, then the panel closes. It also closes by itself
-    whenever the address changes — including the browser's back button — so it is
-    never left open over a page the admin has already navigated away from.
+   close button, Tab and Shift+Tab cycle within the panel, and focus that is
+   somehow outside it is pulled back in on the next Tab. Escape closes it.
+10. When the admin follows a link, presses Escape, presses the close button, taps
+    the dimmed area, or navigates with the browser's back button, then the panel
+    closes — and focus goes back to the hamburger button from every one of those,
+    so a keyboard user is never dropped at the top of the document. Focus that
+    has meanwhile moved somewhere deliberate is left alone; only focus dropped on
+    the document itself is rescued. The panel is never left open over a page the
+    admin has already navigated away from.
 
 ## Data
 
@@ -120,11 +123,25 @@ its links point at routes owned by other features:
   `aria-label="Valikko"` — and is mounted only while open. Mounting rather than
   hiding with a transform is deliberate: a panel that is merely translated
   off-screen keeps its links in the tab order and in the screen reader's
-  document, which is the bug this replaces.
+  document, which is the bug this replaces. The hamburger's `aria-controls`
+  points at the panel's id only while the panel is mounted, for the same reason:
+  a reference to an id that is not in the page is worse than no reference.
+- **The page behind the panel is made `inert`** — the HTML attribute that takes
+  an element and everything inside it out of reach: no clicks, no Tab, and no
+  screen-reader cursor either. Every child of `<body>` that does not contain the
+  panel or its backdrop gets the attribute while the panel is open. `aria-modal`
+  asks a screen reader to stay inside the dialog; `inert` is what actually
+  enforces it, and it is also what stops a pointer reaching the bar behind.
 - **Page scrolling is blocked** while the panel is open by setting
-  `document.body.style.overflow = 'hidden'`, cleared when the panel closes and
-  also when the component unmounts, so a sign-out mid-panel cannot leave the page
-  permanently unscrollable.
+  `document.body.style.overflow = 'hidden'`. On closing, the value that was there
+  before is put back rather than blanked, so the lock cannot quietly discard an
+  `overflow` some other component had set. The undoing also runs when the
+  component unmounts, so signing out from inside the panel cannot leave the next
+  page permanently unscrollable.
+- **Everything the panel does to the rest of the page is undone in one place**,
+  in a fixed order: the background stops being inert, the scroll position is
+  released, and only then does focus go back to the hamburger — focusing a button
+  that is still inert would silently do nothing.
 - **Touch targets in the phone layout are at least 44 by 44 pixels** (the
   hamburger, the close button, each link row), the smallest size that is reliably
   hittable with a thumb.
@@ -139,9 +156,9 @@ its links point at routes owned by other features:
 - The scroll lock is `overflow: hidden` on `<body>`. Older iOS Safari can still
   rubber-band the page behind the panel; the sturdier fix (fixing the body and
   restoring `scrollY` on close) was not worth its complexity here.
-- The link list is written twice, once for the bar and once for the panel, from
-  the same `menuLinks()` data. The two could drift; there is no test that they
-  hold the same labels.
+- `inert` is supported by every current browser but was only widely available
+  from 2023. On something older the fallbacks are what remain: `aria-modal`, the
+  backdrop over the page, and the links behind the panel being `display: none`.
 - The end-to-end (E2E) test for the phone layout needs a real admin account and
   skips itself unless `E2E_EMAIL` and `E2E_PASSWORD` are set, like the other
   signed-in E2E tests. There is no unit test, because this repo has no test setup

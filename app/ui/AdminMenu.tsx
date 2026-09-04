@@ -7,6 +7,7 @@ import Button from '~/ui/Button';
 import { CloseIcon, MenuIcon } from '~/ui/icons';
 import { color, radius, space } from '~/styles/tokens.stylex';
 
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { JSX } from 'react';
 
 type MenuLink = { to: string; label: string };
@@ -24,7 +25,12 @@ const links: MenuLink[] = [
 // panel behind the hamburger button. Kept in one place so the bar, the button
 // and the panel cannot disagree about it -- a link reachable in both at the same
 // width would sit twice in the tab order.
-const DESKTOP = '(min-width: 768px)';
+const DESKTOP_MEDIA_QUERY = '(min-width: 768px)';
+
+// What the Tab key can reach. Wider than the panel currently contains, so
+// adding a field to it later does not quietly punch a hole in the focus trap.
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * A count in parentheses, or nothing.
@@ -58,8 +64,8 @@ function menuLinks(retrievalCount: number | null, responseCount: number | null):
 }
 
 type AdminMenuProps = {
-  supabase: any;
-  user: any;
+  supabase: SupabaseClient;
+  user: User | null | undefined;
   /**
    * Discs waiting to be fetched from the club's storage, or null when this club
    * keeps no retrieval list -- and so has no menu item for it.
@@ -78,59 +84,45 @@ export default function AdminMenu({
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const { pathname } = useLocation();
+  const shownPathname = useRef(pathname);
 
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
 
-  // Nothing behind the panel may scroll while it is open. Cleared on unmount as
-  // well as on close, so signing out from inside the panel cannot leave the
-  // next page permanently stuck.
-  useEffect(() => {
-    if (!isPanelOpen) {
-      return;
-    }
-
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isPanelOpen]);
-
-  // The panel only exists below the breakpoint. Widening the window past it
-  // hides the panel by CSS, so the state has to follow -- otherwise the scroll
-  // lock above would outlive the thing that asked for it.
-  useEffect(() => {
-    if (!isPanelOpen) {
-      return;
-    }
-
-    const desktop = window.matchMedia(DESKTOP);
-    const onChange = () => desktop.matches && closePanel();
-
-    desktop.addEventListener('change', onChange);
-
-    return () => desktop.removeEventListener('change', onChange);
-  }, [isPanelOpen, closePanel]);
-
-  // Focus starts on the close button, Escape closes, and Tab cycles inside the
-  // panel instead of walking into the page behind it. Focus goes back to the
-  // hamburger on close, so a keyboard user is not dropped at the top of the
-  // document.
+  // Everything the panel does to the rest of the page, in one effect, because
+  // the order of the undoing matters: the background stops being inert before
+  // focus is put back into it, and the scroll position it had is what it gets
+  // back.
   useEffect(() => {
     const panel = panelRef.current;
+    const backdrop = backdropRef.current;
 
     if (!isPanelOpen || panel == null) {
       return;
     }
+
+    const toggle = toggleRef.current;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // `inert` is what actually makes the page behind the panel unreachable: no
+    // Tab, no click, and no screen-reader cursor either. `aria-modal` alone asks
+    // the screen reader nicely; this tells the browser. Anything that contains
+    // the panel or its backdrop is left alone, so the two survive being moved
+    // deeper into the page some day.
+    const background = Array.from(document.body.children).filter(
+      (element) => !element.contains(panel) && !(backdrop != null && element.contains(backdrop)),
+    );
+    background.forEach((element) => element.setAttribute('inert', ''));
 
     closeRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closePanel();
-        toggleRef.current?.focus();
         return;
       }
 
@@ -138,7 +130,7 @@ export default function AdminMenu({
         return;
       }
 
-      const focusable = panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE);
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
 
@@ -146,7 +138,12 @@ export default function AdminMenu({
         return;
       }
 
-      if (event.shiftKey && document.activeElement === first) {
+      // Focus that is somehow outside the panel is pulled back into it, not
+      // only wrapped around at the two ends.
+      if (!panel.contains(document.activeElement)) {
+        first.focus();
+        event.preventDefault();
+      } else if (event.shiftKey && document.activeElement === first) {
         last.focus();
         event.preventDefault();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -157,8 +154,47 @@ export default function AdminMenu({
 
     document.addEventListener('keydown', onKeyDown);
 
-    return () => document.removeEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      background.forEach((element) => element.removeAttribute('inert'));
+      document.body.style.overflow = previousOverflow;
+
+      // Closing anything -- the button, Escape, the backdrop, a navigation --
+      // ends here, so focus comes back to the hamburger from every one of them.
+      // Focus that has already gone somewhere deliberate is left where it is;
+      // only focus dropped on the document is rescued.
+      if (document.activeElement == null || document.activeElement === document.body) {
+        toggle?.focus();
+      }
+    };
   }, [isPanelOpen, closePanel]);
+
+  // The panel only exists below the breakpoint. Widening the window past it
+  // hides the panel by CSS, so the state has to follow -- otherwise the scroll
+  // lock and the inert background would outlive the thing that asked for them.
+  useEffect(() => {
+    if (!isPanelOpen) {
+      return;
+    }
+
+    const desktop = window.matchMedia(DESKTOP_MEDIA_QUERY);
+    const onChange = () => desktop.matches && closePanel();
+
+    desktop.addEventListener('change', onChange);
+
+    return () => desktop.removeEventListener('change', onChange);
+  }, [isPanelOpen, closePanel]);
+
+  // The address changing means the panel has served its purpose. This is what
+  // catches the browser's back button, which no click handler sees.
+  useEffect(() => {
+    if (shownPathname.current === pathname) {
+      return;
+    }
+
+    shownPathname.current = pathname;
+    closePanel();
+  }, [pathname, closePanel]);
 
   const handleLogout = async () => {
     if (!window.confirm('Haluatko varmasti kirjautua ulos?')) {
@@ -187,27 +223,22 @@ export default function AdminMenu({
     <>
       <nav {...stylex.props(styles.nav)} aria-label="Päävalikko">
         <ul {...stylex.props(styles.list)}>
-          {items.map(({ to, label }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) => stylex.props(styles.link, isActive && styles.activeLink).className ?? ''}
-              >
-                {label}
-              </NavLink>
-            </li>
+          {items.map((item) => (
+            <MenuNavLink key={item.to} {...item} variant="bar" />
           ))}
         </ul>
         <div {...stylex.props(styles.desktopActions)}>{logoutButton}</div>
         <button
           ref={toggleRef}
           type="button"
-          {...stylex.props(styles.toggle)}
+          {...stylex.props(styles.iconButton, styles.toggle)}
           onClick={() => setIsPanelOpen(true)}
           aria-label={pending > 0 ? `Avaa valikko, ${pending} odottaa käsittelyä` : 'Avaa valikko'}
           aria-expanded={isPanelOpen}
-          aria-controls="admin-menu-panel"
+          // Only while the panel is in the page: the panel is mounted on
+          // opening, and a reference to an id that does not exist is worse than
+          // no reference at all.
+          aria-controls={isPanelOpen ? PANEL_ID : undefined}
         >
           <MenuIcon />
           {pending > 0 && (
@@ -220,19 +251,13 @@ export default function AdminMenu({
 
       {isPanelOpen && (
         <>
-          {/* Mouse-and-thumb convenience only: the keyboard closes the panel with
-              Escape or the close button, so the screen reader is better off not
-              hearing about this at all. tabIndex -1 keeps it out of the tab order,
-              which is what makes aria-hidden legitimate on a <button>. */}
-          <button
-            type="button"
-            {...stylex.props(styles.backdrop)}
-            onClick={closePanel}
-            tabIndex={-1}
-            aria-hidden="true"
-          />
+          {/* Closing by tapping outside is a pointer convenience; the keyboard
+              has Escape and the close button. role="presentation" says as much,
+              and keeps the backdrop out of the tab order and the accessibility
+              tree without a focusable element pretending to be hidden. */}
+          <div ref={backdropRef} role="presentation" {...stylex.props(styles.backdrop)} onClick={closePanel} />
           <div
-            id="admin-menu-panel"
+            id={PANEL_ID}
             ref={panelRef}
             {...stylex.props(styles.panel)}
             role="dialog"
@@ -244,63 +269,59 @@ export default function AdminMenu({
               <button
                 ref={closeRef}
                 type="button"
-                {...stylex.props(styles.close)}
-                onClick={() => {
-                  closePanel();
-                  toggleRef.current?.focus();
-                }}
+                {...stylex.props(styles.iconButton, styles.close)}
+                onClick={closePanel}
                 aria-label="Sulje valikko"
               >
                 <CloseIcon />
               </button>
             </div>
             <ul {...stylex.props(styles.panelList)}>
-              {items.map(({ to, label }) => (
-                <li key={to}>
-                  <NavLink
-                    to={to}
-                    end={to === '/'}
-                    // Following a link to the page already open changes no
-                    // address, so closing cannot be left to the pathname alone.
-                    onClick={closePanel}
-                    className={({ isActive }) =>
-                      stylex.props(styles.panelLink, isActive && styles.panelLinkActive).className ?? ''
-                    }
-                  >
-                    {label}
-                  </NavLink>
-                </li>
+              {items.map((item) => (
+                // Following a link to the page already open changes no address,
+                // so closing cannot be left to the pathname alone.
+                <MenuNavLink key={item.to} {...item} variant="panel" onClick={closePanel} />
               ))}
             </ul>
             <div {...stylex.props(styles.panelFooter)}>{logoutButton}</div>
           </div>
         </>
       )}
-      {/* The address changing means the panel has served its purpose -- this
-          catches the browser's back button, which no click handler sees. */}
-      <PanelCloserOnNavigation pathname={pathname} onNavigate={closePanel} />
     </>
   );
 }
 
+const PANEL_ID = 'admin-menu-panel';
+
+type MenuNavLinkProps = MenuLink & {
+  /** Which of the two layouts this link is being drawn in. */
+  variant: 'bar' | 'panel';
+  onClick?: () => void;
+};
+
 /**
- * Closes the panel whenever the address changes.
+ * One list item, in the bar or in the panel.
  *
- * A tiny component of its own rather than an effect in `AdminMenu`, so the
- * "close on navigation" rule is one readable thing and does not need a guard
- * against firing on the first render.
+ * The same links appear in both layouts, so they are described once here and
+ * the layout only picks the styling. Only the styling differs; a label or a
+ * target cannot drift between the two.
  */
-function PanelCloserOnNavigation({ pathname, onNavigate }: { pathname: string; onNavigate: () => void }): null {
-  const previous = useRef(pathname);
+function MenuNavLink({ to, label, variant, onClick }: MenuNavLinkProps): JSX.Element {
+  const [base, active] =
+    variant === 'bar' ? [styles.link, styles.activeLink] : [styles.panelLink, styles.panelLinkActive];
 
-  useEffect(() => {
-    if (previous.current !== pathname) {
-      previous.current = pathname;
-      onNavigate();
-    }
-  }, [pathname, onNavigate]);
-
-  return null;
+  return (
+    <li>
+      <NavLink
+        to={to}
+        end={to === '/'}
+        onClick={onClick}
+        className={({ isActive }) => stylex.props(base, isActive && active).className ?? ''}
+      >
+        {label}
+      </NavLink>
+    </li>
+  );
 }
 
 const slideIn = stylex.keyframes({
@@ -320,7 +341,7 @@ const styles = stylex.create({
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    justifyContent: { default: 'flex-end', [`@media ${DESKTOP}`]: 'flex-start' },
+    justifyContent: { default: 'flex-end', [`@media ${DESKTOP_MEDIA_QUERY}`]: 'flex-start' },
     gap: space.sm,
     padding: `${space.sm} ${space.md}`,
     backgroundColor: color.surfaceMuted,
@@ -330,7 +351,7 @@ const styles = stylex.create({
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
   },
   list: {
-    display: { default: 'none', [`@media ${DESKTOP}`]: 'flex' },
+    display: { default: 'none', [`@media ${DESKTOP_MEDIA_QUERY}`]: 'flex' },
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: space.xs,
@@ -355,22 +376,30 @@ const styles = stylex.create({
     boxShadow: 'inset 0 -2px 0 0 currentColor',
   },
   desktopActions: {
-    display: { default: 'none', [`@media ${DESKTOP}`]: 'block' },
+    display: { default: 'none', [`@media ${DESKTOP_MEDIA_QUERY}`]: 'block' },
     marginLeft: 'auto',
   },
-  toggle: {
-    display: { default: 'flex', [`@media ${DESKTOP}`]: 'none' },
-    position: 'relative',
+  // 44 by 44 is the smallest square that is reliably hittable with a thumb, and
+  // both of the phone layout's icon buttons want it.
+  iconButton: {
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '44px',
     height: '44px',
     padding: 0,
     color: color.textPrimary,
-    backgroundColor: { default: 'transparent', ':hover': color.surface },
     borderStyle: 'none',
     borderRadius: radius.sm,
     cursor: 'pointer',
+  },
+  toggle: {
+    display: { default: 'flex', [`@media ${DESKTOP_MEDIA_QUERY}`]: 'none' },
+    position: 'relative',
+    backgroundColor: { default: 'transparent', ':hover': color.surface },
+  },
+  close: {
+    backgroundColor: { default: 'transparent', ':hover': color.surfaceMuted },
   },
   badge: {
     position: 'absolute',
@@ -388,21 +417,17 @@ const styles = stylex.create({
     textAlign: 'center',
   },
   backdrop: {
-    display: { default: 'block', [`@media ${DESKTOP}`]: 'none' },
+    display: { default: 'block', [`@media ${DESKTOP_MEDIA_QUERY}`]: 'none' },
     position: 'fixed',
     inset: 0,
-    width: '100%',
-    height: '100%',
-    padding: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    borderStyle: 'none',
     cursor: 'pointer',
     animationName: fadeIn,
     animationDuration: '0.2s',
     zIndex: 998,
   },
   panel: {
-    display: { default: 'flex', [`@media ${DESKTOP}`]: 'none' },
+    display: { default: 'flex', [`@media ${DESKTOP_MEDIA_QUERY}`]: 'none' },
     flexDirection: 'column',
     position: 'fixed',
     top: 0,
@@ -431,19 +456,6 @@ const styles = stylex.create({
     fontSize: '1.125rem',
     fontWeight: 700,
   },
-  close: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '44px',
-    height: '44px',
-    padding: 0,
-    color: color.textPrimary,
-    backgroundColor: { default: 'transparent', ':hover': color.surfaceMuted },
-    borderStyle: 'none',
-    borderRadius: radius.sm,
-    cursor: 'pointer',
-  },
   panelList: {
     margin: 0,
     padding: `${space.sm} 0`,
@@ -463,7 +475,7 @@ const styles = stylex.create({
     color: color.accent,
     backgroundColor: color.surfaceMuted,
     fontWeight: 600,
-    boxShadow: `inset 3px 0 0 0 currentColor`,
+    boxShadow: 'inset 3px 0 0 0 currentColor',
   },
   panelFooter: {
     marginTop: 'auto',
