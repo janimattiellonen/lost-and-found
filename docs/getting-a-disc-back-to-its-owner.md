@@ -329,6 +329,16 @@ What that leaves for later, if the messages get tiresome: the sibling lookup
    reads as being in the storage. The cost of that gap is one owner offered a
    collection from a storage the disc has left, which the admin sees on the
    answer and can sort out by message.
+
+   The same gap runs the other way too. `disc_is_in_storage()` is false as soon
+   as _any_ retrieval row carries a `retrieved_at`, and nothing records a disc
+   going back to the storage — so a disc fetched once, never collected and put
+   back reads as out of it for good. The retrieval list does not agree: a fresh
+   request for that disc is a new row and appears on the Noutolista, while the
+   owner's page has stopped offering to collect it from a storage it is
+   actually sitting in. Both halves are honest about what the app records; what
+   is missing is the move itself. A "back in storage" action would close it, and
+   is the first thing to add if that round trip turns out to happen.
 4. ~~**Should "collected from the storage" (2) be offered when the disc has an
    open request already fetched?**~~ **Answered by section 5's derivation: no,
    and in two places.** `disc_is_in_storage(disc_id)` is false as soon as a

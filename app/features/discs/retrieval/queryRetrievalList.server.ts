@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { selectPendingRetrievals } from './selectPendingRetrievals.server';
+import { queryPendingRetrievals } from './queryPendingRetrievals.server';
 import { isRetrievalMethod, RetrievalMethod } from './retrievalMethod';
 import type { RetrievalListDisc } from './discRetrieval';
 
@@ -36,7 +36,7 @@ type Row = {
  * behind the signed-in page route.
  */
 export async function queryRetrievalList(supabase: SupabaseClient): Promise<RetrievalListDisc[]> {
-  const { data, error } = await selectPendingRetrievals(supabase, LIST_COLUMNS).order('requested_at', {
+  const { data, error } = await queryPendingRetrievals(supabase, LIST_COLUMNS).order('requested_at', {
     ascending: true,
   });
 

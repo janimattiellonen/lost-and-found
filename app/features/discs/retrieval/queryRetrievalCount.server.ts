@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { selectPendingRetrievals } from './selectPendingRetrievals.server';
+import { queryPendingRetrievals } from './queryPendingRetrievals.server';
 
 /**
  * How many discs are waiting to be fetched out of storage.
@@ -10,7 +10,7 @@ import { selectPendingRetrievals } from './selectPendingRetrievals.server';
  * an owner's phone number to do it.
  */
 export async function queryRetrievalCount(supabase: SupabaseClient): Promise<number> {
-  const { count, error } = await selectPendingRetrievals(supabase, 'id, discs!inner(id)', {
+  const { count, error } = await queryPendingRetrievals(supabase, 'id, discs!inner(id)', {
     head: true,
     count: 'exact',
   });

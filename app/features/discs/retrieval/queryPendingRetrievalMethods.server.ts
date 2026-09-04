@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { selectPendingRetrievals } from './selectPendingRetrievals.server';
+import { queryPendingRetrievals } from './queryPendingRetrievals.server';
 import { isRetrievalMethod, type RetrievalMethodValue } from './retrievalMethod';
 
 /**
@@ -28,7 +28,7 @@ type Row = { retrieval_method: number; discs: { external_id: string } };
 export async function queryPendingRetrievalMethods(
   supabase: SupabaseClient,
 ): Promise<Record<string, RetrievalMethodValue>> {
-  const { data, error } = await selectPendingRetrievals(supabase, 'retrieval_method, discs!inner(external_id)');
+  const { data, error } = await queryPendingRetrievals(supabase, 'retrieval_method, discs!inner(external_id)');
 
   if (error) {
     throw new Error(`Noutolistan haku epäonnistui: ${error.message}`);

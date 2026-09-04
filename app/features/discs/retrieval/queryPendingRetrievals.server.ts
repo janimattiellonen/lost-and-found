@@ -17,7 +17,7 @@ import { currentClubId } from '~/config/clubs';
  * caller's `select` must therefore embed discs with `!inner` for these filters
  * to have anything to apply to.
  */
-export function selectPendingRetrievals(
+export function queryPendingRetrievals(
   supabase: SupabaseClient,
   select: string,
   options?: { head?: boolean; count?: 'exact' },

@@ -68,7 +68,10 @@ const FINLAND = ['', 'suomi', 'finland', 'fi'];
  * have been forwarded to anyone.
  *
  * The same numbers are the fields' maxLength on the page, so an owner is
- * stopped as they type rather than after submitting.
+ * stopped as they type rather than after submitting, and the same numbers again
+ * are a CHECK constraint on the columns -- submit_owner_response() is granted to
+ * anon, so a caller holding a token can reach the table without passing here.
+ * See 20260904020000_owner_response_address_limits.sql; change them together.
  */
 export const ADDRESS_LIMITS = {
   shippingName: { max: 100, label: 'Nimi' },
