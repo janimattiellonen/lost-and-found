@@ -36,7 +36,7 @@ type Props = {
 const OWNER_LABELS: Record<HandoverMethodValue, string> = {
   [HandoverMethod.ByMail]: 'Postita kiekko minulle',
   [HandoverMethod.PickedUpFromHome]: 'Noudan kiekon – sovitaan noudosta erikseen',
-  [HandoverMethod.PickedUpFromStorage]: 'Noudan kiekon seuran varastolta',
+  [HandoverMethod.PickedUpFromStorage]: 'Noudan kiekon seuran kopilta',
 };
 
 export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, result }: Props): JSX.Element {
