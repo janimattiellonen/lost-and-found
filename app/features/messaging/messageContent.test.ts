@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { replaceTokensWithValues } from './messageContent';
+import { replaceTokensWithValues, toSmsBody } from './messageContent';
 
 const TOKEN = '8f14e45f-ceea-467a-9f7c-fd4b2a1e9a1c';
 
@@ -72,5 +72,31 @@ describe('replaceTokensWithValues', () => {
 
   it('leaves a message with no tokens alone', () => {
     expect(replaceTokensWithValues('Moi!', disc, BASE)).toBe('Moi!');
+  });
+});
+
+describe('toSmsBody', () => {
+  // The bug this function exists for; see spec 06 for the whole story.
+  it('escapes a question mark, so the message does not stop there', () => {
+    const body = toSmsBody('Moikka. Milloin pääsisit noutamaan kiekon?\nLintukorpi 13 C 11');
+
+    expect(body).not.toContain('?');
+    expect(decodeURIComponent(body)).toBe('Moikka. Milloin pääsisit noutamaan kiekon?\nLintukorpi 13 C 11');
+  });
+
+  it('escapes the other characters that would split a url', () => {
+    expect(toSmsBody('a?b&c#d+e')).toBe('a%3Fb%26c%23d%2Be');
+  });
+
+  // The hand-rolled version wrote the lowercase %0a. Percent-decoding is
+  // case-insensitive, so the handset reads both as a newline -- but the url
+  // this produces is not the one it produced.
+  it('writes a newline as %0A', () => {
+    expect(toSmsBody('one\ntwo')).toBe('one%0Atwo');
+  });
+
+  // Scandinavian letters are in every one of these messages.
+  it('survives a round trip through the scandinavian alphabet', () => {
+    expect(decodeURIComponent(toSmsBody('Äijänpellon radalta, Öö'))).toBe('Äijänpellon radalta, Öö');
   });
 });

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type JSX } from 'react';
 import { Form, useFetcher } from 'react-router';
 
 import type { ComposerDisc, ComposerMessage } from '~/features/messaging/composerData';
-import { convertLineBreaks, lineBreakToBr, replaceTokensWithValues } from '~/features/messaging/messageContent';
+import { lineBreakToBr, replaceTokensWithValues, toSmsBody } from '~/features/messaging/messageContent';
 import type { MessageTemplateDTO } from '~/types';
 import { formatDate, formatPhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -173,7 +173,7 @@ export default function MessageComposer({
         </Button>
         <Button
           variant="contained"
-          to={`sms:${toDiallable(phoneNumber)}&body=${convertLineBreaks(replaceTokensWithValues(message, disc, baseUrl))}`}
+          to={`sms:${toDiallable(phoneNumber)}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`}
         >
           Lähetä tekstiviesti
         </Button>

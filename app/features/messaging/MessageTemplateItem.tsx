@@ -1,5 +1,6 @@
 import { useFetcher } from 'react-router';
 
+import { lineBreakToBr } from '~/features/messaging/messageContent';
 import Button from '~/ui/Button';
 
 import { formatDate } from '~/utils';
@@ -11,16 +12,12 @@ type MessageTemplateProps = {
   messageTemplate: MessageTemplateDTO;
 };
 
-function convertLineBreaks(value: string): string {
-  return value.replaceAll('\n', '<br/>');
-}
-
 export default function MessageTemplateItem({ messageTemplate }: MessageTemplateProps): JSX.Element {
   const fetcher = useFetcher();
 
   return (
     <div className="p-4">
-      <div dangerouslySetInnerHTML={{ __html: convertLineBreaks(messageTemplate.content) }} />
+      <div dangerouslySetInnerHTML={{ __html: lineBreakToBr(messageTemplate.content) }} />
       <div className="mt-2 text-sm text-gray-600">Kategoria: {messageTemplate.categoryName ?? 'ei mitään'}</div>
 
       {messageTemplate.createdAt && (
