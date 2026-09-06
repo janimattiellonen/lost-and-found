@@ -75,14 +75,59 @@ club — and left the old column for the history it already holds.
 
 ## Token grammar
 `replaceTokensWithValues(message, disc, baseUrl)` in
-`app/features/messaging/messageContent.ts`. Three tokens, literal square
+`app/features/messaging/messageContent.ts`. Five tokens, literal square
 brackets, `replaceAll` so every occurrence is filled — not just the first.
 
 | Token | Substituted with | Empty case |
 |---|---|---|
 | `[colour]` | `disc.discColour` | empty string, not the literal token |
 | `[disc]` | `disc.discName` | empty string |
+| `[course]` | `disc.course`, as recorded — "Äijänpelto" | empty string when the disc has no course |
+| `[courses]` | the same name in the genitive — "Äijänpellon" | empty string when the disc has no course |
 | `[link]` | `<baseUrl>/kiekko/<owner_link_token>` | empty string when the disc has no token, rather than a url ending in "undefined" |
+
+**Why a course has two tokens.** Finnish inflects place names, and a message
+names the course mid-sentence: "Sinun musta Mako3 on löytynyt Äijänpellon
+radalta." The nominative "Äijänpelto" cannot be used there. `[courses]` is that
+genitive form — the mnemonic being the English possessive _-'s_ for the Finnish
+genitive _-n_ — and the template supplies the "radalta" itself, so the token is
+the inflected course name and nothing more. `[course]` stays available for a
+message that names the course on its own, as in "Rata: Äijänpelto".
+
+**The genitive is configured, not derived.** `discCourseGenitive` in
+`app/config/courses.ts` holds it per course, because Finnish genitive is not a
+suffix rule: "Oittaa" simply gains an _-n_, but "Äijänpelto" also gradates its
+consonants (_lt_ → _ll_). A new course needs the form written out beside its
+name or `[courses]` falls back to the nominative for it.
+
+Both tokens read `discs.course`, the short name the Google Sheet has always used.
+The long display name in the same config (`name`, "Oittaan frisbeegolfrata") is
+deliberately **not** used: the admin writing the template wants the short form so
+the text message stays short.
+
+A stored value matching no configured course is substituted **as it is** by both
+tokens — uninflected in the case of `[courses]`. Imported Sheet data can hold any
+course name an admin once typed, and an uninflected name reads slightly wrong
+where losing the course entirely reads worse.
+
+The two course tokens look like they should collide and do not: `[course]` never
+matches inside `[courses]`, because the character after "course" is an "s" and
+not the closing bracket. Order of substitution is therefore irrelevant, and a
+test pins that — the day a token is added that genuinely is a prefix of another,
+it will fail rather than silently mangle a message.
+
+The lookup is by course name alone and is **not scoped to a club**, unlike every
+query in this feature. That is safe only because exactly one club
+(`clubId: 1`, Puskasoturit) records a course per disc at all; Talin tallaajat
+records none, so both course tokens are always empty for them. Two clubs using
+the same short name for different courses would collide — see "Edge cases &
+known gaps".
+
+`getCourseGenitive` lives in `app/config/courses.ts` beside the course data
+rather than in the messaging feature, because substitution happens in the
+browser as the admin types: `MessageComposer` calls `replaceTokensWithValues`
+for the preview, the `sms:` href and the hidden field alike, so nothing on that
+path may read `process.env` or the database.
 
 There is no escaping and no other syntax; anything else is left alone.
 `baseUrl` is `new URL(request.url).origin` from the loader — read from the
@@ -122,6 +167,13 @@ The tokens are documented to the admin by
   validated — length, tokens and markup are all free.
 - The batch loader fetches sent history only for the discs actually found, in
   one `in()` query rather than one per disc.
+- `MESSAGING_DISC_COLUMNS` (`app/models/discs.server.ts`) names the columns the
+  single and batch message queries both select, `course` among them. A token can
+  only substitute a field on that list; adding one to the grammar means adding
+  its column here too, or it arrives undefined and substitutes as empty.
+- `ComposerDisc` (`composerData.ts`) is the matching list on the browser's side —
+  the disc fields the composer shows or substitutes. `replaceTokensWithValues`
+  runs client-side as the admin types, so a token's field has to be in both.
 
 ## Edge cases & known gaps
 - **`/message-template/create` has no auth check at all** — no loader, and the
@@ -149,6 +201,22 @@ The tokens are documented to the admin by
   button cannot re-send.
 - A `message_log` row for a since-deleted disc keeps only its legacy
   `internal_disc_id`; it had no `external_id` to backfill from.
+- `getCourseGenitive` matches on the course name alone, with no club scope.
+  Today only one club records a course per disc, so nothing can collide; the day
+  a second club adds a `discCourseName` already in use, `[courses]` would
+  substitute the other club's genitive. The fix would be to pass the club id
+  through to the lookup, which means getting it to the browser first.
+- A course added to `app/config/courses.ts` without a `discCourseGenitive`
+  degrades silently: `[courses]` substitutes the nominative, so a message reads
+  "on löytynyt Äijänpelto radalta". Nothing warns, and no type requires the
+  field, because the clubs that record no course per disc have neither.
+- A template written around either course token reads badly for a disc that has
+  none: the token becomes an empty string, so "[courses] radalta." sends as
+  " radalta." with the space and full stop intact. Nothing warns the admin,
+  though the preview shows it. This matches how `[colour]` and `[disc]` behave.
+- Only the genitive is configured. A template needing another of Finnish's
+  fifteen cases — "Äijänpeltoon", "Äijänpellolla" — has no token for it and must
+  name the course literally, which then applies to every disc in a batch.
 
 ## Open questions
 None recorded.
