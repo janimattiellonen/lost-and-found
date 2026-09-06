@@ -2,8 +2,16 @@ import { getCourseGenitive } from '~/config/courses';
 import { ownerLinkUrl } from '~/lib/ownerLinkUrl';
 import type { DiscDTO } from '~/types';
 
-export function convertLineBreaks(value: string): string {
-  return value.replaceAll('\n', '%0a');
+/**
+ * A message as the `body` of an `sms:` link.
+ *
+ * Every character that means something in a url has to be escaped, not just the
+ * newlines this used to replace by hand -- an unescaped `?` in a template cut
+ * the message short. The reasoning, and why the escaping is safe on a handset,
+ * is in specs/06-messaging-and-templates.md under "Transport & configuration".
+ */
+export function toSmsBody(value: string): string {
+  return encodeURIComponent(value);
 }
 
 export function lineBreakToBr(value: string): string {
