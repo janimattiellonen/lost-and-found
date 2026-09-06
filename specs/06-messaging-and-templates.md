@@ -84,7 +84,7 @@ brackets, `replaceAll` so every occurrence is filled — not just the first.
 | `[disc]` | `disc.discName` | empty string |
 | `[course]` | `disc.course`, as recorded — "Äijänpelto" | empty string when the disc has no course |
 | `[courses]` | the same name in the genitive — "Äijänpellon" | empty string when the disc has no course |
-| `[link]` | `<baseUrl>/kiekko/<owner_link_token>` | empty string when the disc has no token, rather than a url ending in "undefined" |
+| `[link]` | `<baseUrl>/disc/<owner_link_token>` | empty string when the disc has no token, rather than a url ending in "undefined" |
 
 **Why a course has two tokens.** Finnish inflects place names, and a message
 names the course mid-sentence: "Sinun musta Mako3 on löytynyt Äijänpellon

@@ -1,42 +1,24 @@
-import { useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
+import { redirect, type LoaderFunctionArgs } from 'react-router';
 
-import { handleOwnerLinkSubmit } from '~/features/discs/ownerResponse/handleOwnerLinkSubmit.server';
-import { loadOwnerLinkPage } from '~/features/discs/ownerResponse/loadOwnerLinkPage.server';
-import OwnerLinkPage from '~/features/discs/ownerResponse/OwnerLinkPage';
-
-import type { JSX } from 'react';
+import { OWNER_LINK_PATH } from '~/lib/ownerLinkUrl';
 
 /**
- * The page an owner reaches from the link in the sms.
+ * The owner link's old Finnish path, kept alive for ever.
  *
- * No login: holding the link is the permission, and everything the page shows
- * is already on the club's public disc list. See
- * docs/getting-a-disc-back-to-its-owner.md.
+ * Routes are named in English; Finnish is for what the user reads. This one had
+ * already gone out inside text messages that cannot be recalled, and an owner
+ * may open one months from now, so the path redirects rather than disappearing.
+ * See specs/05-owner-link-and-responses.md.
  */
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const token = params.token ?? '';
-
-  return { ...(await loadOwnerLinkPage(token)), token };
-};
-
-export async function action({ request, params }: ActionFunctionArgs) {
-  return handleOwnerLinkSubmit(params.token ?? '', await request.formData());
-}
-
-/**
- * Keeps the token out of the Referer header of anything the page leads to, and
- * out of search results.
- */
-export const headers = () => ({
-  'Referrer-Policy': 'no-referrer',
-  'X-Robots-Tag': 'noindex, nofollow',
-});
-
-export default function OwnerLinkRoute(): JSX.Element {
-  const { disc, clubPayment, contactEmail, token } = useLoaderData<typeof loader>();
-  const result = useActionData<typeof action>();
-
-  return (
-    <OwnerLinkPage disc={disc} clubPayment={clubPayment} contactEmail={contactEmail} token={token} result={result} />
-  );
+export function loader({ params }: LoaderFunctionArgs) {
+  return redirect(`${OWNER_LINK_PATH}/${params.token ?? ''}`, {
+    // Permanent: the old path will never serve a page again.
+    status: 301,
+    // Repeated from the page itself. The token rides in the Location header, and
+    // two headers cost nothing next to reasoning about how a crawler treats a hop.
+    headers: {
+      'Referrer-Policy': 'no-referrer',
+      'X-Robots-Tag': 'noindex, nofollow',
+    },
+  });
 }

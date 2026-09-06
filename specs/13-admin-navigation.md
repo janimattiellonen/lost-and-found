@@ -103,7 +103,7 @@ its links point at routes owned by other features:
 | -------------- | -------------------- | ------------------------------------ |
 | Kiekot         | `/`                  | [01](01-public-disc-list.md)         |
 | Lisää kiekkoja | `/discs/add`         | [02](02-disc-submission.md)          |
-| Vastaukset     | `/vastaukset`        | [05](05-owner-link-and-responses.md) |
+| Vastaukset     | `/responses`         | [05](05-owner-link-and-responses.md) |
 | Tyhjennysloki  | `/emptying-log`      | [08](08-emptying-log.md)             |
 | Viestipohjat   | `/message-templates` | [06](06-messaging-and-templates.md)  |
 | Statistiikka   | `/stats`             | [10](10-statistics.md)               |

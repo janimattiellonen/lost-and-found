@@ -8,6 +8,7 @@ import { OwnerChoice, type OwnerChoiceValue } from './ownerChoice';
 import { ADDRESS_LIMITS } from './parseOwnerResponse';
 import type { OwnerLinkDisc } from './ownerResponse';
 import type { OwnerLinkActionResult } from './handleOwnerLinkSubmit.server';
+import { OWNER_LINK_PATH } from '~/lib/ownerLinkUrl';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import Label from '~/ui/Label';
@@ -66,7 +67,7 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
         <p className="text-gray-700 mb-8 text-center text-lg">
           Seura hoitaa asian eteenpäin. Voit muuttaa valintaasi samasta linkistä, jos tulee muutoksia.
         </p>
-        <Button variant="outlined" size="large" to={`/kiekko/${token}`}>
+        <Button variant="outlined" size="large" to={`${OWNER_LINK_PATH}/${token}`}>
           Muuta valintaa
         </Button>
       </Centered>

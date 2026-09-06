@@ -54,7 +54,7 @@ function withCount(label: string, count: number): string {
  */
 function menuLinks(retrievalCount: number | null, responseCount: number | null): MenuLink[] {
   const responses: MenuLink[] =
-    responseCount === null ? [] : [{ to: '/vastaukset', label: withCount('Vastaukset', responseCount) }];
+    responseCount === null ? [] : [{ to: '/responses', label: withCount('Vastaukset', responseCount) }];
 
   const retrieval: MenuLink[] =
     retrievalCount === null ? [] : [{ to: '/retrieval', label: withCount('Noutolista', retrievalCount) }];

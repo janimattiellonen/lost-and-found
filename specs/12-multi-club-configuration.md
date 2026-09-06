@@ -32,7 +32,7 @@ admins only ever see the one club their instance serves.
 | `/notify/:courseSlug` | GET, POST | public | Found-disc form for the course resolved by `getCourseBySlug` |
 | `/bin/full/:courseSlug` | GET, POST | public | Bin-full form, same slug resolution |
 | `/retrieval` | GET, POST | admin | Both clubs; scoped by `queryPendingRetrievals`' `.eq('discs.club_id', currentClubId())` |
-| `/kiekko/:token` | GET, POST | token | Owner link — both clubs; club taken from `currentClubId()` and passed into the RPC |
+| `/disc/:token` | GET, POST | token | Owner link — both clubs; club taken from `currentClubId()` and passed into the RPC |
 | `/discs/sync` | — | 404 | Per-club Sheets importers; route excluded in `app/routes.ts` |
 
 ## Rules & constraints

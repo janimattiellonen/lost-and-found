@@ -34,9 +34,10 @@ cookie sessions, with row-level security in Postgres as the second line.
 | `/sign-in` | GET, POST | public | Email/password sign-in (`app/features/auth/signInWithForm.server.ts`) |
 | `/`, `/discs/data` | GET | public | Disc list; loader narrows fields for anonymous visitors |
 | `/notify`, `/notify/:courseSlug`, `/bin/full/:courseSlug` | GET, POST | public | QR report forms |
-| `/kiekko/:token` | GET, POST | token only | Owner link; `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow` |
+| `/disc/:token` | GET, POST | token only | Owner link; `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow` |
+| `/kiekko/:token` | GET | public | Permanent redirect to `/disc/:token` for links already sent |
 | `/discs/add`, `/emptying-log`, `/message-templates`, `/message-template/:id/edit`, `/message/send/:externalId`, `/message/send-batch`, `/notifications`, `/stats` | GET (+POST) | admin, loader redirect | Admin pages |
-| `/retrieval`, `/vastaukset` | GET, POST | admin, checked in the feature module | Retrieval list, owner-answer inbox |
+| `/retrieval`, `/responses` | GET, POST | admin, checked in the feature module | Retrieval list, owner-answer inbox |
 | `/discs/create`, `/discs/delete`, `/discs/disposal`, `/discs/return`, `/discs/course`, `/discs/retrieval`, `/discs/batch` | POST JSON | admin, `requireAdminJson` | Disc resource routes |
 | `/message-template/create` | GET, POST | **no server-side check** | New-template form (see gaps) |
 | `/discs/sync` | — | 404 | Route file excluded in `app/routes.ts` |
@@ -47,7 +48,7 @@ cookie sessions, with row-level security in Postgres as the second line.
 - **There is no single `requireUser` helper.** Three mechanisms coexist:
   1. `isUserLoggedIn(request)` — `supabase.auth.getUser()`, true when a user id comes back. Called inline at the top of each admin page's loader, which returns `redirect('/sign-in')`.
   2. `requireAdminJson(request)` (`app/lib/api/resourceRoute.server.ts`) — the shared preamble for the JSON disc routes: POST-only (405), `isUserLoggedIn` (401), parseable JSON body (400). Returns either `{ body }` or `{ response }`.
-  3. `isUserLoggedIn` called inside the feature loader/handler instead of the route, for `/retrieval` and `/vastaukset`.
+  3. `isUserLoggedIn` called inside the feature loader/handler instead of the route, for `/retrieval` and `/responses`.
 - **Route-level checks guard loaders, not actions.** On `/emptying-log`, `/notifications`, `/message-templates` and `/message-template/:id/edit` the check sits in the loader only; the `action` on those routes performs its write with no auth check of its own and relies on RLS.
 - **Keys.** `SUPABASE_KEY` is the **anon** key. It is deliberately public — `root.tsx` ships it to the browser in the loader's `env` object so `createBrowserClient` can run. Every server client (`createConnection`, `createFunctionConnection`, both SSR clients) uses the same anon key; a signed-in request differs only by carrying the session JWT from its cookies.
 - **The service-role key is never reachable from app code.** `SUPABASE_SERVICE_ROLE_KEY` appears nowhere under `app/` and is not in `.env.example`; only `scripts/supabaseClients.ts` reads it, optionally, for local maintenance scripts, falling back to signing in with `SUPABASE_EMAIL`/`SUPABASE_PASSWORD`.
