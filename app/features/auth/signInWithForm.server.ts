@@ -8,14 +8,19 @@ export type LoginErrors = {
   invalidLogin?: boolean | null | undefined;
 };
 
-/** Signs the user in from the posted credentials, or replies with errors. */
-export async function signInWithForm(request: Request) {
+/**
+ * Signs the user in from the posted credentials, or replies with errors.
+ *
+ * Takes the parsed form rather than reading it: `/sign-in` has to inspect the
+ * `intent` field to route between this and the magic link first, and a request
+ * body can only be read once.
+ */
+export async function signInWithForm(request: Request, form: FormData) {
   const errors: LoginErrors = {};
 
   const { supabase, headers } = createSupabaseServerClientWithHeaders(request);
 
   try {
-    const form = await request.formData();
     const email = form.get('email')!;
     const password = form.get('password')!;
 
