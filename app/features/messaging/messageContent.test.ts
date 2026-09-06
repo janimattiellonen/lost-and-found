@@ -16,7 +16,7 @@ describe('replaceTokensWithValues', () => {
   });
 
   it("fills in the owner's own link", () => {
-    expect(replaceTokensWithValues('Kerro täällä: [link]', disc, BASE)).toBe(`Kerro täällä: ${BASE}/kiekko/${TOKEN}`);
+    expect(replaceTokensWithValues('Kerro täällä: [link]', disc, BASE)).toBe(`Kerro täällä: ${BASE}/disc/${TOKEN}`);
   });
 
   // Used to substitute the first one and send the second as a literal "[disc]".

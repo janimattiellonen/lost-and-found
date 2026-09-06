@@ -7,13 +7,13 @@ const TOKEN = '8f14e45f-ceea-467a-9f7c-fd4b2a1e9a1c';
 describe('ownerLinkUrl', () => {
   it('builds the link an owner receives', () => {
     expect(ownerLinkUrl('https://loytokiekot.example.org', TOKEN)).toBe(
-      `https://loytokiekot.example.org/kiekko/${TOKEN}`,
+      `https://loytokiekot.example.org/disc/${TOKEN}`,
     );
   });
 
   it('does not double the slash when the base url has one', () => {
     expect(ownerLinkUrl('https://loytokiekot.example.org/', TOKEN)).toBe(
-      `https://loytokiekot.example.org/kiekko/${TOKEN}`,
+      `https://loytokiekot.example.org/disc/${TOKEN}`,
     );
   });
 

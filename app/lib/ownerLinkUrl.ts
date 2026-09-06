@@ -7,8 +7,13 @@
  * an sms would otherwise be a cross-feature import.
  */
 
-/** The path the sms link points at. */
-export const OWNER_LINK_PATH = '/kiekko';
+/**
+ * The path the sms link points at.
+ *
+ * Was `/kiekko` until routes were made consistently English. Links already sent
+ * still carry the old path; `routes/kiekko.$token.tsx` redirects them here.
+ */
+export const OWNER_LINK_PATH = '/disc';
 
 /**
  * The link to put in a message to an owner.
