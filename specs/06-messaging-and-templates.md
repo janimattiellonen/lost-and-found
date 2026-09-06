@@ -145,13 +145,23 @@ The tokens are documented to the admin by
   **The body must be escaped entirely, not just its newlines.** It used to go
   through a `convertLineBreaks` that replaced `\n` with `%0a` and left every
   other character alone. A template ending "Milloin pääsisit noutamaan kiekon?"
-  therefore put a literal `?` in the url, which is where a query string starts:
-  the messaging app took the text before it as the body and dropped everything
-  after, with no error and nothing in the preview to suggest it. `&` and `#`
-  would each have cut a message the same way. `encodeURIComponent` handles all
-  of them and writes a newline as `%0A`, which is what the old function
-  produced for the one case it did cover — so nothing about an already-working
-  message changes.
+  (when could you come and collect the disc?) therefore put a literal `?` in the
+  url, which is where a query string starts: the messaging app took the text
+  before it as the body and dropped everything after, with no error and nothing
+  in the preview to suggest it. `&` and `#` would each have cut a message the
+  same way.
+
+  **Every message's url changed, not only the broken ones.** `encodeURIComponent`
+  escapes the lot: a space becomes `%20`, "ä" becomes `%C3%A4`, the `://` inside
+  a `[link]` becomes `%3A%2F%2F`, and the newline becomes `%0A` where the old
+  function wrote the lowercase `%0a`. The *decoded* message is identical; the
+  url carrying it is not, for essentially every message the club sends.
+
+  That is safe because the handset percent-decodes the body — and this is
+  something the app already knew rather than something assumed here. The old
+  function emitted `%0a` and the newline arrived as a newline; had the body been
+  taken literally, every multi-line message ever sent would have contained a
+  visible "%0a". Whatever handles these links decodes them.
 - Postage details the message may refer to live in `app/config/shipping.ts`;
   per-club payment and contact details in `app/config/clubs.ts`.
 - The only env vars this feature touches: `APP_CLUB_ID` (club scoping on every
@@ -200,11 +210,19 @@ The tokens are documented to the admin by
   placeholder="Sähköpostiosoite"` — leftover markup; the value is used as a
   phone number and the name is never read.
 - The `sms:` href uses `&body=` rather than the `?body=` of RFC 5724; it works
-  on iOS, not uniformly elsewhere. Left alone deliberately when the body
-  encoding was fixed: that fix is safe everywhere, whereas changing the
-  separator can only be judged on the admin's own handset, and the `&` form is
-  what has been sending messages until now. Note that the two are independent —
-  with the body encoded there is no longer a stray `?` in the url either way.
+  on iOS, not uniformly elsewhere. Left alone when the body encoding was fixed,
+  because the two are independent: with the body escaped there is no stray `?`
+  in the url either way, and the `&` form is what has been sending messages
+  until now.
+- **Nobody has checked on a handset that the escaping introduced with
+  `toSmsBody` round-trips.** The argument above — the old `%0a` arrived as a
+  newline, so the body is decoded — is sound for `%0a`, and it is the whole of
+  the evidence. It does not separately prove that `%3F` comes back as "?" or
+  `%20` as a space, and a `sms:` url with no `?` in it has no query component at
+  all under RFC 5724, so a strict parser is not obliged to decode the body. The
+  fix is believed safe on the strength of one decoded escape and the fact that
+  percent-decoding is not usually selective. The first message sent after it
+  ships is the test, and it is worth actually looking at.
 - Message content is rendered with `dangerouslySetInnerHTML` in the preview, the
   sent-message history and the template list. The content is admin-authored, but
   nothing sanitises it.

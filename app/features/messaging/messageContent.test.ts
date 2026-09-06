@@ -76,9 +76,7 @@ describe('replaceTokensWithValues', () => {
 });
 
 describe('toSmsBody', () => {
-  // The bug this function exists for: a template that asks the owner a question
-  // put a raw `?` in the sms: link, and the messaging app read everything after
-  // it as the url's query string rather than as the message.
+  // The bug this function exists for; see spec 06 for the whole story.
   it('escapes a question mark, so the message does not stop there', () => {
     const body = toSmsBody('Moikka. Milloin pääsisit noutamaan kiekon?\nLintukorpi 13 C 11');
 
@@ -90,7 +88,10 @@ describe('toSmsBody', () => {
     expect(toSmsBody('a?b&c#d+e')).toBe('a%3Fb%26c%23d%2Be');
   });
 
-  it('still writes a newline as %0A, as the hand-rolled version did', () => {
+  // The hand-rolled version wrote the lowercase %0a. Percent-decoding is
+  // case-insensitive, so the handset reads both as a newline -- but the url
+  // this produces is not the one it produced.
+  it('writes a newline as %0A', () => {
     expect(toSmsBody('one\ntwo')).toBe('one%0Atwo');
   });
 

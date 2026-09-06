@@ -6,15 +6,9 @@ import type { DiscDTO } from '~/types';
  * A message as the `body` of an `sms:` link.
  *
  * Every character that means something in a url has to be escaped, not just the
- * newlines this used to replace by hand. A template ending "Milloin pääsisit
- * noutamaan kiekon?" put a literal `?` in the link, which starts a url's query
- * string: the messaging app took everything before it as the body and dropped
- * the rest of the message, silently. `&` would have split it the same way, and
- * `#` would have cut it too.
- *
- * `encodeURIComponent` covers all of them, newlines included — it writes `\n`
- * as `%0A`, which is what the hand-rolled version was producing for that one
- * case.
+ * newlines this used to replace by hand -- an unescaped `?` in a template cut
+ * the message short. The reasoning, and why the escaping is safe on a handset,
+ * is in specs/06-messaging-and-templates.md under "Transport & configuration".
  */
 export function toSmsBody(value: string): string {
   return encodeURIComponent(value);
