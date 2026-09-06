@@ -7,14 +7,14 @@ An owner who gets an sms about a lost disc answers in one tap, instead of the
 admin reading a free-text reply and writing it down. The link in the message
 opens a page for that one disc where the owner says whether they want it back
 and how, and gives a postal address if it is to be posted. Answers land in the
-admin's inbox at `/vastaukset`. Background: `docs/getting-a-disc-back-to-its-owner.md`.
+admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owner.md`.
 
 ## Actors
 - **Anonymous owner** — holds the link from the sms. No account, no login.
 - **Club admin** — signed in, reads and clears the inbox.
 
 ## User-facing behaviour
-1. Owner opens `/kiekko/<token>` → sees colour, disc name, manufacturer and the
+1. Owner opens `/disc/<token>` → sees colour, disc name, manufacturer and the
    last four digits of their phone number ("Puhelinnumero ****1234"), under
    "Löytynyt kiekkosi" (your found disc).
 2. Owner picks "Kyllä, haluan kiekon takaisin" (yes, I want it back) or "Ei,
@@ -43,7 +43,7 @@ admin's inbox at `/vastaukset`. Background: `docs/getting-a-disc-back-to-its-own
    already returned / released / archived → "Linkki ei ole enää käytössä" (this
    link is no longer in use), with the club's contact email. Same screen for all
    of them, so a guess learns nothing.
-9. Admin opens `/vastaukset` ("Omistajien vastaukset") → unhandled answers,
+9. Admin opens `/responses` ("Omistajien vastaukset") → unhandled answers,
    newest first: disc, choice, method, owner name, tappable phone number, the
    address if there is one. "Merkitse käsitellyksi" (mark as handled) asks for
    confirmation, removes the card and **wipes the address**.
@@ -86,12 +86,33 @@ and spec 03 for the shape.
 ## Routes & entry points
 | Route | Method(s) | Auth | Purpose |
 |---|---|---|---|
-| `/kiekko/:token` | GET, POST | none — the token is the permission | The owner's page and its submit |
-| `/vastaukset` | GET, POST | signed in (redirect `/sign-in`) | The inbox; POST marks one answer handled |
+| `/disc/:token` | GET, POST | none — the token is the permission | The owner's page and its submit |
+| `/kiekko/:token` | GET | none | Permanent redirect to `/disc/:token`, keeping links already sent alive |
+| `/responses` | GET, POST | signed in (redirect `/sign-in`) | The inbox; POST marks one answer handled |
 
-`GET /kiekko/:token` sends `Referrer-Policy: no-referrer` and
+`GET /disc/:token` sends `Referrer-Policy: no-referrer` and
 `X-Robots-Tag: noindex, nofollow` so the token leaks into neither a `Referer`
 header nor a search index.
+
+**`/kiekko/:token` still works, and always will have to.** The path was Finnish
+until the routes were made consistently English; every other route in the app is
+named in English, with Finnish kept to what the user reads. Renaming an admin
+route is free — an admin follows a menu link — but this one had already been sent
+to owners inside text messages that cannot be recalled or edited. `/kiekko/:token`
+is therefore kept as a route of its own that answers `301 Moved Permanently` to
+`/disc/:token`, preserving the token. It is a redirect, not a second copy of the
+page, so there is one place the owner flow lives.
+
+The redirect repeats the `Referrer-Policy` and `X-Robots-Tag` headers even though
+it renders nothing. A redirect carries the token in its `Location` header, and
+the cost of setting two headers on it is nil next to reasoning about whether some
+future browser or crawler treats the hop differently.
+
+`301` rather than `302` because the move is permanent: the old path will never
+again serve a page, and a permanent status lets a browser skip the hop next time.
+The trade is that the redirect is cached hard, so the old path cannot later be
+given a different meaning without cache-busting — which is exactly the guarantee
+wanted here.
 
 Database entry points, both `SECURITY DEFINER`, `REVOKE ALL FROM PUBLIC` and
 `GRANT EXECUTE ... TO anon, authenticated`:
@@ -166,6 +187,14 @@ only called from inside those two.
   address. The menu count is a `head: true` count — it reads neither.
 
 ## Edge cases & known gaps
+- `/kiekko/:token` can never be deleted. Text messages already sent carry it, an
+  owner may open one months later, and nothing in the app knows when the last
+  one has been followed. It is two lines of redirect, so the cost of keeping it
+  for ever is small — but it is for ever, and a reader tempted to tidy it away
+  should not.
+- Messages recorded in `message_log` keep the `/kiekko/` link they were sent
+  with. That history is a record of what was sent and is deliberately not
+  rewritten; the links in it still work, through the redirect.
 - **The address wipe fires on "marked handled", not on "posted"** — the only
   event the app has. Marked too early and the label data is gone; never marked
   and the address is kept indefinitely (open question 7 of the doc).

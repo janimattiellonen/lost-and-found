@@ -10,9 +10,9 @@ Built in PR #79, behind four migrations, **all applied 2026-09-04**:
 - one shared handover method (section 5), replacing the retrieval list's own
   two-value enum
 - `discs.owner_link_token`, `disc_owner_responses`, and the flag page at
-  `/kiekko/<token>`
+  `/disc/<token>`
 - `[link]` as a message-template token, beside `[disc]` and `[colour]`
-- the admin's page of answers at `/vastaukset`
+- the admin's page of answers at `/responses`
 - `clubs.stores_discs_offsite`, which is what section 1's table now lives in
 
 Also built, after the first review: `has_more_discs` (section 10b), and
@@ -169,7 +169,7 @@ these three rules, all of which follow from the link being forwardable:
 2. **The address is deleted once it has served its purpose.** It is needed to
    write a parcel label and for nothing else afterwards, and the database should
    not become a standing list of members' home addresses. **What is built wipes
-   it when the answer is marked handled on `/vastaukset`** — the only event the
+   it when the answer is marked handled on `/responses`** — the only event the
    app has. That is not quite the event this rule wants, and an answer never
    marked keeps its address indefinitely; open question 7 is where that gets
    settled, and until it does this rule is honoured by habit rather than by the
@@ -195,7 +195,7 @@ sms and gets forwarded.
   belongs here. See open question 3.
 - **New, proposed:** `owner_link_token uuid`, unique, `default gen_random_uuid()`
   and backfilled the way `external_id` was — what the flag-page link is built on:
-  `/kiekko/<token>`.
+  `/disc/<token>`.
 
   Deliberately not `external_id`. That one is an identifier: it is in admin URLs,
   every disc resource route accepts it, and `message_log` rows reference it, so
@@ -317,7 +317,7 @@ What that leaves for later, if the messages get tiresome: the sibling lookup
    or is the disc list enough for those?
 2. ~~**Does an owner's "I want it back" create the request row by itself**, or
    land as an answer you confirm first?~~ **Decided for the first version:** it
-   lands as an answer, on `/vastaukset`, and the admin acts. A stray click then
+   lands as an answer, on `/responses`, and the admin acts. A stray click then
    cannot send anyone to the storage for nothing, and nothing an owner submits
    changes what the public list shows. Revisit once there is a feel for how many
    answers arrive and how many are acted on unchanged.
@@ -351,7 +351,7 @@ What that leaves for later, if the messages get tiresome: the sibling lookup
    What stays open is the same case running the other way in time: the owner
    answers "I will collect it from the storage" and the disc is fetched home
    _afterwards_. Their answer now names a place the disc has left, and nothing
-   tells them. It shows on `/vastaukset` and the admin sorts it out by message.
+   tells them. It shows on `/responses` and the admin sorts it out by message.
    Whether that deserves more — a flag on the answer, or a message to the owner
    — is the live part of this question.
 
@@ -368,7 +368,7 @@ What that leaves for later, if the messages get tiresome: the sibling lookup
    else in this document depends on it.
 7. **When exactly is a shipping address wiped?** Rule 2 of section 6 says "once
    the disc has been posted". What is built wipes it when the answer is marked
-   handled on `/vastaukset`, which is the only event the app has — and it is not
+   handled on `/responses`, which is the only event the app has — and it is not
    the same event. Marked handled too early and the label data is gone before
    the parcel is made up; never marked, and the address is kept for ever. Either
    the admin's habit makes them the same event, or the wipe belongs on "marked

@@ -15,6 +15,23 @@ the code once lint, typecheck and tests are green.
 The full workflow and the writing rules live in the `specs` skill — read it
 before touching anything in `specs/`.
 
+## Names are English, Finnish is for the user
+
+Every identifier is English: route paths and route files, components, functions,
+types, variables, columns. Finnish belongs only in what a person reads — page
+copy, labels, button text, validation messages, the `AdminMenu` entries.
+
+`AdminMenu` is the pattern to copy: the label is `Noutolista`, the path is
+`/retrieval`.
+
+Two route paths were Finnish and were renamed: `/vastaukset` → `/responses`, and
+`/kiekko/:token` → `/disc/:token`. Renaming an admin route is free, because an
+admin follows a menu link. **A public URL is not free.** The owner link had
+already been sent inside text messages that cannot be recalled, so
+`routes/kiekko.$token.tsx` stays for ever as a `301` to the new path. Before
+renaming any route, ask who is holding the old URL: if the answer is anyone
+outside the admin's browser, the old path has to keep working.
+
 ## Slim routes
 
 Route files in `app/routes/` are thin wiring layers only:

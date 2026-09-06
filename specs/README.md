@@ -11,7 +11,7 @@ per feature, linking to its own spec once written.
 | 2 | [Disc submission](02-disc-submission.md) | Single-field free-text entry, text parser, browser draft storage, persistence. | `features/discs/submission/`, `routes/discs.add.tsx`, `routes/discs.create.tsx` |
 | 3 | [Disc lifecycle actions](03-disc-lifecycle-actions.md) | Return to owner/club, disposal, deletion, course change, retrieval list. | `features/discs/{return,disposal,deletion,courseChange,retrieval}/` |
 | 4 | [Batch operations](04-batch-operations.md) | Select many discs, apply one action to all. | `features/discs/batch/`, `routes/discs.batch.tsx` |
-| 5 | [Owner link & responses](05-owner-link-and-responses.md) | Token link from SMS: owner picks handover method, adds discs, gives address. Admin response inbox. | `features/discs/ownerResponse/`, `routes/kiekko.$token.tsx`, `routes/vastaukset.tsx` |
+| 5 | [Owner link & responses](05-owner-link-and-responses.md) | Token link from SMS: owner picks handover method, adds discs, gives address. Admin response inbox. | `features/discs/ownerResponse/`, `routes/disc.$token.tsx`, `routes/responses.tsx` |
 | 6 | [SMS messaging & templates](06-messaging-and-templates.md) | Send to one owner or a batch, template CRUD with tokens, preview, message log. | `features/messaging/`, `routes/message*.tsx` |
 | 7 | [Found-disc & bin-full notifications](07-notifications.md) | Public QR forms at a course, rate limiting, admin inbox, QR posters. | `features/notifications/`, `routes/notify*.tsx`, `routes/bin.full.$courseSlug.tsx` |
 | 8 | [Emptying log](08-emptying-log.md) | Record and show when a course's collection bin was emptied. | `features/emptyingLog/`, `routes/emptying-log.tsx` |
