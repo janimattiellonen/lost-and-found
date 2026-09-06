@@ -138,8 +138,20 @@ The tokens are documented to the admin by
 ## Transport & configuration
 - **No SMS provider, no API key, no outbound HTTP.** The "send" button is an
   `sms:` URI; the admin's phone or desktop OS sends the actual message.
-  Newlines become `%0a` in the `body` parameter (`convertLineBreaks`) and
-  grouping spaces are stripped from the number (`toDiallable`).
+  The body is percent-encoded whole by `toSmsBody`
+  (`app/features/messaging/messageContent.ts`) and grouping spaces are stripped
+  from the number (`toDiallable`).
+
+  **The body must be escaped entirely, not just its newlines.** It used to go
+  through a `convertLineBreaks` that replaced `\n` with `%0a` and left every
+  other character alone. A template ending "Milloin pääsisit noutamaan kiekon?"
+  therefore put a literal `?` in the url, which is where a query string starts:
+  the messaging app took the text before it as the body and dropped everything
+  after, with no error and nothing in the preview to suggest it. `&` and `#`
+  would each have cut a message the same way. `encodeURIComponent` handles all
+  of them and writes a newline as `%0A`, which is what the old function
+  produced for the one case it did cover — so nothing about an already-working
+  message changes.
 - Postage details the message may refer to live in `app/config/shipping.ts`;
   per-club payment and contact details in `app/config/clubs.ts`.
 - The only env vars this feature touches: `APP_CLUB_ID` (club scoping on every
@@ -187,8 +199,12 @@ The tokens are documented to the admin by
 - The phone field in `MessageComposer` is `type="email" name="email"
   placeholder="Sähköpostiosoite"` — leftover markup; the value is used as a
   phone number and the name is never read.
-- The `sms:` href uses `&body=` rather than `?body=`; it works on iOS, not
-  uniformly elsewhere.
+- The `sms:` href uses `&body=` rather than the `?body=` of RFC 5724; it works
+  on iOS, not uniformly elsewhere. Left alone deliberately when the body
+  encoding was fixed: that fix is safe everywhere, whereas changing the
+  separator can only be judged on the admin's own handset, and the `&` form is
+  what has been sending messages until now. Note that the two are independent —
+  with the body encoded there is no longer a stray `?` in the url either way.
 - Message content is rendered with `dangerouslySetInnerHTML` in the preview, the
   sent-message history and the template list. The content is admin-authored, but
   nothing sanitises it.

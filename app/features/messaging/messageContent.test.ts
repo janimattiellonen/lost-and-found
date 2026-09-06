@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { replaceTokensWithValues } from './messageContent';
+import { replaceTokensWithValues, toSmsBody } from './messageContent';
 
 const TOKEN = '8f14e45f-ceea-467a-9f7c-fd4b2a1e9a1c';
 
@@ -72,5 +72,30 @@ describe('replaceTokensWithValues', () => {
 
   it('leaves a message with no tokens alone', () => {
     expect(replaceTokensWithValues('Moi!', disc, BASE)).toBe('Moi!');
+  });
+});
+
+describe('toSmsBody', () => {
+  // The bug this function exists for: a template that asks the owner a question
+  // put a raw `?` in the sms: link, and the messaging app read everything after
+  // it as the url's query string rather than as the message.
+  it('escapes a question mark, so the message does not stop there', () => {
+    const body = toSmsBody('Moikka. Milloin pääsisit noutamaan kiekon?\nLintukorpi 13 C 11');
+
+    expect(body).not.toContain('?');
+    expect(decodeURIComponent(body)).toBe('Moikka. Milloin pääsisit noutamaan kiekon?\nLintukorpi 13 C 11');
+  });
+
+  it('escapes the other characters that would split a url', () => {
+    expect(toSmsBody('a?b&c#d+e')).toBe('a%3Fb%26c%23d%2Be');
+  });
+
+  it('still writes a newline as %0A, as the hand-rolled version did', () => {
+    expect(toSmsBody('one\ntwo')).toBe('one%0Atwo');
+  });
+
+  // Scandinavian letters are in every one of these messages.
+  it('survives a round trip through the scandinavian alphabet', () => {
+    expect(decodeURIComponent(toSmsBody('Äijänpellon radalta, Öö'))).toBe('Äijänpellon radalta, Öö');
   });
 });
