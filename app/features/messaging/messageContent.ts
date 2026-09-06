@@ -1,3 +1,4 @@
+import { getCourseGenitive } from '~/config/courses';
 import { ownerLinkUrl } from '~/lib/ownerLinkUrl';
 import type { DiscDTO } from '~/types';
 
@@ -10,7 +11,7 @@ export function lineBreakToBr(value: string): string {
 }
 
 /** The disc fields a template can substitute in. */
-type Substitutable = Pick<DiscDTO, 'discColour' | 'discName' | 'ownerLinkToken'>;
+type Substitutable = Pick<DiscDTO, 'discColour' | 'discName' | 'course' | 'ownerLinkToken'>;
 
 /**
  * Fills a message template's tokens in.
@@ -20,6 +21,11 @@ type Substitutable = Pick<DiscDTO, 'discColour' | 'discName' | 'ownerLinkToken'>
  * an absolute url, so the base comes from the request the page was loaded with
  * — window.location would differ between the server render and the browser's.
  *
+ * `[course]` is the course as the disc records it, `[courses]` the same name in
+ * the genitive -- "on löytynyt [courses] radalta", the template supplying the
+ * "radalta" itself. Finnish inflects place names and nothing here can derive
+ * that, so the genitive is configured per course; see getCourseGenitive.
+ *
  * replaceAll rather than replace: a template naming the same token twice used
  * to fill the first one in and send the other as literal `[disc]`.
  */
@@ -27,5 +33,7 @@ export function replaceTokensWithValues(message: string, disc: Substitutable, ba
   return message
     .replaceAll('[colour]', disc.discColour ? disc.discColour : '')
     .replaceAll('[disc]', disc.discName ? disc.discName : '')
+    .replaceAll('[courses]', getCourseGenitive(disc.course))
+    .replaceAll('[course]', disc.course ? disc.course : '')
     .replaceAll('[link]', ownerLinkUrl(baseUrl, disc.ownerLinkToken));
 }
