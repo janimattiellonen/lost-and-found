@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { currentClubId } from '~/config/clubs';
-import { UNIQUE_VIOLATION, type CategoryWriteResult } from './categoryColumns';
+import { toWriteResult, type CategoryWriteResult } from './categoryWriteResult.server';
 
 type Input = {
   id: number;
@@ -19,15 +19,12 @@ export async function queryRenameMessageTemplateCategory(
   supabase: SupabaseClient,
   input: Input,
 ): Promise<CategoryWriteResult> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('message_template_categories')
     .update({ name: input.name, updated_at: new Date().toISOString() })
     .eq('id', input.id)
-    .eq('club_id', currentClubId());
+    .eq('club_id', currentClubId())
+    .select('id');
 
-  if (!error) {
-    return { ok: true };
-  }
-
-  return { ok: false, reason: error.code === UNIQUE_VIOLATION ? 'duplicate' : 'failed' };
+  return toWriteResult(error, data?.length ?? 0);
 }

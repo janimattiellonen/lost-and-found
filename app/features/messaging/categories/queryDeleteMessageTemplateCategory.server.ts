@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { currentClubId } from '~/config/clubs';
+import { toWriteResult, type CategoryWriteResult } from './categoryWriteResult.server';
 
 /**
  * Removes one of this club's categories.
@@ -10,14 +11,16 @@ import { currentClubId } from '~/config/clubs';
  * deliberately no code here that clears the column first — the foreign key
  * cannot forget to.
  */
-export async function queryDeleteMessageTemplateCategory(supabase: SupabaseClient, id: number): Promise<void> {
-  const { error } = await supabase
+export async function queryDeleteMessageTemplateCategory(
+  supabase: SupabaseClient,
+  id: number,
+): Promise<CategoryWriteResult> {
+  const { data, error } = await supabase
     .from('message_template_categories')
     .delete()
     .eq('id', id)
-    .eq('club_id', currentClubId());
+    .eq('club_id', currentClubId())
+    .select('id');
 
-  if (error) {
-    throw new Error(`Kategorian poisto epäonnistui: ${error.message}`);
-  }
+  return toWriteResult(error, data?.length ?? 0);
 }

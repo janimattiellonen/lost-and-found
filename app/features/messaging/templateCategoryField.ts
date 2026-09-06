@@ -11,9 +11,12 @@ export const NO_CATEGORY = '';
  * Reads the posted category back.
  *
  * Anything that is not a positive whole number becomes null, so a hand-posted
- * value cannot get as far as the database. A real id belonging to another club
- * would be rejected there anyway, by the foreign key and the club scoping on
- * the update.
+ * value cannot get as far as the database.
+ *
+ * A well-formed id of *another club's* category gets past this untouched, and
+ * nothing in the schema would stop it: the foreign key only proves the row
+ * exists somewhere. `queryOwnCategoryId` is what rejects it, and every caller
+ * that stores the value runs it through there.
  */
 export function parseCategoryId(value: FormDataEntryValue | null): number | null {
   const parsed = Number(value);

@@ -16,14 +16,3 @@ export type CategoryRow = {
 export function toCategory(row: CategoryRow): MessageTemplateCategoryDTO {
   return { id: row.id, clubId: row.club_id, name: row.name };
 }
-
-/**
- * The database's unique-violation code. The create and rename actions let the
- * unique index on `(club_id, lower(name))` decide whether a name is taken,
- * rather than reading the table first: two admins saving the same name at the
- * same moment would both pass a pre-check.
- */
-export const UNIQUE_VIOLATION = '23505';
-
-/** Whether a category write went through, or which way it did not. */
-export type CategoryWriteResult = { ok: true } | { ok: false; reason: 'duplicate' | 'failed' };

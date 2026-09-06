@@ -1,24 +1,13 @@
-import { redirect, useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
+import { useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
-import { queryMessageTemplateCategories } from '~/features/messaging/categories/queryMessageTemplateCategories.server';
 import CreateMessageTemplatePage from '~/features/messaging/CreateMessageTemplatePage';
 import { createMessageTemplateFromForm } from '~/features/messaging/createMessageTemplateFromForm.server';
-import { createSupabaseServerClient, isUserLoggedIn } from '~/models/utils';
+import { loadCreateMessageTemplatePage } from '~/features/messaging/loadCreateMessageTemplatePage.server';
 
 import type { JSX } from 'react';
 
-/**
- * The page had no loader at all until it needed the category list. It gets the
- * sign-in check its siblings have at the same time — an unguarded loader beside
- * a dozen guarded ones is not worth shipping. The action is still unguarded,
- * exactly as it was; see specs/06-messaging-and-templates.md.
- */
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  if (!(await isUserLoggedIn(request))) {
-    return redirect('/sign-in');
-  }
-
-  return { categories: await queryMessageTemplateCategories(createSupabaseServerClient(request)) };
+  return loadCreateMessageTemplatePage(request);
 };
 
 export async function action({ request }: ActionFunctionArgs) {

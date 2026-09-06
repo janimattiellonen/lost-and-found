@@ -139,7 +139,7 @@ club — and left the old column for the history it already holds.
 | `/message-templates` | GET, POST | signed in | List; POST is `action=delete` or `action=default` |
 | `/message-template/create` | GET, POST | signed in on GET only | Create a template |
 | `/message-template/:id/edit` | GET, POST | signed in on GET only | Edit a template |
-| `/message-template-categories` | GET, POST | signed in on GET only | The category admin tool; POST is `action=create`, `action=rename` or `action=delete` |
+| `/message-template-categories` | GET, POST | signed in on GET only | The category admin tool; POST is `action=create`, `action=rename` or `action=delete`, and nothing else |
 
 **The `category` search parameter is a row id, and it is put there by the
 server.** `/responses` builds the link from
@@ -227,7 +227,8 @@ The tokens are documented to the admin by
 ## Rules & constraints
 - Every template, category and log query filters `club_id = APP_CLUB_ID`; a
   template or category of another club cannot be read, edited or deleted.
-- **Which templates the dropdown offers**, decided by `templatesFor` in
+- **Which templates the dropdown offers**, decided by
+  `templatesForCategoryOrUncategorised` in
   `app/features/messaging/loadSendMessagePage.server.ts`:
 
   | Opened with | Dropdown shows |
@@ -255,9 +256,37 @@ The tokens are documented to the admin by
   attempts the write and turns the database's unique-violation code `23505` into
   that message, rather than reading the table first, so two admins saving the
   same name at the same moment cannot both pass.
+- **A category id posted by a template form is re-checked against this club**
+  (`queryOwnCategoryId`) before it is stored, and becomes "no category" if it
+  names nothing here. Neither the foreign key nor the club scoping on the write
+  would catch a foreign id: the key only proves the row exists *somewhere*, and
+  the `club_id` filter scopes the template being written, not the category it
+  points at. Without the check, a posted `category-id` of the other club's row
+  is stored happily — and since neither template action checks for a signed-in
+  user, an anonymous POST could do it. The template would then vanish from every
+  filtered dropdown while its list card showed the other club's category name,
+  because the `message_template_categories(name)` embed is not club-filtered
+  either. A rejected id becomes null rather than a 422, so a prodder learns
+  nothing about which ids are real.
+- The category tool's `action` must be exactly `create`, `rename` or `delete`;
+  anything else is refused with `'Tallennus epäonnistui'` (422). An earlier
+  shape fell through to `create`, which turned a typo in a hidden field into a
+  new category. Its `id` goes through the same `parseCategoryId` as the
+  composer's `?category=`, so a NaN never reaches PostgREST.
+- A rename or a delete that matches no row reports `'Kategoriaa ei löytynyt'`
+  (422). PostgREST returns no error for that — filtering a row out is not a
+  failure to it — so the writes ask for the affected rows back with `.select('id')`
+  and treat an empty result as the failure it is. Without that, renaming a
+  category of the other club looked like it had saved, and the page came back
+  still showing the old name.
 - Deleting a category never deletes a template. The foreign key does it — there
   is no application code that clears `category_id` first, so nothing can forget
   to.
+- `getMessageTemplates(request, filter?)` in
+  `app/models/messageTemplate.server.ts` is the single template read. Omitting
+  the filter is every template of the club; `{ categoryId: n }` is one
+  category's; `{ categoryId: null }` is the templates in **no** category, which
+  is the fallback above and not "any category".
 - Batch selection (`sendBatchSelection.ts`): ids come from the `ids` query
   parameter, split on commas, trimmed, uuid-validated, deduplicated, and kept
   **in the order the admin saw them**. `MAX_BATCH_SIZE = 100`, because the

@@ -1,7 +1,7 @@
 import { queryMessageTemplateCategoryById } from '~/features/messaging/categories/queryMessageTemplateCategoryById.server';
 import { getDiscWithFullPhoneNumber } from '~/models/discs.server';
 import { getSentMessages } from '~/models/messageLog.server';
-import { getMessageTemplates, getMessageTemplatesByCategory } from '~/models/messageTemplate.server';
+import { getMessageTemplates } from '~/models/messageTemplate.server';
 import { createSupabaseServerClient } from '~/models/utils';
 
 import type { MessageTemplateDTO } from '~/types';
@@ -26,7 +26,7 @@ type Input = {
  */
 export async function loadSendMessagePage(request: Request, input: Input) {
   const [messageTemplates, sentMessages, data] = await Promise.all([
-    templatesFor(request, input.categoryId),
+    templatesForCategoryOrUncategorised(request, input.categoryId),
     getSentMessages(input.externalId, request),
     getDiscWithFullPhoneNumber(input.externalId),
   ]);
@@ -50,12 +50,15 @@ export async function loadSendMessagePage(request: Request, input: Input) {
  * uncategorised templates are also exactly where the deleted category's own
  * templates have just landed, by `ON DELETE SET NULL`.
  */
-async function templatesFor(request: Request, categoryId: number | null): Promise<MessageTemplateDTO[]> {
+async function templatesForCategoryOrUncategorised(
+  request: Request,
+  categoryId: number | null,
+): Promise<MessageTemplateDTO[]> {
   if (categoryId === null) {
     return getMessageTemplates(request);
   }
 
   const category = await queryMessageTemplateCategoryById(createSupabaseServerClient(request), categoryId);
 
-  return getMessageTemplatesByCategory(category ? category.id : null, request);
+  return getMessageTemplates(request, { categoryId: category ? category.id : null });
 }

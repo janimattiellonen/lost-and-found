@@ -12,45 +12,32 @@ import process from 'process';
 const TEMPLATE_COLUMNS =
   'id, created_at, updated_at, club_id, content, is_default, category_id, message_template_categories(name)';
 
-export async function getMessageTemplates(request: Request): Promise<MessageTemplateDTO[]> {
+/**
+ * Which of the club's templates to read.
+ *
+ * `categoryId: null` is not "any category": it means the templates whose
+ * `category_id` is NULL, which is what a page falls back to when the category
+ * it wanted has been deleted. Omit the filter entirely for every template the
+ * club has. See specs/06-messaging-and-templates.md.
+ */
+type CategoryFilter = { categoryId: number | null };
+
+export async function getMessageTemplates(request: Request, filter?: CategoryFilter): Promise<MessageTemplateDTO[]> {
   const supabase = createSupabaseServerClient(request);
 
   const clubId = process.env.APP_CLUB_ID;
 
-  const { data } = await supabase
-    .from('message_templates')
-    .select(TEMPLATE_COLUMNS)
-    .eq('club_id', clubId)
+  const scoped = supabase.from('message_templates').select(TEMPLATE_COLUMNS).eq('club_id', clubId);
+
+  const filtered = !filter
+    ? scoped
+    : filter.categoryId === null
+      ? scoped.is('category_id', null)
+      : scoped.eq('category_id', filter.categoryId);
+
+  const { data } = await filtered
     // .order('is_default', { ascending: false })
     .order('created_at', { ascending: false });
-
-  return data
-    ? data.map((row: any) => {
-        return toDTO(row);
-      })
-    : [];
-}
-
-/**
- * The club's templates in one category, or the ones in no category at all.
- *
- * `null` is not "any category": it means the templates whose `category_id` is
- * NULL, which is what a page falls back to when the category it wanted has been
- * deleted. See specs/06-messaging-and-templates.md.
- */
-export async function getMessageTemplatesByCategory(
-  categoryId: number | null,
-  request: Request,
-): Promise<MessageTemplateDTO[]> {
-  const supabase = createSupabaseServerClient(request);
-
-  const clubId = process.env.APP_CLUB_ID;
-
-  const query = supabase.from('message_templates').select(TEMPLATE_COLUMNS).eq('club_id', clubId);
-
-  const { data } = await (
-    categoryId === null ? query.is('category_id', null) : query.eq('category_id', categoryId)
-  ).order('created_at', { ascending: false });
 
   return data
     ? data.map((row: any) => {

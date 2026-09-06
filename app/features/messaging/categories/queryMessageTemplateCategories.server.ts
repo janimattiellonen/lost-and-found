@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { currentClubId } from '~/config/clubs';
-import { CATEGORY_COLUMNS, toCategory, type CategoryRow } from './categoryColumns';
+import { CATEGORY_COLUMNS, toCategory, type CategoryRow } from './categoryRow.server';
 
 import type { MessageTemplateCategoryDTO } from '~/types';
 
