@@ -47,6 +47,15 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    newest first: disc, choice, method, owner name, tappable phone number, the
    address if there is one. "Merkitse käsitellyksi" (mark as handled) asks for
    confirmation, removes the card and **wipes the address**.
+   - Beside it, "Lähetä viesti" (send a message) opens the message composer for
+     that answer's disc — `/message/send/<externalId>?category=<id>`. The
+     category is the owner-response one from
+     `app/config/messageTemplateCategories.ts`, and it narrows the composer's
+     template dropdown to the templates written for an owner who has already
+     answered: someone at this point in the conversation does not want the
+     "your disc has been found at X" templates the disc list offers. How the
+     narrowing works, and what happens once that category has been deleted, is
+     spec 06.
 10. The admin menu item reads "Vastaukset (3)" while answers are unhandled; the
     count disappears at zero and the item is absent when signed out.
 
@@ -88,7 +97,7 @@ and spec 03 for the shape.
 |---|---|---|---|
 | `/disc/:token` | GET, POST | none — the token is the permission | The owner's page and its submit |
 | `/kiekko/:token` | GET | none | Permanent redirect to `/disc/:token`, keeping links already sent alive |
-| `/responses` | GET, POST | signed in (redirect `/sign-in`) | The inbox; POST marks one answer handled |
+| `/responses` | GET, POST | signed in (redirect `/sign-in`) | The inbox; POST marks one answer handled. Each card links out to the composer (spec 06) |
 
 `GET /disc/:token` sends `Referrer-Policy: no-referrer` and
 `X-Robots-Tag: noindex, nofollow` so the token leaks into neither a `Referer`
