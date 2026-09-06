@@ -7,7 +7,14 @@ import type { DiscDTO, MessageLogDTO } from '~/types';
  */
 export type ComposerDisc = Pick<
   DiscDTO,
-  'externalId' | 'discName' | 'discColour' | 'ownerName' | 'ownerPhoneNumber' | 'notifiedAt' | 'ownerLinkToken'
+  | 'externalId'
+  | 'discName'
+  | 'discColour'
+  | 'course'
+  | 'ownerName'
+  | 'ownerPhoneNumber'
+  | 'notifiedAt'
+  | 'ownerLinkToken'
 >;
 
 /** Exactly the fields the sent-message history shows. */
