@@ -1,5 +1,6 @@
 import { data, redirect } from 'react-router';
 
+import { parseCategoryId } from '~/features/messaging/templateCategoryField';
 import { createMessageTemplate } from '~/models/messageTemplate.server';
 
 export type MessageTemplateErrors = {
@@ -21,11 +22,11 @@ export async function createMessageTemplateFromForm(request: Request, form: Form
     return data({ errors, data: null }, { status: 422 });
   }
 
-  const messageTemplateId = await createMessageTemplate(
-    content.toString(),
-    isDefault ? Boolean(isDefault.toString()) : false,
-    request,
-  );
+  const messageTemplateId = await createMessageTemplate(request, {
+    content: content.toString(),
+    isDefault: isDefault ? Boolean(isDefault.toString()) : false,
+    categoryId: parseCategoryId(form.get('category-id')),
+  });
 
   return redirect(`/message-template/${messageTemplateId}/edit`, {
     status: 302,

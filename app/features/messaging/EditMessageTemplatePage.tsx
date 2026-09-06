@@ -3,7 +3,8 @@ import { useState, type JSX } from 'react';
 import { Form } from 'react-router';
 
 import type { MessageTemplateErrors } from '~/features/messaging/createMessageTemplateFromForm.server';
-import type { MessageTemplateDTO } from '~/types';
+import type { MessageTemplateCategoryDTO, MessageTemplateDTO } from '~/types';
+import TemplateCategorySelect from '~/features/messaging/TemplateCategorySelect';
 import TemplateTokenHelp from '~/features/messaging/TemplateTokenHelp';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
@@ -15,10 +16,11 @@ import Wrapper from '~/ui/Wrapper';
 
 type Props = {
   messageTemplate: MessageTemplateDTO | null;
+  categories: MessageTemplateCategoryDTO[];
   errors?: MessageTemplateErrors | null;
 };
 
-export default function EditMessageTemplatePage({ messageTemplate, errors }: Props): JSX.Element {
+export default function EditMessageTemplatePage({ messageTemplate, categories, errors }: Props): JSX.Element {
   // Seeded from the loader data, then owned by the form: the page is remounted
   // per template, so there is nothing to sync afterwards.
   const [message, setMessage] = useState<string>(messageTemplate?.content ?? '');
@@ -47,6 +49,8 @@ export default function EditMessageTemplatePage({ messageTemplate, errors }: Pro
 
           {errors?.content && <p className="text-red-500 text-xs italic">{errors.content}</p>}
         </Wrapper>
+
+        <TemplateCategorySelect categories={categories} selected={messageTemplate?.categoryId ?? null} />
 
         <Wrapper>
           <FormControlLabel

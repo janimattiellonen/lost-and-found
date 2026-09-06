@@ -1,6 +1,7 @@
 import { data } from 'react-router';
 
 import type { MessageTemplateErrors } from '~/features/messaging/createMessageTemplateFromForm.server';
+import { parseCategoryId } from '~/features/messaging/templateCategoryField';
 import { editMessageTemplate } from '~/models/messageTemplate.server';
 
 /** Validates the edit form and saves the template, or replies with errors. */
@@ -18,7 +19,11 @@ export async function editMessageTemplateFromForm(request: Request, id: number, 
     return data({ errors, ok: null }, { status: 422 });
   }
 
-  await editMessageTemplate(id, content.toString(), isDefault ? Boolean(isDefault.toString()) : false, request);
+  await editMessageTemplate(request, id, {
+    content: content.toString(),
+    isDefault: isDefault ? Boolean(isDefault.toString()) : false,
+    categoryId: parseCategoryId(form.get('category-id')),
+  });
 
   return data({ errors: null, ok: true }, { status: 201 });
 }

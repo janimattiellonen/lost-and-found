@@ -72,6 +72,17 @@ export type MessageTemplateDTO = {
   clubId: number;
   content: string;
   isDefault?: boolean | null;
+  /** Null for a template in no category, which is where every template starts. */
+  categoryId?: number | null;
+  /** The category's name, read through the join so a list need not fetch twice. */
+  categoryName?: string | null;
+};
+
+/** One admin-managed group of message templates. */
+export type MessageTemplateCategoryDTO = {
+  id: number;
+  clubId: number;
+  name: string;
 };
 
 export type MessageLogDTO = {
