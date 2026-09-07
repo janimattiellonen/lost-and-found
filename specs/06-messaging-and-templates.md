@@ -45,7 +45,12 @@ for that reason instead of every template the club has.
     a "Kategoria" dropdown and an "Oletusviestipohja" (default template)
     checkbox, with the token help line above. The dropdown lists this club's
     categories plus "Ei kategoriaa" (no category), which is what a new template
-    starts on.
+    starts on. While a save is in flight the submit button is disabled and reads
+    "Luodaan..." / "Tallennetaan...", so a slow post does not look like a dead
+    button. Afterwards the edit page shows a green "Viestipohja luotu." (created,
+    after the redirect from the create form) or "Viestipohja tallennettu."
+    (saved) line, which disappears again as soon as the form is edited — what is
+    on screen is then no longer what is stored.
 12. "Hallitse kategorioita" (manage categories) on `/message-templates` opens
     `/message-template-categories` ("Viestipohjien kategoriat"): one page with a
     "Lisää kategoria" (add a category) field at the top and a row per existing
@@ -138,7 +143,7 @@ club — and left the old column for the history it already holds.
 | `/message/send-batch?ids=…` | GET, POST | signed in | Compose for a selection; POST records one send |
 | `/message-templates` | GET, POST | signed in | List; POST is `action=delete` or `action=default` |
 | `/message-template/create` | GET, POST | signed in on GET only | Create a template |
-| `/message-template/:id/edit` | GET, POST | signed in on GET only | Edit a template |
+| `/message-template/:id/edit?created=1` | GET, POST | signed in on GET only | Edit a template. `created=1` is what the create form's redirect leaves behind, and only decides which success line is shown |
 | `/message-template-categories` | GET, POST | signed in on GET only | The category admin tool; POST is `action=create`, `action=rename` or `action=delete`, and nothing else |
 
 **The `category` search parameter is a row id, and it is put there by the

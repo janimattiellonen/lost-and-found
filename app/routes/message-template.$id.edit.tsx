@@ -1,4 +1,10 @@
-import { useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
+import {
+  useActionData,
+  useLoaderData,
+  useSearchParams,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
+} from 'react-router';
 
 import EditMessageTemplatePage from '~/features/messaging/EditMessageTemplatePage';
 import { editMessageTemplateFromForm } from '~/features/messaging/editMessageTemplateFromForm.server';
@@ -17,8 +23,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export default function EditMessageTemplateRoute(): JSX.Element {
   const { messageTemplate, categories } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const [searchParams] = useSearchParams();
 
   return (
-    <EditMessageTemplatePage messageTemplate={messageTemplate} categories={categories} errors={actionData?.errors} />
+    <EditMessageTemplatePage
+      messageTemplate={messageTemplate}
+      categories={categories}
+      errors={actionData?.errors}
+      saved={actionData?.ok === true}
+      justCreated={searchParams.get('created') === '1'}
+    />
   );
 }

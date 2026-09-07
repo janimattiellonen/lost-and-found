@@ -1,6 +1,6 @@
 import { useState, type JSX } from 'react';
 
-import { Form } from 'react-router';
+import { Form, useNavigation } from 'react-router';
 
 import type { MessageTemplateErrors } from '~/features/messaging/createMessageTemplateFromForm.server';
 import type { MessageTemplateCategoryDTO, MessageTemplateDTO } from '~/types';
@@ -11,6 +11,7 @@ import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
 import H2 from '~/ui/H2';
 import Label from '~/ui/Label';
+import SuccessNote from '~/ui/SuccessNote';
 import TextField from '~/ui/TextField';
 import Wrapper from '~/ui/Wrapper';
 
@@ -18,13 +19,33 @@ type Props = {
   messageTemplate: MessageTemplateDTO | null;
   categories: MessageTemplateCategoryDTO[];
   errors?: MessageTemplateErrors | null;
+  /** The save this page's own action just made. */
+  saved?: boolean;
+  /** Arrived here straight from the create form, which redirects here. */
+  justCreated?: boolean;
 };
 
-export default function EditMessageTemplatePage({ messageTemplate, categories, errors }: Props): JSX.Element {
+export default function EditMessageTemplatePage({
+  messageTemplate,
+  categories,
+  errors,
+  saved,
+  justCreated,
+}: Props): JSX.Element {
   // Seeded from the loader data, then owned by the form: the page is remounted
   // per template, so there is nothing to sync afterwards.
   const [message, setMessage] = useState<string>(messageTemplate?.content ?? '');
   const [isDefault, setIsDefault] = useState<boolean>(messageTemplate?.isDefault ?? false);
+  // Typing after a save makes the "saved" line a lie -- what is on screen is no
+  // longer what is stored -- so the first edit takes it away again.
+  const [isEdited, setIsEdited] = useState(false);
+
+  const navigation = useNavigation();
+  const isSaving = navigation.state !== 'idle' && navigation.formData != null;
+
+  // "Luotu" only until the first save on this page, after which "tallennettu"
+  // is the truer word even though the ?created marker is still in the URL.
+  const notice = saved ? 'Viestipohja tallennettu.' : justCreated ? 'Viestipohja luotu.' : null;
 
   return (
     <div>
@@ -32,7 +53,17 @@ export default function EditMessageTemplatePage({ messageTemplate, categories, e
 
       <TemplateTokenHelp />
 
-      <Form method="post">
+      <SuccessNote className="mb-4">{!isEdited && !isSaving && notice}</SuccessNote>
+
+      <Form
+        method="post"
+        onChange={() => {
+          setIsEdited(true);
+        }}
+        onSubmit={() => {
+          setIsEdited(false);
+        }}
+      >
         <Wrapper>
           <Label htmlFor="content">Sisältö</Label>
           <TextField
@@ -73,8 +104,8 @@ export default function EditMessageTemplatePage({ messageTemplate, categories, e
             Peru
           </Button>
 
-          <Button name="action" value="create" variant="contained" type="submit">
-            Päivitä
+          <Button name="action" value="create" variant="contained" type="submit" disabled={isSaving}>
+            {isSaving ? 'Tallennetaan...' : 'Päivitä'}
           </Button>
         </div>
       </Form>
