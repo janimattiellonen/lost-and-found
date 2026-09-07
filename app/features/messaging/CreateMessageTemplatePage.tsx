@@ -1,4 +1,4 @@
-import { Form } from 'react-router';
+import { Form, useNavigation } from 'react-router';
 
 import type { MessageTemplateErrors } from '~/features/messaging/createMessageTemplateFromForm.server';
 import TemplateCategorySelect from '~/features/messaging/TemplateCategorySelect';
@@ -20,6 +20,12 @@ type Props = {
 };
 
 export default function CreateMessageTemplatePage({ categories, errors }: Props): JSX.Element {
+  const navigation = useNavigation();
+  // Covers the redirect to the edit page as well as the post itself: the button
+  // stays busy until the next page is on screen, so there is no dead moment
+  // where nothing looks like it is happening.
+  const isSaving = navigation.state !== 'idle' && navigation.formData != null;
+
   return (
     <div>
       <H2 className="mt-8 mb-4">Luo uusi viestipohja</H2>
@@ -40,8 +46,8 @@ export default function CreateMessageTemplatePage({ categories, errors }: Props)
           <FormControlLabel control={<Checkbox name="is-default" />} label="Oletusviestipohja" />
         </Wrapper>
 
-        <Button variant="contained" type="submit">
-          Luo
+        <Button variant="contained" type="submit" disabled={isSaving}>
+          {isSaving ? 'Luodaan...' : 'Luo'}
         </Button>
       </Form>
     </div>

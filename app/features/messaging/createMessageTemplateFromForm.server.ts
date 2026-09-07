@@ -30,7 +30,9 @@ export async function createMessageTemplateFromForm(request: Request, form: Form
     categoryId: await queryOwnCategoryId(createSupabaseServerClient(request), parseCategoryId(form.get('category-id'))),
   });
 
-  return redirect(`/message-template/${messageTemplateId}/edit`, {
+  // The marker the edit page turns into "Viestipohja luotu.": the redirect is
+  // the only trace a create leaves, and on its own it does not say it worked.
+  return redirect(`/message-template/${messageTemplateId}/edit?created=1`, {
     status: 302,
   });
 }
