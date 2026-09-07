@@ -122,3 +122,33 @@ CREATE POLICY "Enable update for authenticated users only"
 
 The other three policies on `discs`: `SELECT` to `public` (the list is public),
 `INSERT` and `DELETE` to `authenticated`.
+
+## message_template_categories
+
+The admin-managed groups a message template can belong to. Applied by
+`supabase/migrations/20260906000000_message_template_categories.sql`.
+
+Nothing here is public in any direction, unlike `discs`. The list is only ever
+read behind a signed-in page and only ever written from the category admin tool,
+and `SUPABASE_KEY` is the anon key that ships in every page's source — so an
+`anon` policy of any kind would let a passer-by rename or delete a club's
+categories.
+
+```sql
+CREATE POLICY "Allow authenticated select" ON public.message_template_categories
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Allow authenticated insert" ON public.message_template_categories
+  FOR INSERT TO authenticated WITH CHECK (true);
+
+-- USING as well as WITH CHECK, for the reason given under `discs` above:
+-- without it a rename would quietly affect zero rows.
+CREATE POLICY "Allow authenticated update" ON public.message_template_categories
+  FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated delete" ON public.message_template_categories
+  FOR DELETE TO authenticated USING (true);
+```
+
+Club scoping is not in these policies — they say `true`, the same as every other
+table here. It is done in the queries, which all filter `club_id = APP_CLUB_ID`.

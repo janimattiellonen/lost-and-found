@@ -12,6 +12,11 @@ import type { JSX } from 'react';
 
 type Props = {
   responses: OwnerResponseSummary[];
+  /**
+   * The message template category a message sent from here should pick from,
+   * or null when this club has none. See specs/06-messaging-and-templates.md.
+   */
+  messageCategoryId: number | null;
 };
 
 /**
@@ -22,7 +27,7 @@ type Props = {
  * for; acting on it is still a decision, and one an answer from a link should
  * not make on the admin's behalf.
  */
-export default function OwnerResponsesPage({ responses }: Props): JSX.Element {
+export default function OwnerResponsesPage({ responses, messageCategoryId }: Props): JSX.Element {
   return (
     <div>
       <H2 className="mt-8 mb-2">Omistajien vastaukset</H2>
@@ -35,14 +40,26 @@ export default function OwnerResponsesPage({ responses }: Props): JSX.Element {
       {responses.length === 0 && <p className="text-gray-500">Ei uusia vastauksia.</p>}
 
       {responses.map((response) => (
-        <ResponseItem key={response.id} response={response} />
+        <ResponseItem key={response.id} response={response} messageCategoryId={messageCategoryId} />
       ))}
     </div>
   );
 }
 
-function ResponseItem({ response }: { response: OwnerResponseSummary }): JSX.Element {
+function ResponseItem({
+  response,
+  messageCategoryId,
+}: {
+  response: OwnerResponseSummary;
+  messageCategoryId: number | null;
+}): JSX.Element {
   const method = handoverMethodLabel(response.handoverMethod);
+
+  // The composer, narrowed to the templates written for someone who has already
+  // answered. Without a category it is the same page the disc list opens, which
+  // offers every template the club has.
+  const composerPath =
+    `/message/send/${response.externalId}` + (messageCategoryId === null ? '' : `?category=${messageCategoryId}`);
 
   return (
     <Paper className="mb-4 max-w-2xl p-4">
@@ -89,24 +106,30 @@ function ResponseItem({ response }: { response: OwnerResponseSummary }): JSX.Ele
           <span className="mt-2 text-xs text-gray-500">Vastattu {formatDateTime(response.respondedAt)}</span>
         </div>
 
-        {/* Confirmed, because it is what wipes the address. */}
-        <Form
-          method="post"
-          onSubmit={(event) => {
-            const warning = response.address
-              ? 'Merkitäänkö vastaus käsitellyksi? Postitusosoite poistetaan.'
-              : 'Merkitäänkö vastaus käsitellyksi?';
-
-            if (!window.confirm(warning)) {
-              event.preventDefault();
-            }
-          }}
-        >
-          <input type="hidden" name="responseId" value={response.id} />
-          <Button variant="contained" type="submit">
-            Merkitse käsitellyksi
+        <div className="flex flex-col items-end gap-2">
+          <Button to={composerPath} variant="contained">
+            Lähetä viesti
           </Button>
-        </Form>
+
+          {/* Confirmed, because it is what wipes the address. */}
+          <Form
+            method="post"
+            onSubmit={(event) => {
+              const warning = response.address
+                ? 'Merkitäänkö vastaus käsitellyksi? Postitusosoite poistetaan.'
+                : 'Merkitäänkö vastaus käsitellyksi?';
+
+              if (!window.confirm(warning)) {
+                event.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="responseId" value={response.id} />
+            <Button variant="contained" type="submit">
+              Merkitse käsitellyksi
+            </Button>
+          </Form>
+        </div>
       </div>
     </Paper>
   );

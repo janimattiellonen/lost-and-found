@@ -1,7 +1,9 @@
 import { Form } from 'react-router';
 
 import type { MessageTemplateErrors } from '~/features/messaging/createMessageTemplateFromForm.server';
+import TemplateCategorySelect from '~/features/messaging/TemplateCategorySelect';
 import TemplateTokenHelp from '~/features/messaging/TemplateTokenHelp';
+import type { MessageTemplateCategoryDTO } from '~/types';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -13,10 +15,11 @@ import Wrapper from '~/ui/Wrapper';
 import type { JSX } from 'react';
 
 type Props = {
+  categories: MessageTemplateCategoryDTO[];
   errors?: MessageTemplateErrors | null;
 };
 
-export default function CreateMessageTemplatePage({ errors }: Props): JSX.Element {
+export default function CreateMessageTemplatePage({ categories, errors }: Props): JSX.Element {
   return (
     <div>
       <H2 className="mt-8 mb-4">Luo uusi viestipohja</H2>
@@ -30,6 +33,8 @@ export default function CreateMessageTemplatePage({ errors }: Props): JSX.Elemen
 
           {errors?.content && <p className="text-red-500 text-xs italic">{errors.content}</p>}
         </Wrapper>
+
+        <TemplateCategorySelect categories={categories} selected={null} />
 
         <Wrapper>
           <FormControlLabel control={<Checkbox name="is-default" />} label="Oletusviestipohja" />

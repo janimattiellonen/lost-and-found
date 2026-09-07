@@ -18,6 +18,8 @@ export default function MessageTemplateItem({ messageTemplate }: MessageTemplate
   return (
     <div className="p-4">
       <div dangerouslySetInnerHTML={{ __html: lineBreakToBr(messageTemplate.content) }} />
+      <div className="mt-2 text-sm text-gray-600">Kategoria: {messageTemplate.categoryName ?? 'ei mitään'}</div>
+
       {messageTemplate.createdAt && (
         <div className="mt-2 font-bold">Luotu: {formatDate(messageTemplate.createdAt)}</div>
       )}

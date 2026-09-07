@@ -1,6 +1,9 @@
 import { data, redirect } from 'react-router';
 
+import { queryOwnCategoryId } from '~/features/messaging/categories/queryOwnCategoryId.server';
+import { parseCategoryId } from '~/features/messaging/templateCategoryField';
 import { createMessageTemplate } from '~/models/messageTemplate.server';
+import { createSupabaseServerClient } from '~/models/utils';
 
 export type MessageTemplateErrors = {
   content?: string | null | undefined;
@@ -21,11 +24,11 @@ export async function createMessageTemplateFromForm(request: Request, form: Form
     return data({ errors, data: null }, { status: 422 });
   }
 
-  const messageTemplateId = await createMessageTemplate(
-    content.toString(),
-    isDefault ? Boolean(isDefault.toString()) : false,
-    request,
-  );
+  const messageTemplateId = await createMessageTemplate(request, {
+    content: content.toString(),
+    isDefault: isDefault ? Boolean(isDefault.toString()) : false,
+    categoryId: await queryOwnCategoryId(createSupabaseServerClient(request), parseCategoryId(form.get('category-id'))),
+  });
 
   return redirect(`/message-template/${messageTemplateId}/edit`, {
     status: 302,

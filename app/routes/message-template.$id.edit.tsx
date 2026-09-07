@@ -1,20 +1,13 @@
-import { redirect, useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
+import { useActionData, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
 import EditMessageTemplatePage from '~/features/messaging/EditMessageTemplatePage';
 import { editMessageTemplateFromForm } from '~/features/messaging/editMessageTemplateFromForm.server';
-import { getMessageTemplate } from '~/models/messageTemplate.server';
-import { isUserLoggedIn } from '~/models/utils';
+import { loadEditMessageTemplatePage } from '~/features/messaging/loadEditMessageTemplatePage.server';
 
 import type { JSX } from 'react';
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
-  if (!(await isUserLoggedIn(request))) {
-    return redirect('/sign-in');
-  }
-
-  const messageTemplate = await getMessageTemplate(parseInt(params.id || '', 10), request);
-
-  return { messageTemplate, ok: null };
+  return loadEditMessageTemplatePage(request, parseInt(params.id || '', 10));
 };
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -22,8 +15,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export default function EditMessageTemplateRoute(): JSX.Element {
-  const { messageTemplate } = useLoaderData<typeof loader>();
+  const { messageTemplate, categories } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
-  return <EditMessageTemplatePage messageTemplate={messageTemplate} errors={actionData?.errors} />;
+  return (
+    <EditMessageTemplatePage messageTemplate={messageTemplate} categories={categories} errors={actionData?.errors} />
+  );
 }

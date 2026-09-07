@@ -16,9 +16,13 @@ export default function MessageTemplatesPage({ messageTemplates }: Props): JSX.E
     <div>
       <H2 className="mt-8 mb-4">Viestipohjat</H2>
 
-      <Button to="/message-template/create" variant="contained">
-        Luo uusi viestipohja
-      </Button>
+      <div className="flex flex-wrap gap-4">
+        <Button to="/message-template/create" variant="contained">
+          Luo uusi viestipohja
+        </Button>
+
+        <Button to="/message-template-categories">Hallitse kategorioita</Button>
+      </div>
 
       <Wrapper>
         {messageTemplates.map((messageTemplate: MessageTemplateDTO) => {
