@@ -2,7 +2,7 @@ import { Form } from 'react-router';
 
 import { retrievalMethodLabel } from './retrievalMethod';
 import type { RetrievalListDisc } from './discRetrieval';
-import { formatDate, formatPhoneNumber } from '~/utils';
+import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import Paper from '~/ui/Paper';
@@ -57,14 +57,14 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
 
           {method && <span className="text-sm text-gray-600">{method}</span>}
 
-          {/* A link rather than plain digits: the number is here to be called
-              or texted from the same phone the list is read on. The name comes
-              after it in brackets, outside the link — only the digits are
-              tappable. */}
+          {/* A link rather than plain digits: the number is here to be texted
+              from the same phone the list is read on, so it opens a message to
+              the owner rather than placing a call. The name comes after it in
+              brackets, outside the link — only the digits are tappable. */}
           {(disc.ownerPhoneNumber || disc.ownerName) && (
             <span className="text-sm text-gray-600">
               {disc.ownerPhoneNumber && (
-                <a href={`tel:${disc.ownerPhoneNumber}`} className="text-blue-700 underline">
+                <a href={`sms:${toDiallablePhoneNumber(disc.ownerPhoneNumber)}`} className="text-blue-700 underline">
                   {formatPhoneNumber(disc.ownerPhoneNumber)}
                 </a>
               )}

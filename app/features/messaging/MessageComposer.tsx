@@ -5,7 +5,7 @@ import { Form, useFetcher } from 'react-router';
 import type { ComposerDisc, ComposerMessage } from '~/features/messaging/composerData';
 import { lineBreakToBr, replaceTokensWithValues, toSmsBody } from '~/features/messaging/messageContent';
 import type { MessageTemplateDTO } from '~/types';
-import { formatDate, formatPhoneNumber } from '~/utils';
+import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import H3 from '~/ui/H3';
@@ -173,7 +173,7 @@ export default function MessageComposer({
         </Button>
         <Button
           variant="contained"
-          to={`sms:${toDiallable(phoneNumber)}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`}
+          to={`sms:${toDiallablePhoneNumber(phoneNumber)}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`}
         >
           Lähetä tekstiviesti
         </Button>
@@ -215,12 +215,4 @@ export default function MessageComposer({
       )}
     </div>
   );
-}
-
-/**
- * The number as the phone should receive it: no grouping spaces, which an
- * sms: target does not take.
- */
-function toDiallable(phoneNumber: string): string {
-  return phoneNumber.replace(/\s/g, '');
 }

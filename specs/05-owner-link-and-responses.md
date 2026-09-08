@@ -47,8 +47,8 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    link is no longer in use), with the club's contact email. Same screen for all
    of them, so a guess learns nothing.
 9. Admin opens `/responses` ("Omistajien vastaukset") → unhandled answers,
-   newest first: disc, choice, method, the tappable phone number with the owner's
-   name in brackets after it, the address if there is one, when the answer came in
+   newest first: disc, choice, method, the phone number as an `sms:` link (tapping it
+   opens a message to the owner, not a call) with the owner's name in brackets after it, the address if there is one, when the answer came in
    and when the disc itself was registered in the system ("Kiekko kirjattu",
    omitted when the disc has no registration date). "Merkitse käsitellyksi" (mark as handled) asks for
    confirmation, removes the card and **wipes the address**.
