@@ -13,6 +13,10 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 
 ## [Unreleased]
 
+### Changed
+
+- Tapping an owner's phone number on the retrieval list or the responses view now opens a message to them instead of placing a call.
+
 ## 2026-09 — Getting a disc back to its owner
 
 ### Added

@@ -159,3 +159,11 @@ export function getWeekdayName(date?: Date): string {
 export function getYear(date: Date): number {
   return getYearFromDate(date);
 }
+
+/**
+ * The number as a phone should receive it in an `sms:` or `tel:` target: no
+ * grouping spaces, which those schemes do not take.
+ */
+export function toDiallablePhoneNumber(phoneNumber: string): string {
+  return phoneNumber.replace(/\s/g, '');
+}
