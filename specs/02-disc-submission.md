@@ -3,6 +3,7 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 Lets a club admin empty a bin of found discs into the database by typing one
 free-text line per disc — "Star Destroyer punainen 050 123 4567 Steve D." — with
 a parser splitting that line into mould, plastic, colour, manufacturer, phone
@@ -10,9 +11,11 @@ number and owner. Replaces typing seven fields per disc, and replaces the Google
 Sheet as the entry point for discs found by the club itself.
 
 ## Actors
+
 - **Club admin** (signed in). `/discs/add` redirects to `/sign-in` otherwise, and `/discs/create` refuses with 401.
 
 ## User-facing behaviour
+
 1. When the admin types a line into "Kiekon tiedot" (disc details) and presses Enter, `parseDiscText` runs and a row is appended to the draft table; the field clears for the next disc.
 2. When the club records courses, a "Rata" radio row offers each course plus "Ei radan tietoa" (no course info); the choice applies to rows added **from then on**, never to what was typed. A "Aseta rata ... kaikille riveille" / "Poista rata kaikilta riveiltä" button retro-fits the whole draft.
 3. When some rows lack a course, a quiet `role="status"` reminder counts them. It never blocks saving.
@@ -24,6 +27,7 @@ Sheet as the entry point for discs found by the club itself.
 9. When the page is reloaded before saving, the draft comes back from localStorage.
 
 ## What the parser recognises, in order
+
 `app/features/discs/submission/parser/parseDiscText.ts`:
 
 1. **Note** — everything after the **first** `|` is `additionalInfo`, kept verbatim and never tokenized. A later `|` belongs to the note; a blank note is `null`.
@@ -43,20 +47,21 @@ not guessed. Data files stay a straight copy of upstream; additions go in
 `aliases.ts`.
 
 ## Data
+
 Rows are inserted into `public.discs` by `createDiscs` / `toInsertRows`
 (`app/models/discs.server.ts`):
 
-| Column | Value on a web-added disc |
-|---|---|
-| `external_id` | uuid generated in the app (not by the column default), so the caller learns the ids without a second round trip. |
-| `internal_disc_id` | **NULL** — no Google Sheet row. `syncNewDiscs` uses `max(internal_disc_id)`, which ignores NULLs, so these cannot shadow the import. |
-| `club_id` | `APP_CLUB_ID`, never from the request. |
-| `disc_name` | `"<mould>, <plastic>"` (`toDiscName`) — the shape the sheet has always used, so the public list's name filter keeps working. |
-| `disc_colour` | `''` when unparsed (not NULL). |
-| `disc_manufacturer`, `owner_name`, `owner_phone_number`, `course`, `additional_info` | As parsed/edited; `undefined` keys are dropped before insert. |
-| `added_at` | Today (`y-MM-dd`) unless the DTO carries one. |
-| `is_returned_to_owner`, `can_be_sold_or_donated` | `false`. |
-| `id`, `created_at`, `updated_at`, `owner_link_token` | Left to the database. |
+| Column                                                                               | Value on a web-added disc                                                                                                            |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `external_id`                                                                        | uuid generated in the app (not by the column default), so the caller learns the ids without a second round trip.                     |
+| `internal_disc_id`                                                                   | **NULL** — no Google Sheet row. `syncNewDiscs` uses `max(internal_disc_id)`, which ignores NULLs, so these cannot shadow the import. |
+| `club_id`                                                                            | `APP_CLUB_ID`, never from the request.                                                                                               |
+| `disc_name`                                                                          | `"<mould>, <plastic>"` (`toDiscName`) — the shape the sheet has always used, so the public list's name filter keeps working.         |
+| `disc_colour`                                                                        | `''` when unparsed (not NULL).                                                                                                       |
+| `disc_manufacturer`, `owner_name`, `owner_phone_number`, `course`, `additional_info` | As parsed/edited; `undefined` keys are dropped before insert.                                                                        |
+| `added_at`                                                                           | Today (`y-MM-dd`) unless the DTO carries one.                                                                                        |
+| `is_returned_to_owner`, `can_be_sold_or_donated`                                     | `false`.                                                                                                                             |
+| `id`, `created_at`, `updated_at`, `owner_link_token`                                 | Left to the database.                                                                                                                |
 
 Disc weight is deliberately not a field — it lands in the free-text note if
 written at all.
@@ -67,16 +72,18 @@ truth, read through `useSyncExternalStore` (the server snapshot is always empty,
 so a restore causes no hydration mismatch); localStorage is a best-effort mirror.
 
 ## Routes & entry points
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
-| `/discs/add` (`app/routes/discs.add.tsx`) | GET | admin; redirects to `/sign-in` | Renders `AddDiscsPage`; loader supplies `getDiscCourseNames(APP_CLUB_ID)`. Linked from `AdminMenu` as "Lisää kiekkoja". |
-| `/discs/create` (`app/routes/discs.create.tsx`) | POST JSON | admin (`requireAdminJson`) | Resource route (no default export) that validates and inserts the batch; answers `{ savedCount, externalIds }` or `{ error }`. |
+
+| Route                                           | Method(s) | Auth                           | Purpose                                                                                                                        |
+| ----------------------------------------------- | --------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/discs/add` (`app/routes/discs.add.tsx`)       | GET       | admin; redirects to `/sign-in` | Renders `AddDiscsPage`; loader supplies `getDiscCourseNames(APP_CLUB_ID)`. Linked from `AdminMenu` as "Lisää kiekkoja".        |
+| `/discs/create` (`app/routes/discs.create.tsx`) | POST JSON | admin (`requireAdminJson`)     | Resource route (no default export) that validates and inserts the batch; answers `{ savedCount, externalIds }` or `{ error }`. |
 
 `/discs/create` is a resource route rather than an action on `/discs/add`
 because a plain `fetch` POST to a page route is a document request and would be
 answered with rendered HTML.
 
 ## Rules & constraints
+
 - Server-side validation in `parseBatch` (`toDiscDTO.ts`), which trusts nothing about the body:
   - body must be `{ discs: [...] }`, non-empty, at most `MAX_BATCH_SIZE = 100`.
   - each of the 8 known fields must be a string or nullish; blanks are trimmed to `null`.
@@ -92,6 +99,7 @@ answered with rendered HTML.
 - `draftStorage.toDraftRow` re-validates every restored field, because localStorage survives a deploy that changes the row shape and is writable by anything on the origin.
 
 ## Edge cases & known gaps
+
 - A browser that blocks site data still works; it just loses the draft on refresh.
 - A partially failed insert has no partial reporting — `createDiscs` inserts the batch in one statement and throws on error.
 - `additionalInfo` is parsed as a note but there is no length check client-side; a >500-char note is only rejected by the server, after the admin has typed it.
@@ -102,4 +110,5 @@ answered with rendered HTML.
 - Nothing deduplicates: the same disc typed twice is inserted twice.
 
 ## Open questions
+
 None recorded.

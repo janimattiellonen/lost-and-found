@@ -339,6 +339,7 @@ What that leaves for later, if the messages get tiresome: the sibling lookup
    actually sitting in. Both halves are honest about what the app records; what
    is missing is the move itself. A "back in storage" action would close it, and
    is the first thing to add if that round trip turns out to happen.
+
 4. ~~**Should "collected from the storage" (2) be offered when the disc has an
    open request already fetched?**~~ **Answered by section 5's derivation: no,
    and in two places.** `disc_is_in_storage(disc_id)` is false as soon as a

@@ -3,6 +3,7 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 An owner who gets an sms about a lost disc answers in one tap, instead of the
 admin reading a free-text reply and writing it down. The link in the message
 opens a page for that one disc where the owner says whether they want it back
@@ -10,16 +11,18 @@ and how, and gives a postal address if it is to be posted. Answers land in the
 admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owner.md`.
 
 ## Actors
+
 - **Anonymous owner** — holds the link from the sms. No account, no login.
 - **Club admin** — signed in, reads and clears the inbox.
 
 ## User-facing behaviour
+
 1. Owner opens `/disc/<token>` → sees colour, disc name, manufacturer and the
-   last four digits of their phone number ("Puhelinnumero ****1234"), under
+   last four digits of their phone number ("Puhelinnumero \*\*\*\*1234"), under
    "Löytynyt kiekkosi" (your found disc).
 2. Owner picks "Kyllä, haluan kiekon takaisin" (yes, I want it back) or "Ei,
    seura saa pitää kiekon" (no, the club may keep it).
-3. Choosing "yes" opens the handover options the disc's *location* allows —
+3. Choosing "yes" opens the handover options the disc's _location_ allows —
    "Postita kiekko minulle", "Noudan kiekon – sovitaan noudosta erikseen",
    "Noudan kiekon seuran kopilta" (post it / I'll collect it / I'll collect it
    from the club's koppi).
@@ -62,23 +65,24 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
     count disappears at zero and the item is absent when signed out.
 
 ## Data
+
 **`discs.owner_link_token uuid`** — NOT NULL, unique, `default gen_random_uuid()`,
-backfilled. Deliberately *not* `external_id`: this is a credential and can be
+backfilled. Deliberately _not_ `external_id`: this is a credential and can be
 rotated with one UPDATE to kill every link already sent.
 
 **`disc_owner_responses`** — one row per answer, append-only in practice; the
 latest row wins.
 
-| Column | Notes |
-|---|---|
-| `disc_id` | FK to `discs`, ON DELETE CASCADE |
-| `responded_at` | default `now()` |
-| `choice` | 0 = gives the disc up, 1 = wants it back (`app/features/discs/ownerResponse/ownerChoice.ts`) |
-| `handover_method` | 0 post, 1 collect from admin, 2 collect from koppi; NULL iff `choice = 0` |
-| `has_more_discs` | boolean, only ever true for post |
-| `shipping_name / _street / _postal_code / _city / _country` | nullable; only for post. NULL country means Finland |
-| `shipping_cleared_at` | when the address was wiped |
-| `handled_at` | NULL = still in the inbox; drives the menu count |
+| Column                                                      | Notes                                                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `disc_id`                                                   | FK to `discs`, ON DELETE CASCADE                                                             |
+| `responded_at`                                              | default `now()`                                                                              |
+| `choice`                                                    | 0 = gives the disc up, 1 = wants it back (`app/features/discs/ownerResponse/ownerChoice.ts`) |
+| `handover_method`                                           | 0 post, 1 collect from admin, 2 collect from koppi; NULL iff `choice = 0`                    |
+| `has_more_discs`                                            | boolean, only ever true for post                                                             |
+| `shipping_name / _street / _postal_code / _city / _country` | nullable; only for post. NULL country means Finland                                          |
+| `shipping_cleared_at`                                       | when the address was wiped                                                                   |
+| `handled_at`                                                | NULL = still in the inbox; drives the menu count                                             |
 
 **`clubs.stores_discs_offsite`** — boolean, true for club 2 (Talin Tallaajat).
 What `disc_is_in_storage()` reads.
@@ -95,11 +99,12 @@ for the admin rather than a fact about the disc: see "Rules & constraints" below
 and spec 03 for the shape.
 
 ## Routes & entry points
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
-| `/disc/:token` | GET, POST | none — the token is the permission | The owner's page and its submit |
-| `/kiekko/:token` | GET | none | Permanent redirect to `/disc/:token`, keeping links already sent alive |
-| `/responses` | GET, POST | signed in (redirect `/sign-in`) | The inbox; POST marks one answer handled. Each card links out to the composer (spec 06) |
+
+| Route            | Method(s) | Auth                               | Purpose                                                                                 |
+| ---------------- | --------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `/disc/:token`   | GET, POST | none — the token is the permission | The owner's page and its submit                                                         |
+| `/kiekko/:token` | GET       | none                               | Permanent redirect to `/disc/:token`, keeping links already sent alive                  |
+| `/responses`     | GET, POST | signed in (redirect `/sign-in`)    | The inbox; POST marks one answer handled. Each card links out to the composer (spec 06) |
 
 `GET /disc/:token` sends `Referrer-Policy: no-referrer` and
 `X-Robots-Tag: noindex, nofollow` so the token leaks into neither a `Referer`
@@ -133,13 +138,14 @@ Database entry points, both `SECURITY DEFINER`, `REVOKE ALL FROM PUBLIC` and
   stripped first), and `in_storage`. No row for a returned / released / archived
   disc, or one of another club.
 - `submit_owner_response(p_token, p_club_id, p_choice, p_handover_method,
-  five address params, p_has_more_discs)` — inserts one row; every failure
+five address params, p_has_more_discs)` — inserts one row; every failure
   raises the same `unknown token`.
 
 `disc_is_in_storage(bigint)` is revoked from PUBLIC and granted to nobody; it is
 only called from inside those two.
 
 ## Rules & constraints
+
 - **The link is the whole permission.** No expiry — an owner may answer weeks
   later. Its power ends with the disc's state instead: returned, released or
   archived and the page stops working.
@@ -174,13 +180,13 @@ only called from inside those two.
   and `submit_owner_response` refuses method 2 for a disc not in storage.
 - **Address length limits, in three places, and the DB one is the boundary.**
 
-  | Field | Max | Client label |
-  |---|---|---|
-  | `shippingName` | 100 | Nimi |
-  | `shippingStreet` | 150 | Katuosoite |
-  | `shippingPostalCode` | 16 | Postinumero |
-  | `shippingCity` | 60 | Postitoimipaikka |
-  | `shippingCountry` | 60 | Maa |
+  | Field                | Max | Client label     |
+  | -------------------- | --- | ---------------- |
+  | `shippingName`       | 100 | Nimi             |
+  | `shippingStreet`     | 150 | Katuosoite       |
+  | `shippingPostalCode` | 16  | Postinumero      |
+  | `shippingCity`       | 60  | Postitoimipaikka |
+  | `shippingCountry`    | 60  | Maa              |
 
   `ADDRESS_LIMITS` in `app/features/discs/ownerResponse/parseOwnerResponse.ts`
   supplies both the input `maxLength` (stops typing) and the server-side check
@@ -190,6 +196,7 @@ only called from inside those two.
   never pass through the parser. The `owner_response_address_lengths` CHECK from
   `20260904020000_owner_response_address_limits.sql` is what an anonymous caller
   cannot get around. Change all three together.
+
 - Length is measured after trimming. A posting requires name, street, postal
   code and city; country is optional. A Finnish postal code (country empty,
   "suomi", "finland" or "fi") must be exactly five digits; anywhere else any
@@ -198,6 +205,7 @@ only called from inside those two.
   address. The menu count is a `head: true` count — it reads neither.
 
 ## Edge cases & known gaps
+
 - `/kiekko/:token` can never be deleted. Text messages already sent carry it, an
   owner may open one months later, and nothing in the app knows when the last
   one has been followed. It is two lines of redirect, so the cost of keeping it
@@ -219,7 +227,7 @@ only called from inside those two.
   answer does not remove — a row is only ever created or updated, never
   withdrawn. The admin closes it with "Merkitse noudetuksi" (mark as fetched) or
   leaves it; there is no "this was a mistake" action anywhere in the feature.
-- `disc_is_in_storage()` is false as soon as *any* retrieval row has a
+- `disc_is_in_storage()` is false as soon as _any_ retrieval row has a
   `retrieved_at`, and nothing records a disc going back. A disc fetched, not
   collected and returned to the koppi reads as out of it for good.
 - The reverse race: an owner answers "I'll collect it from the koppi" and the
@@ -233,6 +241,7 @@ only called from inside those two.
   rendered as a blank card.
 
 ## Open questions
+
 Carried from `docs/getting-a-disc-back-to-its-owner.md`: when exactly a shipping
 address is wiped (7); whether the page hands out the admin's full address for a
 collection (6); whether the page lists an owner's other discs (8); whether an

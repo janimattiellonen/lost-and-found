@@ -3,6 +3,7 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 Tells a lost disc's owner that it has been found. The admin composes a message
 from a reusable template, hands it to their own phone as an `sms:` link, and
 records that it was sent so the disc's row shows a history. There is no SMS
@@ -13,10 +14,12 @@ messages an owner for one particular reason offers only the templates written
 for that reason instead of every template the club has.
 
 ## Actors
+
 - **Club admin** — signed in. The only actor; every route here is behind login.
 - The **owner** only receives the text, from the admin's own phone.
 
 ## User-facing behaviour
+
 1. Admin clicks the message icon on a disc row → `/message/send/<externalId>`,
    "Viestin luonti" (composing a message).
 2. The page seeds the phone number from the disc and the message body from the
@@ -35,7 +38,7 @@ for that reason instead of every template the club has.
 9. From a multi-disc selection, "Lähetä sms N henkilölle" opens
    `/message/send-batch?ids=<uuid,uuid,…>` and the same composer is worked
    through one owner at a time, with a "Kiekko 3 / 12" progress line. Recording
-   a send *or* cancelling moves on; the last one returns to the list.
+   a send _or_ cancelling moves on; the last one returns to the list.
 10. `/message-templates` ("Viestipohjat") lists this club's templates, the
     default one outlined. Each card shows its category under the content —
     "Kategoria: Omistajan vastaus", or "Kategoria: ei mitään" (none) for a
@@ -64,6 +67,7 @@ for that reason instead of every template the club has.
     template dropdown narrowed to the owner-response category.
 
 ## Data
+
 **`message_templates`** — `id`, `created_at`, `updated_at`, `club_id`,
 `content`, `is_default`, `category_id`. At most one default per club, kept by
 resetting every `is_default` for the club before setting the new one (no unique
@@ -78,13 +82,13 @@ is a decision about the category, not about the messages written under it.
 **`message_template_categories`** — added by
 `supabase/migrations/20260906000000_message_template_categories.sql`.
 
-| Column | Notes |
-|---|---|
-| `id` | `BIGSERIAL`. This is what code refers to a category by — see below |
-| `created_at` | default `now()` |
-| `updated_at` | set on rename |
-| `club_id` | `BIGINT NOT NULL`, from `APP_CLUB_ID` — the environment variable naming which club this deployment serves |
-| `name` | `TEXT NOT NULL`, what the admin reads and may change at will; `CHECK (btrim(name) <> '')` |
+| Column       | Notes                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| `id`         | `BIGSERIAL`. This is what code refers to a category by — see below                                        |
+| `created_at` | default `now()`                                                                                           |
+| `updated_at` | set on rename                                                                                             |
+| `club_id`    | `BIGINT NOT NULL`, from `APP_CLUB_ID` — the environment variable naming which club this deployment serves |
+| `name`       | `TEXT NOT NULL`, what the admin reads and may change at will; `CHECK (btrim(name) <> '')`                 |
 
 Unique index on `(club_id, lower(name))`, so one club cannot end up with
 "Vastaus" twice in a dropdown. Row level security (RLS) — the PostgreSQL feature
@@ -119,14 +123,14 @@ A club added later needs a row of its own here and in that map.
 
 **`message_log`** — one row per "marked as sent".
 
-| Column | Notes |
-|---|---|
-| `id` | |
-| `sent_at` | written as the string `'now()'` |
-| `external_id` | uuid of the disc — the key since `20260902000000_message_log_external_id.sql`; nullable, indexed |
-| `internal_disc_id` | legacy Google Sheet row number; NOT NULL dropped, nothing writes it any more |
-| `club_id` | from `APP_CLUB_ID` |
-| `content` | the substituted body, newlines already converted to `<br/>` |
+| Column             | Notes                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `id`               |                                                                                                  |
+| `sent_at`          | written as the string `'now()'`                                                                  |
+| `external_id`      | uuid of the disc — the key since `20260902000000_message_log_external_id.sql`; nullable, indexed |
+| `internal_disc_id` | legacy Google Sheet row number; NOT NULL dropped, nothing writes it any more                     |
+| `club_id`          | from `APP_CLUB_ID`                                                                               |
+| `content`          | the substituted body, newlines already converted to `<br/>`                                      |
 
 Mapped by `app/models/MessageLogMapper.ts` → `MessageLogDTO`.
 
@@ -137,14 +141,15 @@ on `(internal_disc_id, club_id)` — a Sheet row number is only unique within it
 club — and left the old column for the history it already holds.
 
 ## Routes & entry points
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
-| `/message/send/:externalId?category=N` | GET, POST | signed in | Compose for one disc; POST records the send. `category` narrows the template dropdown |
-| `/message/send-batch?ids=…` | GET, POST | signed in | Compose for a selection; POST records one send |
-| `/message-templates` | GET, POST | signed in | List; POST is `action=delete` or `action=default` |
-| `/message-template/create` | GET, POST | signed in on GET only | Create a template |
+
+| Route                                  | Method(s) | Auth                  | Purpose                                                                                                                     |
+| -------------------------------------- | --------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `/message/send/:externalId?category=N` | GET, POST | signed in             | Compose for one disc; POST records the send. `category` narrows the template dropdown                                       |
+| `/message/send-batch?ids=…`            | GET, POST | signed in             | Compose for a selection; POST records one send                                                                              |
+| `/message-templates`                   | GET, POST | signed in             | List; POST is `action=delete` or `action=default`                                                                           |
+| `/message-template/create`             | GET, POST | signed in on GET only | Create a template                                                                                                           |
 | `/message-template/:id/edit?created=1` | GET, POST | signed in on GET only | Edit a template. `created=1` is what the create form's redirect leaves behind, and only decides which success line is shown |
-| `/message-template-categories` | GET, POST | signed in on GET only | The category admin tool; POST is `action=create`, `action=rename` or `action=delete`, and nothing else |
+| `/message-template-categories`         | GET, POST | signed in on GET only | The category admin tool; POST is `action=create`, `action=rename` or `action=delete`, and nothing else                      |
 
 **The `category` search parameter is a row id, and it is put there by the
 server.** `/responses` builds the link from
@@ -157,17 +162,18 @@ parameter only ever filters a dropdown — no message, disc or template is
 reachable through it that was not reachable without it.
 
 ## Token grammar
+
 `replaceTokensWithValues(message, disc, baseUrl)` in
 `app/features/messaging/messageContent.ts`. Five tokens, literal square
 brackets, `replaceAll` so every occurrence is filled — not just the first.
 
-| Token | Substituted with | Empty case |
-|---|---|---|
-| `[colour]` | `disc.discColour` | empty string, not the literal token |
-| `[disc]` | `disc.discName` | empty string |
-| `[course]` | `disc.course`, as recorded — "Äijänpelto" | empty string when the disc has no course |
-| `[courses]` | the same name in the genitive — "Äijänpellon" | empty string when the disc has no course |
-| `[link]` | `<baseUrl>/disc/<owner_link_token>` | empty string when the disc has no token, rather than a url ending in "undefined" |
+| Token       | Substituted with                              | Empty case                                                                       |
+| ----------- | --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `[colour]`  | `disc.discColour`                             | empty string, not the literal token                                              |
+| `[disc]`    | `disc.discName`                               | empty string                                                                     |
+| `[course]`  | `disc.course`, as recorded — "Äijänpelto"     | empty string when the disc has no course                                         |
+| `[courses]` | the same name in the genitive — "Äijänpellon" | empty string when the disc has no course                                         |
+| `[link]`    | `<baseUrl>/disc/<owner_link_token>`           | empty string when the disc has no token, rather than a url ending in "undefined" |
 
 **Why a course has two tokens.** Finnish inflects place names, and a message
 names the course mid-sentence: "Sinun musta Mako3 on löytynyt Äijänpellon
@@ -219,6 +225,7 @@ The tokens are documented to the admin by
 `app/features/messaging/TemplateTokenHelp.tsx`, shown on both template forms.
 
 ## Transport & configuration
+
 - **No SMS provider, no API key, no outbound HTTP.** The "send" button is an
   `sms:` URI; the admin's phone or desktop OS sends the actual message.
   The body is percent-encoded whole by `toSmsBody`
@@ -237,7 +244,7 @@ The tokens are documented to the admin by
   **Every message's url changed, not only the broken ones.** `encodeURIComponent`
   escapes the lot: a space becomes `%20`, "ä" becomes `%C3%A4`, the `://` inside
   a `[link]` becomes `%3A%2F%2F`, and the newline becomes `%0A` where the old
-  function wrote the lowercase `%0a`. The *decoded* message is identical; the
+  function wrote the lowercase `%0a`. The _decoded_ message is identical; the
   url carrying it is not, for essentially every message the club sends.
 
   That is safe because the handset percent-decodes the body — and this is
@@ -245,6 +252,7 @@ The tokens are documented to the admin by
   function emitted `%0a` and the newline arrived as a newline; had the body been
   taken literally, every multi-line message ever sent would have contained a
   visible "%0a". Whatever handles these links decodes them.
+
 - Postage details the message may refer to live in `app/config/shipping.ts`;
   per-club payment and contact details in `app/config/clubs.ts`.
 - The only env vars this feature touches: `APP_CLUB_ID` (club scoping on every
@@ -252,17 +260,18 @@ The tokens are documented to the admin by
   `createSupabaseServerClient`.
 
 ## Rules & constraints
+
 - Every template, category and log query filters `club_id = APP_CLUB_ID`; a
   template or category of another club cannot be read, edited or deleted.
 - **Which templates the dropdown offers**, decided by
   `templatesForCategoryOrUncategorised` in
   `app/features/messaging/loadSendMessagePage.server.ts`:
 
-  | Opened with | Dropdown shows |
-  |---|---|
-  | no `category` parameter | every template of the club — what the disc list has always done |
-  | a `category` that resolves to a row of this club | the templates whose `category_id` is that row |
-  | a `category` that resolves to nothing — deleted, another club's, or not a number | only templates with **no** category |
+  | Opened with                                                                      | Dropdown shows                                                  |
+  | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+  | no `category` parameter                                                          | every template of the club — what the disc list has always done |
+  | a `category` that resolves to a row of this club                                 | the templates whose `category_id` is that row                   |
+  | a `category` that resolves to nothing — deleted, another club's, or not a number | only templates with **no** category                             |
 
   The last line is the deliberate answer to "the admin deleted the category the
   code points at". Falling back to every template would silently undo the
@@ -270,6 +279,7 @@ The tokens are documented to the admin by
   broken page; the uncategorised templates are the set still meaningful once the
   grouping is gone, and they are also exactly where the deleted category's own
   templates have just landed, by `ON DELETE SET NULL`.
+
 - The body is still seeded from the club's default template, but only when that
   template is in the dropdown. `MessageComposer` looks for `isDefault` in the
   list it was handed, so a default belonging to another category simply is not
@@ -286,7 +296,7 @@ The tokens are documented to the admin by
 - **A category id posted by a template form is re-checked against this club**
   (`queryOwnCategoryId`) before it is stored, and becomes "no category" if it
   names nothing here. Neither the foreign key nor the club scoping on the write
-  would catch a foreign id: the key only proves the row exists *somewhere*, and
+  would catch a foreign id: the key only proves the row exists _somewhere_, and
   the `club_id` filter scopes the template being written, not the category it
   points at. Without the check, a posted `category-id` of the other club's row
   is stored happily — and since neither template action checks for a signed-in
@@ -327,7 +337,7 @@ The tokens are documented to the admin by
   what re-seeds the number, template and body for the next owner. The advance
   callback is guarded by a ref so a re-render cannot skip an owner.
 - `recordMessageSent` re-validates the external id and posts the one from the
-  *loaded* disc, not from the URL.
+  _loaded_ disc, not from the URL.
 - Template content is required (`'Sisältö on pakollinen'`, 422); nothing else is
   validated — length, tokens and markup are all free.
 - The batch loader fetches sent history only for the discs actually found, in
@@ -341,6 +351,7 @@ The tokens are documented to the admin by
   runs client-side as the admin types, so a token's field has to be in both.
 
 ## Edge cases & known gaps
+
 - `/message-template/create` had no auth check at all until this work: no
   loader, and an action that never called `isUserLoggedIn`. It needed a loader
   to fetch the category list for its dropdown, and shipping an unguarded loader
@@ -373,7 +384,7 @@ The tokens are documented to the admin by
   `console.log`s `Error: undefined` on success. A failed insert is reported to
   the admin as "Lähetetty".
 - The phone field in `MessageComposer` is `type="email" name="email"
-  placeholder="Sähköpostiosoite"` — leftover markup; the value is used as a
+placeholder="Sähköpostiosoite"` — leftover markup; the value is used as a
   phone number and the name is never read.
 - The `sms:` href uses `&body=` rather than the `?body=` of RFC 5724; it works
   on iOS, not uniformly elsewhere. Left alone when the body encoding was fixed,
@@ -419,4 +430,5 @@ The tokens are documented to the admin by
   name the course literally, which then applies to every disc in a batch.
 
 ## Open questions
+
 None recorded.

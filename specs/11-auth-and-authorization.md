@@ -3,17 +3,20 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 Keeps the club's admin pages and writes to the admin's own hands while the disc
 list, the QR notification forms and the owner link stay open to anyone. There is
 one role — signed in or not — implemented with Supabase email/password auth over
 cookie sessions, with row-level security in Postgres as the second line.
 
 ## Actors
+
 - **Anonymous visitor** — reads the disc list, submits found/bin-full reports, answers from an owner link.
 - **Club admin** — one Supabase user per club instance; there is no user table, no roles, no per-user permissions.
 - **Command-line scripts** (`scripts/`) — sign in as an admin, or use a service-role key set only in a local `.env`.
 
 ## User-facing behaviour
+
 1. When an admin posts email + password to `/sign-in`, then the session cookies are set and they are redirected to `/`.
 2. When either field is empty or Supabase rejects the credentials, then the form re-renders with a Finnish error and HTTP 422.
 3. When a signed-out visitor requests an admin page, then its loader redirects to `/sign-in`.
@@ -22,6 +25,7 @@ cookie sessions, with row-level security in Postgres as the second line.
 6. When "Kirjaudu ulos" is confirmed, then `supabase.auth.signOut()` runs in the browser; `root.tsx` sees the auth-state change and revalidates.
 
 ## Data
+
 - Auth state lives entirely in Supabase's `auth` schema and in the browser's cookies. This app owns no users, roles or sessions table.
 - RLS is enabled by migration on `bin_full_notifications`, `disc_retrievals`, `disc_owner_responses`; `discs` and `disc_found_notifications` carry policies applied outside the migrations dir (documented in `docs/rls.md`).
 - `discs` policies: `SELECT` to `public`; `INSERT`/`DELETE`/`UPDATE` to `authenticated`. The `UPDATE` policy needs `USING` as well as `WITH CHECK` — without `USING` the statement silently affects zero rows (`supabase/migrations/20260829040000_discs_update_policy.sql`).
@@ -29,20 +33,22 @@ cookie sessions, with row-level security in Postgres as the second line.
 - No RLS migration exists for `message_templates`, `message_log` or `emptying_log`; whatever policies they carry were applied by hand in Supabase.
 
 ## Routes & entry points
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
-| `/sign-in` | GET, POST | public | Email/password sign-in (`app/features/auth/signInWithForm.server.ts`) |
-| `/`, `/discs/data` | GET | public | Disc list; loader narrows fields for anonymous visitors |
-| `/notify`, `/notify/:courseSlug`, `/bin/full/:courseSlug` | GET, POST | public | QR report forms |
-| `/disc/:token` | GET, POST | token only | Owner link; `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow` |
-| `/kiekko/:token` | GET | public | Permanent redirect to `/disc/:token` for links already sent |
-| `/discs/add`, `/emptying-log`, `/message-templates`, `/message-template/:id/edit`, `/message/send/:externalId`, `/message/send-batch`, `/notifications`, `/stats` | GET (+POST) | admin, loader redirect | Admin pages |
-| `/retrieval`, `/responses` | GET, POST | admin, checked in the feature module | Retrieval list, owner-answer inbox |
-| `/discs/create`, `/discs/delete`, `/discs/disposal`, `/discs/return`, `/discs/course`, `/discs/retrieval`, `/discs/batch` | POST JSON | admin, `requireAdminJson` | Disc resource routes |
-| `/message-template/create` | GET, POST | **no server-side check** | New-template form (see gaps) |
-| `/discs/sync` | — | 404 | Route file excluded in `app/routes.ts` |
+
+| Route                                                                                                                                                             | Method(s)   | Auth                                 | Purpose                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| `/sign-in`                                                                                                                                                        | GET, POST   | public                               | Email/password sign-in (`app/features/auth/signInWithForm.server.ts`)         |
+| `/`, `/discs/data`                                                                                                                                                | GET         | public                               | Disc list; loader narrows fields for anonymous visitors                       |
+| `/notify`, `/notify/:courseSlug`, `/bin/full/:courseSlug`                                                                                                         | GET, POST   | public                               | QR report forms                                                               |
+| `/disc/:token`                                                                                                                                                    | GET, POST   | token only                           | Owner link; `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow` |
+| `/kiekko/:token`                                                                                                                                                  | GET         | public                               | Permanent redirect to `/disc/:token` for links already sent                   |
+| `/discs/add`, `/emptying-log`, `/message-templates`, `/message-template/:id/edit`, `/message/send/:externalId`, `/message/send-batch`, `/notifications`, `/stats` | GET (+POST) | admin, loader redirect               | Admin pages                                                                   |
+| `/retrieval`, `/responses`                                                                                                                                        | GET, POST   | admin, checked in the feature module | Retrieval list, owner-answer inbox                                            |
+| `/discs/create`, `/discs/delete`, `/discs/disposal`, `/discs/return`, `/discs/course`, `/discs/retrieval`, `/discs/batch`                                         | POST JSON   | admin, `requireAdminJson`            | Disc resource routes                                                          |
+| `/message-template/create`                                                                                                                                        | GET, POST   | **no server-side check**             | New-template form (see gaps)                                                  |
+| `/discs/sync`                                                                                                                                                     | —           | 404                                  | Route file excluded in `app/routes.ts`                                        |
 
 ## Rules & constraints
+
 - **Session model.** `createSupabaseServerClientWithHeaders(request)` (`app/models/utils.ts`) builds a request-scoped `@supabase/ssr` server client that reads cookies from the request and collects `Set-Cookie` writes onto a `Headers` it returns. Any handler that establishes or refreshes a session **must** return those headers — `signInWithForm` and the `root.tsx` loader do; nothing else does.
 - `createSupabaseServerClient(request)` is the read-only convenience: same client, cookie writes deliberately dropped. Model functions that query under RLS use it.
 - **There is no single `requireUser` helper.** Three mechanisms coexist:
@@ -59,6 +65,7 @@ cookie sessions, with row-level security in Postgres as the second line.
 - `AdminMenu` and `Header` are hidden on `/notify*` for signed-out visitors (`showHeader` in `root.tsx`); hiding UI is cosmetic, never the authorization.
 
 ## Edge cases & known gaps
+
 - `/message-template/create` has **no loader and no auth check** — an anonymous visitor can render the form and POST it. Whether the insert lands depends solely on RLS on `message_templates`, for which there is no migration in this repo.
 - Likewise the unguarded `action`s on `/emptying-log`, `/notifications` and `/message-templates` — deletes and updates there are protected by RLS alone.
 - `root.tsx` uses `auth.getSession()` (cookie-derived, unverified) for UI state, while every gate uses `auth.getUser()` (verified against Supabase). The mismatch is intentional but means the menu can render for a session the gates would reject.
@@ -67,4 +74,5 @@ cookie sessions, with row-level security in Postgres as the second line.
 - Sessions expire with Supabase's defaults; a stale tab discovers this as a `401` from a resource route rather than a redirect.
 
 ## Open questions
+
 - Whether `message_templates`, `message_log` and `emptying_log` have RLS enabled at all — no migration in this repo says so.
