@@ -45,7 +45,9 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    of them, so a guess learns nothing.
 9. Admin opens `/responses` ("Omistajien vastaukset") → unhandled answers,
    newest first: disc, choice, method, owner name, tappable phone number, the
-   address if there is one. "Merkitse käsitellyksi" (mark as handled) asks for
+   address if there is one, when the answer came in and when the disc itself was
+   registered in the system ("Kiekko kirjattu", omitted when the disc has no
+   registration date). "Merkitse käsitellyksi" (mark as handled) asks for
    confirmation, removes the card and **wipes the address**.
    - Beside it, "Lähetä viesti" (send a message) opens the message composer for
      that answer's disc — `/message/send/<externalId>?category=<id>`. The

@@ -7,7 +7,8 @@ import type { OwnerResponseSummary } from './ownerResponse';
 
 const RESPONSE_COLUMNS =
   'id, responded_at, choice, handover_method, has_more_discs, shipping_name, shipping_street, shipping_postal_code, ' +
-  'shipping_city, shipping_country, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number)';
+  'shipping_city, shipping_country, ' +
+  'discs!inner(external_id, created_at, disc_name, disc_colour, owner_name, owner_phone_number)';
 
 /**
  * What the select above reads back.
@@ -29,6 +30,7 @@ type Row = {
   shipping_country: string | null;
   discs: {
     external_id: string;
+    created_at: string | null;
     disc_name: string;
     disc_colour: string;
     owner_name: string | null;
@@ -67,6 +69,7 @@ export async function queryUnhandledOwnerResponses(supabase: SupabaseClient): Pr
       {
         id: row.id,
         externalId: row.discs.external_id,
+        discRegisteredAt: row.discs.created_at ?? null,
         discName: row.discs.disc_name,
         discColour: row.discs.disc_colour,
         ownerName: row.discs.owner_name ?? null,

@@ -51,6 +51,8 @@ export type OwnerLinkDisc = {
 export type OwnerResponseSummary = {
   id: number;
   externalId: string;
+  /** When the disc was registered in the system. Null on rows predating it. */
+  discRegisteredAt: string | null;
   discName: string;
   discColour: string;
   ownerName: string | null;

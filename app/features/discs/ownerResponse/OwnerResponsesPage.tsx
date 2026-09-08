@@ -3,7 +3,7 @@ import { Form } from 'react-router';
 import { handoverMethodLabel } from '~/features/discs/handoverMethod';
 import { ownerChoiceLabel, OwnerChoice } from './ownerChoice';
 import type { OwnerResponseSummary } from './ownerResponse';
-import { formatDateTime, formatPhoneNumber } from '~/utils';
+import { formatDate, formatDateTime, formatPhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import Paper from '~/ui/Paper';
@@ -103,7 +103,10 @@ function ResponseItem({
             </span>
           )}
 
-          <span className="mt-2 text-xs text-gray-500">Vastattu {formatDateTime(response.respondedAt)}</span>
+          <span className="mt-2 text-xs text-gray-500">
+            Vastattu {formatDateTime(response.respondedAt)}
+            {response.discRegisteredAt && ` · Kiekko kirjattu ${formatDate(response.discRegisteredAt)}`}
+          </span>
         </div>
 
         <div className="flex flex-col items-end gap-2">
