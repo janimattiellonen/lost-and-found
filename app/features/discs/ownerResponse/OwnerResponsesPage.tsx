@@ -74,12 +74,17 @@ function ResponseItem({
             {method && ` · ${method}`}
           </span>
 
-          {response.ownerName && <span className="text-sm text-gray-600">{response.ownerName}</span>}
-
-          {response.ownerPhoneNumber && (
-            <a href={`tel:${response.ownerPhoneNumber}`} className="text-sm text-blue-700 underline">
-              {formatPhoneNumber(response.ownerPhoneNumber)}
-            </a>
+          {/* The number first, the name after it in brackets: the number is
+              what gets tapped, and only the digits belong inside the link. */}
+          {(response.ownerPhoneNumber || response.ownerName) && (
+            <span className="text-sm text-gray-600">
+              {response.ownerPhoneNumber && (
+                <a href={`tel:${response.ownerPhoneNumber}`} className="text-blue-700 underline">
+                  {formatPhoneNumber(response.ownerPhoneNumber)}
+                </a>
+              )}
+              {response.ownerName && (response.ownerPhoneNumber ? ` (${response.ownerName})` : response.ownerName)}
+            </span>
           )}
 
           {/* No address to show, and a reason: this one needs a message before

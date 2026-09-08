@@ -80,9 +80,10 @@ Course is not a state; `setDiscCourse` can run in any state.
    turns orange once the disc is on the list, and reopening the form preselects the
    current method. Offered on both clubs.
 6. When an admin opens `/retrieval`, "Noutolista" lists the pending errands oldest first
-   as phone-sized cards: colour + name, date entered, request date followed by the
-   method, a `tel:` link and the owner's name. "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes
-   the row.
+   as phone-sized cards: colour + name, method, a `tel:` link followed by the
+   owner's name in brackets, and both dates together on the bottom row —
+   "Pyydetty" (requested) then "Kirjattu" (entered), as on the answers page.
+   "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes the row.
 7. When the retrieval list has pending rows, the admin menu item shows the count
    (`loadRetrievalCount.server.ts`); it is absent only when nobody is signed in.
 8. When a disc's owner answers "haluan kiekkoni takaisin" (I want my disc

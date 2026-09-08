@@ -55,26 +55,30 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             {disc.discColour} {disc.discName}
           </span>
 
-          <span className="text-sm text-gray-600">Kirjattu {formatDate(disc.addedAt)}</span>
-
-          {/* What the notepad never recorded. Worth having on the card: a
-              request from three weeks ago is one to ask about. The method sits
-              here rather than beside the dates above: it is part of what was
-              asked for. */}
-          <span className="text-sm text-gray-600">
-            Pyydetty {formatDate(disc.requestedAt)}
-            {method && ` · ${method}`}
-          </span>
+          {method && <span className="text-sm text-gray-600">{method}</span>}
 
           {/* A link rather than plain digits: the number is here to be called
-              or texted from the same phone the list is read on. */}
-          {disc.ownerPhoneNumber && (
-            <a href={`tel:${disc.ownerPhoneNumber}`} className="text-sm text-blue-700 underline">
-              {formatPhoneNumber(disc.ownerPhoneNumber)}
-            </a>
+              or texted from the same phone the list is read on. The name comes
+              after it in brackets, outside the link — only the digits are
+              tappable. */}
+          {(disc.ownerPhoneNumber || disc.ownerName) && (
+            <span className="text-sm text-gray-600">
+              {disc.ownerPhoneNumber && (
+                <a href={`tel:${disc.ownerPhoneNumber}`} className="text-blue-700 underline">
+                  {formatPhoneNumber(disc.ownerPhoneNumber)}
+                </a>
+              )}
+              {disc.ownerName && (disc.ownerPhoneNumber ? ` (${disc.ownerName})` : disc.ownerName)}
+            </span>
           )}
 
-          {disc.ownerName && <span className="text-sm text-gray-600">{disc.ownerName}</span>}
+          {/* The dates last and together, as on the answers page: the request
+              date is what the card is read for -- one from three weeks ago is
+              one to ask about -- and the day the disc was written down says how
+              long it has been on the shelf. */}
+          <span className="mt-2 text-xs text-gray-500">
+            Pyydetty {formatDate(disc.requestedAt)} · Kirjattu {formatDate(disc.addedAt)}
+          </span>
         </div>
 
         {/* Confirmed, because it is the one thing on this page that changes
