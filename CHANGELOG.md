@@ -7,8 +7,9 @@ This project is deployed continuously and does not use version numbers, so relea
 are grouped by the period in which the work landed, newest first. Add new entries
 under **Unreleased** as you merge them.
 
-Entries start at 2026-02-23, the first commit whose message is descriptive enough to
-turn into a changelog entry; see [Earlier history](#earlier-history) at the bottom.
+Entries cover the whole project, from the first commit on 2023-07-20. Sections up to
+2026-02 were reconstructed from the diffs rather than the commit messages; see
+[A note on the early history](#a-note-on-the-early-history) at the bottom.
 
 ## [Unreleased]
 
@@ -85,11 +86,77 @@ turn into a changelog entry; see [Earlier history](#earlier-history) at the bott
 - The disc table sorts newest first by default.
 - Prettier and ESLint scripts added to the project.
 
-## Earlier history
+## 2024-10 – 2025-12 — Maintenance
 
-Development before 2026-02-23 (`903f33b`) is not documented here. Those commits carry
-messages like `Fixes`, `Improvements` and `ddd`, so a changelog for them would have to be
-reconstructed from the diffs rather than the log. Broadly, that period built the
-application itself: the disc list and search, the Google Sheets sync, Supabase storage
-and login, SMS messaging with templates, the statistics page, and the warning icon on
-discs at risk of being sold or donated.
+### Changed
+
+- A disc is flagged as at risk of being sold or donated after three months at the club, not six.
+- The date an owner was notified is parsed from the Tali sheet, stored, and shown on the message page along with the owner's name.
+- Node 20 is required, pinned in `.nvmrc`.
+
+## 2023-09 – 2023-10 — SMS messaging
+
+### Added
+
+- Message templates: create, edit and list them, with one marked as the default.
+- A message page per disc that fills the template in, resolves the `[colour]` and `[disc]` tokens against the disc, shows a preview, and opens the text in the phone's own SMS app with the owner's full number.
+- Sent messages are recorded in a message log, so an owner is not contacted twice about the same disc.
+- Back links between the message template pages.
+
+### Changed
+
+- The front page loads its discs through a fetcher after the first render rather than in the route loader, which stopped a slow query blocking the page, and shows a loading indicator while they arrive.
+
+## 2023-08 – 2023-09 — Statistics
+
+### Added
+
+- A statistics page for admins, with a vertical and a horizontal bar chart.
+- Charts for discs returned to the club and discs returned to their owners, over time.
+- A chart of the most frequently lost disc models.
+- Counts of returned discs and of discs sold or donated.
+
+### Changed
+
+- Clearer wording for the chart and page titles.
+
+## 2023-08 — Public list, login and the bin log
+
+### Added
+
+- Email and password login against Supabase, with a session cookie, guarding the admin pages behind it.
+- An admin menu and a header showing the club's name, plus the club name in the page title.
+- Talin Tallaajat branding: logo and favicon.
+- Bin emptying log (`Tyhjennysloki`): the front page shows when each bin was last emptied, and an admin can mark one as emptied.
+- Search discs by the last digits of the owner's phone number, and pick a disc model from an autocomplete rather than a plain dropdown.
+- A red warning icon on discs that have been at the club long enough to be at risk of being sold or donated.
+- Info text on the front page explaining what the list contains, what is deliberately not published about an owner, and where to ask about a disc.
+- The time of the last full sync is stored on the club.
+
+### Changed
+
+- The disc list moved from `/discs` to the front page.
+- Only the owner's last four phone-number digits reach the public list.
+- The intro text is shown for Talin Tallaajat only, whose site it links to.
+- Prettier configuration added and applied.
+
+### Fixed
+
+- Rows without an id, name or date are skipped when importing a sheet.
+- Sync writes go through the signed-in user's Supabase client, so row-level security applies.
+
+## 2023-07 — First version
+
+### Added
+
+- Remix application on Supabase, deployed to Vercel, with Tailwind for styling.
+- Google Sheets importers for Talin Tallaajat and Puskasoturit, and routes to sync one disc or all of them.
+- The disc list as a sortable table, with a filter by disc model.
+- DTO and mapper layer between the snake_case database and the camelCase application code.
+
+## A note on the early history
+
+Everything up to 2026-02-23 was reconstructed by reading the diffs: the commit messages
+from that period are things like `Fixes`, `Improvements`, `ddd` and `sfddfg`, and say
+nothing about what changed. Small commits have been folded into the feature they belong
+to, so the entries above describe what the code did, not what any single commit claimed.
