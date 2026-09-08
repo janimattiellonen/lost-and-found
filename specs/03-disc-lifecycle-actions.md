@@ -3,15 +3,17 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 Once a disc is in the club's inventory, an admin records what became of it: it went back
 to its owner, it was released for sale or donation, it was filed under the wrong course,
-or it was entered by mistake. The admin also keeps a *noutolista* ("retrieval list")
+or it was entered by mistake. The admin also keeps a _noutolista_ ("retrieval list")
 of discs that have to be brought to hand before an owner can get them — out of the
 club's koppi (its storage shed) at Talin Tallaajat, off the admin's own shelf at
 Puskasoturit. Either way it is a trip the admin has to remember to make, which is why
 it is worth writing down.
 
 ## Actors
+
 - **Club admin** (signed in) — the actor for every action below, each behind
   `requireAdminJson` or an `isUserLoggedIn` check.
 - **A disc's owner** (anonymous, holding an sms link) — can put a disc on the retrieval
@@ -26,14 +28,14 @@ it is worth writing down.
 A disc's state is not one column. It is the combination of three flags/timestamps on
 `discs` plus the presence of an open row in `disc_retrievals`.
 
-| State | How it is stored | Public list shows it? |
-|---|---|---|
-| Listed (default) | `is_returned_to_owner = false`, `can_be_sold_or_donated = false`, `archived_at IS NULL` | yes |
-| Returned to owner | `is_returned_to_owner = true` + `returned_to_owner_date` + `return_method` | no |
-| Released for sale/donation | `can_be_sold_or_donated = true` + `can_be_sold_or_donated_date` + `can_be_sold_or_donated_method` | no |
-| Archived | `archived_at` set | no |
-| Deleted | row gone (`disc_retrievals` cascades) | no |
-| On the retrieval list | orthogonal: an open `disc_retrievals` row (`retrieved_at IS NULL`) on a *listed* disc | yes, with an extra icon |
+| State                      | How it is stored                                                                                  | Public list shows it?   |
+| -------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------- |
+| Listed (default)           | `is_returned_to_owner = false`, `can_be_sold_or_donated = false`, `archived_at IS NULL`           | yes                     |
+| Returned to owner          | `is_returned_to_owner = true` + `returned_to_owner_date` + `return_method`                        | no                      |
+| Released for sale/donation | `can_be_sold_or_donated = true` + `can_be_sold_or_donated_date` + `can_be_sold_or_donated_method` | no                      |
+| Archived                   | `archived_at` set                                                                                 | no                      |
+| Deleted                    | row gone (`disc_retrievals` cascades)                                                             | no                      |
+| On the retrieval list      | orthogonal: an open `disc_retrievals` row (`retrieved_at IS NULL`) on a _listed_ disc             | yes, with an extra icon |
 
 Transitions:
 
@@ -65,6 +67,7 @@ Transitions:
 Course is not a state; `setDiscCourse` can run in any state.
 
 ## User-facing behaviour
+
 1. When an admin clicks the return icon on a disc row, an inline
    "Merkitse palautetuksi" (mark as returned) form opens with today's date and optional
    radios "Postitettu"/"Noudettu"; submitting sets the three return columns.
@@ -103,17 +106,17 @@ Course is not a state; `setDiscCourse` can run in any state.
 
 `discs` columns this feature owns:
 
-| Column | Type | Notes |
-|---|---|---|
-| `is_returned_to_owner` | bool | set by the return mark |
-| `returned_to_owner_date` | date | |
-| `return_method` | smallint, nullable | CHECK in (0,1); nullable = "unanswered" |
-| `can_be_sold_or_donated` | bool | set by the disposal mark |
-| `can_be_sold_or_donated_date` | date | |
-| `can_be_sold_or_donated_method` | smallint, nullable | CHECK in (0,1) |
-| `can_be_sold_or_donated_text` | text | legacy free text from the Sheet; never written by these actions |
-| `archived_at` | timestamptz, nullable | "club stopped listing it", indexed; stats ignore it |
-| `course` | text, nullable | |
+| Column                          | Type                  | Notes                                                           |
+| ------------------------------- | --------------------- | --------------------------------------------------------------- |
+| `is_returned_to_owner`          | bool                  | set by the return mark                                          |
+| `returned_to_owner_date`        | date                  |                                                                 |
+| `return_method`                 | smallint, nullable    | CHECK in (0,1); nullable = "unanswered"                         |
+| `can_be_sold_or_donated`        | bool                  | set by the disposal mark                                        |
+| `can_be_sold_or_donated_date`   | date                  |                                                                 |
+| `can_be_sold_or_donated_method` | smallint, nullable    | CHECK in (0,1)                                                  |
+| `can_be_sold_or_donated_text`   | text                  | legacy free text from the Sheet; never written by these actions |
+| `archived_at`                   | timestamptz, nullable | "club stopped listing it", indexed; stats ignore it             |
+| `course`                        | text, nullable        |                                                                 |
 
 `disc_retrievals` (`20260903000000_disc_retrievals.sql`) — one row per errand, deliberately
 not columns on `discs`:
@@ -135,16 +138,16 @@ not columns on `discs`:
   ever wrote anything but 0 and a column with one value reads like a fact that is being
   kept. That migration's own comment says provenance should come back as
   `owner_response_id` if an answer ever creates a retrieval; this is that case, and
-  follows it. A foreign key to the answer beats an enum: it says *which* answer,
+  follows it. A foreign key to the answer beats an enum: it says _which_ answer,
   so the admin can read the address and the phone number the request came with.
 
 ### Three distinct method enums
 
-| Enum | Where stored | Values | Labels |
-|---|---|---|---|
-| `ReturnMethod` (`return/returnMethod.ts`) | `discs.return_method` | 0, 1 | "Postitettu", "Noudettu" (past tense — what happened) |
-| `DisposalMethod` (`disposal/disposalMethod.ts`) | `discs.can_be_sold_or_donated_method` | 0, 1 | "Myydään", "Lahjoitetaan" |
-| `RetrievalMethod` (`retrieval/retrievalMethod.ts`) | `disc_retrievals.retrieval_method` | 0, 1 | "Postitus", "Nouto (minulta)" (what was asked for) |
+| Enum                                               | Where stored                          | Values | Labels                                                |
+| -------------------------------------------------- | ------------------------------------- | ------ | ----------------------------------------------------- |
+| `ReturnMethod` (`return/returnMethod.ts`)          | `discs.return_method`                 | 0, 1   | "Postitettu", "Noudettu" (past tense — what happened) |
+| `DisposalMethod` (`disposal/disposalMethod.ts`)    | `discs.can_be_sold_or_donated_method` | 0, 1   | "Myydään", "Lahjoitetaan"                             |
+| `RetrievalMethod` (`retrieval/retrievalMethod.ts`) | `disc_retrievals.retrieval_method`    | 0, 1   | "Postitus", "Nouto (minulta)" (what was asked for)    |
 
 `RetrievalMethod` is **not its own enum**: it is `HandoverMethod`
 (`app/features/discs/handoverMethod.ts`, values 0 `ByMail` / 1 `PickedUpFromHome` /
@@ -155,15 +158,15 @@ add, never renumber, and extend the CHECK alongside.
 
 ## Routes & entry points
 
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
-| `/discs/return` | POST JSON | admin | `{externalId, returnedToOwnerDate, returnMethod\|null}` → `{returned:true}` |
-| `/discs/disposal` | POST JSON | admin | `{externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod\|null}` → `{marked:true}` |
-| `/discs/delete` | POST JSON | admin | `{externalId}` → `{deleted:true}` |
-| `/discs/course` | POST JSON | admin | `{externalId, course\|null}` → `{marked:true}` |
-| `/discs/retrieval` | POST JSON | admin | `{externalId, retrievalMethod}` → `{onRetrievalList:true}` |
-| `/retrieval` | GET | signed in | the "Noutolista" page |
-| `/retrieval` | POST form | signed in | `externalId` → closes the open row, revalidates |
+| Route              | Method(s) | Auth      | Purpose                                                                                  |
+| ------------------ | --------- | --------- | ---------------------------------------------------------------------------------------- |
+| `/discs/return`    | POST JSON | admin     | `{externalId, returnedToOwnerDate, returnMethod\|null}` → `{returned:true}`              |
+| `/discs/disposal`  | POST JSON | admin     | `{externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod\|null}` → `{marked:true}` |
+| `/discs/delete`    | POST JSON | admin     | `{externalId}` → `{deleted:true}`                                                        |
+| `/discs/course`    | POST JSON | admin     | `{externalId, course\|null}` → `{marked:true}`                                           |
+| `/discs/retrieval` | POST JSON | admin     | `{externalId, retrievalMethod}` → `{onRetrievalList:true}`                               |
+| `/retrieval`       | GET       | signed in | the "Noutolista" page                                                                    |
+| `/retrieval`       | POST form | signed in | `externalId` → closes the open row, revalidates                                          |
 
 No route of this feature is reachable without a session. The one non-admin entry point
 is the database function `submit_owner_response()`, described in spec 05.
@@ -172,6 +175,7 @@ All five JSON routes are resource routes (no component) delegating to a
 `handle*Request.server.ts`.
 
 ## Rules & constraints
+
 - `requireAdminJson`: POST only (405), signed in (401), parseable JSON (400).
 - `isExternalId` is a strict uuid regex; `isIsoDate` rejects `2026-02-30`.
 - Return and disposal methods are **optional** (`null` allowed, and clearable). The
@@ -214,6 +218,7 @@ All five JSON routes are resource routes (no component) delegating to a
   runs in UTC and a Finnish evening is already the next day there.
 
 ## Edge cases & known gaps
+
 - **Archiving has no UI.** `archived_at` is read by `getDiscs`, the owner-link loader
   and the retrieval filter, and mapped by `DiscMapper`, but no route or action writes it.
   It is set by the maintenance script `scripts/archiveStaleDiscs.ts`
@@ -223,8 +228,8 @@ All five JSON routes are resource routes (no component) delegating to a
   `can_be_sold_or_donated` or `archived_at`. A wrong mark is fixed in SQL.
 - Two maintenance scripts sit outside the UI entirely and are the only writers of their
   columns: `npm run archive:discs` and `npm run import:puskasoturit` (spec 09).
-- The return mark does *not* close an open retrieval row. The row stays in the table with
-  `retrieved_at IS NULL` for ever; it merely stops being *pending* because the disc is no
+- The return mark does _not_ close an open retrieval row. The row stays in the table with
+  `retrieved_at IS NULL` for ever; it merely stops being _pending_ because the disc is no
   longer listed. Retrieval-duration statistics computed later would see these as open.
 - `queryCompleteRetrieval` reports `done` for a disc with no open request, so a double tap
   on "Merkitse noudetuksi" is not an error.
@@ -254,6 +259,7 @@ All five JSON routes are resource routes (no component) delegating to a
 - The delete is a hard delete; `disc_retrievals` cascades, message log rows do not go with it.
 
 ## Open questions
+
 - Whether a return mark should close the open retrieval row rather than let it be
   filtered out.
 - Whether the list should show that a line came from an owner's own answer rather than

@@ -10,8 +10,8 @@ Every major feature has a specification in `specs/`, indexed by `specs/README.md
 and structured by `specs/_TEMPLATE.md`. A spec describes what the system **does
 today**, not what it should eventually do.
 
-The specs exist to answer two questions that the code answers badly: *why is it
-like this*, and *what will I break if I change it*. Optimise for those.
+The specs exist to answer two questions that the code answers badly: _why is it
+like this_, and _what will I break if I change it_. Optimise for those.
 
 ## Who you are writing for
 
@@ -50,7 +50,7 @@ visitor writing to `discs` even if the route forgets to check.
 
 How much explanation an abbreviation needs depends on how far it sits from
 everyday knowledge. "URL" needs nothing. "DTO (data transfer object)" needs the
-expansion but not a definition. "RLS" needs the expansion *and* a sentence,
+expansion but not a definition. "RLS" needs the expansion _and_ a sentence,
 because the reader's decisions depend on understanding what it actually enforces.
 When in doubt, give the sentence — it costs one line.
 
@@ -71,16 +71,16 @@ gloss is for the reader; the quoted Finnish is the contract with the UI.
 Jargon that sounds sophisticated but adds nothing is the main thing that makes a
 spec unreadable. Pick the ordinary word.
 
-| Instead of | Write |
-|---|---|
-| leverage, utilise | use |
-| orchestrate | run, coordinate |
-| surface (verb) | show, report |
-| hydrate the DTO | fill in the object |
-| idempotent | running it twice changes nothing |
-| the happy path | when everything works |
-| performant | fast |
-| single source of truth | the one place this is decided |
+| Instead of             | Write                            |
+| ---------------------- | -------------------------------- |
+| leverage, utilise      | use                              |
+| orchestrate            | run, coordinate                  |
+| surface (verb)         | show, report                     |
+| hydrate the DTO        | fill in the object               |
+| idempotent             | running it twice changes nothing |
+| the happy path         | when everything works            |
+| performant             | fast                             |
+| single source of truth | the one place this is decided    |
 
 Keep a technical term when it is genuinely the precise name for a thing —
 `SECURITY DEFINER`, `WITH CHECK`, foreign key, transaction. Then explain it once.

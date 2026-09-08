@@ -3,16 +3,19 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 An admin clearing out the club's disc bin marks a dozen discs the same way at once
 instead of opening a form per row. Discs are ticked in the disc list, one action is
 picked from a dropdown above the table, and it is applied to the whole selection in a
 single request.
 
 ## Actors
+
 - **Club admin** (signed in). The select column and the external ids the selection is
   keyed on are only sent to a signed-in visitor.
 
 ## User-facing behaviour
+
 1. When an admin is signed in, the disc table grows a leading checkbox column
    (`app/features/discs/list/DiscTable.tsx`); ticking rows reveals the action bar
    `SelectedDiscsActions.tsx`, which reads "N kiekkoa valittu" (N discs selected).
@@ -35,17 +38,18 @@ single request.
    people) counts only those that do, and a note says how many fall outside the message.
 
 ## The five batch actions
+
 `app/features/discs/batch/batchAction.ts` holds one row per action — label, confirm
 wording, past-tense wording, and what it writes — so the three tenses cannot drift apart
 and the smallint mapping is declared once.
 
-| Action | Dropdown label | Writes |
-|---|---|---|
-| `returnByMail` | "Merkitse palautetuiksi (postitettu)" | return columns, `ReturnMethod.ByMail` |
-| `returnPickedUp` | "Merkitse palautetuiksi (noudettu)" | return columns, `ReturnMethod.PickedUp` |
-| `sell` | "Merkitse myytäviksi" | disposal columns, `DisposalMethod.Sold` |
-| `donate` | "Merkitse lahjoitettaviksi" | disposal columns, `DisposalMethod.Donated` |
-| `delete` | "Poista" | nothing — hard delete, and the only action needing no date |
+| Action           | Dropdown label                        | Writes                                                     |
+| ---------------- | ------------------------------------- | ---------------------------------------------------------- |
+| `returnByMail`   | "Merkitse palautetuiksi (postitettu)" | return columns, `ReturnMethod.ByMail`                      |
+| `returnPickedUp` | "Merkitse palautetuiksi (noudettu)"   | return columns, `ReturnMethod.PickedUp`                    |
+| `sell`           | "Merkitse myytäviksi"                 | disposal columns, `DisposalMethod.Sold`                    |
+| `donate`         | "Merkitse lahjoitettaviksi"           | disposal columns, `DisposalMethod.Donated`                 |
+| `delete`         | "Poista"                              | nothing — hard delete, and the only action needing no date |
 
 Dropdown order is `['message', returnByMail, returnPickedUp, sell, donate, delete]`.
 
@@ -57,6 +61,7 @@ Neither batch mark asks for a method in a second step: the action name already c
 The single-disc forms still ask, because there the method may be left unanswered.
 
 ## Data
+
 No tables of its own. It writes exactly the columns the single-disc marks write, through
 the shared `returnPatch` / `disposalPatch` helpers in `app/models/discs.server.ts`:
 `is_returned_to_owner` + date + `return_method`, or `can_be_sold_or_donated` + date +
@@ -64,21 +69,22 @@ the shared `returnPatch` / `disposalPatch` helpers in `app/models/discs.server.t
 
 ## Routes & entry points
 
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
+| Route          | Method(s) | Auth  | Purpose                                                 |
+| -------------- | --------- | ----- | ------------------------------------------------------- |
 | `/discs/batch` | POST JSON | admin | `{action, externalIds[], date?}` → `{affected: number}` |
 
 Client: `runBatchAction.ts` posts it; `useBatchAction.ts` owns the confirm → request →
 report state machine; `SelectedDiscsActions.tsx` renders the bar.
 
 ## Rules & constraints
+
 - `requireAdminJson` first: POST only (405), signed in (401), parseable JSON (400).
 - `action` must be one of the five (`isBatchAction`) else 422 "Tuntematon toimenpide."
 - `externalIds` must be a non-empty array of valid uuids (`isExternalId` on every element)
   else 422 "Virheellinen kiekkojen tunnistelista."
 - The array is **deduplicated** (`new Set`) before the size check and before the write, so
   the reported count stands for discs, not for repeated ids.
-- `MAX_DISCS_PER_WRITE = 20`, checked *after* dedup: 422 "Yhdellä kertaa voi käsitellä
+- `MAX_DISCS_PER_WRITE = 20`, checked _after_ dedup: 422 "Yhdellä kertaa voi käsitellä
   enintään 20 kiekkoa." Enforced twice — the dropdown withholds the actions, and the route
   refuses regardless, since the list is not the only thing that can post.
 - The cap is on the write, not on the selection or on messaging, which writes nothing.
@@ -96,6 +102,7 @@ report state machine; `SelectedDiscsActions.tsx` renders the bar.
   push the selection past the cap between choosing and pressing.
 
 ## Partial failure
+
 There is none in the transactional sense. Each action is a single Supabase statement
 (`.update(...).in('external_id', ids)` or `.delete().in(...)`), so it either raises — 500,
 nothing reported as done — or succeeds and returns the rows it touched.
@@ -107,12 +114,13 @@ which re-selects to distinguish `not-found` from `not-permitted`. `batchActionOu
 reports the shortfall without calling it an error.
 
 ## Edge cases & known gaps
+
 - A shortfall is unattributed: the admin is told two discs were missed, never which two.
 - No batch course change and no batch retrieval-list action — those are single-disc only.
 - Rows without an `externalId` (anonymous loader payload) cannot be selected
   (`enableRowSelection`), and `getRowId` falls back to `row-<id>` for them.
 - The dedup means posting the same id 25 times is accepted, not rejected as oversized.
-- `batchAction.test.ts` pins the smallint mapping against the *labels* rather than the
+- `batchAction.test.ts` pins the smallint mapping against the _labels_ rather than the
   numbers, because nothing in the UI shows the stored number — an inverted sell/donate or
   posted/collected mapping would otherwise be invisible. It also asserts that `delete` is
   the only action with no mark.
@@ -121,4 +129,5 @@ reports the shortfall without calling it an error.
 - The confirmation names no discs — the selection is behind the dialog on screen.
 
 ## Open questions
+
 None.

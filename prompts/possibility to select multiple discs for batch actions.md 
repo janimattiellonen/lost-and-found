@@ -1,0 +1,11 @@
+# Possibility to select multiple discs for batch actions
+
+Now it is possible to select multiple discs to send an sms to. In a similar fashion I'd like to select
+multiple discs that I want to:
+- mark as returned
+- mark for sale/donation
+- delete
+
+In these new cases I want to the system to require a confirmation from me, before doing the selected action.
+The confirmation message should state what is been trying to do and on how many discs. The disc data is
+irrelevant in the confirmation text.

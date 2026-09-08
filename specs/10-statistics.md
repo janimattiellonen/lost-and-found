@@ -3,17 +3,20 @@
 > Status: as-built (describes what exists today, not a wishlist)
 
 ## Purpose
+
 A single admin page, "Statistiikka" (statistics), showing how many discs the
 club has taken in and given back, when it happened, and which disc models go
 missing most often. It is a rough operational overview, not a reporting tool:
 everything is computed in the browser from one fetch of the club's discs.
 
 ## Actors
+
 - Club admin only. `app/routes/stats.tsx` redirects to `/sign-in` unless
   `isUserLoggedIn(request)`. Linked from `app/ui/AdminMenu.tsx` as
   `{ to: '/stats', label: 'Statistiikka' }`.
 
 ## User-facing behaviour
+
 1. When an admin opens `/stats`, then two totals and three charts render from
    the loader's disc array.
 2. "Myytyjen / lahjoitettujen kiekkojen määrä" (number of sold/donated discs) —
@@ -30,6 +33,7 @@ everything is computed in the browser from one fetch of the club's discs.
    horizontal bar chart of the ten most frequent `disc_name` values.
 
 ## Data source
+
 `getDiscsForStats()` in `app/models/discs.server.ts`:
 
 ```
@@ -45,11 +49,12 @@ from discs where club_id = APP_CLUB_ID order by added_at asc
 - Every count and grouping happens in JS, in the components, on each render.
 
 ## The charts
-| Chart | Component | Measures | Grouped by | Bucket |
-|---|---|---|---|---|
-| Seuralle palautetut kiekot | `DiscsReturnedToClub.tsx` | Discs taken into the club's inventory | `addedAt` | `"<month0>.<year>"` key, i.e. month within a year; drill-down by day of month |
-| Omistajille palautetut kiekot | `DiscsReturnedToOwner.tsx` | Discs with `isReturnedToOwner` **and** a resolvable return date | `returnedToOwnerDate`, falling back to a leading `d.M.yyyy` in `returnedToOwnerText` | `date-fns` month number **only — no year** (see gaps); drill-down by day of month |
-| Top 10 kadotettua kiekkomallia | `MostLostByDiscName.tsx` | Row count per `discName` | exact `discName` string | none — all time |
+
+| Chart                          | Component                  | Measures                                                        | Grouped by                                                                           | Bucket                                                                            |
+| ------------------------------ | -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Seuralle palautetut kiekot     | `DiscsReturnedToClub.tsx`  | Discs taken into the club's inventory                           | `addedAt`                                                                            | `"<month0>.<year>"` key, i.e. month within a year; drill-down by day of month     |
+| Omistajille palautetut kiekot  | `DiscsReturnedToOwner.tsx` | Discs with `isReturnedToOwner` **and** a resolvable return date | `returnedToOwnerDate`, falling back to a leading `d.M.yyyy` in `returnedToOwnerText` | `date-fns` month number **only — no year** (see gaps); drill-down by day of month |
+| Top 10 kadotettua kiekkomallia | `MostLostByDiscName.tsx`   | Row count per `discName`                                        | exact `discName` string                                                              | none — all time                                                                   |
 
 Shared helpers are in `app/features/stats/statsUtils.ts`
 (`mapBySeparator` → `sortMappedData` → `getAddedDiscCountByMonth` /
@@ -59,6 +64,7 @@ Shared helpers are in `app/features/stats/statsUtils.ts`
 daily ones.
 
 ## Rendering
+
 - `app/ui/BarChart.tsx` — vertical bars as `<button>`s, so a bar is clickable
   and keyboard-reachable; bar height is `value / (max + 30)`, so charts with
   small numbers look flat and no bar is ever full height. Hard-coded red bars,
@@ -70,11 +76,13 @@ daily ones.
   printed above/beside the bar; there is no charting library.
 
 ## Routes & entry points
-| Route | Method(s) | Auth | Purpose |
-|---|---|---|---|
-| `/stats` | GET | signed-in; otherwise redirect to `/sign-in` | Loads all discs for the club and renders `StatsPage`. |
+
+| Route    | Method(s) | Auth                                        | Purpose                                               |
+| -------- | --------- | ------------------------------------------- | ----------------------------------------------------- |
+| `/stats` | GET       | signed-in; otherwise redirect to `/sign-in` | Loads all discs for the club and renders `StatsPage`. |
 
 ## Rules & constraints
+
 - Admin-only; the loader is the only authorization check.
 - Phone numbers are not selected at all here (the `owner_phone_number` masking
   in `getDiscsForStats` is dead code for the current select list).
@@ -85,6 +93,7 @@ daily ones.
   memoization or caching, so it grows linearly and forever.
 
 ## Edge cases & known gaps
+
 - `DiscsReturnedToOwner` groups by `getMonth(date)` alone, so **the same month
   in different years is merged into one bar**; `DiscsReturnedToClub` includes
   the year in its key. The two charts are not comparable.
@@ -92,7 +101,7 @@ daily ones.
   `getMonth` is 0-based, so **January is dropped from
   `DiscsReturnedToOwner`** entirely. `DiscsReturnedToClub` is unaffected because
   its separator is the string `"0.2026"`, which is truthy.
-- `DiscsReturnedToOwner`'s day drill-down is fed the *unfiltered* `data`, not
+- `DiscsReturnedToOwner`'s day drill-down is fed the _unfiltered_ `data`, not
   the filtered set, so a disc with a parsable return note but
   `isReturnedToOwner = false` appears in the day chart though not in the month
   chart.
@@ -106,6 +115,7 @@ daily ones.
   renders an empty chart frame.
 
 ## Open questions
+
 - Whether the monthly charts should exclude archived discs, and whether
   "seuralle palautetut" (measured by `added_at`) is the intended meaning of
   "returned to the club" as opposed to "found and logged".
