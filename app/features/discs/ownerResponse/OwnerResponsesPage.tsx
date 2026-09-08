@@ -3,7 +3,7 @@ import { Form } from 'react-router';
 import { handoverMethodLabel } from '~/features/discs/handoverMethod';
 import { ownerChoiceLabel, OwnerChoice } from './ownerChoice';
 import type { OwnerResponseSummary } from './ownerResponse';
-import { formatDateTime, formatPhoneNumber } from '~/utils';
+import { formatDate, formatDateTime, formatPhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import Paper from '~/ui/Paper';
@@ -74,12 +74,17 @@ function ResponseItem({
             {method && ` · ${method}`}
           </span>
 
-          {response.ownerName && <span className="text-sm text-gray-600">{response.ownerName}</span>}
-
-          {response.ownerPhoneNumber && (
-            <a href={`tel:${response.ownerPhoneNumber}`} className="text-sm text-blue-700 underline">
-              {formatPhoneNumber(response.ownerPhoneNumber)}
-            </a>
+          {/* The number first, the name after it in brackets: the number is
+              what gets tapped, and only the digits belong inside the link. */}
+          {(response.ownerPhoneNumber || response.ownerName) && (
+            <span className="text-sm text-gray-600">
+              {response.ownerPhoneNumber && (
+                <a href={`tel:${response.ownerPhoneNumber}`} className="text-blue-700 underline">
+                  {formatPhoneNumber(response.ownerPhoneNumber)}
+                </a>
+              )}
+              {response.ownerName && (response.ownerPhoneNumber ? ` (${response.ownerName})` : response.ownerName)}
+            </span>
           )}
 
           {/* No address to show, and a reason: this one needs a message before
@@ -103,7 +108,10 @@ function ResponseItem({
             </span>
           )}
 
-          <span className="mt-2 text-xs text-gray-500">Vastattu {formatDateTime(response.respondedAt)}</span>
+          <span className="mt-2 text-xs text-gray-500">
+            Vastattu {formatDateTime(response.respondedAt)}
+            {response.discRegisteredAt && ` · Kiekko kirjattu ${formatDate(response.discRegisteredAt)}`}
+          </span>
         </div>
 
         <div className="flex flex-col items-end gap-2">
