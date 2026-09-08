@@ -25,28 +25,28 @@ export default function DiscListIntro({ clubId }: DiscListIntroProps): JSX.Eleme
   return (
     <div className="mt-8 max-w-4xl">
       <p>
-        Tällä sivulla luetellaan vain palauttamattomat kiekot, jotka ovat edelleen seuran hallussa. Kiekon tila (onko
-        palautettu/myyty/lahjoitettu) saattaa olla virheellinen, jolloin listalla voi näkyä kiekko, joka ei enää ole
-        seuralla.
+        Seuran hallussa olevat kiekot. Jos kiekosta löytyy selkeästi luettava puhelinnumero, lähetetään siihen viestiä
+        kiekon löytymisestä.
       </p>
 
-      <p>Jos kiekosta löytyy selkeästi luettava puhelinnumero, lähetetään siihen viestiä kiekon löytymisestä.</p>
+      <p></p>
 
       {lostDiscsUrl && (
         <p>
-          Tarkemmat tiedot seuran <a href={lostDiscsUrl}>löytökiekoista</a>.
+          Tarkemmat tiedot seuran{' '}
+          <a href={lostDiscsUrl} target={'_blank'} rel="noreferrer">
+            löytökiekoista
+          </a>
+          .
         </p>
       )}
-
-      <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
 
       <p>
         <WarningIcon
           title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
-          style={{ color: 'red', marginRight: '0.5rem' }}
+          style={{ display: 'inline', color: 'red', marginRight: '0.5rem' }}
         />
-        Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
-        pian myydä tai lahjoittaa.
+        Yli 3kk seuralla olleet kiekot myydään tai lahjoitetaan.
       </p>
     </div>
   );

@@ -148,18 +148,6 @@ export default function Index2Page(): JSX.Element {
 
         {/* The page lists nothing until it is asked to, so without a word here
             it just looks empty. Says what to type and why the list is hidden. */}
-        {!isLoading && !hasSearched && (
-          <div {...stylex.props(styles.emptyState)}>
-            <p {...stylex.props(styles.emptyStateLead)}>Kiekkoja ei näytetä ennen hakua.</p>
-            <p {...stylex.props(styles.placeholderText)}>
-              Useimmiten puhelinnumeron 4 viimeistä numeroa riittää. Jos numero on kiekossa epäselvä, hae kiekon
-              nimellä.
-            </p>
-            {!isLoading && discs.length > 0 && (
-              <p {...stylex.props(styles.placeholderText)}>Haettavana {discs.length} kiekkoa.</p>
-            )}
-          </div>
-        )}
 
         {!isLoading && hasSearched && results.length === 0 && (
           <p {...stylex.props(styles.placeholderText)}>
@@ -204,7 +192,12 @@ function DiscCard(props: DiscCardProps): JSX.Element {
   return (
     <article {...stylex.props(styles.card)}>
       <div {...stylex.props(styles.cardHeader)}>
-        <span {...stylex.props(styles.cardName)}>{disc.discName}</span>
+        <span {...stylex.props(styles.cardName)}>
+          {disc.discName}
+          {disc.discManufacturer && (
+            <span {...stylex.props(styles.cardManufacturer)}> ({disc.discManufacturer})</span>
+          )}
+        </span>
         {atRisk && (
           <WarningIcon
             title="Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa"
@@ -215,7 +208,6 @@ function DiscCard(props: DiscCardProps): JSX.Element {
 
       <dl {...stylex.props(styles.cardBody)}>
         {disc.discColour && <Row label="Väri" value={disc.discColour} />}
-        {disc.discManufacturer && <Row label="Valmistaja" value={disc.discManufacturer} />}
         {disc.ownerName && <Row label="Omistaja" value={disc.ownerName} />}
         {disc.ownerPhoneNumber && <Row label="Puhelin" value={`****${disc.ownerPhoneNumber.slice(-4)}`} />}
         <Row label="Lisätty" value={formatDate(disc.addedAt)} />
@@ -568,6 +560,11 @@ const styles = stylex.create({
   cardName: {
     fontSize: font.sizeLg,
     fontWeight: font.weightBold,
+  },
+  cardManufacturer: {
+    color: color.textMuted,
+    fontSize: font.sizeSm,
+    fontWeight: font.weightRegular,
   },
   cardBody: {
     margin: 0,
