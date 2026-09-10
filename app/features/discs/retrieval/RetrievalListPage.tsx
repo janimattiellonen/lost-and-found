@@ -1,6 +1,6 @@
 import { Form } from 'react-router';
 
-import { retrievalErrandLabel } from './retrievalMethod';
+import { retrievalErrandLabel } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
 import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -47,7 +47,7 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
 function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
   // What is to be done with this one: the method its owner asked for, or that
   // the club is keeping it.
-  const errand = retrievalErrandLabel(disc.retrievalMethod);
+  const errand = retrievalErrandLabel(disc.errand);
 
   return (
     <Paper className="mb-4 max-w-2xl p-4">

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { queryPendingRetrievals } from './queryPendingRetrievals.server';
-import { isRetrievalMethod } from './retrievalMethod';
+import { toRetrievalErrand } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
 
 /** What the page shows of the disc behind a request. */
@@ -54,10 +54,7 @@ export async function queryRetrievalList(supabase: SupabaseClient): Promise<Retr
     addedAt: row.discs.added_at ?? null,
     ownerName: row.discs.owner_name ?? null,
     ownerPhoneNumber: row.discs.owner_phone_number ?? null,
-    // NULL is a value with a meaning here — the club is keeping this one — and
-    // an out-of-range smallint is read as the same thing rather than as a
-    // method it might not be. Either way the disc is still on the shelf.
-    retrievalMethod: isRetrievalMethod(row.retrieval_method) ? row.retrieval_method : null,
+    errand: toRetrievalErrand(row.retrieval_method),
     requestedAt: row.requested_at,
   }));
 }

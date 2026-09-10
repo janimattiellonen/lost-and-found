@@ -1,3 +1,4 @@
+import type { RetrievalErrand } from './retrievalErrand';
 import type { RetrievalMethodValue } from './retrievalMethod';
 
 /** Putting one disc on the retrieval list — what the route receives. */
@@ -22,8 +23,8 @@ export type RetrievalListDisc = {
   addedAt: string | null;
   ownerName: string | null;
   ownerPhoneNumber: string | null;
-  /** What the owner asked for. Null for a disc the club is keeping. */
-  retrievalMethod: RetrievalMethodValue | null;
+  /** What is to be done with the disc once it is off the shelf. */
+  errand: RetrievalErrand;
   /** ISO timestamp of the request. */
   requestedAt: string;
 };

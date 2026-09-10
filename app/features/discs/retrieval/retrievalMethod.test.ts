@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  RetrievalMethod,
-  isRetrievalMethod,
-  retrievalErrandLabel,
-  retrievalMethodLabel,
-  retrievalMethodOptions,
-} from './retrievalMethod';
+import { RetrievalMethod, isRetrievalMethod, retrievalMethodLabel, retrievalMethodOptions } from './retrievalMethod';
 import { HandoverMethod } from '~/features/discs/handoverMethod';
 
 describe('retrievalMethod', () => {
@@ -52,18 +46,5 @@ describe('retrievalMethod', () => {
     ['undefined', undefined],
   ])('rejects %s', (_reason, value) => {
     expect(isRetrievalMethod(value)).toBe(false);
-  });
-});
-
-describe('retrievalErrandLabel', () => {
-  it.each([
-    [RetrievalMethod.ByMail, 'Postitus'],
-    [RetrievalMethod.PickedUp, 'Nouto (minulta)'],
-  ])('says what the owner asked for when the disc goes back to them: %i', (method, label) => {
-    expect(retrievalErrandLabel(method)).toBe(label);
-  });
-
-  it('reads a missing method as the disc the club is keeping', () => {
-    expect(retrievalErrandLabel(null)).toBe('Myyntiin tai lahjoitukseen');
   });
 });

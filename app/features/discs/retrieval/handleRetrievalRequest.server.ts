@@ -1,7 +1,7 @@
 import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId } from '~/lib/api/validate';
 import { isRetrievalMethod } from './retrievalMethod';
-import { queryRequestRetrieval } from './queryRequestRetrieval.server';
+import { queryRequestRetrievals } from './queryRequestRetrievals.server';
 import { createSupabaseServerClient } from '~/models/utils';
 
 /** Authorises, validates and applies a retrieval request posted to /discs/retrieval. */
@@ -26,9 +26,14 @@ export async function handleRetrievalRequest(request: Request): Promise<Response
   }
 
   try {
-    const outcome = await queryRequestRetrieval(createSupabaseServerClient(request), { externalId, retrievalMethod });
+    // Nothing resolved means this club has no such disc — the same lookup that
+    // scopes the write is what reports it.
+    const affected = await queryRequestRetrievals(createSupabaseServerClient(request), {
+      externalIds: [externalId],
+      retrievalMethod,
+    });
 
-    if (outcome === 'not-found') {
+    if (affected === 0) {
       return Response.json({ error: 'Kiekkoa ei löytynyt.' }, { status: 404 });
     }
 

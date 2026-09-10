@@ -29,17 +29,3 @@ export const isRetrievalMethod = needsFetchingFromStorage;
 export const retrievalMethodLabel = handoverMethodLabel;
 
 export type RetrievalMethodValue = FetchingHandoverMethod;
-
-/**
- * The one line under the disc's name on the retrieval list: what is to be done
- * with this disc once it is off the shelf.
- *
- * For a disc going back to its owner that is the method they asked for, which
- * is the difference between a stamp and a doorstep. A disc the club is keeping
- * is not going to anybody, so it has no method — and that missing method is the
- * whole of how the two kinds of errand are told apart, in the database as well
- * as here.
- */
-export function retrievalErrandLabel(retrievalMethod: RetrievalMethodValue | null): string {
-  return retrievalMethod === null ? 'Myyntiin tai lahjoitukseen' : (handoverMethodLabel(retrievalMethod) ?? '');
-}

@@ -44,7 +44,7 @@ Reads `public.discs`, scoped to `club_id = APP_CLUB_ID`.
 | `is_returned_to_owner`, `can_be_sold_or_donated`, `archived_at` | Exclusion filters, see below.                                                                                                         |
 
 Also reads `emptying_log` (via `getEmptyingLogItemsForClub`) and, for a signed-in
-admin of a retrieval-list club, `disc_retrievals` (`queryPendingRetrievalMethods`).
+admin of a retrieval-list club, `disc_retrievals` (`queryPendingRetrievalErrands`).
 
 Exclusion is a single query in `getDiscs()`:
 `is_returned_to_owner = false AND can_be_sold_or_donated = false AND archived_at IS NULL AND club_id = APP_CLUB_ID`,

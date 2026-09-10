@@ -181,9 +181,13 @@ not columns on `discs`:
 | `DisposalMethod` (`disposal/disposalMethod.ts`)    | `discs.can_be_sold_or_donated_method` | 0, 1   | "Myydään", "Lahjoitetaan"                             |
 | `RetrievalMethod` (`retrieval/retrievalMethod.ts`) | `disc_retrievals.retrieval_method`    | 0, 1   | "Postitus", "Nouto (minulta)" (what was asked for)    |
 
-There is no fourth enum for "sale or donation" as an errand. `retrievalErrandLabel()`
-(`retrieval/retrievalMethod.ts`) is the one place that reads a null method, and it returns
-the fixed "Myyntiin tai lahjoitukseen"; `DisposalMethod` says which of the two the club
+There is no fourth enum for "sale or donation" as an errand. The nullable column is
+decoded once on the way out of the database into `RetrievalErrand`
+(`retrieval/retrievalErrand.ts`), a two-case union — `{ kind: 'to-owner'; method }` or
+`{ kind: 'kept-by-club' }` — so nothing downstream carries a nullable method that could be
+read as either fact. `toRetrievalErrand()` is the one place that decode happens, so the
+two queries reading the table cannot disagree about it, and `retrievalErrandLabel()` — both
+in the same file — is what puts the fixed "Myyntiin tai lahjoitukseen" on the card; `DisposalMethod` says which of the two the club
 intends, on the disc itself, and the retrieval list does not show it.
 
 `RetrievalMethod` is **not its own enum**: it is `HandoverMethod`
@@ -222,7 +226,8 @@ All five JSON routes are resource routes (no component) delegating to a
   `Tuntematon rata "X".` so it cannot leak into the list page's course filter.
 - Every write is scoped to `APP_CLUB_ID`: the disc updates/deletes add `.eq('club_id', …)`,
   and every `disc_retrievals` write resolves `external_id → id` through
-  `queryDiscIdByExternalId.server.ts`, which carries the club filter.
+  `queryDiscIdByExternalId.server.ts` for one disc or `queryDiscIdsByExternalIds.server.ts`
+  for a set, both of which carry the club filter.
 - `updateDisc` distinguishes `not-found` (404) from `not-permitted` (403) by re-selecting
   the row: RLS refuses an UPDATE by filtering, not by raising. `markRefusal` maps both.
 - `queryPendingRetrievals.server.ts` is the single filter chain behind the page, the menu
@@ -231,23 +236,30 @@ All five JSON routes are resource routes (no component) delegating to a
   2026-09-10; dropping that one condition is what lets a disposal errand be seen, and it
   also means a disc marked released while its owner's request was open stays on the list
   rather than vanishing off it.
-- **The disposal errand is written by the app, next to the mark**, in
-  `queryRequestDisposalRetrievals.server.ts`, called from `handleDisposalRequest` with one
-  external id and from `handleBatchRequest` with the whole selection. It is the same
-  update-or-insert as `queryRequestRetrieval` — clear the method on an open row if there
-  is one, otherwise insert a row with none — over a set of discs instead of one, and it
-  resolves the ids through the same club-scoped lookup. It runs **after** the mark and
-  takes the ids the mark was asked for rather than the ones it changed; an id from another
-  club drops out in the lookup either way.
-- The mark and the errand are **two writes, not one transaction**, and each caller catches
-  the second separately so the admin is told which half happened: "Kiekko merkittiin,
-  mutta noutolistalle lisääminen epäonnistui." A plain failure would read as "nothing
-  happened", and the disc is marked — and once it is, it is off the disc list, so the
+- **Every write to the list is `queryRequestRetrievals.server.ts`**: resolve the external
+  ids to this club's disc ids, set the method on whatever open rows exist, insert a row for
+  the rest. One function rather than one per caller, since the update-or-insert and its
+  ordering are the whole of what this feature has to get right. It takes a set of ids and a
+  method that may be null — null being a disc the club is keeping — so the admin's "Lisää
+  noutolistalle" passes one id and a method, and a disposal passes the selection and null.
+  It returns how many discs this club actually had, which is how `handleRetrievalRequest`
+  answers 404 for another club's id.
+- **The disposal errand is written next to the mark**, through
+  `queryRequestDisposalRetrievals.server.ts` — the write above plus the message for a
+  half-done state — called from `handleDisposalRequest` with one external id and from
+  `handleBatchRequest` with the whole selection. It runs **after** the mark and takes the
+  ids the mark was asked for rather than the ones it changed; an id from another club drops
+  out in the lookup either way.
+- The mark and the errand are **two writes, not one transaction**, so the admin is told
+  which half happened: "Kiekko merkittiin, mutta noutolistalle lisääminen epäonnistui."
+  (plural "Kiekot" for a batch). The sentence is composed in one place, by the query that
+  failed, because it knows how many discs it was asked about. A plain failure would read as
+  "nothing happened", and the disc is marked — and once it is, it is off the disc list, so the
   storage icon is no longer there to add the errand by hand. The recovery is SQL.
 - A disc already on the list when it is released has its open row **converted** rather
   than duplicated: the method is cleared, `requested_at` and `owner_response_id` are left
-  alone. The reverse conversion is `queryRequestRetrieval`, which writes the method the
-  admin picked onto whatever open row is there. Either way there is one open errand per
+  alone. The reverse conversion is the same function called with a method, which writes it
+  onto whatever open row is there. Either way there is one open errand per
   disc, which is what the partial unique index already promised.
 - **The retrieval list is not gated on the club.** It was until 2026-09-04, by
   `isRetrievalListEnabled()` in `app/config/clubs.ts`; that function and all five of its
@@ -296,9 +308,11 @@ All five JSON routes are resource routes (no component) delegating to a
   on "Merkitse noudetuksi" is not an error.
 - `handleRetrievedRequest` returns `null` for a disc from another club: the club filter
   lives in `queryDiscIdByExternalId`, and a `not-found` outcome is discarded.
-- `queryRetrievalList` reads an out-of-range smallint as a null method, so such a row
-  reads as "Myyntiin tai lahjoitukseen" rather than as a method it might not be. Either
-  way the disc is on the shelf and the line is on the list.
+- `toRetrievalErrand` reads an out-of-range smallint as `kept-by-club`, the same as a null,
+  so such a row reads as "Myyntiin tai lahjoitukseen" rather than as a method it might not
+  be. Either way the disc is on the shelf and the line is on the list. The CHECK constraint
+  should make it impossible; if it ever happens, a corrupt row claims the club is keeping a
+  disc its owner asked for, and only the answers inbox would say otherwise.
 - A disc on the list because its owner gave it up, but not yet marked released, is still
   on the disc list — and its storage icon is orange with no method preselected. That is
   the window between reading the answers inbox and making the mark; it closes as soon as
