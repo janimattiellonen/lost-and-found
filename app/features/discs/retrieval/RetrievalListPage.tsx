@@ -1,6 +1,6 @@
 import { Form } from 'react-router';
 
-import { retrievalMethodLabel } from './retrievalMethod';
+import { retrievalErrandLabel } from './retrievalMethod';
 import type { RetrievalListDisc } from './discRetrieval';
 import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -31,8 +31,8 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
       <H2 className="mt-8 mb-2">Noutolista</H2>
 
       <p className="mb-6 max-w-2xl text-sm text-gray-600">
-        Kiekot, joita omistajat ovat pyytäneet ja joita ei ole vielä haettu. Merkitse kiekko noudetuksi, kun se on
-        sinulla – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
+        Kiekot, joita ei ole vielä haettu: omistajien pyytämät sekä myyntiin tai lahjoitukseen menevät. Merkitse kiekko
+        noudetuksi, kun se on sinulla – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
       </p>
 
       {discs.length === 0 && <p className="text-gray-500">Noutolistalla ei ole kiekkoja.</p>}
@@ -45,7 +45,9 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
 }
 
 function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
-  const method = retrievalMethodLabel(disc.retrievalMethod);
+  // What is to be done with this one: the method its owner asked for, or that
+  // the club is keeping it.
+  const errand = retrievalErrandLabel(disc.retrievalMethod);
 
   return (
     <Paper className="mb-4 max-w-2xl p-4">
@@ -55,7 +57,7 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             {disc.discColour} {disc.discName}
           </span>
 
-          {method && <span className="text-sm text-gray-600">{method}</span>}
+          {errand && <span className="text-sm text-gray-600">{errand}</span>}
 
           {/* A link rather than plain digits: the number is here to be texted
               from the same phone the list is read on, so it opens a message to

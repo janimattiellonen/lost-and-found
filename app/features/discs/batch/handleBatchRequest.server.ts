@@ -1,6 +1,8 @@
 import { requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
+import { queryRequestDisposalRetrievals } from '~/features/discs/retrieval/queryRequestDisposalRetrievals.server';
 import { deleteDiscs, markDiscsAsReturned, markDiscsForDisposal } from '~/models/discs.server';
+import { createSupabaseServerClient } from '~/models/utils';
 
 import { isBatchAction, markFor, MAX_DISCS_PER_WRITE, type BatchMark } from './batchAction';
 
@@ -38,7 +40,7 @@ type MarkInput = {
  * Applies a mark to the selection: which columns and which method both come
  * from the action's own row in the batch action table.
  */
-function applyMark(request: Request, { mark, externalIds, date }: MarkInput): Promise<number> {
+async function applyMark(request: Request, { mark, externalIds, date }: MarkInput): Promise<number> {
   if (mark.columns === 'return') {
     return markDiscsAsReturned(request, {
       externalIds,
@@ -46,10 +48,25 @@ function applyMark(request: Request, { mark, externalIds, date }: MarkInput): Pr
     });
   }
 
-  return markDiscsForDisposal(request, {
+  const affected = await markDiscsForDisposal(request, {
     externalIds,
     details: { canBeSoldOrDonatedDate: date, canBeSoldOrDonatedMethod: mark.method },
   });
+
+  // Every disc released for sale or donation is one to fetch off the shelf, a
+  // selection of fifty as much as a single row action. Marking a disc from the
+  // batch that is already on the list clears its method rather than adding a
+  // second errand, the same as the single mark does.
+  //
+  // The two writes are not one transaction, so a failure here is reported as
+  // what it is: the discs are marked, and it is the list that is short.
+  try {
+    await queryRequestDisposalRetrievals(createSupabaseServerClient(request), externalIds);
+  } catch {
+    throw new Error('Kiekot merkittiin, mutta noutolistalle lisääminen epäonnistui.');
+  }
+
+  return affected;
 }
 
 /** Answers with how many discs the action reached, or with why it could not. */

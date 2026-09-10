@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { queryPendingRetrievals } from './queryPendingRetrievals.server';
-import { isRetrievalMethod, RetrievalMethod } from './retrievalMethod';
+import { isRetrievalMethod } from './retrievalMethod';
 import type { RetrievalListDisc } from './discRetrieval';
 
 /** What the page shows of the disc behind a request. */
@@ -17,7 +17,7 @@ const LIST_COLUMNS =
  */
 type Row = {
   requested_at: string;
-  retrieval_method: number;
+  retrieval_method: number | null;
   discs: {
     external_id: string;
     disc_name: string;
@@ -29,15 +29,18 @@ type Row = {
 };
 
 /**
- * The discs waiting to be fetched out of storage, oldest request first — the
- * order the admin works through them in.
+ * The discs waiting to be fetched out of storage, newest request first.
+ *
+ * The top of the list is where the admin looks: a request that came in today is
+ * the one he has not dealt with yet, and an old line is one he has already seen
+ * every time he opened the page.
  *
  * The owner's phone number is the point of the list, so this is only ever read
  * behind the signed-in page route.
  */
 export async function queryRetrievalList(supabase: SupabaseClient): Promise<RetrievalListDisc[]> {
   const { data, error } = await queryPendingRetrievals(supabase, LIST_COLUMNS).order('requested_at', {
-    ascending: true,
+    ascending: false,
   });
 
   if (error) {
@@ -51,10 +54,10 @@ export async function queryRetrievalList(supabase: SupabaseClient): Promise<Retr
     addedAt: row.discs.added_at ?? null,
     ownerName: row.discs.owner_name ?? null,
     ownerPhoneNumber: row.discs.owner_phone_number ?? null,
-    // The CHECK constraint should make an out-of-range value impossible; if one
-    // happens, read it as the method that costs a wasted trip rather than a
-    // wasted stamp.
-    retrievalMethod: isRetrievalMethod(row.retrieval_method) ? row.retrieval_method : RetrievalMethod.PickedUp,
+    // NULL is a value with a meaning here — the club is keeping this one — and
+    // an out-of-range smallint is read as the same thing rather than as a
+    // method it might not be. Either way the disc is still on the shelf.
+    retrievalMethod: isRetrievalMethod(row.retrieval_method) ? row.retrieval_method : null,
     requestedAt: row.requested_at,
   }));
 }

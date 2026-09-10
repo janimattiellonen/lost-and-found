@@ -22,7 +22,8 @@ export type RetrievalListDisc = {
   addedAt: string | null;
   ownerName: string | null;
   ownerPhoneNumber: string | null;
-  retrievalMethod: RetrievalMethodValue;
+  /** What the owner asked for. Null for a disc the club is keeping. */
+  retrievalMethod: RetrievalMethodValue | null;
   /** ISO timestamp of the request. */
   requestedAt: string;
 };

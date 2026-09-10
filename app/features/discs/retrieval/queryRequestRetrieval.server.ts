@@ -13,7 +13,8 @@ type Input = {
  * Puts one of this club's discs on the retrieval list.
  *
  * A disc already on it has its open row updated rather than a second one
- * inserted, which is how "he'd rather collect it after all" is recorded — and
+ * inserted, which is how "he'd rather collect it after all" is recorded — and how a
+ * disc that was down for sale or donation is put back on its way to its owner — and
  * the partial unique index means two requests racing cannot both land. A disc
  * fetched once and since back in storage gets a new row, so the history keeps
  * both errands.

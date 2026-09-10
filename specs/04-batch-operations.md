@@ -117,6 +117,11 @@ reports the shortfall without calling it an error.
 
 - A shortfall is unattributed: the admin is told two discs were missed, never which two.
 - No batch course change and no batch retrieval-list action — those are single-disc only.
+  A batch "myytäväksi tai lahjoitettavaksi" does put every disc it marks on the retrieval
+  list — `handleBatchRequest` calls `queryRequestDisposalRetrievals` with the selection
+  once the mark is done (spec 03), so marking fifty discs released adds fifty errands. It
+  runs after the mark and is not part of its transaction: if it throws, the discs are
+  marked and the errands are not, and the batch reports the failure rather than the count.
 - Rows without an `externalId` (anonymous loader payload) cannot be selected
   (`enableRowSelection`), and `getRowId` falls back to `row-<id>` for them.
 - The dedup means posting the same id 25 times is accepted, not rejected as oversized.

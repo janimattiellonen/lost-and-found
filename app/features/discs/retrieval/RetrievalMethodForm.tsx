@@ -6,7 +6,13 @@ type Props = {
   discName: string;
   /** Distinguishes this form's radio group from any other on the page. */
   idPrefix: string;
-  /** What the disc is already down for, when it is already on the list. */
+  /** Whether the disc is already on the list, whatever it is down for. */
+  isOnList: boolean;
+  /**
+   * What the disc is already down for. Null when it is not on the list, and
+   * also when it is on it because the club is keeping it — there is no method
+   * to preselect, and picking one here is what turns it back into a return.
+   */
   current: RetrievalMethodValue | null;
   /** Resolves to null on success, or to a message to show in the form. */
   onSubmit: (retrievalMethod: RetrievalMethodValue) => Promise<string | null>;
@@ -25,7 +31,14 @@ type Props = {
  * A disc already on the list opens the same form with its method preselected,
  * which is how a "he'd rather collect it after all" is corrected.
  */
-export default function RetrievalMethodForm({ discName, idPrefix, current, onSubmit, onCancel }: Props): JSX.Element {
+export default function RetrievalMethodForm({
+  discName,
+  idPrefix,
+  isOnList,
+  current,
+  onSubmit,
+  onCancel,
+}: Props): JSX.Element {
   const [retrievalMethod, setRetrievalMethod] = useState<RetrievalMethodValue | null>(current);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +63,7 @@ export default function RetrievalMethodForm({ discName, idPrefix, current, onSub
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
       {/* Light text: the form opens inside the dark disc table. */}
       <p className="basis-full text-xs text-gray-300">
-        {current === null ? 'Lisää noutolistalle' : 'Muuta noutotapaa'}: <b>{discName}</b>
+        {isOnList ? 'Muuta noutotapaa' : 'Lisää noutolistalle'}: <b>{discName}</b>
       </p>
 
       <fieldset>

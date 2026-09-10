@@ -55,7 +55,7 @@ type DiscTableProps = {
    * their owners asked for. Null for a visitor who is not signed in, which is
    * what leaves the row action out.
    */
-  pendingRetrievals?: Record<string, RetrievalMethodValue> | null;
+  pendingRetrievals?: Record<string, RetrievalMethodValue | null> | null;
   /**
    * The courses this club collects from; empty for a club that records none.
    * Drives both the Rata column and the admin tool that sets it, so the two
@@ -77,9 +77,12 @@ interface Row {
   externalId?: string;
   /** Club-internal notes. The loader only sends these to a signed-in visitor. */
   additionalInfo?: string;
+  /** Whether the disc is waiting to be fetched out of the club's storage. */
+  onRetrievalList: boolean;
   /**
-   * What the owner asked for, when the disc is waiting to be fetched. Null when
-   * it is not on the retrieval list.
+   * What the owner asked for, when the disc is waiting to be fetched. Null both
+   * when it is not on the retrieval list and when it is on it because the club
+   * is keeping it, which has no method — so read onRetrievalList for that.
    */
   retrievalMethod: RetrievalMethodValue | null;
 }
@@ -191,7 +194,7 @@ function isTightColumn(columnId: string): boolean {
   return columnId === 'id' || columnId === 'actions' || columnId === 'select';
 }
 
-function mapToDataRows(discs: DiscDTO[], pendingRetrievals: Record<string, RetrievalMethodValue> | null): Row[] {
+function mapToDataRows(discs: DiscDTO[], pendingRetrievals: Record<string, RetrievalMethodValue | null> | null): Row[] {
   return discs.map((disc, index) => ({
     id: index + 1,
     discName: disc.discName,
@@ -205,6 +208,8 @@ function mapToDataRows(discs: DiscDTO[], pendingRetrievals: Record<string, Retri
     additionalInfo: disc.additionalInfo,
     // The open requests come from a query of their own, which the loader runs
     // for a signed-in admin of a club that keeps a list and for nobody else.
+    onRetrievalList:
+      disc.externalId !== undefined && pendingRetrievals !== null && disc.externalId in pendingRetrievals,
     retrievalMethod: disc.externalId ? (pendingRetrievals?.[disc.externalId] ?? null) : null,
   }));
 }
@@ -518,12 +523,12 @@ export default function DiscTable({
                         <button
                           type="button"
                           aria-label={
-                            row.original.retrievalMethod !== null
+                            row.original.onRetrievalList
                               ? `Muuta kiekon ${row.original.discName} noutotapaa`
                               : `Lisää kiekko ${row.original.discName} noutolistalle`
                           }
                           title={
-                            row.original.retrievalMethod !== null
+                            row.original.onRetrievalList
                               ? 'Kiekko on noutolistalla – muuta noutotapaa'
                               : 'Lisää noutolistalle'
                           }
@@ -532,7 +537,7 @@ export default function DiscTable({
                           }
                           onClick={() => toggleForm(row.original.externalId!, 'retrieval')}
                           className={
-                            row.original.retrievalMethod !== null
+                            row.original.onRetrievalList
                               ? 'inline-flex text-orange-400 hover:text-orange-300'
                               : 'inline-flex text-gray-300 hover:text-white'
                           }
@@ -706,6 +711,7 @@ export default function DiscTable({
                         <RetrievalMethodForm
                           discName={row.original.discName}
                           idPrefix={`retrieval-${open.externalId}`}
+                          isOnList={row.original.onRetrievalList}
                           current={row.original.retrievalMethod}
                           onCancel={() => setOpenForm(null)}
                           onSubmit={async (retrievalMethod) => {
