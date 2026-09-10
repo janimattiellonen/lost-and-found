@@ -270,7 +270,11 @@ All five JSON routes are resource routes (no component) delegating to a
   (plural "Kiekot" for a batch). The sentence is composed in one place, by the query that
   failed, because it knows how many discs it was asked about. A plain failure would read as
   "nothing happened", and the disc is marked — and once it is, it is off the disc list, so the
-  storage icon is no longer there to add the errand by hand. The recovery is SQL.
+  storage icon is no longer there to add the errand by hand. The recovery is SQL. The two
+  routes carry that sentence differently: the single mark answers 500 with it, since one disc
+  either got its errand or did not, while the batch answers 200 with the count **and** the
+  sentence (spec 04), because throwing away "fifty discs were marked" to report the half that
+  failed would be the more misleading of the two.
 - A disc already on the list when it is released **keeps its open row exactly as it was**.
   The club deciding to sell a disc does not unsay what its owner asked for, and until
   2026-09-10 the mark cleared `retrieval_method`, so an owner's "Postitus" vanished with

@@ -29,6 +29,17 @@ function readSelection(value: unknown): Selection {
   return { externalIds };
 }
 
+/**
+ * What an action did: how many discs it reached, and what went wrong afterwards
+ * that the admin still has to hear about.
+ *
+ * A warning is not an error. The discs were marked; a disposal's second write —
+ * the retrieval errands — is what failed, and answering 500 would throw the
+ * count away and tell the admin nothing happened, which would be the one thing
+ * that is not true.
+ */
+type BatchOutcome = { affected: number; warning?: string };
+
 type MarkInput = {
   mark: BatchMark;
   externalIds: string[];
@@ -40,15 +51,18 @@ type MarkInput = {
  * Applies a mark to the selection: which columns and which method both come
  * from the action's own row in the batch action table.
  *
- * A disposal mark also writes the retrieval errands, so this reports how many
- * discs it reached only once both halves are done.
+ * A disposal mark also writes the retrieval errands. Both halves are reported:
+ * the count when they both went through, and the count plus a warning when the
+ * errands did not.
  */
-async function applyMark(request: Request, { mark, externalIds, date }: MarkInput): Promise<number> {
+async function applyMark(request: Request, { mark, externalIds, date }: MarkInput): Promise<BatchOutcome> {
   if (mark.columns === 'return') {
-    return markDiscsAsReturned(request, {
-      externalIds,
-      details: { returnedToOwnerDate: date, returnMethod: mark.method },
-    });
+    return {
+      affected: await markDiscsAsReturned(request, {
+        externalIds,
+        details: { returnedToOwnerDate: date, returnMethod: mark.method },
+      }),
+    };
   }
 
   const affected = await markDiscsForDisposal(request, {
@@ -61,18 +75,36 @@ async function applyMark(request: Request, { mark, externalIds, date }: MarkInpu
   // batch that is already on the list clears its method rather than adding a
   // second errand, the same as the single mark does.
   //
-  // The two writes are not one transaction, so a failure here surfaces as what
-  // it is — the discs are marked and it is the list that is short — in the
-  // message the query throws.
-  await queryRequestDisposalRetrievals(createSupabaseServerClient(request), externalIds);
+  // Nothing was marked, so there is nothing to fetch and nothing to warn about:
+  // the shortfall the report already names is the whole story.
+  if (affected === 0) {
+    return { affected };
+  }
 
-  return affected;
+  // The two writes are not one transaction, so a failure here comes back beside
+  // the count rather than instead of it: the discs are marked, and it is the
+  // list that is short. The sentence is the query's, not composed again here.
+  try {
+    await queryRequestDisposalRetrievals(createSupabaseServerClient(request), externalIds);
+  } catch (error) {
+    if (!(error instanceof Error)) {
+      throw error;
+    }
+
+    return { affected, warning: error.message };
+  }
+
+  return { affected };
 }
 
-/** Answers with how many discs the action reached, or with why it could not. */
-async function respondWithCount(apply: () => Promise<number>): Promise<Response> {
+/**
+ * Answers with how many discs the action reached — plus, for a disposal whose
+ * errands did not follow, the warning that says so — or with why it could not
+ * run at all.
+ */
+async function respondWithOutcome(apply: () => Promise<BatchOutcome>): Promise<Response> {
   try {
-    return Response.json({ affected: await apply() });
+    return Response.json(await apply());
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Toimenpide epäonnistui.';
 
@@ -105,12 +137,12 @@ export async function handleBatchRequest(request: Request): Promise<Response> {
   // No mark to write is a delete, and a delete records nothing — so it is the
   // one action that needs no date.
   if (mark === null) {
-    return respondWithCount(() => deleteDiscs(request, selection.externalIds));
+    return respondWithOutcome(async () => ({ affected: await deleteDiscs(request, selection.externalIds) }));
   }
 
   if (!isIsoDate(date)) {
     return Response.json({ error: 'Virheellinen päivämäärä.' }, { status: 422 });
   }
 
-  return respondWithCount(() => applyMark(request, { mark, externalIds: selection.externalIds, date }));
+  return respondWithOutcome(() => applyMark(request, { mark, externalIds: selection.externalIds, date }));
 }

@@ -120,11 +120,22 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
   };
 
   if (selected.length === 0) {
-    return notice?.kind === 'done' ? (
-      <p className="mb-4 text-sm" aria-live="polite">
-        {notice.text}
-      </p>
-    ) : null;
+    // Both belong here rather than beside the buttons: the write went through,
+    // so the ticks are gone and there is nothing left to act on — a warning is
+    // the admin being told what he now has to chase, not an invitation to
+    // retry.
+    if (notice?.kind === 'done' || notice?.kind === 'warning') {
+      return (
+        <p
+          className={notice.kind === 'warning' ? 'mb-4 text-sm font-bold text-amber-700' : 'mb-4 text-sm'}
+          aria-live="polite"
+        >
+          {notice.text}
+        </p>
+      );
+    }
+
+    return null;
   }
 
   return (
