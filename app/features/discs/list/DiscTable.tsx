@@ -22,7 +22,7 @@ import { disposalMethodOptions } from '~/features/discs/disposal/disposalMethod'
 import { markForDisposal } from '~/features/discs/disposal/markForDisposal';
 import { markForRetrieval } from '~/features/discs/retrieval/markForRetrieval';
 import RetrievalMethodForm from '~/features/discs/retrieval/RetrievalMethodForm';
-import { retrievalErrandMethod, type RetrievalErrand } from '~/features/discs/retrieval/retrievalErrand';
+import { retrievalErrandMethod, type StoredErrand } from '~/features/discs/retrieval/retrievalErrand';
 import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { returnMethodOptions } from '~/features/discs/return/returnMethod';
 import CourseForm from '~/features/discs/list/CourseForm';
@@ -55,7 +55,7 @@ type DiscTableProps = {
    * their owners asked for. Null for a visitor who is not signed in, which is
    * what leaves the row action out.
    */
-  pendingRetrievals?: Record<string, RetrievalErrand> | null;
+  pendingRetrievals?: Record<string, StoredErrand> | null;
   /**
    * The courses this club collects from; empty for a club that records none.
    * Drives both the Rata column and the admin tool that sets it, so the two
@@ -81,7 +81,7 @@ interface Row {
    * What the disc is waiting to be fetched for, or null when it is not on the
    * retrieval list at all.
    */
-  retrieval: RetrievalErrand | null;
+  retrieval: StoredErrand | null;
 }
 
 type OutletContext = {
@@ -191,7 +191,7 @@ function isTightColumn(columnId: string): boolean {
   return columnId === 'id' || columnId === 'actions' || columnId === 'select';
 }
 
-function mapToDataRows(discs: DiscDTO[], pendingRetrievals: Record<string, RetrievalErrand> | null): Row[] {
+function mapToDataRows(discs: DiscDTO[], pendingRetrievals: Record<string, StoredErrand> | null): Row[] {
   return discs.map((disc, index) => ({
     id: index + 1,
     discName: disc.discName,

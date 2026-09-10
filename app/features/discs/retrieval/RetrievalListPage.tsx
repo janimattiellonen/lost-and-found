@@ -1,7 +1,6 @@
 import { Form } from 'react-router';
 
-import { retrievalErrandLabel } from './retrievalErrand';
-import { retrievalMethodLabel } from './retrievalMethod';
+import { retrievalErrandLabel, supersededRequestLabel } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
 import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -46,10 +45,10 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
 }
 
 function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
-  // What is to be done with this one: the method its owner asked for, or that
-  // the club is keeping it.
+  // What is to be done with this one: the method its owner asked for, that the
+  // club is keeping it, or that the row cannot be read.
   const errand = retrievalErrandLabel(disc.errand);
-  const { supersededMethod } = disc;
+  const { superseded } = disc;
 
   return (
     <Paper className="mb-4 max-w-2xl p-4">
@@ -59,17 +58,15 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             {disc.discColour} {disc.discName}
           </span>
 
-          {errand && <span className="text-sm text-gray-600">{errand}</span>}
+          <span className="text-sm text-gray-600">{errand}</span>
 
           {/* The club has decided to keep a disc its owner had asked for. Both
               facts are true and they disagree, so the card says both rather
               than quietly showing the newer one: this is the line that tells
               the admin there is a message to send before the disc goes to the
               bring-and-buy table. */}
-          {supersededMethod !== null && (
-            <span className="text-sm font-bold text-amber-700">
-              Huom! Omistaja on pyytänyt kiekkoa: {retrievalMethodLabel(supersededMethod)}
-            </span>
+          {superseded !== null && (
+            <span className="text-sm font-bold text-amber-700">{supersededRequestLabel(superseded)}</span>
           )}
 
           {/* A link rather than plain digits: the number is here to be texted

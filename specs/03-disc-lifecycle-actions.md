@@ -102,12 +102,15 @@ Course is not a state; `setDiscCourse` can run in any state.
    "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes the row. Both kinds
    of errand are one list in one order: the second line reads "Postitus" / "Nouto
    (minulta)" for a disc going back to its owner and "Myyntiin tai lahjoitukseen" for one
-   the club is keeping, which is all that separates them. The card is the same otherwise,
-   phone number included — the owner of a disc being sold is still who to ask about it.
-   A disc the club has released **while its owner had an open request** carries one more
-   line, in amber: "Huom! Omistaja on pyytänyt kiekkoa: Postitus". Both facts are true and
-   they disagree, so the card shows both rather than only the newer one — that line is how
-   the admin knows to send a message before the disc reaches the bring-and-buy table.
+   the club is keeping, and "Noutotapa epäselvä – tarkista viestit" for a row whose method
+   the app cannot read. The card is the same otherwise, phone number included — the owner of
+   a disc being sold is still who to ask about it.
+   A disc the club has released **while its row still held a request** carries one more
+   line, in amber: "Huom! Omistaja on pyytänyt kiekkoa: Postitus", or "Huom! Kiekolla on
+   avoin noutopyyntö, jonka noutotapaa ei voi lukea – tarkista viestit." when the row cannot
+   be read. Both facts are true and they disagree, so the card shows both rather than only
+   the newer one — that line is how the admin knows to send a message before the disc
+   reaches the bring-and-buy table.
 7. When the retrieval list has pending rows, the admin menu item shows the count
    (`loadRetrievalCount.server.ts`); it is absent only when nobody is signed in.
 8. When a disc's owner answers on the sms link, the disc appears on the retrieval list by
@@ -189,12 +192,14 @@ not columns on `discs`:
 | `DisposalMethod` (`disposal/disposalMethod.ts`)    | `discs.can_be_sold_or_donated_method` | 0, 1   | "Myydään", "Lahjoitetaan"                             |
 | `RetrievalMethod` (`retrieval/retrievalMethod.ts`) | `disc_retrievals.retrieval_method`    | 0, 1   | "Postitus", "Nouto (minulta)" (what was asked for)    |
 
-There is no fourth enum for "sale or donation" as an errand. The nullable column is
-decoded once on the way out of the database into `RetrievalErrand`
-(`retrieval/retrievalErrand.ts`), a two-case union — `{ kind: 'to-owner'; method }` or
-`{ kind: 'kept-by-club' }` — so nothing downstream carries a nullable method that could be
-read as either fact. `toRetrievalErrand()` is the one place that decode happens, so the
-two queries reading the table cannot disagree about it. `toListedErrand()` wraps it for the
+There is no fourth enum for "sale or donation" as an errand. The nullable column is decoded
+once on the way out of the database (`retrieval/retrievalErrand.ts`) so that nothing
+downstream carries a nullable method that could be read as either fact. Two types, because a
+row can say something a write never may: **`RetrievalErrand`** is what a write asks for —
+`{ kind: 'to-owner'; method }` or `{ kind: 'kept-by-club' }` — and **`StoredErrand`** is what
+a row may turn out to say, those two plus `{ kind: 'unclear' }` for a value the CHECK
+forbids. `toRetrievalErrand()` is the one place that decode happens, so the two queries
+reading the table cannot disagree about it. `toListedErrand()` wraps it for the
 list page, where the disc's own release flag overrules the row, and `retrievalErrandLabel()`
 — all three in the same file — is what puts the fixed "Myyntiin tai lahjoitukseen" on the
 card; `DisposalMethod` says which of the two the club
@@ -339,11 +344,27 @@ All five JSON routes are resource routes (no component) delegating to a
   on "Merkitse noudetuksi" is not an error.
 - `handleRetrievedRequest` returns `null` for a disc from another club: the club filter
   lives in `queryDiscIdByExternalId`, and a `not-found` outcome is discarded.
-- `toRetrievalErrand` reads an out-of-range smallint as `kept-by-club`, the same as a null,
-  so such a row reads as "Myyntiin tai lahjoitukseen" rather than as a method it might not
-  be. Either way the disc is on the shelf and the line is on the list. The CHECK constraint
-  should make it impossible; if it ever happens, a corrupt row claims the club is keeping a
-  disc its owner asked for, and only the answers inbox would say otherwise.
+- `toRetrievalErrand` gives an out-of-range smallint **its own reading**, `unclear`, and the
+  card says "Noutotapa epäselvä – tarkista viestit". It used to be read as `kept-by-club`,
+  the same as a null, which had a corrupt row calmly asserting that a disc its owner had
+  asked for was going to the bring-and-buy table. The CHECK constraint should make the value
+  impossible either way; the difference is what the page does if it ever appears, and
+  "I do not know, go and look" is the only honest one. A released disc keeps that reading
+  too: `toListedErrand` carries an unreadable row through as the request the disposal
+  overruled (`superseded`), rather than folding it into "no request" — which is how the
+  first attempt at this lost it on the one page it was written for. The disc is on the shelf in all three
+  readings, so the line is on the list in all three. The type says the same thing:
+  `RetrievalErrand` is what a write may ask for, `StoredErrand` is what a row may turn out
+  to say, and only the second has the third case.
+- **A converted errand keeps its place in the order.** The list is newest request first,
+  and a conversion — the club releasing a disc its owner had asked for in July — leaves
+  `requested_at` alone, so that line stays where July put it rather than jumping to the top.
+  That is the order working as asked ("by the date the retrieval request was made"), not a
+  bug: the errand is as old as the first time it was asked for, and the club's decision
+  changes what to do with the disc, not when it was wanted. It does mean a disc marked for
+  sale today can sit near the bottom of a long list. Nothing hides it — the admin has just
+  marked it — but if that ever needs to change, it needs a column: `requested_at` cannot
+  carry both dates, and ordering on the disposal date would need a second one on the row.
 - A disc on the list because its owner gave it up, but not yet marked released, is still
   on the disc list — and its storage icon is orange with no method preselected. That is
   the window between reading the answers inbox and making the mark; it closes as soon as

@@ -17,7 +17,7 @@ import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
 import NumberSearch from '~/ui/NumberSearch';
 import { getDiscCourseNames } from '~/config/courses';
-import type { RetrievalErrand } from '~/features/discs/retrieval/retrievalErrand';
+import type { StoredErrand } from '~/features/discs/retrieval/retrievalErrand';
 
 export default function DiscListPage(): JSX.Element {
   const fetcher = useFetcher();
@@ -44,7 +44,7 @@ export default function DiscListPage(): JSX.Element {
   const distinctCourses: string[] = fetcher.data?.distinctCourses ?? [];
   const emptyingLogItems: EmptyingLogDTO[] = fetcher.data?.emptyingLogItems ?? [];
   // Null both before the first load and for a visitor who is not signed in.
-  const pendingRetrievals: Record<string, RetrievalErrand> | null = fetcher.data?.pendingRetrievals ?? null;
+  const pendingRetrievals: Record<string, StoredErrand> | null = fetcher.data?.pendingRetrievals ?? null;
 
   const changeHandler = (e: any): void => {
     if (e.target.value.length > 2) {
