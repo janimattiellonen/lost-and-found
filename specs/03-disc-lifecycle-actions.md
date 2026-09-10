@@ -67,7 +67,8 @@ Transitions:
                   +-- a later request inserts a NEW row (history keeps both)
 
    Listed/Released --- mark disposal, or the owner answers "keep it"
-                       ---> an open row with no method
+                       ---> an open row, with no method if there was none
+                            (an existing request is left as it is)
 
    Marking a listed disc returned or archived silently drops any open retrieval
    row off the list (it is filtered out, never closed). Releasing it for sale or
@@ -103,6 +104,10 @@ Course is not a state; `setDiscCourse` can run in any state.
    (minulta)" for a disc going back to its owner and "Myyntiin tai lahjoitukseen" for one
    the club is keeping, which is all that separates them. The card is the same otherwise,
    phone number included — the owner of a disc being sold is still who to ask about it.
+   A disc the club has released **while its owner had an open request** carries one more
+   line, in amber: "Huom! Omistaja on pyytänyt kiekkoa: Postitus". Both facts are true and
+   they disagree, so the card shows both rather than only the newer one — that line is how
+   the admin knows to send a message before the disc reaches the bring-and-buy table.
 7. When the retrieval list has pending rows, the admin menu item shows the count
    (`loadRetrievalCount.server.ts`); it is absent only when nobody is signed in.
 8. When a disc's owner answers on the sms link, the disc appears on the retrieval list by
@@ -153,9 +158,12 @@ not columns on `discs`:
   not going to an owner at all
 - CHECK `retrieval_method IS NULL OR retrieval_method IN (0,1)`
   (`20260910000000_retrieval_for_disposal.sql`, replacing the `NOT NULL` and the
-  values-only CHECK). **NULL is the whole of how the two kinds of errand are told apart**:
-  a disc the club is keeping is not going to an owner, so it has no handover method. No
-  other writer produces NULL, and every row written before that date has a method.
+  values-only CHECK). NULL means the row itself names no handover: a disc the club is
+  keeping is not going to an owner. It is not the _whole_ of how the two kinds are told
+  apart, though — a disc released while its owner's request was open keeps that request on
+  the row, so the page reads `discs.can_be_sold_or_donated` first and the row's method
+  second. `toListedErrand()` is the one place that pair is turned into what the card
+  shows. Every row written before that date has a method.
 - CHECK `retrieved_at >= requested_at`; partial UNIQUE index on `disc_id WHERE retrieved_at IS NULL`
 - RLS (row level security — the PostgreSQL feature that decides, row by row, whether a
   database role may read or write it): `authenticated` only, all four verbs; nothing for
@@ -186,8 +194,10 @@ decoded once on the way out of the database into `RetrievalErrand`
 (`retrieval/retrievalErrand.ts`), a two-case union — `{ kind: 'to-owner'; method }` or
 `{ kind: 'kept-by-club' }` — so nothing downstream carries a nullable method that could be
 read as either fact. `toRetrievalErrand()` is the one place that decode happens, so the
-two queries reading the table cannot disagree about it, and `retrievalErrandLabel()` — both
-in the same file — is what puts the fixed "Myyntiin tai lahjoitukseen" on the card; `DisposalMethod` says which of the two the club
+two queries reading the table cannot disagree about it. `toListedErrand()` wraps it for the
+list page, where the disc's own release flag overrules the row, and `retrievalErrandLabel()`
+— all three in the same file — is what puts the fixed "Myyntiin tai lahjoitukseen" on the
+card; `DisposalMethod` says which of the two the club
 intends, on the disc itself, and the retrieval list does not show it.
 
 `RetrievalMethod` is **not its own enum**: it is `HandoverMethod`
@@ -237,13 +247,18 @@ All five JSON routes are resource routes (no component) delegating to a
   also means a disc marked released while its owner's request was open stays on the list
   rather than vanishing off it.
 - **Every write to the list is `queryRequestRetrievals.server.ts`**: resolve the external
-  ids to this club's disc ids, set the method on whatever open rows exist, insert a row for
-  the rest. One function rather than one per caller, since the update-or-insert and its
-  ordering are the whole of what this feature has to get right. It takes a set of ids and a
-  method that may be null — null being a disc the club is keeping — so the admin's "Lisää
-  noutolistalle" passes one id and a method, and a disposal passes the selection and null.
-  It returns how many discs this club actually had, which is how `handleRetrievalRequest`
-  answers 404 for another club's id.
+  ids to this club's disc ids, read which of them already have an open row, write the method
+  onto those (for a `to-owner` errand only — see the next-but-one bullet), and insert a row
+  for the rest. One function rather than one per caller, since the write and its ordering
+  are the whole of what this feature has to get right. It takes a set of ids and a
+  `RetrievalErrand`, so the admin's "Lisää noutolistalle" passes one id and `to-owner` with
+  a method, and a disposal passes the selection and `kept-by-club`. It returns how many
+  discs this club actually had, which is how `handleRetrievalRequest` answers 404 for
+  another club's id.
+- The insert **tolerates a unique violation** (`23505`) rather than reporting it: between
+  reading the open rows and inserting, an owner can answer the link and their errand land
+  first. The disc is then on the list, which is all the write was asked to achieve, so
+  calling it a failure would tell the admin his mark went wrong when it did not.
 - **The disposal errand is written next to the mark**, through
   `queryRequestDisposalRetrievals.server.ts` — the write above plus the message for a
   half-done state — called from `handleDisposalRequest` with one external id and from
@@ -256,11 +271,23 @@ All five JSON routes are resource routes (no component) delegating to a
   failed, because it knows how many discs it was asked about. A plain failure would read as
   "nothing happened", and the disc is marked — and once it is, it is off the disc list, so the
   storage icon is no longer there to add the errand by hand. The recovery is SQL.
-- A disc already on the list when it is released has its open row **converted** rather
-  than duplicated: the method is cleared, `requested_at` and `owner_response_id` are left
-  alone. The reverse conversion is the same function called with a method, which writes it
-  onto whatever open row is there. Either way there is one open errand per
-  disc, which is what the partial unique index already promised.
+- A disc already on the list when it is released **keeps its open row exactly as it was**.
+  The club deciding to sell a disc does not unsay what its owner asked for, and until
+  2026-09-10 the mark cleared `retrieval_method`, so an owner's "Postitus" vanished with
+  nothing on any page to say it ever existed. The row is now left alone and the page decides
+  what to show: `queryRetrievalList` reads `discs.can_be_sold_or_donated`, and a released
+  disc reads as `kept-by-club` whatever its row says, with the row's own method carried
+  beside it as `supersededMethod` for the amber line. `requested_at` and `owner_response_id`
+  were always left alone.
+- The **opposite** direction does write: an admin picking a method for a disc the club had
+  been keeping is him saying it goes back to its owner after all, and that is the newest
+  word about where the disc is going. So `to-owner` writes onto an open row and
+  `kept-by-club` does not — the asymmetry is deliberate and lives in one `if` in
+  `queryRequestRetrievals.server.ts`. Either way there is one open errand per disc, which is
+  what the partial unique index already promised.
+- An owner answering the link twice still overwrites their own earlier answer, in
+  `submit_owner_response()`. That is the same owner changing their own mind, not the club
+  overruling them.
 - **The retrieval list is not gated on the club.** It was until 2026-09-04, by
   `isRetrievalListEnabled()` in `app/config/clubs.ts`; that function and all five of its
   call sites are gone. The reasoning it was built on — that only Talin stores discs

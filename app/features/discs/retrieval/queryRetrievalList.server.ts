@@ -1,12 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { queryPendingRetrievals } from './queryPendingRetrievals.server';
-import { toRetrievalErrand } from './retrievalErrand';
+import { toListedErrand } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
 
 /** What the page shows of the disc behind a request. */
 const LIST_COLUMNS =
-  'requested_at, retrieval_method, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number, added_at)';
+  'requested_at, retrieval_method, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number, added_at, can_be_sold_or_donated)';
 
 /**
  * What the select above reads back.
@@ -25,6 +25,7 @@ type Row = {
     owner_name: string | null;
     owner_phone_number: string | null;
     added_at: string | null;
+    can_be_sold_or_donated: boolean;
   };
 };
 
@@ -48,13 +49,13 @@ export async function queryRetrievalList(supabase: SupabaseClient): Promise<Retr
   }
 
   return ((data ?? []) as unknown as Row[]).map((row) => ({
+    ...toListedErrand(row.retrieval_method, row.discs.can_be_sold_or_donated),
     externalId: row.discs.external_id,
     discName: row.discs.disc_name,
     discColour: row.discs.disc_colour,
     addedAt: row.discs.added_at ?? null,
     ownerName: row.discs.owner_name ?? null,
     ownerPhoneNumber: row.discs.owner_phone_number ?? null,
-    errand: toRetrievalErrand(row.retrieval_method),
     requestedAt: row.requested_at,
   }));
 }

@@ -16,8 +16,12 @@
 -- owner. Nothing else writes NULL, so the list can read it as exactly that.
 --
 -- The one open row per disc stays the invariant it always was: a disc asked for
--- and then marked sold has that row's method cleared rather than a second row
--- inserted, which is the same update-or-insert queryRequestRetrieval does.
+-- and then marked sold keeps its single open row rather than gaining a second.
+--
+-- (Written when the disposal mark cleared that row's method. It no longer does:
+-- the owner's request is left on the row and the page reads the disc's own
+-- can_be_sold_or_donated to decide what to show. The schema is unchanged either
+-- way -- this comment is corrected rather than the statement below.)
 ALTER TABLE public.disc_retrievals
   ALTER COLUMN retrieval_method DROP NOT NULL;
 

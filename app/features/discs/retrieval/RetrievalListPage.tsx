@@ -1,6 +1,7 @@
 import { Form } from 'react-router';
 
 import { retrievalErrandLabel } from './retrievalErrand';
+import { retrievalMethodLabel } from './retrievalMethod';
 import type { RetrievalListDisc } from './discRetrieval';
 import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -48,6 +49,7 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
   // What is to be done with this one: the method its owner asked for, or that
   // the club is keeping it.
   const errand = retrievalErrandLabel(disc.errand);
+  const { supersededMethod } = disc;
 
   return (
     <Paper className="mb-4 max-w-2xl p-4">
@@ -58,6 +60,17 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
           </span>
 
           {errand && <span className="text-sm text-gray-600">{errand}</span>}
+
+          {/* The club has decided to keep a disc its owner had asked for. Both
+              facts are true and they disagree, so the card says both rather
+              than quietly showing the newer one: this is the line that tells
+              the admin there is a message to send before the disc goes to the
+              bring-and-buy table. */}
+          {supersededMethod !== null && (
+            <span className="text-sm font-bold text-amber-700">
+              Huom! Omistaja on pyytänyt kiekkoa: {retrievalMethodLabel(supersededMethod)}
+            </span>
+          )}
 
           {/* A link rather than plain digits: the number is here to be texted
               from the same phone the list is read on, so it opens a message to

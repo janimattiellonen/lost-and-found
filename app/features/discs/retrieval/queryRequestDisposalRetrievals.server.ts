@@ -19,8 +19,9 @@ function failureMessage(count: number): string {
  * list. They are off the public list but still on the shelf, and somebody has
  * to go and get them.
  *
- * The write itself is the ordinary one, with no method — a disc the club is
- * keeping is not going back to an owner, so there is nothing to say about how.
+ * The write itself is the ordinary one, as a `kept-by-club` errand: a disc
+ * already on the list because its owner asked for it keeps that request intact,
+ * since the club deciding to sell a disc does not unsay what its owner wanted.
  * What this adds is the message for the half-done state: the mark and the
  * errand are two writes and not one transaction, and an admin told only
  * "failed" would try the mark again, which is not what he needs.
@@ -31,7 +32,7 @@ function failureMessage(count: number): string {
  */
 export async function queryRequestDisposalRetrievals(supabase: SupabaseClient, externalIds: string[]): Promise<void> {
   try {
-    await queryRequestRetrievals(supabase, { externalIds, retrievalMethod: null });
+    await queryRequestRetrievals(supabase, { externalIds, errand: { kind: 'kept-by-club' } });
   } catch (error) {
     // The admin gets the sentence he can act on; the database's own words stay
     // reachable as the cause rather than being dropped on the floor.

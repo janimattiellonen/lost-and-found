@@ -15,7 +15,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 
 ### Added
 
-- A disc marked for sale or donation goes onto the retrieval list, so it is fetched off the shelf with everything else waiting to be picked up; it reads "Myyntiin tai lahjoitukseen" instead of a handover method.
+- A disc marked for sale or donation goes onto the retrieval list, so it is fetched off the shelf with everything else waiting to be picked up; it reads "Myyntiin tai lahjoitukseen" instead of a handover method. If its owner had already asked for that disc, the list says so in amber — the sale does not quietly bury the request.
 - An owner who gives their disc up from the link in the message puts it on the retrieval list too, the way asking for it back already did.
 
 ### Changed

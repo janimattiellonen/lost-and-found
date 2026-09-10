@@ -49,3 +49,33 @@ export function retrievalErrandMethod(errand: RetrievalErrand | null): Retrieval
 export function toRetrievalErrand(retrievalMethod: number | null): RetrievalErrand {
   return isRetrievalMethod(retrievalMethod) ? { kind: 'to-owner', method: retrievalMethod } : { kind: 'kept-by-club' };
 }
+
+/** One line of the list: what to do with the disc, and what that overruled. */
+export type ListedErrand = {
+  errand: RetrievalErrand;
+  /**
+   * The method still on the row when the club has since decided to keep the
+   * disc — the request the decision overruled. Null when there is nothing to
+   * disagree about.
+   */
+  supersededMethod: RetrievalMethodValue | null;
+};
+
+/**
+ * What the retrieval list shows for one row.
+ *
+ * The row alone cannot answer this. A disc released for sale or donation is not
+ * going back to anybody whatever its own row says, and since 2026-09-10 the
+ * mark deliberately leaves that row alone rather than clearing it — so the
+ * disc's `can_be_sold_or_donated` decides what is to be done, and the row's
+ * surviving method becomes the request that decision overruled.
+ */
+export function toListedErrand(retrievalMethod: number | null, keptByClub: boolean): ListedErrand {
+  const fromRow = toRetrievalErrand(retrievalMethod);
+
+  if (!keptByClub) {
+    return { errand: fromRow, supersededMethod: null };
+  }
+
+  return { errand: { kind: 'kept-by-club' }, supersededMethod: retrievalErrandMethod(fromRow) };
+}

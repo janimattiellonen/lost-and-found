@@ -30,7 +30,7 @@ export async function handleRetrievalRequest(request: Request): Promise<Response
     // scopes the write is what reports it.
     const affected = await queryRequestRetrievals(createSupabaseServerClient(request), {
       externalIds: [externalId],
-      retrievalMethod,
+      errand: { kind: 'to-owner', method: retrievalMethod },
     });
 
     if (affected === 0) {

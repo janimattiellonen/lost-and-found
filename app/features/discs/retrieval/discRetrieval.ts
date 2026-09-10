@@ -25,6 +25,12 @@ export type RetrievalListDisc = {
   ownerPhoneNumber: string | null;
   /** What is to be done with the disc once it is off the shelf. */
   errand: RetrievalErrand;
+  /**
+   * What the owner had asked for before the club decided to keep the disc, when
+   * those two disagree. Null the rest of the time — including when the owner
+   * gave the disc up themselves, since then there is nothing to disagree about.
+   */
+  supersededMethod: RetrievalMethodValue | null;
   /** ISO timestamp of the request. */
   requestedAt: string;
 };
