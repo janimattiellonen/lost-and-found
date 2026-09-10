@@ -39,6 +39,9 @@ type MarkInput = {
 /**
  * Applies a mark to the selection: which columns and which method both come
  * from the action's own row in the batch action table.
+ *
+ * A disposal mark also writes the retrieval errands, so this reports how many
+ * discs it reached only once both halves are done.
  */
 async function applyMark(request: Request, { mark, externalIds, date }: MarkInput): Promise<number> {
   if (mark.columns === 'return') {
@@ -58,13 +61,10 @@ async function applyMark(request: Request, { mark, externalIds, date }: MarkInpu
   // batch that is already on the list clears its method rather than adding a
   // second errand, the same as the single mark does.
   //
-  // The two writes are not one transaction, so a failure here is reported as
-  // what it is: the discs are marked, and it is the list that is short.
-  try {
-    await queryRequestDisposalRetrievals(createSupabaseServerClient(request), externalIds);
-  } catch {
-    throw new Error('Kiekot merkittiin, mutta noutolistalle lisääminen epäonnistui.');
-  }
+  // The two writes are not one transaction, so a failure here surfaces as what
+  // it is — the discs are marked and it is the list that is short — in the
+  // message the query throws.
+  await queryRequestDisposalRetrievals(createSupabaseServerClient(request), externalIds);
 
   return affected;
 }

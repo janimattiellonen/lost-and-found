@@ -33,14 +33,14 @@ knew both facts.
 A disc's state is not one column. It is the combination of three flags/timestamps on
 `discs` plus the presence of an open row in `disc_retrievals`.
 
-| State                      | How it is stored                                                                                           | Public list shows it?   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------- |
-| Listed (default)           | `is_returned_to_owner = false`, `can_be_sold_or_donated = false`, `archived_at IS NULL`                    | yes                     |
-| Returned to owner          | `is_returned_to_owner = true` + `returned_to_owner_date` + `return_method`                                 | no                      |
-| Released for sale/donation | `can_be_sold_or_donated = true` + `can_be_sold_or_donated_date` + `can_be_sold_or_donated_method`          | no                      |
-| Archived                   | `archived_at` set                                                                                          | no                      |
-| Deleted                    | row gone (`disc_retrievals` cascades)                                                                      | no                      |
-| On the retrieval list      | orthogonal: an open `disc_retrievals` row (`retrieved_at IS NULL`) on a disc not returned and not archived | yes, with an extra icon |
+| State                      | How it is stored                                                                                           | Public list shows it?                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Listed (default)           | `is_returned_to_owner = false`, `can_be_sold_or_donated = false`, `archived_at IS NULL`                    | yes                                                                                                         |
+| Returned to owner          | `is_returned_to_owner = true` + `returned_to_owner_date` + `return_method`                                 | no                                                                                                          |
+| Released for sale/donation | `can_be_sold_or_donated = true` + `can_be_sold_or_donated_date` + `can_be_sold_or_donated_method`          | no                                                                                                          |
+| Archived                   | `archived_at` set                                                                                          | no                                                                                                          |
+| Deleted                    | row gone (`disc_retrievals` cascades)                                                                      | no                                                                                                          |
+| On the retrieval list      | orthogonal: an open `disc_retrievals` row (`retrieved_at IS NULL`) on a disc not returned and not archived | only if still listed: a listed disc shows with an extra icon, a released one shows nowhere but `/retrieval` |
 
 Transitions:
 
@@ -116,8 +116,9 @@ Course is not a state; `setDiscCourse` can run in any state.
 9. When an admin marks a disc "myytäväksi tai lahjoitettavaksi", the disc leaves the disc
    list and appears on the retrieval list, whether it was marked one at a time or as part
    of a batch selection. Nothing is asked of the admin at the point of marking; the errand
-   is written by the same code path that writes an admin's "Lisää noutolistalle", straight
-   after the mark. Only discs marked from 2026-09-10 onwards: the migration backfills
+   is written straight after the mark by `queryRequestDisposalRetrievals.server.ts`, which
+   makes the same update-or-insert an admin's "Lisää noutolistalle" makes, over a set of
+   discs instead of one. Only discs marked from 2026-09-10 onwards: the migration backfills
    nothing, on the grounds that a list opening with every disc ever released is one nobody
    reads.
 10. The intro paragraph on `/retrieval` names no place: "Kiekot, joita ei ole vielä haettu:

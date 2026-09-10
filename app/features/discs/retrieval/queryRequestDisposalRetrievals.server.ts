@@ -1,6 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { currentClubId } from '~/config/clubs';
+import { queryDiscIdsByExternalIds } from './queryDiscIdsByExternalIds.server';
+
+/**
+ * What the admin is told when the discs were marked but the errand was not
+ * written. Thrown from here rather than composed by each caller: the two
+ * disposal routes differ in how they answer, not in what went wrong, and the
+ * singular and the plural of the same sentence drifted apart when both had a
+ * copy.
+ */
+function failureMessage(count: number): string {
+  return count === 1
+    ? 'Kiekko merkittiin, mutta noutolistalle lisääminen epäonnistui.'
+    : 'Kiekot merkittiin, mutta noutolistalle lisääminen epäonnistui.';
+}
 
 /**
  * Puts discs the club has just released for sale or donation on the retrieval
@@ -16,11 +29,10 @@ import { currentClubId } from '~/config/clubs';
  * what happens to the disc once it is in hand.
  *
  * Takes the external ids the mark was asked for rather than the ones it
- * changed. Resolving them here is also what scopes the write to APP_CLUB_ID, so
- * an id from another club drops out on the way in and gets no errand.
+ * changed; the club-scoped lookup drops anything this club does not have.
  */
 export async function queryRequestDisposalRetrievals(supabase: SupabaseClient, externalIds: string[]): Promise<void> {
-  const discIds = await queryDiscIds(supabase, externalIds);
+  const discIds = await queryDiscIdsByExternalIds(supabase, externalIds);
 
   if (discIds.length === 0) {
     return;
@@ -34,7 +46,7 @@ export async function queryRequestDisposalRetrievals(supabase: SupabaseClient, e
     .select('disc_id');
 
   if (updateError) {
-    throw new Error(`Noutolistalle lisääminen epäonnistui: ${updateError.message}`);
+    throw new Error(failureMessage(externalIds.length));
   }
 
   const alreadyOnList = new Set((updated ?? []).map((row) => row.disc_id as number));
@@ -47,21 +59,6 @@ export async function queryRequestDisposalRetrievals(supabase: SupabaseClient, e
   const { error: insertError } = await supabase.from('disc_retrievals').insert(rows);
 
   if (insertError) {
-    throw new Error(`Noutolistalle lisääminen epäonnistui: ${insertError.message}`);
+    throw new Error(failureMessage(externalIds.length));
   }
-}
-
-/** The numeric ids of the given discs that belong to this club. */
-async function queryDiscIds(supabase: SupabaseClient, externalIds: string[]): Promise<number[]> {
-  const { data, error } = await supabase
-    .from('discs')
-    .select('id')
-    .in('external_id', externalIds)
-    .eq('club_id', currentClubId());
-
-  if (error) {
-    throw new Error(`Kiekkojen haku epäonnistui: ${error.message}`);
-  }
-
-  return (data ?? []).map((row) => row.id as number);
 }

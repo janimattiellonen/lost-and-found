@@ -5,9 +5,6 @@ import { queryRequestDisposalRetrievals } from '~/features/discs/retrieval/query
 import { markForDisposal } from '~/models/discs.server';
 import { createSupabaseServerClient } from '~/models/utils';
 
-/** What the admin is told when the disc was marked but the errand was not written. */
-const RETRIEVAL_FAILURE = 'Kiekko merkittiin, mutta noutolistalle lisääminen epäonnistui.';
-
 /** Authorises, validates and applies a disposal posted to /discs/disposal. */
 export async function handleDisposalRequest(request: Request): Promise<Response> {
   const gate = await requireAdminJson(request);
@@ -49,13 +46,17 @@ export async function handleDisposalRequest(request: Request): Promise<Response>
     // club never released would be a trip for nothing.
     //
     // Its own catch, because the two writes are not one transaction and the
-    // admin has to be told which half happened. Reporting a plain failure would
-    // be worse than either: the disc is marked, so a second attempt at the mark
-    // is not what he needs.
+    // admin has to be told which half happened — the message comes from the
+    // query, which knows how many discs it was asked about. Reporting a plain
+    // failure would be worse than either: the disc is marked, so a second
+    // attempt at the mark is not what he needs.
     try {
       await queryRequestDisposalRetrievals(createSupabaseServerClient(request), [externalId]);
-    } catch {
-      return Response.json({ error: RETRIEVAL_FAILURE }, { status: 500 });
+    } catch (retrievalError) {
+      const message =
+        retrievalError instanceof Error ? retrievalError.message : 'Noutolistalle lisääminen epäonnistui.';
+
+      return Response.json({ error: message }, { status: 500 });
     }
 
     return Response.json({ marked: true });
