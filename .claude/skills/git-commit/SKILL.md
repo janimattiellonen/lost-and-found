@@ -82,7 +82,7 @@ git add -p
 
 **Never commit secrets** (.env, credentials.json, private keys).
 
-**Never commit using `git -a`
+\*\*Never commit using `git -a`
 
 ### 3. Generate Commit Message
 

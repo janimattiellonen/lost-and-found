@@ -15,6 +15,16 @@ the code once lint, typecheck and tests are green.
 The full workflow and the writing rules live in the `specs` skill — read it
 before touching anything in `specs/`.
 
+## Every pull request updates the changelog
+
+`CHANGELOG.md` is part of the deliverable, not an afterthought: before a branch is
+opened as a pull request, its user-visible changes get a line under
+`## [Unreleased]`, committed on the branch so the entry is reviewed with the code.
+Nothing writes the changelog after a merge.
+
+The entry style, what earns a line, and the month roll-up ritual live in the
+`changelog` skill — read it before editing `CHANGELOG.md`.
+
 ## Names are English, Finnish is for the user
 
 Every identifier is English: route paths and route files, components, functions,

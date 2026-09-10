@@ -30,6 +30,19 @@ Here are some example lines (fake phonenumbers):
 The new page is of course only available for a signed in person and whatever actions the page holds.
 I should also be able to mark the discs as retrieved -> disc is removed from the retrieval list
 
-When there are discs on the retrieval list, show tye amount of items on the list in parentheses after the
+When there are discs on the retrieval list, show the amount of items on the list in parentheses after the
 "Noutolista" menu item. It allows me to quickly see if there are something I need to retrieve.
 This menu item is of course only visible if I'm signed in.
+
+
+## Updates
+
+New branch.
+
+When I mark a disc to be sold or donated, I would like the disc to also show up on the /retrieval page.
+If a disc owner uses the provided link to do the same, his disc should also show up on the /retrieval page.
+
+If an owner uses the provided link to mark his disc to be sold or donated, I can see it on the /responses
+page. If I mark a disc to be sold or donated, I have to keep a record of it myself.
+
+By finding the disc on the /retrieval page, makes it easier for me to keep track.
