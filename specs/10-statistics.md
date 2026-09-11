@@ -36,6 +36,13 @@ everything is computed in the browser from one fetch of the club's discs.
    below it breaking that month down by day; the clicked bar turns blue.
 7. "Top 10 kadotettua kiekkomallia" (top 10 most-lost disc models) — a
    horizontal bar chart of the ten most frequent `disc_name` values.
+8. Under that title sits a checkbox, "Ryhmittele kiekon nimen mukaan" (group by
+   disc name), off by default. When it is ticked, then the chart counts by disc
+   model instead of by the exact stored string: "Destroyer, Star",
+   "Destroyer, Halo" and "destroyer" become one bar, labelled with whichever
+   spelling of the model occurs most often in the group. The choice is component
+   state only — nothing is stored, and reloading the page returns to the
+   unticked chart.
 
 ## Data source
 
@@ -91,7 +98,35 @@ never sees it.
 | ------------------------------ | -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
 | Seuralle palautetut kiekot     | `DiscsReturnedToClub.tsx`  | Discs taken into the club's inventory                           | `addedAt`                                                                            | `"<month0>.<year>"` key, i.e. month within a year; drill-down by day of month     |
 | Omistajille palautetut kiekot  | `DiscsReturnedToOwner.tsx` | Discs with `isReturnedToOwner` **and** a resolvable return date | `returnedToOwnerDate`, falling back to a leading `d.M.yyyy` in `returnedToOwnerText` | `date-fns` month number **only — no year** (see gaps); drill-down by day of month |
-| Top 10 kadotettua kiekkomallia | `MostLostByDiscName.tsx`   | Row count per `discName`                                        | exact `discName` string                                                              | none — all time                                                                   |
+| Top 10 kadotettua kiekkomallia | `MostLostByDiscName.tsx`   | Row count per `discName`                                        | exact `discName` string, or the model name alone when grouping is on                 | none — all time                                                                   |
+
+### Grouping by disc name
+
+Admins type a disc as mould first, plastic after a comma — "Destroyer, Star".
+On 2026-09-11, `select disc_name from discs where club_id = 1` returned 1770
+rows, 1483 of which contain a comma; the grouping is built on that shape.
+`getTopLostDiscsByDiscName` in `statsUtils.ts` therefore:
+
+- takes everything before the first comma as the model name, accepting a full
+  stop in the comma's place because a few rows read "Essence. NEO";
+- collapses runs of whitespace, so a name typed with a stray double space is
+  the same model as one without;
+- compares the result in lower case, which is what merges "Destroyer",
+  "destroyer" and "DEstroyer";
+- labels the bar with whichever spelling occurs most often in the group — 40
+  "Destroyer" and one "DEstroyer" read "Destroyer" — falling back to the
+  first-seen spelling when two are equally common.
+
+A name that is nothing but a separator ("`, Star`") keeps its original text
+rather than collapsing into an empty bar. On the live data the checkbox takes
+the chart from 764 distinct entries to 430, and the top bar from
+"Destroyer, Star" at 75 to "Destroyer" at 110.
+
+The dictionary of real mould and plastic names in
+`app/features/discs/submission/parser/` is deliberately **not** used here.
+Grouping on the comma needs no vocabulary to maintain and no cross-feature
+import, and it covers the stored data; what it does not cover is listed under
+known gaps.
 
 Shared helpers are in `app/features/stats/statsUtils.ts`
 (`mapBySeparator` → `sortMappedData` → `getAddedDiscCountByMonth` /
@@ -130,6 +165,9 @@ daily ones.
   `can_be_sold_or_donated_method` holds. No live row has a method set while the
   flag is false, and nothing enforces that; such a disc would be left out of the
   breakdown entirely, exactly as it is already left out of the headline.
+- Grouping never looks past the first comma or full stop, so a two-word mould
+  such as "Night Trooper" or "Sea Serpent" survives whole — there is no attempt
+  to tell a plastic from part of a name.
 - Phone numbers are not selected at all here (the `owner_phone_number` masking
   in `getDiscsForStats` is dead code for the current select list).
 - The whole club's disc table crosses the wire on every page load, and every
@@ -151,9 +189,19 @@ daily ones.
   the filtered set, so a disc with a parsable return note but
   `isReturnedToOwner = false` appears in the day chart though not in the month
   chart.
-- `MostLostByDiscName` groups on the raw `discName`, so casing and spelling
-  variants ("Destroyer" vs "destroyer") count as different models, and ties at
-  the tenth place are broken arbitrarily.
+- With grouping off, `MostLostByDiscName` groups on the raw `discName`, so
+  casing and spelling variants ("Destroyer" vs "destroyer") count as different
+  models. Ties at the tenth place are broken arbitrarily either way — the sort
+  is by count only, so which of two equal models is shown tenth depends on the
+  order the rows came back from the database.
+- Grouping by disc name only splits on a comma or a full stop. A plastic written
+  with a space — "Destroyer Star", "Method NEO" — stays its own model, and so
+  does a misspelt mould: case differences merge, but "Destroyer" and "Destoyer"
+  do not. Only a handful of live rows are written that way, and they cannot be
+  told apart from a genuine two-word mould without a vocabulary of real names.
+- A full stop is treated as a mistyped comma, so any mould whose name contains
+  one would be silently truncated at it. No such name is in the live data, and
+  nothing checks for one.
 - The two headline counts include archived and long-resolved discs, so they are
   all-time totals with no date range control. The method breakdowns inherit
   this.
@@ -161,9 +209,8 @@ daily ones.
   ones, so the visible split between the two known methods is drawn from a
   minority of the data and should not be read as the club's real ratio. Nothing
   backfills the old rows and nothing will: the information was never captured.
-- Of `statsUtils.ts`, only the two method breakdowns are covered by tests
-  (`statsUtils.test.ts`); the date-bucketing helpers and every stats component
-  are untested.
+- `statsUtils.test.ts` covers `getTopLostDiscsByDiscName` and the two method
+  breakdowns; nothing covers the date-bucketing helpers or any stats component.
 - Charts are unlabelled beyond the title; no empty state — a club with no data
   renders an empty chart frame. The method breakdowns are the same: with nothing
   sold, donated or returned they print "Myydään: 0" and "Lahjoitetaan: 0" under
