@@ -1,6 +1,6 @@
 import { markRefusal, requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
-import { isReturnMethod } from '~/features/discs/return/returnMethod';
+import { isReturnMethod } from '~/discMethods';
 import { markAsReturned } from '~/models/discs.server';
 
 /** Authorises, validates and applies a return posted to /discs/return. */

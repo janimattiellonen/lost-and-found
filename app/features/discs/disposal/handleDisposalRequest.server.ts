@@ -1,6 +1,6 @@
 import { markRefusal, requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
-import { isDisposalMethod } from '~/features/discs/disposal/disposalMethod';
+import { isDisposalMethod } from '~/discMethods';
 import { queryRequestDisposalRetrievals } from '~/features/discs/retrieval/queryRequestDisposalRetrievals.server';
 import { markForDisposal } from '~/models/discs.server';
 import { createSupabaseServerClient } from '~/models/utils';

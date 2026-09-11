@@ -18,6 +18,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - A disc marked for sale or donation goes onto the retrieval list, so it is fetched off the shelf with everything else waiting to be picked up; it reads "Myyntiin tai lahjoitukseen" instead of a handover method. If its owner had already asked for that disc, the list says so in amber — the sale does not quietly bury the request.
 - An owner who gives their disc up from the link in the message puts it on the retrieval list too, the way asking for it back already did.
 - Marking a bin emptied can record a day other than today: ticking "pvm" on a course's row opens a date picker, for when the bin was checked but logged later.
+- The statistics page breaks its two headline totals down by method: how many discs are waiting to be sold and how many donated, and how many went back to their owners by post and how many were picked up. Discs whose method was never filled in are shown as "Ei kirjattu" rather than dropped, so each breakdown still adds up to the total above it.
 
 ### Changed
 

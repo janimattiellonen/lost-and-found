@@ -17,12 +17,17 @@ everything is computed in the browser from one fetch of the club's discs.
 
 ## User-facing behaviour
 
-1. When an admin opens `/stats`, then two totals and three charts render from
-   the loader's disc array.
+1. When an admin opens `/stats`, then two totals with their method breakdowns,
+   and three charts, render from the loader's disc array.
 2. "Myytyjen / lahjoitettujen kiekkojen määrä" (number of sold/donated discs) —
-   a count of discs with `canBeSoldOrDonated`.
+   a count of discs with `canBeSoldOrDonated`, and under it a breakdown of that
+   same count by `canBeSoldOrDonatedMethod`: "Myydään" (to be sold),
+   "Lahjoitetaan" (to be donated), and — when any disc's method was never
+   filled in — "Ei kirjattu" (not recorded) for those.
 3. "Omistajille palautettujen kiekkojen määrä" (number of discs returned to
-   owners) — a count of discs with `isReturnedToOwner`.
+   owners) — a count of discs with `isReturnedToOwner`, and under it a breakdown
+   of that same count by `returnMethod`: "Postitettu" (posted), "Noudettu"
+   (picked up), and "Ei kirjattu" on the same condition.
 4. "Seuralle palautetut kiekot" (discs returned to the club) — a monthly bar
    chart of discs by `added_at`.
 5. "Omistajille palautetut kiekot" — a monthly bar chart of discs by the date
@@ -38,8 +43,8 @@ everything is computed in the browser from one fetch of the club's discs.
 
 ```
 select internal_disc_id, disc_name, can_be_sold_or_donated,
-       is_returned_to_owner, returned_to_owner_text, returned_to_owner_date,
-       added_at
+       can_be_sold_or_donated_method, is_returned_to_owner, return_method,
+       returned_to_owner_text, returned_to_owner_date, added_at
 from discs where club_id = APP_CLUB_ID order by added_at asc
 ```
 
@@ -47,6 +52,38 @@ from discs where club_id = APP_CLUB_ID order by added_at asc
   and deleted-flagged discs are all included** in every chart.
 - Club scoping is by the `APP_CLUB_ID` env var, read server-side.
 - Every count and grouping happens in JS, in the components, on each render.
+
+### The two method breakdowns
+
+Both methods are stored as smallints and both are nullable, so a breakdown has
+two lines when every disc has a method and three when any does not. The numbers
+are built by `getDisposalMethodCounts` and `getReturnMethodCounts` in
+`statsUtils.ts`, which count only the discs already counted in the headline
+above them — the lines therefore always add up to it.
+
+| Column                          | 0                      | 1                      | Enum                 |
+| ------------------------------- | ---------------------- | ---------------------- | -------------------- |
+| `can_be_sold_or_donated_method` | "Myydään" (to be sold) | "Lahjoitetaan"         | `app/discMethods.ts` |
+| `return_method`                 | "Postitettu" (posted)  | "Noudettu" (picked up) | `app/discMethods.ts` |
+
+The labels are read from those two enums rather than retyped here, so the
+statistics page and the disc table can never disagree about what a `1` means.
+Both enums moved out of `features/discs/` and into `app/discMethods.ts` for
+this: ESLint forbids one feature slice importing another, and they were already
+shared vocabulary — `app/types.ts` has always depended on them. They sit at the
+top level beside `types.ts` and `utils.ts` rather than in `app/lib/`, which is
+documented as plumbing with no domain in it.
+
+**Most rows have no method.** Neither column existed while the club ran on the
+Google Sheet, and the sheet import leaves both null. On 2026-09-11 the live
+table held 495 discs marked sold-or-donated — 107 "Myydään", 109
+"Lahjoitetaan" and 279 with nothing recorded — and 448 returned to owners, of
+which 39 "Postitettu", 105 "Noudettu" and 304 nothing. A breakdown that showed
+only the known methods would therefore have hidden more than half of each total
+and would not have summed to the headline printed directly above it, so the
+unrecorded discs are shown as their own "Ei kirjattu" line. That line is left
+out only when it would read zero, so a club that has always recorded the method
+never sees it.
 
 ## The charts
 
@@ -58,8 +95,9 @@ from discs where club_id = APP_CLUB_ID order by added_at asc
 
 Shared helpers are in `app/features/stats/statsUtils.ts`
 (`mapBySeparator` → `sortMappedData` → `getAddedDiscCountByMonth` /
-`getAddedDiscCountByDaysInMonth`, plus `getDonatedOrSoldDiscCount` and
-`getReturnedDiscCount`). Bars are sorted by date ascending; legends use
+`getAddedDiscCountByDaysInMonth`, plus `getDonatedOrSoldDiscCount`,
+`getReturnedDiscCount` and the two method breakdowns). Bars are sorted by date
+ascending; legends use
 `getMonthName(date, 'short')` in `fi-FI` for the monthly charts and `dd` for the
 daily ones.
 
@@ -72,6 +110,9 @@ daily ones.
   each chart via the `className` passed by the stats components.
 - `app/ui/HorizontalBarChart.tsx` — same `max + 30` width formula, fixed 10rem
   label column, no click handling.
+- `app/features/stats/MethodBreakdown.tsx` — the method lines under each total,
+  as a `<dl>` of label and count. It lives in the feature rather than `app/ui/`
+  because both its uses are on this one page.
 - Neither chart has an axis, a scale, or a value shown other than the number
   printed above/beside the bar; there is no charting library.
 
@@ -84,6 +125,11 @@ daily ones.
 ## Rules & constraints
 
 - Admin-only; the loader is the only authorization check.
+- Each method breakdown counts only the discs its headline counts — a disc is
+  in the disposal breakdown only if `can_be_sold_or_donated` is true, whatever
+  `can_be_sold_or_donated_method` holds. No live row has a method set while the
+  flag is false, and nothing enforces that; such a disc would be left out of the
+  breakdown entirely, exactly as it is already left out of the headline.
 - Phone numbers are not selected at all here (the `owner_phone_number` masking
   in `getDiscsForStats` is dead code for the current select list).
 - The whole club's disc table crosses the wire on every page load, and every
@@ -109,10 +155,25 @@ daily ones.
   variants ("Destroyer" vs "destroyer") count as different models, and ties at
   the tenth place are broken arbitrarily.
 - The two headline counts include archived and long-resolved discs, so they are
-  all-time totals with no date range control.
-- No tests cover `statsUtils.ts` or any stats component.
+  all-time totals with no date range control. The method breakdowns inherit
+  this.
+- The method is unrecorded on 56% of sold-or-donated discs and 68% of returned
+  ones, so the visible split between the two known methods is drawn from a
+  minority of the data and should not be read as the club's real ratio. Nothing
+  backfills the old rows and nothing will: the information was never captured.
+- Of `statsUtils.ts`, only the two method breakdowns are covered by tests
+  (`statsUtils.test.ts`); the date-bucketing helpers and every stats component
+  are untested.
 - Charts are unlabelled beyond the title; no empty state — a club with no data
-  renders an empty chart frame.
+  renders an empty chart frame. The method breakdowns are the same: with nothing
+  sold, donated or returned they print "Myydään: 0" and "Lahjoitetaan: 0" under
+  a zero, rather than saying there is nothing to show.
+- The headline "Myytyjen / lahjoitettujen kiekkojen määrä" is past tense (discs
+  that _were_ sold or donated) while the enum labels beneath it, "Myydään" and
+  "Lahjoitetaan", are what is _to_ happen to a disc the club has released. The
+  column records an intention, not a completed sale, so the labels are the
+  accurate half; the heading predates them and was left alone rather than
+  changed under an admin who knows it by sight.
 
 ## Open questions
 

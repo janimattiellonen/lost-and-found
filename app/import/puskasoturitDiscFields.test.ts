@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { DisposalMethod } from '~/features/discs/disposal/disposalMethod';
-import { ReturnMethod } from '~/features/discs/return/returnMethod';
+import { DisposalMethod } from '~/discMethods';
+import { ReturnMethod } from '~/discMethods';
 import type { DiscDTO } from '~/types';
 import {
   DISPOSAL_METHOD_DONATED,

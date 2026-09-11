@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { disposalMethodLabel } from '~/features/discs/disposal/disposalMethod';
-import { returnMethodLabel } from '~/features/discs/return/returnMethod';
+import { disposalMethodLabel, returnMethodLabel } from '~/discMethods';
 
 import {
   batchActionNotice,

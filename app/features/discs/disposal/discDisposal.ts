@@ -1,4 +1,4 @@
-import type { DisposalMethodValue } from './disposalMethod';
+import type { DisposalMethodValue } from '~/discMethods';
 
 /** What is recorded when a disc is released for sale or donation. */
 export type DiscDisposalDetails = {

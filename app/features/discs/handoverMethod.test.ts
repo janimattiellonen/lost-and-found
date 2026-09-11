@@ -8,7 +8,7 @@ import {
   isHandoverMethod,
   needsFetchingFromStorage,
 } from './handoverMethod';
-import { ReturnMethod } from './return/returnMethod';
+import { ReturnMethod } from '~/discMethods';
 
 describe('handoverMethod', () => {
   it('offers the three ways a disc can get back to its owner', () => {

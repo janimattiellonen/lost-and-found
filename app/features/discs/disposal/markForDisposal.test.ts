@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { DisposalMethod } from './disposalMethod';
+import { DisposalMethod } from '~/discMethods';
 import { markForDisposal } from './markForDisposal';
 
 const input = {

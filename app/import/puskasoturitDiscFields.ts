@@ -9,7 +9,7 @@ import type { DiscDTO } from '~/types';
  * simply yields null, and the original text is stored alongside regardless.
  *
  * The two method maps repeat the numbers from
- * ~/features/discs/return/returnMethod and ~/features/discs/disposal/disposalMethod
+ * ~/discMethods and ~/discMethods
  * rather than importing them, so this module (and the import script that uses
  * it) stays free of `~/` runtime imports and runs under plain `node`. The
  * accompanying test asserts the numbers still match those enums.
