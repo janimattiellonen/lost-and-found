@@ -71,9 +71,9 @@ async function applyMark(request: Request, { mark, externalIds, date }: MarkInpu
   });
 
   // Every disc released for sale or donation is one to fetch off the shelf, a
-  // selection of fifty as much as a single row action. Marking a disc from the
-  // batch that is already on the list clears its method rather than adding a
-  // second errand, the same as the single mark does.
+  // selection of fifty as much as a single row action. A disc from the batch
+  // that is already on the list keeps its open row exactly as it was rather
+  // than gaining a second errand, the same as the single mark does.
   //
   // Nothing was marked, so there is nothing to fetch and nothing to warn about:
   // the shortfall the report already names is the whole story.
