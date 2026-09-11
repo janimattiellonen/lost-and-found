@@ -189,3 +189,76 @@ function countByMethod(
 
   return notRecorded > 0 ? [...counts, { label: 'Ei kirjattu', value: notRecorded }] : counts;
 }
+
+export type DiscNameStat = {
+  label: string;
+  value: number;
+};
+
+export type TopLostDiscsOptions = {
+  /** Count "Destroyer, Star" and "destroyer" as the same model. */
+  groupByDiscName?: boolean;
+  limit?: number;
+};
+
+/**
+ * Counts how often each disc model was lost, most-lost first.
+ *
+ * Without `groupByDiscName` the stored string is the model, so "Destroyer, Star"
+ * and "Destroyer, Halo" are two entries. With it, everything from the first
+ * comma onwards is dropped as the plastic and the remainder is matched
+ * case-insensitively, which is what folds the two into one "Destroyer".
+ */
+export function getTopLostDiscsByDiscName(data: DiscDTO[], options: TopLostDiscsOptions = {}): DiscNameStat[] {
+  const groups = new Map<string, { value: number; spellings: Map<string, number> }>();
+
+  data.forEach((item: DiscDTO) => {
+    const spelling = options.groupByDiscName ? getDiscModelName(item.discName) : item.discName;
+    const key = options.groupByDiscName ? spelling.toLowerCase() : spelling;
+
+    const group = groups.get(key) ?? { value: 0, spellings: new Map<string, number>() };
+
+    group.value += 1;
+    group.spellings.set(spelling, (group.spellings.get(spelling) ?? 0) + 1);
+
+    groups.set(key, group);
+  });
+
+  const stats: DiscNameStat[] = [...groups.values()].map((group) => {
+    return { label: pickCommonestSpelling(group.spellings), value: group.value };
+  });
+
+  const sorted = stats.sort((a: DiscNameStat, b: DiscNameStat) => b.value - a.value);
+
+  return options.limit ? sorted.slice(0, options.limit) : sorted;
+}
+
+/**
+ * The mould name out of a stored disc name: admins type the mould first and the
+ * plastic after a comma ("Destroyer, Star"), and a few rows use a full stop
+ * where the comma was meant ("Essence. NEO"). A name that is nothing but a
+ * separator keeps its original text rather than collapsing to an empty bar.
+ */
+function getDiscModelName(discName: string): string {
+  const model = discName.split(/[,.]/)[0].trim().replace(/\s+/g, ' ');
+
+  return model.length > 0 ? model : discName.trim();
+}
+
+/**
+ * The label a merged group is shown under. Ties go to the spelling seen first,
+ * because `Map` keeps insertion order.
+ */
+function pickCommonestSpelling(spellings: Map<string, number>): string {
+  let commonest = '';
+  let highest = 0;
+
+  for (const [spelling, count] of spellings) {
+    if (count > highest) {
+      commonest = spelling;
+      highest = count;
+    }
+  }
+
+  return commonest;
+}
