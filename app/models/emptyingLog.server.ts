@@ -14,10 +14,22 @@ export async function getEmptyingLogItems(request: Request) {
     : [];
 }
 
-export async function markAsEmptied(courseId: number, request: Request) {
+type MarkAsEmptiedInput = {
+  courseId: number;
+  emptiedAt?: string;
+};
+
+/**
+ * Records an emptying for one log row. `emptiedAt` is an ISO `y-MM-dd` date the
+ * admin picked by hand; without it Postgres stamps the current time.
+ */
+export async function markAsEmptied(request: Request, { courseId, emptiedAt }: MarkAsEmptiedInput) {
   const supabase = createSupabaseServerClient(request);
 
-  await supabase.from('emptying_log').update({ emptied_at: 'now()' }).eq('id', courseId);
+  await supabase
+    .from('emptying_log')
+    .update({ emptied_at: emptiedAt ?? 'now()' })
+    .eq('id', courseId);
 
   return [];
 }

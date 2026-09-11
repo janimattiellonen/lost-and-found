@@ -18,6 +18,8 @@ row per course and overwrites the timestamp in place.
 
 1. Admin opens "Tyhjennysloki" ("emptying log") from the admin menu and sees one row per course: the course name and a button.
 2. Pressing "Merkitse tyhjennetyksi" sets that row's `emptied_at` to `now()` and the page reloads; the previous date is gone.
+   - Each row also has a small "pvm" ("date") checkbox next to the button. Ticking it reveals a date picker for that row, pre-filled with today; pressing the button then stores the picked day instead of the current time.
+   - The tick and the picked date live in the row's own React state, so they apply to that course only — ticking "pvm" for one course leaves every other course on `now()`.
 3. On the public disc list, when at least one row exists for the club, a heading "Löytökiekot tarkistettu viimeksi" ("lost discs last checked") lists each course with a short `fi-FI` date.
 4. A row with no `emptied_at` renders as "Ei tiedossa" ("not known").
 5. The course name is shown next to the date only when the club has more than one row (`showCourseName` in `app/ui/EmptyingLogItem.tsx`).
@@ -34,19 +36,21 @@ row per course and overwrites the timestamp in place.
 
 ## Routes & entry points
 
-| Route           | Method(s) | Auth                                                      | Purpose                                                                                                      |
-| --------------- | --------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `/emptying-log` | GET       | signed in (`isUserLoggedIn`, else redirect to `/sign-in`) | Lists every log row with its mark button (`app/routes/emptying-log.tsx`)                                     |
-| `/emptying-log` | POST      | signed in                                                 | `item` = row id -> `markBinEmptied` -> `markAsEmptied` (`app/features/emptyingLog/markBinEmptied.server.ts`) |
-| `/` (disc list) | GET       | anonymous                                                 | Read-only display via `getEmptyingLogItemsForClub` in `app/features/discs/list/loadDiscListData.server.ts`   |
+| Route           | Method(s) | Auth                                                      | Purpose                                                                                                                                        |
+| --------------- | --------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/emptying-log` | GET       | signed in (`isUserLoggedIn`, else redirect to `/sign-in`) | Lists every log row with its mark button (`app/routes/emptying-log.tsx`)                                                                       |
+| `/emptying-log` | POST      | signed in                                                 | `item` = row id, optional `emptiedAt` = `y-MM-dd` -> `markBinEmptied` -> `markAsEmptied` (`app/features/emptyingLog/markBinEmptied.server.ts`) |
+| `/` (disc list) | GET       | anonymous                                                 | Read-only display via `getEmptyingLogItemsForClub` in `app/features/discs/list/loadDiscListData.server.ts`                                     |
 
 ## Rules & constraints
 
 - Writes go through `createSupabaseServerClient(request)`, so RLS with the caller's session is the real gate; the route guard is a convenience redirect.
 - `getEmptyingLogItemsForClub(clubId, request)` filters `.eq('club_id', clubId)` — that is the public path.
 - `getEmptyingLogItems(request)` (the admin page) has **no club filter**: it lists every club's rows.
-- `markAsEmptied(courseId, request)` filters only on `id` — no `club_id` check.
-- `emptied_at` is set with the string `'now()'`, evaluated by Postgres, not by the app clock.
+- `markAsEmptied(request, { courseId, emptiedAt })` filters only on `id` — no `club_id` check.
+- `emptied_at` is set with the string `'now()'`, evaluated by Postgres, not by the app clock — unless the form posted an `emptiedAt` date, which is written verbatim into a `timestamptz` and so lands at midnight **UTC** of that day. For a Finnish club that reads back as the right date, but the instant is 02:00/03:00 local, not the start of the Finnish day.
+- `emptiedAt` is accepted only when `isIsoDate` (`app/lib/api/validate.ts`) says it is a real calendar date; anything else falls back to `now()` rather than erroring.
+- The date input is unmounted while "pvm" is unticked, so such a row posts no `emptiedAt` field at all.
 - Missing POST body `item` is a silent no-op.
 
 ## Relationship to bin-full notifications (spec 07)
