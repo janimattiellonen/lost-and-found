@@ -1,6 +1,6 @@
 import { Form } from 'react-router';
 
-import { retrievalMethodLabel } from './retrievalMethod';
+import { retrievalErrandLabel, supersededRequestLabel } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
 import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -31,8 +31,8 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
       <H2 className="mt-8 mb-2">Noutolista</H2>
 
       <p className="mb-6 max-w-2xl text-sm text-gray-600">
-        Kiekot, joita omistajat ovat pyytäneet ja joita ei ole vielä haettu. Merkitse kiekko noudetuksi, kun se on
-        sinulla – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
+        Kiekot, joita ei ole vielä haettu: omistajien pyytämät sekä myyntiin tai lahjoitukseen menevät. Merkitse kiekko
+        noudetuksi, kun se on sinulla – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
       </p>
 
       {discs.length === 0 && <p className="text-gray-500">Noutolistalla ei ole kiekkoja.</p>}
@@ -45,7 +45,10 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
 }
 
 function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
-  const method = retrievalMethodLabel(disc.retrievalMethod);
+  // What is to be done with this one: the method its owner asked for, that the
+  // club is keeping it, or that the row cannot be read.
+  const errand = retrievalErrandLabel(disc.errand);
+  const { superseded } = disc;
 
   return (
     <Paper className="mb-4 max-w-2xl p-4">
@@ -55,7 +58,16 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             {disc.discColour} {disc.discName}
           </span>
 
-          {method && <span className="text-sm text-gray-600">{method}</span>}
+          <span className="text-sm text-gray-600">{errand}</span>
+
+          {/* The club has decided to keep a disc its owner had asked for. Both
+              facts are true and they disagree, so the card says both rather
+              than quietly showing the newer one: this is the line that tells
+              the admin there is a message to send before the disc goes to the
+              bring-and-buy table. */}
+          {superseded !== null && (
+            <span className="text-sm font-bold text-amber-700">{supersededRequestLabel(superseded)}</span>
+          )}
 
           {/* A link rather than plain digits: the number is here to be texted
               from the same phone the list is read on, so it opens a message to

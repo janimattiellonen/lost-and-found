@@ -1,3 +1,4 @@
+import type { StoredErrand, SupersededRequest } from './retrievalErrand';
 import type { RetrievalMethodValue } from './retrievalMethod';
 
 /** Putting one disc on the retrieval list — what the route receives. */
@@ -22,7 +23,14 @@ export type RetrievalListDisc = {
   addedAt: string | null;
   ownerName: string | null;
   ownerPhoneNumber: string | null;
-  retrievalMethod: RetrievalMethodValue;
+  /** What is to be done with the disc once it is off the shelf. */
+  errand: StoredErrand;
+  /**
+   * What the row still asked for before the club decided to keep the disc, when
+   * those two disagree. Null the rest of the time — including when the owner
+   * gave the disc up themselves, since then there is nothing to disagree about.
+   */
+  superseded: SupersededRequest | null;
   /** ISO timestamp of the request. */
   requestedAt: string;
 };

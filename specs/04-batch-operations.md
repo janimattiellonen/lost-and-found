@@ -28,6 +28,12 @@ single request.
 4. When the write returns, the bar reports it — "Poistettiin 12 kiekkoa." — the ticks
    clear and the list reloads. The report survives one more render with an empty
    selection so it does not vanish with the ticks.
+   - When a disposal's discs were marked but their retrieval errands were not, the same
+     report carries both sentences and turns amber: "Merkittiin myytäväksi 50 kiekkoa.
+     Kiekot merkittiin, mutta noutolistalle lisääminen epäonnistui." The ticks still clear
+     and the list still reloads, because the write did go through — pressing the action
+     again is not the fix, and the notice deliberately sits where the plain report sits
+     rather than beside the buttons.
 5. When fewer discs were reached than asked for, the report names the shortfall:
    "Poistettiin 10 kiekkoa. 2 kiekkoa jäi käsittelemättä – kiekkoja ei löytynyt tai niitä
    ei voitu muuttaa."
@@ -69,9 +75,9 @@ the shared `returnPatch` / `disposalPatch` helpers in `app/models/discs.server.t
 
 ## Routes & entry points
 
-| Route          | Method(s) | Auth  | Purpose                                                 |
-| -------------- | --------- | ----- | ------------------------------------------------------- |
-| `/discs/batch` | POST JSON | admin | `{action, externalIds[], date?}` → `{affected: number}` |
+| Route          | Method(s) | Auth  | Purpose                                                                   |
+| -------------- | --------- | ----- | ------------------------------------------------------------------------- |
+| `/discs/batch` | POST JSON | admin | `{action, externalIds[], date?}` → `{affected: number, warning?: string}` |
 
 Client: `runBatchAction.ts` posts it; `useBatchAction.ts` owns the confirm → request →
 report state machine; `SelectedDiscsActions.tsx` renders the bar.
@@ -97,15 +103,23 @@ report state machine; `SelectedDiscsActions.tsx` renders the bar.
 - Every model call is scoped to `APP_CLUB_ID` (`.eq('club_id', clubId)`), so an id from
   another club is simply not among the rows affected.
 - `runBatchAction` treats a 200 without a numeric `affected` as an error: the route reports
-  a count on every success path.
+  a count on every success path. An optional `warning` beside it means the discs were
+  written and something after that was not; anything else in the body is ignored.
 - `handleRun` re-checks that the chosen action is still in the dropdown — one more tick can
   push the selection past the cap between choosing and pressing.
 
 ## Partial failure
 
-There is none in the transactional sense. Each action is a single Supabase statement
-(`.update(...).in('external_id', ids)` or `.delete().in(...)`), so it either raises — 500,
-nothing reported as done — or succeeds and returns the rows it touched.
+Each action is a single Supabase statement (`.update(...).in('external_id', ids)` or
+`.delete().in(...)`), so the write itself either raises — 500, nothing reported as done — or
+succeeds and returns the rows it touched. There is no partial write to report.
+
+The one action with a second half is a disposal, which also writes the retrieval errands
+(spec 03). Those are not in the same transaction, so that half can fail on its own: the
+route answers 200 with the count **and** a `warning`, never a 500, since a 500 would say
+nothing happened when fifty discs were marked. Nothing was marked (`affected === 0`) means
+there is nothing to fetch either, so the errand write is skipped and no warning is
+composed — the shortfall the report already names is the whole story.
 
 `updateDiscs` / `deleteDiscs` return `data?.length ?? 0`. A shortfall means some ids did
 not resolve (unknown, another club's, already deleted) **or** RLS filtered the update out;
@@ -117,6 +131,18 @@ reports the shortfall without calling it an error.
 
 - A shortfall is unattributed: the admin is told two discs were missed, never which two.
 - No batch course change and no batch retrieval-list action — those are single-disc only.
+  A batch "myytäväksi tai lahjoitettavaksi" does put every disc it marks on the retrieval
+  list — `handleBatchRequest` calls `queryRequestDisposalRetrievals` with the selection
+  once the mark is done (spec 03), so marking fifty discs released adds fifty errands. It
+  runs after the mark and is not part of its transaction: if it throws, the discs are marked
+  and the errands are not. That is answered as a **200 carrying both facts** — the count and
+  a `warning` — not as a 500, because a 500 would throw the count away and tell the admin
+  nothing happened, which is the one reading that is wrong. `batchActionNotice` puts the two
+  sentences in that order ("Merkittiin myytäväksi 50 kiekkoa. Kiekot merkittiin, mutta
+  noutolistalle lisääminen epäonnistui."), the ticks clear and the list reloads as they do
+  after any write, and the line is amber where a plain report is not. Trying again is not
+  the fix — the discs are already marked — so the notice sits where the "done" one does,
+  not beside the buttons.
 - Rows without an `externalId` (anonymous loader payload) cannot be selected
   (`enableRowSelection`), and `getRowId` falls back to `row-<id>` for them.
 - The dedup means posting the same id 25 times is accepted, not rejected as oversized.

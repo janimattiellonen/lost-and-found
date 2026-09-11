@@ -145,3 +145,30 @@ export function batchActionOutcome(action: BatchAction, affected: number, reques
 
   return done;
 }
+
+/**
+ * The same report, when something after the write failed.
+ *
+ * Both sentences, in that order: what was done first, because it was done and
+ * the admin is looking at a list that no longer has those discs in it, then
+ * what did not happen. Reporting only the failure would say "nothing happened",
+ * which is the one reading that is wrong.
+ */
+type NoticeInput = {
+  action: BatchAction;
+  /** How many discs the write reached. */
+  affected: number;
+  /** How many it was asked to reach. */
+  requested: number;
+  /** What did not happen afterwards, or null when everything did. */
+  warning: string | null;
+};
+
+export function batchActionNotice({ action, affected, requested, warning }: NoticeInput): {
+  kind: 'done' | 'warning';
+  text: string;
+} {
+  const outcome = batchActionOutcome(action, affected, requested);
+
+  return warning === null ? { kind: 'done', text: outcome } : { kind: 'warning', text: `${outcome} ${warning}` };
+}

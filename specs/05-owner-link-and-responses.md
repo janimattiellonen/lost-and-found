@@ -38,10 +38,12 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    answering again is how a choice or a typo is changed.
    - An answer of "I want it back" that asks for post or for collection from
      the admin also puts the disc straight onto the admin's retrieval list
-     (spec 03), so the admin does not have to copy it across. The
-     owner sees no sign of this; the page says the same thing either way.
-     Collecting from the koppi puts nothing on the list — the disc stays where it
-     is and the owner comes to it — and neither does giving the disc up.
+     (spec 03), so the admin does not have to copy it across. So does giving the
+     disc up, since 2026-09-10: the club is keeping it and it still has to come
+     off the shelf, so the errand says "Myyntiin tai lahjoitukseen" instead of a
+     method. The owner sees no sign of either; the page says the same thing
+     whatever they answer. Collecting from the koppi is the one answer that puts
+     nothing on the list — the disc stays where it is and the owner comes to it.
 8. A token that is unknown, malformed, belongs to another club, or names a disc
    already returned / released / archived → "Linkki ei ole enää käytössä" (this
    link is no longer in use), with the club's contact email. Same screen for all
@@ -220,7 +222,9 @@ only called from inside those two.
 - An answer changes nothing about the disc. Nothing on the public list shows
   that an owner has answered, and a "gives it up" answer does not release the
   disc — the admin still marks it. True of `discs` only; the answer may add a
-  `disc_retrievals` row.
+  `disc_retrievals` row, and since 2026-09-10 a "gives it up" answer does add
+  one. So a disc can sit on the retrieval list as "Myyntiin tai lahjoitukseen"
+  while still being on the public list, until the admin makes the mark.
 - The two tables can disagree and nothing reconciles them. An owner
   who answers "post it", then answers again "I'll collect it from the koppi",
   leaves two answers in the inbox and one open retrieval row that the second

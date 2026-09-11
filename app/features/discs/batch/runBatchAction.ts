@@ -9,8 +9,16 @@ const BATCH_URL = '/discs/batch';
 
 const GENERIC_ERROR = 'Toimenpide epäonnistui. Yritä uudelleen.';
 
-/** How many discs the action reached, or why it did not run. */
-export type BatchActionResult = { status: 'success'; affected: number } | { status: 'error'; message: string };
+/**
+ * How many discs the action reached, or why it did not run.
+ *
+ * A success may still carry a warning: the discs were written and something
+ * after that was not, which the admin has to hear without being told the action
+ * failed.
+ */
+export type BatchActionResult =
+  | { status: 'success'; affected: number; warning: string | null }
+  | { status: 'error'; message: string };
 
 /**
  * Applies one action to a selection of discs.
@@ -29,7 +37,7 @@ export async function runBatchAction(action: BatchAction, externalIds: string[])
     return result;
   }
 
-  const affected = (result.body as { affected?: unknown })?.affected;
+  const { affected, warning } = (result.body ?? {}) as { affected?: unknown; warning?: unknown };
 
   // The route reports a count on every path it answers 200 on, so a body
   // without one never came from it.
@@ -37,5 +45,5 @@ export async function runBatchAction(action: BatchAction, externalIds: string[])
     return { status: 'error', message: GENERIC_ERROR };
   }
 
-  return { status: 'success', affected };
+  return { status: 'success', affected, warning: typeof warning === 'string' ? warning : null };
 }

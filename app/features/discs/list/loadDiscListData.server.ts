@@ -1,5 +1,5 @@
 import { currentClubId } from '~/config/clubs';
-import { queryPendingRetrievalMethods } from '~/features/discs/retrieval/queryPendingRetrievalMethods.server';
+import { queryPendingRetrievalErrands } from '~/features/discs/retrieval/queryPendingRetrievalErrands.server';
 import { getDiscs } from '~/models/discs.server';
 import { getEmptyingLogItemsForClub } from '~/models/emptyingLog.server';
 import { createSupabaseServerClient, isUserLoggedIn } from '~/models/utils';
@@ -24,7 +24,7 @@ export async function loadDiscListData(request: Request) {
   // Which of these discs are already waiting to be fetched, so the row action
   // can say so rather than putting one on the list twice. Null when nobody is
   // signed in, since the retrieval icons are not rendered at all then.
-  const pendingRetrievals = isLoggedIn ? await queryPendingRetrievalMethods(createSupabaseServerClient(request)) : null;
+  const pendingRetrievals = isLoggedIn ? await queryPendingRetrievalErrands(createSupabaseServerClient(request)) : null;
 
   return {
     clubId,

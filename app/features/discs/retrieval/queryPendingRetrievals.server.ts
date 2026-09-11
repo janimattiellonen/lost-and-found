@@ -10,11 +10,14 @@ import { currentClubId } from '~/config/clubs';
  * club filter below is the whole of the separation.
  *
  * "Pending" is two things at once. The request is open — nothing has been
- * fetched — and the disc is one the club still lists: a disc since returned,
- * released for sale or donation, or archived has no errand left in it, so it
- * drops off the list without anyone having to tick it off. Written once, so the
- * count on the menu cannot come to mean something slightly different from the
- * page it points at.
+ * fetched — and the disc is one that still has an errand in it: a disc since
+ * returned to its owner, or archived, has none, so it drops off the list
+ * without anyone having to tick it off. Written once, so the count on the menu
+ * cannot come to mean something slightly different from the page it points at.
+ *
+ * A disc released for sale or donation is deliberately *not* filtered out, as
+ * it was until 2026-09-10. It is off the public list but still on the shelf,
+ * and fetching it is the errand — a purpose 1 row is the reason it is here.
  *
  * The club is scoped through the join rather than copied onto the row, so the
  * two tables cannot disagree about which club a retrieval belongs to. The
@@ -32,6 +35,5 @@ export function queryPendingRetrievals(
     .is('retrieved_at', null)
     .eq('discs.club_id', currentClubId())
     .eq('discs.is_returned_to_owner', false)
-    .eq('discs.can_be_sold_or_donated', false)
     .is('discs.archived_at', null);
 }

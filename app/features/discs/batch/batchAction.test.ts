@@ -3,7 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { disposalMethodLabel } from '~/features/discs/disposal/disposalMethod';
 import { returnMethodLabel } from '~/features/discs/return/returnMethod';
 
-import { batchActionOrder, batchActionOutcome, confirmBatchAction, isBatchAction, markFor } from './batchAction';
+import {
+  batchActionNotice,
+  batchActionOrder,
+  batchActionOutcome,
+  confirmBatchAction,
+  isBatchAction,
+  markFor,
+} from './batchAction';
 
 describe('isBatchAction', () => {
   it('accepts the five actions the dropdown offers', () => {
@@ -100,5 +107,41 @@ describe('markFor', () => {
 
   it('has a mark for every action that is not a delete', () => {
     expect(batchActionOrder.filter((action) => markFor(action) === null)).toEqual(['delete']);
+  });
+});
+
+describe('batchActionNotice', () => {
+  it('reports a clean run as done', () => {
+    expect(batchActionNotice({ action: 'sell', affected: 3, requested: 3, warning: null })).toEqual({
+      kind: 'done',
+      text: 'Merkittiin myytäväksi 3 kiekkoa.',
+    });
+  });
+
+  it('reports what was written before what was not, so the count is not lost', () => {
+    expect(
+      batchActionNotice({
+        action: 'sell',
+        affected: 50,
+        requested: 50,
+        warning: 'Kiekot merkittiin, mutta noutolistalle lisääminen epäonnistui.',
+      }),
+    ).toEqual({
+      kind: 'warning',
+      text: 'Merkittiin myytäväksi 50 kiekkoa. Kiekot merkittiin, mutta noutolistalle lisääminen epäonnistui.',
+    });
+  });
+
+  it('keeps the shortfall in the sentence when both went wrong', () => {
+    expect(
+      batchActionNotice({
+        action: 'donate',
+        affected: 8,
+        requested: 10,
+        warning: 'Noutolistalle lisääminen epäonnistui.',
+      }).text,
+    ).toBe(
+      'Merkittiin lahjoitettavaksi 8 kiekkoa. 2 kiekkoa jäi käsittelemättä – kiekkoja ei löytynyt tai niitä ei voitu muuttaa. Noutolistalle lisääminen epäonnistui.',
+    );
   });
 });

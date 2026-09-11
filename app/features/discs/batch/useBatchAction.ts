@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { batchActionOutcome, confirmBatchAction, type BatchAction } from './batchAction';
+import { batchActionNotice, confirmBatchAction, type BatchAction } from './batchAction';
 import { runBatchAction } from './runBatchAction';
 
 /**
@@ -10,8 +10,13 @@ import { runBatchAction } from './runBatchAction';
  * A report of what was done belongs to a finished action, with the selection
  * emptied behind it; an error belongs to a selection that is still there to try
  * again. Callers render them in different places for that reason.
+ *
+ * A warning is the first of those, not the second: the discs were written, so
+ * the selection goes and the list reloads, but something after the write did
+ * not happen and saying so quietly would leave the admin to find out later.
+ * Trying again is not the fix for it.
  */
-export type BatchNotice = { kind: 'done' | 'error'; text: string };
+export type BatchNotice = { kind: 'done' | 'warning' | 'error'; text: string };
 
 type Options = {
   /** Called once a write has gone through, to clear the ticks and reload. */
@@ -53,7 +58,14 @@ export function useBatchAction({ onDone }: Options) {
       return false;
     }
 
-    setNotice({ kind: 'done', text: batchActionOutcome(action, result.affected, externalIds.length) });
+    setNotice(
+      batchActionNotice({
+        action,
+        affected: result.affected,
+        requested: externalIds.length,
+        warning: result.warning,
+      }),
+    );
     onDone();
 
     return true;

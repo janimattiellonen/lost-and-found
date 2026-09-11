@@ -1,12 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { queryPendingRetrievals } from './queryPendingRetrievals.server';
-import { isRetrievalMethod, RetrievalMethod } from './retrievalMethod';
+import { toListedErrand } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
 
 /** What the page shows of the disc behind a request. */
 const LIST_COLUMNS =
-  'requested_at, retrieval_method, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number, added_at)';
+  'requested_at, retrieval_method, discs!inner(external_id, disc_name, disc_colour, owner_name, owner_phone_number, added_at, can_be_sold_or_donated)';
 
 /**
  * What the select above reads back.
@@ -17,7 +17,7 @@ const LIST_COLUMNS =
  */
 type Row = {
   requested_at: string;
-  retrieval_method: number;
+  retrieval_method: number | null;
   discs: {
     external_id: string;
     disc_name: string;
@@ -25,19 +25,23 @@ type Row = {
     owner_name: string | null;
     owner_phone_number: string | null;
     added_at: string | null;
+    can_be_sold_or_donated: boolean;
   };
 };
 
 /**
- * The discs waiting to be fetched out of storage, oldest request first — the
- * order the admin works through them in.
+ * The discs waiting to be fetched out of storage, newest request first.
+ *
+ * The top of the list is where the admin looks: a request that came in today is
+ * the one he has not dealt with yet, and an old line is one he has already seen
+ * every time he opened the page.
  *
  * The owner's phone number is the point of the list, so this is only ever read
  * behind the signed-in page route.
  */
 export async function queryRetrievalList(supabase: SupabaseClient): Promise<RetrievalListDisc[]> {
   const { data, error } = await queryPendingRetrievals(supabase, LIST_COLUMNS).order('requested_at', {
-    ascending: true,
+    ascending: false,
   });
 
   if (error) {
@@ -45,16 +49,13 @@ export async function queryRetrievalList(supabase: SupabaseClient): Promise<Retr
   }
 
   return ((data ?? []) as unknown as Row[]).map((row) => ({
+    ...toListedErrand(row.retrieval_method, row.discs.can_be_sold_or_donated),
     externalId: row.discs.external_id,
     discName: row.discs.disc_name,
     discColour: row.discs.disc_colour,
     addedAt: row.discs.added_at ?? null,
     ownerName: row.discs.owner_name ?? null,
     ownerPhoneNumber: row.discs.owner_phone_number ?? null,
-    // The CHECK constraint should make an out-of-range value impossible; if one
-    // happens, read it as the method that costs a wasted trip rather than a
-    // wasted stamp.
-    retrievalMethod: isRetrievalMethod(row.retrieval_method) ? row.retrieval_method : RetrievalMethod.PickedUp,
     requestedAt: row.requested_at,
   }));
 }

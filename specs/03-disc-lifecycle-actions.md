@@ -7,10 +7,15 @@
 Once a disc is in the club's inventory, an admin records what became of it: it went back
 to its owner, it was released for sale or donation, it was filed under the wrong course,
 or it was entered by mistake. The admin also keeps a _noutolista_ ("retrieval list")
-of discs that have to be brought to hand before an owner can get them — out of the
-club's koppi (its storage shed) at Talin Tallaajat, off the admin's own shelf at
-Puskasoturit. Either way it is a trip the admin has to remember to make, which is why
-it is worth writing down.
+of discs that have to be brought to hand — out of the club's koppi (its storage shed)
+at Talin Tallaajat, off the admin's own shelf at Puskasoturit. Either way it is a trip
+the admin has to remember to make, which is why it is worth writing down.
+
+Two things put a disc on that list, and since 2026-09-10 both of them do it by
+themselves. Its owner wants it back and it has to reach them; or the club is keeping it,
+to sell or donate. The second used to be a list the admin held in his head — he marked
+the disc sold and then had to remember which shelf it was on — while the app already
+knew both facts.
 
 ## Actors
 
@@ -28,14 +33,14 @@ it is worth writing down.
 A disc's state is not one column. It is the combination of three flags/timestamps on
 `discs` plus the presence of an open row in `disc_retrievals`.
 
-| State                      | How it is stored                                                                                  | Public list shows it?   |
-| -------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------- |
-| Listed (default)           | `is_returned_to_owner = false`, `can_be_sold_or_donated = false`, `archived_at IS NULL`           | yes                     |
-| Returned to owner          | `is_returned_to_owner = true` + `returned_to_owner_date` + `return_method`                        | no                      |
-| Released for sale/donation | `can_be_sold_or_donated = true` + `can_be_sold_or_donated_date` + `can_be_sold_or_donated_method` | no                      |
-| Archived                   | `archived_at` set                                                                                 | no                      |
-| Deleted                    | row gone (`disc_retrievals` cascades)                                                             | no                      |
-| On the retrieval list      | orthogonal: an open `disc_retrievals` row (`retrieved_at IS NULL`) on a _listed_ disc             | yes, with an extra icon |
+| State                      | How it is stored                                                                                           | Public list shows it?                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Listed (default)           | `is_returned_to_owner = false`, `can_be_sold_or_donated = false`, `archived_at IS NULL`                    | yes                                                                                                         |
+| Returned to owner          | `is_returned_to_owner = true` + `returned_to_owner_date` + `return_method`                                 | no                                                                                                          |
+| Released for sale/donation | `can_be_sold_or_donated = true` + `can_be_sold_or_donated_date` + `can_be_sold_or_donated_method`          | no                                                                                                          |
+| Archived                   | `archived_at` set                                                                                          | no                                                                                                          |
+| Deleted                    | row gone (`disc_retrievals` cascades)                                                                      | no                                                                                                          |
+| On the retrieval list      | orthogonal: an open `disc_retrievals` row (`retrieved_at IS NULL`) on a disc not returned and not archived | only if still listed: a listed disc shows with an extra icon, a released one shows nowhere but `/retrieval` |
 
 Transitions:
 
@@ -43,13 +48,14 @@ Transitions:
                     +-- mark returned ---> Returned  (terminal in the UI)
                     |
    Listed ----------+-- mark disposal ---> Released  (terminal in the UI)
+                    |                        and onto the retrieval list
      |  ^           |
      |  |           +-- delete ----------> gone
      |  |
      |  +-- (manual SQL) archived_at cleared
      +----- (archive:discs script) archived_at set -----> Archived
 
-   Listed --- request retrieval ---> on retrieval list (open row)
+   Listed --- request retrieval ---> on retrieval list (open row, with a method)
      |            ^        |
      +-- owner answers "I want it back, post it / I'll collect it from you"
      |   on the sms link --> the same open row, owner_response_id set
@@ -60,8 +66,13 @@ Transitions:
                   |
                   +-- a later request inserts a NEW row (history keeps both)
 
-   Marking a listed disc returned / released / archived silently drops any
-   open retrieval row off the list (it is filtered out, never closed).
+   Listed/Released --- mark disposal, or the owner answers "keep it"
+                       ---> an open row, with no method if there was none
+                            (an existing request is left as it is)
+
+   Marking a listed disc returned or archived silently drops any open retrieval
+   row off the list (it is filtered out, never closed). Releasing it for sale or
+   donation does the opposite: it puts one there.
 ```
 
 Course is not a state; `setDiscCourse` can run in any state.
@@ -81,27 +92,49 @@ Course is not a state; `setDiscCourse` can run in any state.
 5. When an admin clicks the storage icon, `RetrievalMethodForm` opens; the method is
    **required** ("Postitus" (by post) / "Nouto (minulta)" (collect from me)). The icon
    turns orange once the disc is on the list, and reopening the form preselects the
-   current method. Offered on both clubs.
-6. When an admin opens `/retrieval`, "Noutolista" lists the pending errands oldest first
-   as phone-sized cards: colour + name, method, an `sms:` link (tapping the number
+   current method — except for a disc on the list because the club is keeping it, which
+   has no method to preselect; picking one there is how the admin says it goes back to
+   its owner after all. Offered on both clubs.
+6. When an admin opens `/retrieval`, "Noutolista" lists the pending errands newest first
+   as phone-sized cards: colour + name, what is to be done with it, an `sms:` link (tapping the number
    opens a message to the owner, not a call) followed by the owner's name in brackets, and both dates together on the bottom row —
    "Pyydetty" (requested) then "Kirjattu" (entered), as on the answers page.
-   "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes the row.
+   "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes the row. Both kinds
+   of errand are one list in one order: the second line reads "Postitus" / "Nouto
+   (minulta)" for a disc going back to its owner and "Myyntiin tai lahjoitukseen" for one
+   the club is keeping, and "Noutotapa epäselvä – tarkista viestit" for a row whose method
+   the app cannot read. The card is the same otherwise, phone number included — the owner of
+   a disc being sold is still who to ask about it.
+   A disc the club has released **while its row still held a request** carries one more
+   line, in amber: "Huom! Omistaja on pyytänyt kiekkoa: Postitus", or "Huom! Kiekolla on
+   avoin noutopyyntö, jonka noutotapaa ei voi lukea – tarkista viestit." when the row cannot
+   be read. Both facts are true and they disagree, so the card shows both rather than only
+   the newer one — that line is how the admin knows to send a message before the disc
+   reaches the bring-and-buy table.
 7. When the retrieval list has pending rows, the admin menu item shows the count
    (`loadRetrievalCount.server.ts`); it is absent only when nobody is signed in.
-8. When a disc's owner answers "haluan kiekkoni takaisin" (I want my disc
-   back) on the sms link and asks for either post or collection from the admin, the disc
-   appears on the retrieval list by itself, with no admin step in between. An owner who
-   says they will collect it from the koppi themselves creates no row — the disc never
-   comes to the admin, so there is no errand — and neither does an owner who gives the
-   disc up. The answer still lands in the "Vastaukset" (answers) inbox either way; the
-   retrieval row is in addition to it, not instead of it.
-9. The intro paragraph on `/retrieval` names no place: "Kiekot, joita omistajat ovat
-   pyytäneet ja joita ei ole vielä haettu. Merkitse kiekko noudetuksi, kun se on
-   sinulla…" (discs owners have asked for and that have not been fetched yet; mark one
-   as fetched when you have it). On Puskasoturit the disc is on the admin's own shelf,
-   and a wording per club would be a second place recording where a club keeps its
-   discs.
+8. When a disc's owner answers on the sms link, the disc appears on the retrieval list by
+   itself, with no admin step in between: "haluan kiekkoni takaisin" (I want my disc back)
+   with either post or collection from the admin makes an errand with that method, and
+   giving the disc up makes one with none — the club is keeping it, and it still has to
+   come off the shelf. An owner who says they will collect it from the koppi themselves
+   creates no row: the disc never comes to the admin, so there is no errand. The answer
+   still lands in the "Vastaukset" (answers) inbox either way; the retrieval row is in
+   addition to it, not instead of it.
+9. When an admin marks a disc "myytäväksi tai lahjoitettavaksi", the disc leaves the disc
+   list and appears on the retrieval list, whether it was marked one at a time or as part
+   of a batch selection. Nothing is asked of the admin at the point of marking; the errand
+   is written straight after the mark by `queryRequestDisposalRetrievals.server.ts`, which
+   makes the same update-or-insert an admin's "Lisää noutolistalle" makes, over a set of
+   discs instead of one. Only discs marked from 2026-09-10 onwards: the migration backfills
+   nothing, on the grounds that a list opening with every disc ever released is one nobody
+   reads.
+10. The intro paragraph on `/retrieval` names no place: "Kiekot, joita ei ole vielä haettu:
+    omistajien pyytämät sekä myyntiin tai lahjoitukseen menevät. Merkitse kiekko
+    noudetuksi, kun se on sinulla…" (discs not yet fetched — the ones owners have asked
+    for and the ones going to sale or donation; mark one as fetched when you have it). On
+    Puskasoturit the disc is on the admin's own shelf, and a wording per club would be a
+    second place recording where a club keeps its discs.
 
 ## Data
 
@@ -124,7 +157,16 @@ not columns on `discs`:
 
 - `disc_id BIGINT` FK to `discs.id` `ON DELETE CASCADE` (numeric id, not `external_id`)
 - `requested_at`, `retrieved_at` (nullable — NULL is what puts the row on the list)
-- `retrieval_method SMALLINT NOT NULL`, CHECK in (0,1)
+- `retrieval_method SMALLINT NULL` — what the owner asked for; NULL for an errand that is
+  not going to an owner at all
+- CHECK `retrieval_method IS NULL OR retrieval_method IN (0,1)`
+  (`20260910000000_retrieval_for_disposal.sql`, replacing the `NOT NULL` and the
+  values-only CHECK). NULL means the row itself names no handover: a disc the club is
+  keeping is not going to an owner. It is not the _whole_ of how the two kinds are told
+  apart, though — a disc released while its owner's request was open keeps that request on
+  the row, so the page reads `discs.can_be_sold_or_donated` first and the row's method
+  second. `toListedErrand()` is the one place that pair is turned into what the card
+  shows. Every row written before that date has a method.
 - CHECK `retrieved_at >= requested_at`; partial UNIQUE index on `disc_id WHERE retrieved_at IS NULL`
 - RLS (row level security — the PostgreSQL feature that decides, row by row, whether a
   database role may read or write it): `authenticated` only, all four verbs; nothing for
@@ -150,6 +192,19 @@ not columns on `discs`:
 | `DisposalMethod` (`disposal/disposalMethod.ts`)    | `discs.can_be_sold_or_donated_method` | 0, 1   | "Myydään", "Lahjoitetaan"                             |
 | `RetrievalMethod` (`retrieval/retrievalMethod.ts`) | `disc_retrievals.retrieval_method`    | 0, 1   | "Postitus", "Nouto (minulta)" (what was asked for)    |
 
+There is no fourth enum for "sale or donation" as an errand. The nullable column is decoded
+once on the way out of the database (`retrieval/retrievalErrand.ts`) so that nothing
+downstream carries a nullable method that could be read as either fact. Two types, because a
+row can say something a write never may: **`RetrievalErrand`** is what a write asks for —
+`{ kind: 'to-owner'; method }` or `{ kind: 'kept-by-club' }` — and **`StoredErrand`** is what
+a row may turn out to say, those two plus `{ kind: 'unclear' }` for a value the CHECK
+forbids. `toRetrievalErrand()` is the one place that decode happens, so the two queries
+reading the table cannot disagree about it. `toListedErrand()` wraps it for the
+list page, where the disc's own release flag overrules the row, and `retrievalErrandLabel()`
+— all three in the same file — is what puts the fixed "Myyntiin tai lahjoitukseen" on the
+card; `DisposalMethod` says which of the two the club
+intends, on the disc itself, and the retrieval list does not show it.
+
 `RetrievalMethod` is **not its own enum**: it is `HandoverMethod`
 (`app/features/discs/handoverMethod.ts`, values 0 `ByMail` / 1 `PickedUpFromHome` /
 2 `PickedUpFromStorage`) narrowed to `FETCHING_HANDOVER_METHODS` — the two that require a
@@ -159,15 +214,15 @@ add, never renumber, and extend the CHECK alongside.
 
 ## Routes & entry points
 
-| Route              | Method(s) | Auth      | Purpose                                                                                  |
-| ------------------ | --------- | --------- | ---------------------------------------------------------------------------------------- |
-| `/discs/return`    | POST JSON | admin     | `{externalId, returnedToOwnerDate, returnMethod\|null}` → `{returned:true}`              |
-| `/discs/disposal`  | POST JSON | admin     | `{externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod\|null}` → `{marked:true}` |
-| `/discs/delete`    | POST JSON | admin     | `{externalId}` → `{deleted:true}`                                                        |
-| `/discs/course`    | POST JSON | admin     | `{externalId, course\|null}` → `{marked:true}`                                           |
-| `/discs/retrieval` | POST JSON | admin     | `{externalId, retrievalMethod}` → `{onRetrievalList:true}`                               |
-| `/retrieval`       | GET       | signed in | the "Noutolista" page                                                                    |
-| `/retrieval`       | POST form | signed in | `externalId` → closes the open row, revalidates                                          |
+| Route              | Method(s) | Auth      | Purpose                                                                                                                           |
+| ------------------ | --------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `/discs/return`    | POST JSON | admin     | `{externalId, returnedToOwnerDate, returnMethod\|null}` → `{returned:true}`                                                       |
+| `/discs/disposal`  | POST JSON | admin     | `{externalId, canBeSoldOrDonatedDate, canBeSoldOrDonatedMethod\|null}` → `{marked:true}`, and the disc goes on the retrieval list |
+| `/discs/delete`    | POST JSON | admin     | `{externalId}` → `{deleted:true}`                                                                                                 |
+| `/discs/course`    | POST JSON | admin     | `{externalId, course\|null}` → `{marked:true}`                                                                                    |
+| `/discs/retrieval` | POST JSON | admin     | `{externalId, retrievalMethod}` → `{onRetrievalList:true}`                                                                        |
+| `/retrieval`       | GET       | signed in | the "Noutolista" page                                                                                                             |
+| `/retrieval`       | POST form | signed in | `externalId` → closes the open row, revalidates                                                                                   |
 
 No route of this feature is reachable without a session. The one non-admin entry point
 is the database function `submit_owner_response()`, described in spec 05.
@@ -186,12 +241,62 @@ All five JSON routes are resource routes (no component) delegating to a
   `Tuntematon rata "X".` so it cannot leak into the list page's course filter.
 - Every write is scoped to `APP_CLUB_ID`: the disc updates/deletes add `.eq('club_id', …)`,
   and every `disc_retrievals` write resolves `external_id → id` through
-  `queryDiscIdByExternalId.server.ts`, which carries the club filter.
+  `queryDiscIdByExternalId.server.ts` for one disc or `queryDiscIdsByExternalIds.server.ts`
+  for a set, both of which carry the club filter.
 - `updateDisc` distinguishes `not-found` (404) from `not-permitted` (403) by re-selecting
   the row: RLS refuses an UPDATE by filtering, not by raising. `markRefusal` maps both.
 - `queryPendingRetrievals.server.ts` is the single filter chain behind the page, the menu
-  count and the row icons: open row **and** disc still listed (not returned, not released,
-  not archived), club-scoped through the `discs!inner` join.
+  count and the row icons: open row **and** disc not returned and not archived,
+  club-scoped through the `discs!inner` join. It filtered out released discs too until
+  2026-09-10; dropping that one condition is what lets a disposal errand be seen, and it
+  also means a disc marked released while its owner's request was open stays on the list
+  rather than vanishing off it.
+- **Every write to the list is `queryRequestRetrievals.server.ts`**: resolve the external
+  ids to this club's disc ids, read which of them already have an open row, write the method
+  onto those (for a `to-owner` errand only — see the next-but-one bullet), and insert a row
+  for the rest. One function rather than one per caller, since the write and its ordering
+  are the whole of what this feature has to get right. It takes a set of ids and a
+  `RetrievalErrand`, so the admin's "Lisää noutolistalle" passes one id and `to-owner` with
+  a method, and a disposal passes the selection and `kept-by-club`. It returns how many
+  discs this club actually had, which is how `handleRetrievalRequest` answers 404 for
+  another club's id.
+- The insert **tolerates a unique violation** (`23505`) rather than reporting it: between
+  reading the open rows and inserting, an owner can answer the link and their errand land
+  first. The disc is then on the list, which is all the write was asked to achieve, so
+  calling it a failure would tell the admin his mark went wrong when it did not.
+- **The disposal errand is written next to the mark**, through
+  `queryRequestDisposalRetrievals.server.ts` — the write above plus the message for a
+  half-done state — called from `handleDisposalRequest` with one external id and from
+  `handleBatchRequest` with the whole selection. It runs **after** the mark and takes the
+  ids the mark was asked for rather than the ones it changed; an id from another club drops
+  out in the lookup either way.
+- The mark and the errand are **two writes, not one transaction**, so the admin is told
+  which half happened: "Kiekko merkittiin, mutta noutolistalle lisääminen epäonnistui."
+  (plural "Kiekot" for a batch). The sentence is composed in one place, by the query that
+  failed, because it knows how many discs it was asked about. A plain failure would read as
+  "nothing happened", and the disc is marked — and once it is, it is off the disc list, so the
+  storage icon is no longer there to add the errand by hand. The recovery is SQL. The two
+  routes carry that sentence differently: the single mark answers 500 with it, since one disc
+  either got its errand or did not, while the batch answers 200 with the count **and** the
+  sentence (spec 04), because throwing away "fifty discs were marked" to report the half that
+  failed would be the more misleading of the two.
+- A disc already on the list when it is released **keeps its open row exactly as it was**.
+  The club deciding to sell a disc does not unsay what its owner asked for, and until
+  2026-09-10 the mark cleared `retrieval_method`, so an owner's "Postitus" vanished with
+  nothing on any page to say it ever existed. The row is now left alone and the page decides
+  what to show: `queryRetrievalList` reads `discs.can_be_sold_or_donated`, and a released
+  disc reads as `kept-by-club` whatever its row says, with the row's own method carried
+  beside it as `supersededMethod` for the amber line. `requested_at` and `owner_response_id`
+  were always left alone.
+- The **opposite** direction does write: an admin picking a method for a disc the club had
+  been keeping is him saying it goes back to its owner after all, and that is the newest
+  word about where the disc is going. So `to-owner` writes onto an open row and
+  `kept-by-club` does not — the asymmetry is deliberate and lives in one `if` in
+  `queryRequestRetrievals.server.ts`. Either way there is one open errand per disc, which is
+  what the partial unique index already promised.
+- An owner answering the link twice still overwrites their own earlier answer, in
+  `submit_owner_response()`. That is the same owner changing their own mind, not the club
+  overruling them.
 - **The retrieval list is not gated on the club.** It was until 2026-09-04, by
   `isRetrievalListEnabled()` in `app/config/clubs.ts`; that function and all five of its
   call sites are gone. The reasoning it was built on — that only Talin stores discs
@@ -202,11 +307,14 @@ All five JSON routes are resource routes (no component) delegating to a
   one club's errands off the other's list is `queryPendingRetrievals`, not a feature flag.
 - What an owner's answer does to the retrieval list is decided entirely by the answer's
   own fields, inside `submit_owner_response()` after the answer row is inserted:
-  a row is created when `choice = 1` (wants it back) **and** `handover_method` is 0 (post)
-  or 1 (collect from the admin). `handover_method = 2` (collect from the koppi) and
-  `choice = 0` (gives it up) create nothing. This is the same narrowing
-  `needsFetchingFromStorage` and the `disc_retrievals` CHECK already apply — a disc the
-  owner collects from the koppi is not an errand for anybody.
+  a row with a method is created when `choice = 1` (wants it back) **and**
+  `handover_method` is 0 (post) or 1 (collect from the admin), and a row with none when
+  `choice = 0` (gives it up). `handover_method = 2` (collect from the koppi) is the one
+  answer that creates nothing — the disc stays where it is and the owner comes to it, so
+  it is an errand for nobody. That is the same narrowing `needsFetchingFromStorage`
+  applies. A "gives it up" answer still changes nothing on `discs`: releasing the disc
+  remains the admin's mark to make, and until he makes it the disc stays on the public
+  list.
 - An answer for a disc that is **already** on the list updates the open row
   rather than failing — `ON CONFLICT (disc_id) WHERE retrieved_at IS NULL DO UPDATE`,
   using the partial unique index as the arbiter — setting `retrieval_method` to what the
@@ -236,8 +344,31 @@ All five JSON routes are resource routes (no component) delegating to a
   on "Merkitse noudetuksi" is not an error.
 - `handleRetrievedRequest` returns `null` for a disc from another club: the club filter
   lives in `queryDiscIdByExternalId`, and a `not-found` outcome is discarded.
-- `queryRetrievalList` falls back to `RetrievalMethod.PickedUp` for an out-of-range
-  smallint — a wasted trip rather than a wasted stamp.
+- `toRetrievalErrand` gives an out-of-range smallint **its own reading**, `unclear`, and the
+  card says "Noutotapa epäselvä – tarkista viestit". It used to be read as `kept-by-club`,
+  the same as a null, which had a corrupt row calmly asserting that a disc its owner had
+  asked for was going to the bring-and-buy table. The CHECK constraint should make the value
+  impossible either way; the difference is what the page does if it ever appears, and
+  "I do not know, go and look" is the only honest one. A released disc keeps that reading
+  too: `toListedErrand` carries an unreadable row through as the request the disposal
+  overruled (`superseded`), rather than folding it into "no request" — which is how the
+  first attempt at this lost it on the one page it was written for. The disc is on the shelf in all three
+  readings, so the line is on the list in all three. The type says the same thing:
+  `RetrievalErrand` is what a write may ask for, `StoredErrand` is what a row may turn out
+  to say, and only the second has the third case.
+- **A converted errand keeps its place in the order.** The list is newest request first,
+  and a conversion — the club releasing a disc its owner had asked for in July — leaves
+  `requested_at` alone, so that line stays where July put it rather than jumping to the top.
+  That is the order working as asked ("by the date the retrieval request was made"), not a
+  bug: the errand is as old as the first time it was asked for, and the club's decision
+  changes what to do with the disc, not when it was wanted. It does mean a disc marked for
+  sale today can sit near the bottom of a long list. Nothing hides it — the admin has just
+  marked it — but if that ever needs to change, it needs a column: `requested_at` cannot
+  carry both dates, and ordering on the disposal date would need a second one on the row.
+- A disc on the list because its owner gave it up, but not yet marked released, is still
+  on the disc list — and its storage icon is orange with no method preselected. That is
+  the window between reading the answers inbox and making the mark; it closes as soon as
+  the admin marks the disc, which takes it off the disc list altogether.
 - ~~Two sources of truth for "this club stores discs offsite".~~ Closed on 2026-09-04
   with `isRetrievalListEnabled()`. `clubs.stores_discs_offsite` (set for club 2 in
   `20260903010000_owner_responses.sql`) is now the one place, and it decides one thing:
@@ -263,6 +394,9 @@ All five JSON routes are resource routes (no component) delegating to a
 
 - Whether a return mark should close the open retrieval row rather than let it be
   filtered out.
+- Whether a disposal line should say which of sale or donation was chosen.
+  `discs.can_be_sold_or_donated_method` knows, when the admin answered it at all, but the
+  errand — fetch this one, it is not going back — is the same either way.
 - Whether the list should show that a line came from an owner's own answer rather than
   from the admin's transcription. `owner_response_id` makes it possible; nothing in the UI
   reads it, on the grounds that the errand is the same either way.

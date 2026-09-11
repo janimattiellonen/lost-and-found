@@ -4,8 +4,9 @@ import { currentClubId } from '~/config/clubs';
 /**
  * The numeric id of one of this club's discs, or null when it has no such disc.
  *
- * Every write to disc_retrievals goes through here: the retrieval row is keyed
- * on discs.id, and the lookup that resolves it is also what scopes the write to
+ * Every single-disc write to disc_retrievals goes through here, and every
+ * many-disc one through queryDiscIdsByExternalIds: the retrieval row is keyed on
+ * discs.id, and the lookup that resolves it is also what scopes the write to
  * APP_CLUB_ID — so an id belonging to another club cannot be given an errand on
  * this club's list, even with a valid uuid in hand.
  */
