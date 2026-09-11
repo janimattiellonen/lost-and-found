@@ -1,5 +1,4 @@
-import { DisposalMethod, type DisposalMethodValue } from '~/features/discs/disposal/disposalMethod';
-import { ReturnMethod, type ReturnMethodValue } from '~/features/discs/return/returnMethod';
+import { DisposalMethod, ReturnMethod, type DisposalMethodValue, type ReturnMethodValue } from '~/discMethods';
 
 /**
  * The actions that can be applied to a whole selection of discs at once.

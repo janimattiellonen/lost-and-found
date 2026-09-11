@@ -18,13 +18,12 @@ import {
 
 import { setDiscCourse } from '~/features/discs/courseChange/setDiscCourse';
 import { deleteDisc } from '~/features/discs/deletion/deleteDisc';
-import { disposalMethodOptions } from '~/features/discs/disposal/disposalMethod';
 import { markForDisposal } from '~/features/discs/disposal/markForDisposal';
 import { markForRetrieval } from '~/features/discs/retrieval/markForRetrieval';
 import RetrievalMethodForm from '~/features/discs/retrieval/RetrievalMethodForm';
 import { retrievalErrandMethod, type StoredErrand } from '~/features/discs/retrieval/retrievalErrand';
 import { markAsReturned } from '~/features/discs/return/markAsReturned';
-import { returnMethodOptions } from '~/features/discs/return/returnMethod';
+import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';

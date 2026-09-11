@@ -1,4 +1,4 @@
-import type { ReturnMethodValue } from './returnMethod';
+import type { ReturnMethodValue } from '~/discMethods';
 
 /** What is recorded when a disc goes back to its owner. */
 export type DiscReturnDetails = {

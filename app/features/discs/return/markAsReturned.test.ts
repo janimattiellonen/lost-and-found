@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { markAsReturned } from './markAsReturned';
-import { ReturnMethod } from './returnMethod';
+import { ReturnMethod } from '~/discMethods';
 
 const input = {
   externalId: '3f8a1c2e-5b6d-4a7f-9c0e-1d2b3a4c5d6e',

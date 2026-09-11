@@ -192,8 +192,8 @@ not columns on `discs`:
 
 | Enum                                               | Where stored                          | Values | Labels                                                |
 | -------------------------------------------------- | ------------------------------------- | ------ | ----------------------------------------------------- |
-| `ReturnMethod` (`return/returnMethod.ts`)          | `discs.return_method`                 | 0, 1   | "Postitettu", "Noudettu" (past tense — what happened) |
-| `DisposalMethod` (`disposal/disposalMethod.ts`)    | `discs.can_be_sold_or_donated_method` | 0, 1   | "Myydään", "Lahjoitetaan"                             |
+| `ReturnMethod` (`app/discMethods.ts`)              | `discs.return_method`                 | 0, 1   | "Postitettu", "Noudettu" (past tense — what happened) |
+| `DisposalMethod` (`app/discMethods.ts`)            | `discs.can_be_sold_or_donated_method` | 0, 1   | "Myydään", "Lahjoitetaan"                             |
 | `RetrievalMethod` (`retrieval/retrievalMethod.ts`) | `disc_retrievals.retrieval_method`    | 0, 1   | "Postitus", "Nouto (minulta)" (what was asked for)    |
 
 There is no fourth enum for "sale or donation" as an errand. The nullable column is decoded
@@ -213,7 +213,11 @@ intends, on the disc itself, and the retrieval list does not show it.
 (`app/features/discs/handoverMethod.ts`, values 0 `ByMail` / 1 `PickedUpFromHome` /
 2 `PickedUpFromStorage`) narrowed to `FETCHING_HANDOVER_METHODS` — the two that require a
 trip to storage. `PickedUpFromStorage` (2) is rejected by `isRetrievalMethod` and by the DB
-CHECK. All three enums are built by `app/lib/methodEnum.ts`; the numbers are persisted, so
+CHECK. All three enums are built by `app/lib/methodEnum.ts`; the first two sit together in
+`app/discMethods.ts`, at the top level beside `types.ts` and `utils.ts`, rather than in the
+discs slice — the statistics page reads their labels too and ESLint forbids one feature
+importing another, and `app/lib/` is for plumbing with no domain in it. The numbers are
+persisted, so
 add, never renumber, and extend the CHECK alongside.
 
 ## Routes & entry points
