@@ -1,7 +1,13 @@
 import DiscsReturnedToClub from '~/features/stats/DiscsReturnedToClub';
 import DiscsReturnedToOwner from '~/features/stats/DiscsReturnedToOwner';
+import MethodBreakdown from '~/features/stats/MethodBreakdown';
 import MostLostByDiscName from '~/features/stats/MostLostByDiscName';
-import { getDonatedOrSoldDiscCount, getReturnedDiscCount } from '~/features/stats/statsUtils';
+import {
+  getDisposalMethodCounts,
+  getDonatedOrSoldDiscCount,
+  getReturnMethodCounts,
+  getReturnedDiscCount,
+} from '~/features/stats/statsUtils';
 import type { DiscDTO } from '~/types';
 import H2 from '~/ui/H2';
 import H3 from '~/ui/H3';
@@ -22,9 +28,13 @@ export default function StatsPage({ data }: Props): JSX.Element {
 
         <p>{getDonatedOrSoldDiscCount(data)}</p>
 
+        <MethodBreakdown counts={getDisposalMethodCounts(data)} />
+
         <H3>Omistajille palautettujen kiekkojen määrä</H3>
 
         <p>{getReturnedDiscCount(data)}</p>
+
+        <MethodBreakdown counts={getReturnMethodCounts(data)} />
       </div>
 
       <H2 className="mt-4 mb-2">Seuralle palautetut kiekot</H2>

@@ -1,5 +1,8 @@
+/** One choice as the built enum exposes it: the stored number and its Finnish word. */
+export type MethodOption = { value: number; label: string };
+
 /** One choice: the number that is stored, and the Finnish word for it. */
-type MethodSpec = Record<string, { value: number; label: string }>;
+type MethodSpec = Record<string, MethodOption>;
 
 /**
  * Builds the small enum both disc marks need: named numeric values, the options
