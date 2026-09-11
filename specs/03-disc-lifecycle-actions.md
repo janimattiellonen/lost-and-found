@@ -66,9 +66,13 @@ Transitions:
                   |
                   +-- a later request inserts a NEW row (history keeps both)
 
-   Listed/Released --- mark disposal, or the owner answers "keep it"
-                       ---> an open row, with no method if there was none
-                            (an existing request is left as it is)
+   Listed/Released --- mark disposal ---> an open row, with no method if there
+                                         was none (an existing request is
+                                         left as it is)
+
+   Listed/Released --- the owner answers "keep it" ---> an open row with no
+                                         method (the owner's newer word
+                                         replaces any method on the row)
 
    Marking a listed disc returned or archived silently drops any open retrieval
    row off the list (it is filtered out, never closed). Releasing it for sale or
@@ -286,7 +290,7 @@ All five JSON routes are resource routes (no component) delegating to a
   nothing on any page to say it ever existed. The row is now left alone and the page decides
   what to show: `queryRetrievalList` reads `discs.can_be_sold_or_donated`, and a released
   disc reads as `kept-by-club` whatever its row says, with the row's own method carried
-  beside it as `supersededMethod` for the amber line. `requested_at` and `owner_response_id`
+  beside it as `superseded` for the amber line. `requested_at` and `owner_response_id`
   were always left alone.
 - The **opposite** direction does write: an admin picking a method for a disc the club had
   been keeping is him saying it goes back to its owner after all, and that is the newest
