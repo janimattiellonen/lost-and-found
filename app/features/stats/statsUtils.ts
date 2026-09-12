@@ -152,7 +152,7 @@ export type YearFilterResult = {
  */
 export function getReturnDate(disc: DiscDTO): Date | null {
   if (disc.returnedToOwnerDate) {
-    return toDate(disc.returnedToOwnerDate, 'y-MM-dd');
+    return toDayDate(disc.returnedToOwnerDate);
   }
 
   if (!disc.returnedToOwnerText) {
@@ -170,7 +170,7 @@ export function getReturnDate(disc: DiscDTO): Date | null {
  * Google Sheet import leaves it empty. See the spec for what that costs.
  */
 export function getDisposalDate(disc: DiscDTO): Date | null {
-  return disc.canBeSoldOrDonatedDate ? toDate(disc.canBeSoldOrDonatedDate, 'y-MM-dd') : null;
+  return disc.canBeSoldOrDonatedDate ? toDayDate(disc.canBeSoldOrDonatedDate) : null;
 }
 
 /** The date the disc was logged. Set on every row, including web-added ones. */
@@ -274,6 +274,19 @@ export function getDisposalMethodCounts(data: DiscDTO[]): MethodCount[] {
  */
 export function getReturnMethodCounts(data: DiscDTO[]): MethodCount[] {
   return countByMethod(data.filter(isReturnedToOwner), (item) => item.returnMethod, returnMethodOptions);
+}
+
+/**
+ * The day out of a stored date column, whatever shape it arrives in.
+ *
+ * The two columns are not the same PostgreSQL type: `returned_to_owner_date`
+ * comes back as "2026-07-16" and `can_be_sold_or_donated_date` as
+ * "2026-09-04T00:00:00". Reading the first ten characters covers both, and
+ * parsing that as a local day rather than handing the whole string to `Date`
+ * keeps a date from sliding to the previous day in a timezone behind UTC.
+ */
+function toDayDate(value: string): Date | null {
+  return toDate(value.slice(0, 10), 'y-MM-dd');
 }
 
 function toDate(value: string, pattern: string): Date | null {

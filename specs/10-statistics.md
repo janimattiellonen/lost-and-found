@@ -138,6 +138,15 @@ The return-date fallback is `getReturnDate`, which moved from
 `DiscsReturnedToOwner.tsx` into `statsUtils.ts` so the total and the monthly
 chart cannot drift apart about when a disc went home.
 
+**The two columns are not the same type**, which is worth knowing before
+touching either: `returned_to_owner_date` comes back as "2026-07-16" and
+`can_be_sold_or_donated_date` as "2026-09-04T00:00:00". Both go through
+`toDayDate`, which takes the first ten characters and parses them as a local
+day. Parsing the whole string with a `y-MM-dd` pattern silently yields an
+invalid date for the timestamp form — every disposal date then reads as missing
+and the total shows zero under every year, which is exactly what happened the
+first time this was built.
+
 **The disposal date is missing on most rows, and this filter shows it.** On
 2026-09-12 Puskasoturit had 495 discs marked sold-or-donated and only 44 of them
 carried `can_be_sold_or_donated_date`, all in 2026 — the column was added long

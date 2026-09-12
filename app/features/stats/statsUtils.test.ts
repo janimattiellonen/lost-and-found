@@ -209,6 +209,12 @@ describe('getReturnDate', () => {
     expect(getReturnDate(disc({ returnedToOwnerDate: '2025-03-09' }))?.getFullYear()).toBe(2025);
   });
 
+  // returned_to_owner_date comes back as a plain day, and the disposal column
+  // as a timestamp; both have to read as the day the admin picked.
+  it('reads the day, not the day before, from a plain date', () => {
+    expect(getReturnDate(disc({ returnedToOwnerDate: '2026-07-16' }))?.getDate()).toBe(16);
+  });
+
   it('falls back to the leading date of a note copied from the Google Sheet', () => {
     const date = getReturnDate(disc({ returnedToOwnerText: '29.8.2026 (Janimatti), postitettu' }));
 
@@ -227,6 +233,13 @@ describe('getDisposalDate', () => {
 
   it('reads the column when it is set', () => {
     expect(getDisposalDate(disc({ canBeSoldOrDonatedDate: '2026-01-04' }))?.getFullYear()).toBe(2026);
+  });
+
+  it('reads the timestamp shape the column actually returns', () => {
+    const date = getDisposalDate(disc({ canBeSoldOrDonatedDate: '2026-09-04T00:00:00' }));
+
+    expect(date?.getFullYear()).toBe(2026);
+    expect(date?.getDate()).toBe(4);
   });
 });
 
