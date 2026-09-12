@@ -1,6 +1,7 @@
 import { redirect } from 'react-router';
 
 import type { ComposerDisc, ComposerMessage } from '~/features/messaging/composerData';
+import { toComposerDisc } from '~/features/messaging/composerData';
 import { MAX_BATCH_SIZE, parseBatchIds } from '~/features/messaging/sendBatchSelection';
 import { getDiscsWithFullPhoneNumbers } from '~/models/discs.server';
 import { getSentMessagesByDisc } from '~/models/messageLog.server';
@@ -57,15 +58,7 @@ export async function loadSendMessageBatchPage(request: Request) {
     }));
   });
 
-  const discs: ComposerDisc[] = found.map((disc) => ({
-    externalId: disc.externalId,
-    discName: disc.discName,
-    discColour: disc.discColour,
-    ownerName: disc.ownerName,
-    ownerPhoneNumber: disc.ownerPhoneNumber,
-    notifiedAt: disc.notifiedAt,
-    ownerLinkToken: disc.ownerLinkToken,
-  }));
+  const discs: ComposerDisc[] = found.map(toComposerDisc);
 
   return { tooMany: null, discs, messageTemplates, sentMessagesByDisc, baseUrl: url.origin };
 }
