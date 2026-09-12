@@ -26,6 +26,10 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - The retrieval list is ordered newest request first, so the errands that have just come in are at the top.
 - Tapping an owner's phone number on the retrieval list or the responses view now opens a message to them instead of placing a call.
 
+### Fixed
+
+- A message written for several selected discs at once names the course the disc was found on. It had been left blank there — "on löytynyt radalta" — while the same template filled the course in correctly when the message was opened for a single disc.
+
 ## 2026-09 — Getting a disc back to its owner
 
 ### Added
