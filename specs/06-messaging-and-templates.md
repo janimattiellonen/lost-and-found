@@ -349,6 +349,20 @@ The tokens are documented to the admin by
 - `ComposerDisc` (`composerData.ts`) is the matching list on the browser's side —
   the disc fields the composer shows or substitutes. `replaceTokensWithValues`
   runs client-side as the admin types, so a token's field has to be in both.
+- `toComposerDisc` (`composerData.ts`) is how the batch loader narrows a disc to
+  that list; the one-disc loader hands the composer a whole `DiscDTO`, which is
+  assignable as it stands. Only the batch path narrows, so only the batch path
+  could drop a field — and it did: nearly every `DiscDTO` field is optional, so
+  the batch loader's hand-written field list omitted `course` and still
+  typechecked, leaving `[course]` and `[courses]` empty in every batch message
+  while the one-disc page filled them in.
+- `everyComposerFieldIsCopied` (`composerData.ts`) is what stops that happening
+  again: a type-level assertion that fails the build, naming the field, if
+  `ComposerDisc` gains one `toComposerDisc` does not copy. It is deliberately
+  not a test — a test would have to list the fields by hand itself, which is the
+  copying at fault. Adding a token to the grammar therefore means adding its
+  column to `MESSAGING_DISC_COLUMNS` and its field to `ComposerDisc`, and the
+  compiler insists on the third step.
 
 ## Edge cases & known gaps
 
