@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { getDisposalMethodCounts, getReturnMethodCounts, getTopLostDiscsByDiscName } from './statsUtils';
+import {
+  filterDiscsByYear,
+  getDisposalDate,
+  getDisposalMethodCounts,
+  getReturnDate,
+  getReturnMethodCounts,
+  getStatsYears,
+  getTopLostDiscsByDiscName,
+} from './statsUtils';
 import { DisposalMethod, ReturnMethod } from '~/discMethods';
 import type { DiscDTO } from '~/types';
 
@@ -193,5 +201,142 @@ describe('getTopLostDiscsByDiscName', () => {
       { label: 'Destroyer', value: 2 },
       { label: 'Wraith', value: 1 },
     ]);
+  });
+});
+
+describe('getReturnDate', () => {
+  it('reads the column when the admin tool wrote one', () => {
+    expect(getReturnDate(disc({ returnedToOwnerDate: '2025-03-09' }))?.getFullYear()).toBe(2025);
+  });
+
+  it('falls back to the leading date of a note copied from the Google Sheet', () => {
+    const date = getReturnDate(disc({ returnedToOwnerText: '29.8.2026 (Janimatti), postitettu' }));
+
+    expect(date?.getFullYear()).toBe(2026);
+  });
+
+  it('is null when the note begins with something other than a date', () => {
+    expect(getReturnDate(disc({ returnedToOwnerText: 'noudettu 29.8.2026' }))).toBeNull();
+  });
+});
+
+describe('getDisposalDate', () => {
+  it('is null on the rows the Google Sheet import left empty', () => {
+    expect(getDisposalDate(disc({ canBeSoldOrDonated: true }))).toBeNull();
+  });
+
+  it('reads the column when it is set', () => {
+    expect(getDisposalDate(disc({ canBeSoldOrDonatedDate: '2026-01-04' }))?.getFullYear()).toBe(2026);
+  });
+});
+
+describe('filterDiscsByYear', () => {
+  const discsOfSeveralYears = [
+    disc({ returnedToOwnerDate: '2024-05-01' }),
+    disc({ returnedToOwnerDate: '2025-05-01' }),
+    disc({ returnedToOwnerDate: '2025-11-30' }),
+    disc({}),
+    disc({}),
+  ];
+
+  const returns = { discs: discsOfSeveralYears, getDate: getReturnDate };
+
+  it('keeps every disc and reports no gap under "all"', () => {
+    expect(filterDiscsByYear(returns, 'all')).toEqual({ discs: discsOfSeveralYears, undated: 0 });
+  });
+
+  it('keeps only the discs dated in the chosen year', () => {
+    expect(filterDiscsByYear(returns, 2025).discs).toHaveLength(2);
+  });
+
+  it('reports the undated discs rather than dropping them silently', () => {
+    expect(filterDiscsByYear(returns, 2024).undated).toBe(2);
+  });
+
+  it('reports the same gap whichever year is chosen', () => {
+    expect(filterDiscsByYear(returns, 2026)).toEqual({ discs: [], undated: 2 });
+  });
+
+  it('counts a disc dated 1012 as undated, so the years still add up', () => {
+    const mistyped = {
+      discs: [disc({ returnedToOwnerText: '1.5.1012 (Janimatti), noudettu' })],
+      getDate: getReturnDate,
+    };
+
+    expect(filterDiscsByYear(mistyped, 2012)).toEqual({ discs: [], undated: 1 });
+  });
+
+  it('leaves no disc in neither a year nor the undated count', () => {
+    const all = filterDiscsByYear(returns, 'all').discs.length;
+    const years = [2024, 2025].reduce((total, year) => total + filterDiscsByYear(returns, year).discs.length, 0);
+
+    expect(years + filterDiscsByYear(returns, 2024).undated).toBe(all);
+  });
+});
+
+describe('getStatsYears', () => {
+  it('takes the union of both dates, ascending', () => {
+    const years = getStatsYears([
+      { discs: [disc({ canBeSoldOrDonatedDate: '2026-01-04' })], getDate: getDisposalDate },
+      { discs: [disc({ returnedToOwnerDate: '2024-05-01' })], getDate: getReturnDate },
+    ]);
+
+    expect(years).toEqual([2024, 2026]);
+  });
+
+  it('lists a year once however many discs carry it', () => {
+    const discsOfOneYear = [disc({ returnedToOwnerDate: '2025-01-01' }), disc({ returnedToOwnerDate: '2025-06-01' })];
+
+    expect(getStatsYears([{ discs: discsOfOneYear, getDate: getReturnDate }])).toEqual([2025]);
+  });
+
+  it('discards a mistyped year, so "1.5.1012" cannot become a button', () => {
+    const mistyped = disc({ returnedToOwnerText: '1.5.1012 (Janimatti), noudettu' });
+
+    expect(getStatsYears([{ discs: [mistyped], getDate: getReturnDate }])).toEqual([]);
+  });
+
+  it('is empty when nothing is dated', () => {
+    expect(getStatsYears([{ discs: [disc({})], getDate: getReturnDate }])).toEqual([]);
+  });
+});
+
+describe('getTopLostDiscsByDiscName with splitByYear', () => {
+  const logged = [
+    disc({ discName: 'Destroyer, Star', addedAt: '2024-08-12T00:00:00+00:00' }),
+    disc({ discName: 'Destroyer, Halo', addedAt: '2026-07-15T00:00:00+00:00' }),
+    disc({ discName: 'destroyer', addedAt: '2026-02-01T00:00:00+00:00' }),
+  ];
+
+  it('leaves the years out unless they are asked for', () => {
+    expect(getTopLostDiscsByDiscName(logged, { groupByDiscName: true })[0].years).toBeUndefined();
+  });
+
+  it('splits a grouped model by the year its discs were logged, ascending', () => {
+    const [destroyer] = getTopLostDiscsByDiscName(logged, { groupByDiscName: true, splitByYear: true });
+
+    expect(destroyer.value).toBe(3);
+    expect(destroyer.years).toEqual([
+      { year: 2024, value: 1 },
+      { year: 2026, value: 2 },
+    ]);
+  });
+
+  it('splits the exact stored names too, so the parts still sum to the bar', () => {
+    const stats = getTopLostDiscsByDiscName(logged, { splitByYear: true });
+
+    stats.forEach((stat) => {
+      expect(stat.years?.reduce((total, year) => total + year.value, 0)).toBe(stat.value);
+    });
+  });
+
+  it('counts a disc with no addedAt in the total but in no year', () => {
+    const [stat] = getTopLostDiscsByDiscName([...logged, disc({ discName: 'Destroyer' })], {
+      groupByDiscName: true,
+      splitByYear: true,
+    });
+
+    expect(stat.value).toBe(4);
+    expect(stat.years?.reduce((total, year) => total + year.value, 0)).toBe(3);
   });
 });

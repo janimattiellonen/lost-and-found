@@ -21,6 +21,8 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - The statistics page breaks its two headline totals down by method: how many discs are waiting to be sold and how many donated, and how many went back to their owners by post and how many were picked up. Discs whose method was never filled in are shown as "Ei kirjattu" rather than dropped, so each breakdown still adds up to the total above it.
 - A checkbox under "Top 10 kadotettua kiekkomallia" on the statistics page counts discs by model rather than by the exact name typed in, so "Destroyer, Star", "Destroyer, Halo" and "destroyer" share one bar.
 - Every disc in the list has a pencil icon opening a page that edits it: name, colour, manufacturer, owner, phone number, course and the club's internal notes, so a typo is fixed in the app rather than in the database.
+- The statistics page filters its two headline totals by year — "2024 | 2025 | 2026 | Kaikki" — with the years taken from the data rather than a fixed list. A disc whose date was never recorded belongs to no year, so a line under the total says how many were left out.
+- A second checkbox under "Top 10 kadotettua kiekkomallia", "Näytä vuosien mukaan", puts a second bar under each model split into the years its discs were logged, each part captioned with its year and count.
 
 ### Changed
 

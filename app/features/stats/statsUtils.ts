@@ -3,7 +3,7 @@ import type { MethodOption } from '~/lib/methodEnum';
 import type { DiscDTO } from '~/types';
 import type { BarValueType } from '~/ui/BarChart';
 import { getMonthName } from '~/utils';
-import { format, isWithinInterval, lastDayOfMonth } from 'date-fns';
+import { format, isWithinInterval, lastDayOfMonth, parse } from 'date-fns';
 
 export type LostDiscsProps = {
   data: DiscDTO[];
@@ -123,12 +123,135 @@ export function getAddedDiscCountByDaysInMonth(
   return sortMappedData(mapped);
 }
 
-export function getDonatedOrSoldDiscCount(data: DiscDTO[]): number {
-  return data.filter(isDonatedOrSold).length;
+/** Either one year, or every disc whatever its date. */
+export type YearSelection = number | 'all';
+
+/** A disc's relevant date for one statistic, or null when it has none. */
+export type GetDiscDate = (disc: DiscDTO) => Date | null;
+
+/** A set of discs together with the date that places each of them in a year. */
+export type DatedDiscs = {
+  discs: DiscDTO[];
+  getDate: GetDiscDate;
+};
+
+export type YearFilterResult = {
+  discs: DiscDTO[];
+  /** Discs dropped for having no usable date. Always 0 under 'all'. */
+  undated: number;
+};
+
+/**
+ * The date a disc went back to its owner, from one of two places:
+ * returned_to_owner_date, written by the admin tool, or the leading d.M.yyyy of
+ * the free-text note copied from the Google Sheet ("29.8.2026 (Janimatti),
+ * postitettu"), which is all the older rows have.
+ *
+ * Shared with DiscsReturnedToOwner so the returned-to-owner total and the
+ * monthly chart under it cannot disagree about when a disc went home.
+ */
+export function getReturnDate(disc: DiscDTO): Date | null {
+  if (disc.returnedToOwnerDate) {
+    return toDate(disc.returnedToOwnerDate, 'y-MM-dd');
+  }
+
+  if (!disc.returnedToOwnerText) {
+    return null;
+  }
+
+  const leadingDate = disc.returnedToOwnerText.match(/^\d+\.\d+\.\d+/);
+
+  return leadingDate?.length === 1 ? toDate(leadingDate[0], 'd.M.yyyy') : null;
 }
 
-export function getReturnedDiscCount(data: DiscDTO[]): number {
-  return data.filter(isReturnedToOwner).length;
+/**
+ * The date the club released a disc for sale or donation. Null on most rows:
+ * the column was added long after the club started releasing discs, and the
+ * Google Sheet import leaves it empty. See the spec for what that costs.
+ */
+export function getDisposalDate(disc: DiscDTO): Date | null {
+  return disc.canBeSoldOrDonatedDate ? toDate(disc.canBeSoldOrDonatedDate, 'y-MM-dd') : null;
+}
+
+/** The date the disc was logged. Set on every row, including web-added ones. */
+function getAddedDate(disc: DiscDTO): Date | null {
+  if (!disc.addedAt) {
+    return null;
+  }
+
+  const parsed = new Date(disc.addedAt);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * Narrows a set of discs to one year, and reports how many it could not place.
+ *
+ * An undated disc belongs to no year, so the year figures can only ever be
+ * smaller than the all-time one. The count comes back rather than being
+ * silently dropped, because on the disposal total it is nine discs in ten and
+ * the page has to be able to say so.
+ */
+export function filterDiscsByYear({ discs, getDate }: DatedDiscs, year: YearSelection): YearFilterResult {
+  if (year === 'all') {
+    return { discs, undated: 0 };
+  }
+
+  const withYears = discs.map((disc) => ({ disc, year: toPlausibleYear(getDate(disc)) }));
+
+  return {
+    discs: withYears.filter((item) => item.year === year).map((item) => item.disc),
+    undated: withYears.filter((item) => item.year === null).length,
+  };
+}
+
+/**
+ * The years the club actually has statistics for, ascending, taken from every
+ * date passed in. A date outside `toPlausibleYear`'s bound gets no button.
+ */
+export function getStatsYears(sets: DatedDiscs[]): number[] {
+  const years = new Set<number>();
+
+  sets.forEach(({ discs, getDate }) => {
+    discs.forEach((disc) => {
+      const year = toPlausibleYear(getDate(disc));
+
+      if (year !== null) {
+        years.add(year);
+      }
+    });
+  });
+
+  return [...years].sort((a, b) => a - b);
+}
+
+/**
+ * A disc's year, or null when it has no date or one nobody could have meant.
+ *
+ * The bound is 2000..next year. One live row's returned_to_owner_text begins
+ * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
+ * callers: if only the button list rejected it, the disc would drop out of
+ * every year and out of the "Päivämäärä puuttuu" count too, and the years would
+ * quietly stop adding up to the all-time total.
+ */
+function toPlausibleYear(date: Date | null): number | null {
+  if (date === null) {
+    return null;
+  }
+
+  const year = date.getFullYear();
+
+  return year >= 2000 && year <= new Date().getFullYear() + 1 ? year : null;
+}
+
+/** The discs the club has released for sale or donation. */
+export function getDonatedOrSoldDiscs(data: DiscDTO[]): DiscDTO[] {
+  return data.filter(isDonatedOrSold);
+}
+
+/** The discs that reached their owners. */
+export function getReturnedDiscs(data: DiscDTO[]): DiscDTO[] {
+  return data.filter(isReturnedToOwner);
 }
 
 /** One line of a method breakdown: the Finnish label, and how many discs have it. */
@@ -153,8 +276,14 @@ export function getReturnMethodCounts(data: DiscDTO[]): MethodCount[] {
   return countByMethod(data.filter(isReturnedToOwner), (item) => item.returnMethod, returnMethodOptions);
 }
 
-// Shared with the two headline counts above, so a breakdown can never be drawn
-// from a different set of discs than the total printed over it.
+function toDate(value: string, pattern: string): Date | null {
+  const parsed = parse(value, pattern, new Date());
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Shared with the two disc sets above, so a breakdown can never be drawn from a
+// different set of discs than the total printed over it.
 function isDonatedOrSold(item: DiscDTO): boolean {
   return Boolean(item.canBeSoldOrDonated);
 }
@@ -190,14 +319,24 @@ function countByMethod(
   return notRecorded > 0 ? [...counts, { label: 'Ei kirjattu', value: notRecorded }] : counts;
 }
 
+/** One year of a model's total, for the stacked bar under it. */
+export type YearCount = {
+  year: number;
+  value: number;
+};
+
 export type DiscNameStat = {
   label: string;
   value: number;
+  /** Ascending by year, summing to `value`. Absent unless asked for. */
+  years?: YearCount[];
 };
 
 export type TopLostDiscsOptions = {
   /** Count "Destroyer, Star" and "destroyer" as the same model. */
   groupByDiscName?: boolean;
+  /** Also break each model's total down by the year its discs were logged. */
+  splitByYear?: boolean;
   limit?: number;
 };
 
@@ -208,24 +347,40 @@ export type TopLostDiscsOptions = {
  * and "Destroyer, Halo" are two entries. With it, everything from the first
  * comma onwards is dropped as the plastic and the remainder is matched
  * case-insensitively, which is what folds the two into one "Destroyer".
+ *
+ * With `splitByYear` each entry also carries the same total broken down by the
+ * year the disc was logged (`addedAt`), which is the only date on a disc that is
+ * both populated everywhere and chronologically real — see the spec.
  */
 export function getTopLostDiscsByDiscName(data: DiscDTO[], options: TopLostDiscsOptions = {}): DiscNameStat[] {
-  const groups = new Map<string, { value: number; spellings: Map<string, number> }>();
+  const groups = new Map<string, { value: number; spellings: Map<string, number>; years: Map<number, number> }>();
 
   data.forEach((item: DiscDTO) => {
     const spelling = options.groupByDiscName ? getDiscModelName(item.discName) : item.discName;
     const key = options.groupByDiscName ? spelling.toLowerCase() : spelling;
 
-    const group = groups.get(key) ?? { value: 0, spellings: new Map<string, number>() };
+    const group = groups.get(key) ?? {
+      value: 0,
+      spellings: new Map<string, number>(),
+      years: new Map<number, number>(),
+    };
 
     group.value += 1;
     group.spellings.set(spelling, (group.spellings.get(spelling) ?? 0) + 1);
+
+    const year = getAddedDate(item)?.getFullYear();
+
+    if (year !== undefined) {
+      group.years.set(year, (group.years.get(year) ?? 0) + 1);
+    }
 
     groups.set(key, group);
   });
 
   const stats: DiscNameStat[] = [...groups.values()].map((group) => {
-    return { label: pickCommonestSpelling(group.spellings), value: group.value };
+    const stat: DiscNameStat = { label: pickCommonestSpelling(group.spellings), value: group.value };
+
+    return options.splitByYear ? { ...stat, years: toYearCounts(group.years) } : stat;
   });
 
   const sorted = stats.sort((a: DiscNameStat, b: DiscNameStat) => b.value - a.value);
@@ -243,6 +398,15 @@ function getDiscModelName(discName: string): string {
   const model = discName.split(/[,.]/)[0].trim().replace(/\s+/g, ' ');
 
   return model.length > 0 ? model : discName.trim();
+}
+
+/**
+ * A model's year tallies, ascending. A disc with an unreadable `addedAt` is
+ * counted in the model's total but in no year, so the parts can fall short of
+ * the bar above them; no live row is like that.
+ */
+function toYearCounts(years: Map<number, number>): YearCount[] {
+  return [...years.entries()].map(([year, value]) => ({ year, value })).sort((a, b) => a.year - b.year);
 }
 
 /**
