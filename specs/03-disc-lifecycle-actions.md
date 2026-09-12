@@ -45,9 +45,11 @@ A disc's state is not one column. It is the combination of three flags/timestamp
 Transitions:
 
 ```
-                    +-- mark returned ---> Returned  (terminal in the UI)
+                    +-- mark returned ---> Returned  (one-way here; the edit
+                    |                        form in spec 14 unticks it)
                     |
-   Listed ----------+-- mark disposal ---> Released  (terminal in the UI)
+   Listed ----------+-- mark disposal ---> Released  (one-way here; the edit
+                    |                        form in spec 14 unticks it)
                     |                        and onto the retrieval list
      |  ^           |
      |  |           +-- delete ----------> gone
@@ -341,8 +343,12 @@ All five JSON routes are resource routes (no component) delegating to a
   It is set by the maintenance script `scripts/archiveStaleDiscs.ts`
   (`npm run archive:discs`), which archives unresolved discs added before a cutoff.
   Clearing it (putting a disc back on the list) is a manual SQL update.
-- No transition is reversible from the UI: nothing clears `is_returned_to_owner`,
-  `can_be_sold_or_donated` or `archived_at`. A wrong mark is fixed in SQL.
+- None of the actions _here_ is reversible: a row action only ever sets a mark. The
+  disc edit form (spec 14) is the way back for `is_returned_to_owner` and
+  `can_be_sold_or_donated` — unticking either clears its date and method too, though
+  neither untick touches `disc_retrievals`, so a disc released and then un-released
+  stays on the retrieval list. Nothing clears `archived_at`; that one is still a
+  manual SQL update.
 - Two maintenance scripts sit outside the UI entirely and are the only writers of their
   columns: `npm run archive:discs` and `npm run import:puskasoturit` (spec 09).
 - The return mark does _not_ close an open retrieval row. The row stays in the table with
