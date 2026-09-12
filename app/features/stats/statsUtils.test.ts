@@ -6,6 +6,9 @@ import {
   getDisposalMethodCounts,
   getReturnDate,
   getReturnMethodCounts,
+  getDefaultYear,
+  getEarliestDate,
+  getSelectedYear,
   getStatsYears,
   getTopLostDiscsByDiscName,
 } from './statsUtils';
@@ -288,29 +291,111 @@ describe('filterDiscsByYear', () => {
 });
 
 describe('getStatsYears', () => {
-  it('takes the union of both dates, ascending', () => {
-    const years = getStatsYears([
-      { discs: [disc({ canBeSoldOrDonatedDate: '2026-01-04' })], getDate: getDisposalDate },
-      { discs: [disc({ returnedToOwnerDate: '2024-05-01' })], getDate: getReturnDate },
-    ]);
+  it('lists only the years this total has data for, ascending', () => {
+    const returns = {
+      discs: [disc({ returnedToOwnerDate: '2026-01-04' }), disc({ returnedToOwnerDate: '2024-05-01' })],
+      getDate: getReturnDate,
+    };
 
-    expect(years).toEqual([2024, 2026]);
+    expect(getStatsYears(returns)).toEqual([2024, 2026]);
+  });
+
+  // The two totals reach back to different places, so each gets its own list:
+  // the disposal date was first recorded in September 2026, while the returns
+  // go back to 2024 through the Google Sheet notes.
+  it('does not offer a year the total itself has no disc in', () => {
+    const disposals = { discs: [disc({ canBeSoldOrDonatedDate: '2026-09-01T00:00:00' })], getDate: getDisposalDate };
+
+    expect(getStatsYears(disposals)).toEqual([2026]);
   });
 
   it('lists a year once however many discs carry it', () => {
     const discsOfOneYear = [disc({ returnedToOwnerDate: '2025-01-01' }), disc({ returnedToOwnerDate: '2025-06-01' })];
 
-    expect(getStatsYears([{ discs: discsOfOneYear, getDate: getReturnDate }])).toEqual([2025]);
+    expect(getStatsYears({ discs: discsOfOneYear, getDate: getReturnDate })).toEqual([2025]);
   });
 
   it('discards a mistyped year, so "1.5.1012" cannot become a button', () => {
     const mistyped = disc({ returnedToOwnerText: '1.5.1012 (Janimatti), noudettu' });
 
-    expect(getStatsYears([{ discs: [mistyped], getDate: getReturnDate }])).toEqual([]);
+    expect(getStatsYears({ discs: [mistyped], getDate: getReturnDate })).toEqual([]);
   });
 
   it('is empty when nothing is dated', () => {
-    expect(getStatsYears([{ discs: [disc({})], getDate: getReturnDate }])).toEqual([]);
+    expect(getStatsYears({ discs: [disc({})], getDate: getReturnDate })).toEqual([]);
+  });
+});
+
+describe('getSelectedYear', () => {
+  it('keeps a year the data still offers', () => {
+    expect(getSelectedYear(2025, [2024, 2025, 2026])).toBe(2025);
+  });
+
+  it('keeps "Kaikki" while more than one year is offered', () => {
+    expect(getSelectedYear('all', [2024, 2025])).toBe('all');
+  });
+
+  // The loader revalidates under an open page, so what was clicked against the
+  // old data can name a year that no longer has a button.
+  it('falls back when the selected year is no longer offered', () => {
+    expect(getSelectedYear(2024, [2026])).toBe(2026);
+  });
+
+  it('drops "Kaikki" when the years shrink to one, rather than showing an unexplained total', () => {
+    expect(getSelectedYear('all', [2026])).toBe(2026);
+  });
+
+  it('leaves "Kaikki" standing when nothing is dated and no button renders', () => {
+    expect(getSelectedYear('all', [])).toBe('all');
+  });
+});
+
+describe('getEarliestDate', () => {
+  it('is the oldest dated disc in the total', () => {
+    const returns = {
+      discs: [
+        disc({ returnedToOwnerDate: '2026-01-15' }),
+        disc({ returnedToOwnerText: '3.9.2024 (Janimatti), noudettu' }),
+        disc({}),
+      ],
+      getDate: getReturnDate,
+    };
+
+    const earliest = getEarliestDate(returns);
+
+    expect(earliest?.getFullYear()).toBe(2024);
+    expect(earliest?.getMonth()).toBe(8);
+    expect(earliest?.getDate()).toBe(3);
+  });
+
+  it('ignores a date nobody could have meant, rather than reporting 1012', () => {
+    const returns = {
+      discs: [
+        disc({ returnedToOwnerText: '1.5.1012 (Janimatti), noudettu' }),
+        disc({ returnedToOwnerDate: '2025-02-02' }),
+      ],
+      getDate: getReturnDate,
+    };
+
+    expect(getEarliestDate(returns)?.getFullYear()).toBe(2025);
+  });
+
+  it('is null when the total has nothing dated', () => {
+    expect(getEarliestDate({ discs: [disc({})], getDate: getReturnDate })).toBeNull();
+  });
+});
+
+describe('getDefaultYear', () => {
+  it('starts on the only year there is, since "Kaikki" is not offered', () => {
+    expect(getDefaultYear([2026])).toBe(2026);
+  });
+
+  it('starts on "Kaikki" once there is more than one year to compare', () => {
+    expect(getDefaultYear([2024, 2025, 2026])).toBe('all');
+  });
+
+  it('falls back to "Kaikki" when no disc is dated and no button renders', () => {
+    expect(getDefaultYear([])).toBe('all');
   });
 });
 

@@ -28,37 +28,46 @@ everything is computed in the browser from one fetch of the club's discs.
    owners) — a count of discs with `isReturnedToOwner`, and under it a breakdown
    of that same count by `returnMethod`: "Postitettu" (posted), "Noudettu"
    (picked up), and "Ei kirjattu" on the same condition.
-4. Above those two totals sits a row of year buttons, one per year plus
-   "Kaikki" (all) — 2024, 2025, 2026, Kaikki — with "Kaikki" selected when the
-   page opens. They are `app/ui/Button.tsx` in its `contained`/`outlined`
-   variants, so the selected year is the filled one; the original sketch wrote
-   them as "2024 | 2025 | 2026 | Kaikki" but no separator is drawn. Clicking a year
-   narrows **both** totals and both method breakdowns to the discs dated in it;
-   clicking "Kaikki" restores the all-time figures. The two monthly charts and
-   the Top 10 below are not affected. The choice is component state only —
-   nothing is stored, and reloading returns to "Kaikki".
-5. When a year is selected and some discs in that total carry no usable date,
-   then a line under the breakdown reads "Päivämäärä puuttuu 451 kiekolta – ne
-   eivät näy vuosivalinnoissa." (451 discs have no date — they do not appear
-   under any year). Those discs are counted under "Kaikki" and under no year, so
-   the years never sum to the all-time total without it. The line is absent
-   under "Kaikki" and absent when every disc is dated.
-6. "Seuralle palautetut kiekot" (discs returned to the club) — a monthly bar
+4. **Each** of those two totals carries its own row of year buttons, directly
+   under its heading, offering only the years that total has a dated disc in.
+   They are `app/ui/Button.tsx` in its `contained`/`outlined` variants, so the
+   selected year is the filled one; the original sketch wrote them as
+   "2024 | 2025 | 2026 | Kaikki" but no separator is drawn. Clicking a year
+   narrows that total and its method breakdown; the other total, the two
+   monthly charts and the Top 10 are untouched. The choice is component state
+   only — nothing is stored, and reloading returns to the default.
+5. "Kaikki" (all) appears only when a total has data in more than one year, and
+   it is then what the total opens on. With a single year there is no button for
+   it and the total opens on that year. On the live data this means the
+   sale/donation total shows one button, 2026, while the returns total shows
+   2024, 2025, 2026 and Kaikki.
+6. Under each total's method breakdown a line reads "Tiedot alkaen 1.9.2026"
+   (data from 1.9.2026), giving the date of the oldest dated disc that total
+   counts, whichever year is selected. The two differ: 1.9.2026 for sales,
+   26.6.2024 for returns. The line is absent when the total has no dated disc
+   at all.
+7. When a year is selected and some discs in that total carry no usable date,
+   then a further line reads "Päivämäärä puuttuu 451 kiekolta – ne eivät näy
+   vuosivalinnoissa." (451 discs have no date — they do not appear under any
+   year). Those discs are counted under "Kaikki" and under no year, so the years
+   never sum to the all-time total without it. The line is absent under "Kaikki"
+   and absent when every disc is dated.
+8. "Seuralle palautetut kiekot" (discs returned to the club) — a monthly bar
    chart of discs by `added_at`.
-7. "Omistajille palautetut kiekot" — a monthly bar chart of discs by the date
+9. "Omistajille palautetut kiekot" — a monthly bar chart of discs by the date
    they went back to their owner.
-8. When a bar in either monthly chart is clicked, then a second chart appears
-   below it breaking that month down by day; the clicked bar turns blue.
-9. "Top 10 kadotettua kiekkomallia" (top 10 most-lost disc models) — a
-   horizontal bar chart of the ten most frequent `disc_name` values.
-10. Under that title sits a checkbox, "Ryhmittele kiekon nimen mukaan" (group by
+10. When a bar in either monthly chart is clicked, then a second chart appears
+    below it breaking that month down by day; the clicked bar turns blue.
+11. "Top 10 kadotettua kiekkomallia" (top 10 most-lost disc models) — a
+    horizontal bar chart of the ten most frequent `disc_name` values.
+12. Under that title sits a checkbox, "Ryhmittele kiekon nimen mukaan" (group by
     disc name), off by default. When it is ticked, then the chart counts by disc
     model instead of by the exact stored string: "Destroyer, Star",
     "Destroyer, Halo" and "destroyer" become one bar, labelled with whichever
     spelling of the model occurs most often in the group. The choice is component
     state only — nothing is stored, and reloading the page returns to the
     unticked chart.
-11. Beside it sits a second checkbox, "Näytä vuosien mukaan" (show by year),
+13. Beside it sits a second checkbox, "Näytä vuosien mukaan" (show by year),
     also off by default and independent of the first. When it is ticked, then a
     second bar appears under each model's bar, the same length as it, divided
     into one part per year the model was logged in, earliest year leftmost. Each
@@ -119,8 +128,10 @@ never sees it.
 
 ### The year filter
 
-`YearFilter.tsx` renders the buttons; `StatsPage` holds the selected year and
-passes the narrowed disc arrays down. The work is done by `filterDiscsByYear` in
+`TotalByYear.tsx` is one headline total: its buttons, its count, its method
+breakdown and its two explanatory lines. `StatsPage` renders two of them and
+holds no filter state itself, so neither total can narrow the other.
+`YearFilter.tsx` draws the buttons. The work is done by `filterDiscsByYear` in
 `statsUtils.ts`, which takes a `DatedDiscs` — a disc array paired with the
 function that reads each disc's relevant date — and either a year or `'all'`,
 and returns both the matching discs and a count of the ones it could not date.
@@ -159,9 +170,29 @@ released, so a year built on it would answer a question nobody asked. The
 "Päivämäärä puuttuu" line exists so the zero is never mistaken for "we released
 nothing" — it names the 451 discs that dropped out.
 
-The year buttons are the years actually present in the two dates, ascending,
-with "Kaikki" last. `getStatsYears` takes the union of both sets, so a year that
-only has returns still gets a button.
+A total's buttons are the years its own dates cover, ascending, with "Kaikki"
+last. `getStatsYears` is given one total's set, not both, because the two reach
+back to different places and a shared list offered the sale total years it can
+only ever read zero in: the club began recording a disposal date on 1 September
+2026, while the returns go back to 26 June 2024 through the dates written into
+the Google Sheet notes.
+
+"Kaikki" is left out entirely while a total has only one year. It would not even
+be a synonym for that year — it also folds in every disc whose date was never
+recorded, so on the sale total it reads 495 beside 2026's 44. `getDefaultYear`
+therefore opens such a total on its single year. Both come back on their own
+once a second year has a dated disc; no date is hardcoded.
+
+`getEarliestDate` supplies the "Tiedot alkaen" line, skipping implausible dates
+the same way the buttons do.
+
+**The selected year is derived, not stored.** `TotalByYear` keeps what was
+clicked, but renders `getSelectedYear(clicked, years)`. The loader revalidates
+while the page is open, and a click made against the older data can name a year
+that no longer has a button — or be "Kaikki" after the years shrank to one,
+which would print the all-time 495 with nothing on screen offering it. Either
+way the total falls back to its default, so a count is never shown that no
+button explains.
 
 Both it and `filterDiscsByYear` place a disc through `toPlausibleYear`, which
 returns null for anything outside 2000 to next year. One live row's
@@ -255,9 +286,16 @@ daily ones.
   rather than hand-rolled CSS, `contained` for the selected year and `outlined`
   for the rest, inside a `role="group"` labelled "Vuosi" (year), the selected
   one carrying `aria-pressed`. Button uppercases its text, so "Kaikki" reads
-  "KAIKKI", as every other button in the app does. It lives in the feature
-  rather than `app/ui/` because the stats page is the only thing that filters by
-  year.
+  "KAIKKI", as every other button in the app does. It renders nothing at all
+  when the total has no dated disc. It lives in the feature rather than
+  `app/ui/` because the stats page is the only thing that filters by year.
+  `getDefaultYear` sits in `statsUtils.ts` rather than beside it, so the unit
+  tests can reach it without pulling a StyleX component into a plain Node run —
+  importing this file from a test fails with "Unexpected 'stylex.defineVars'
+  call at runtime".
+- `app/features/stats/TotalByYear.tsx` — one headline total end to end: its
+  year buttons, count, method breakdown, "Tiedot alkaen" line and
+  "Päivämäärä puuttuu" line. `StatsPage` renders it twice.
 - `app/features/stats/MethodBreakdown.tsx` — the method lines under each total,
   as a `<dl>` of label and count. It lives in the feature rather than `app/ui/`
   because both its uses are on this one page.
@@ -281,14 +319,16 @@ daily ones.
 - Grouping never looks past the first comma or full stop, so a two-word mould
   such as "Night Trooper" or "Sea Serpent" survives whole — there is no attempt
   to tell a plastic from part of a name.
-- The year filter narrows only the two totals and their method breakdowns.
-  Neither monthly chart nor the Top 10 reads it; the Top 10's own year split is
-  a separate control with a separate date (`added_at`).
+- A year filter narrows one total and its method breakdown, nothing else.
+  Neither monthly chart nor the Top 10 reads either of them; the Top 10's own
+  year split is a separate control with a separate date (`added_at`).
+- A total never offers a year it has no dated disc in, so a button is never a
+  guaranteed zero.
 - A disc with no usable date is in the all-time total and in no year. Selecting
   a year can therefore only ever show fewer discs than "Kaikki", and the years
   plus the "Päivämäärä puuttuu" count always add back up to it.
 - The year buttons come from the data, not from a hard-coded list, so a club
-  whose discs are all from one year sees one button and "Kaikki".
+  whose discs are all from one year sees that single button and no "Kaikki".
 - Phone numbers are not selected at all here (the `owner_phone_number` masking
   in `getDiscsForStats` is dead code for the current select list).
 - The whole club's disc table crosses the wire on every page load, and every
@@ -327,10 +367,19 @@ daily ones.
   "Kaikki" they are all-time totals; the year buttons are the only date control
   on the page, and they do not narrow by anything finer than a year.
 - `can_be_sold_or_donated_date` is null on 451 of the 495 sold-or-donated discs,
-  so the disposal total's year buttons are drawn from 9% of the rows. 2024 and
-  2025 read zero not because nothing was released but because nothing was
-  dated. The "Päivämäärä puuttuu" line says so on screen; nothing backfills the
-  column and nothing will.
+  so that total's single 2026 button is drawn from 9% of the rows and the total
+  it shows, 44, is not the number of discs the club has released. The
+  "Päivämäärä puuttuu" line says so on screen; nothing backfills the column and
+  nothing will. The club started recording the date in September 2026, so the
+  earlier releases are simply not recoverable.
+- A total with no dated disc renders no filter at all and quietly shows its
+  all-time figure. No live club is in that state — both have dated discs in both
+  totals — and nothing on screen would say the filter is missing rather than
+  broken.
+- With one year and no "Kaikki", the sale total has no control that shows its
+  all-time figure at all. That is deliberate — 495 would be read as 495 dated
+  sales — but it does mean the only way to see it is to wait for 2027, when
+  "Kaikki" returns on its own.
 - One row's `returned_to_owner_text` starts "1.5.1012". `toPlausibleYear`
   bounds a year to 2000..next year, and both the button list and the filter go
   through it, so the disc gets no button of its own and is counted under
@@ -353,9 +402,10 @@ daily ones.
   backfills the old rows and nothing will: the information was never captured.
 - `statsUtils.test.ts` covers `getTopLostDiscsByDiscName` (including the year
   split), the two method breakdowns, and the year helpers — `getReturnDate`,
-  `getDisposalDate`, `filterDiscsByYear` and `getStatsYears`. Nothing covers the
-  month/day bucketing helpers or any stats component, so neither `YearFilter`
-  nor the stacked bar has a test: the caption collision that staggering fixed
+  `getDisposalDate`, `filterDiscsByYear`, `getStatsYears`, `getEarliestDate`,
+  `getDefaultYear` and `getSelectedYear`. Nothing covers the month/day bucketing helpers or any stats
+  component, so neither `YearFilter`, `TotalByYear` nor the stacked bar has a
+  test: the caption collision that staggering fixed
   was found by rendering the chart and looking at it, not by a test, and it
   would not be caught if it came back.
 - Charts are unlabelled beyond the title; no empty state — a club with no data

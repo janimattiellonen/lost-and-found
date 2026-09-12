@@ -206,23 +206,77 @@ export function filterDiscsByYear({ discs, getDate }: DatedDiscs, year: YearSele
 }
 
 /**
- * The years the club actually has statistics for, ascending, taken from every
- * date passed in. A date outside `toPlausibleYear`'s bound gets no button.
+ * The years one total actually has data for, ascending. A date outside
+ * `toPlausibleYear`'s bound gets no button.
  */
-export function getStatsYears(sets: DatedDiscs[]): number[] {
+export function getStatsYears({ discs, getDate }: DatedDiscs): number[] {
   const years = new Set<number>();
 
-  sets.forEach(({ discs, getDate }) => {
-    discs.forEach((disc) => {
-      const year = toPlausibleYear(getDate(disc));
+  discs.forEach((disc) => {
+    const year = toPlausibleYear(getDate(disc));
 
-      if (year !== null) {
-        years.add(year);
-      }
-    });
+    if (year !== null) {
+      years.add(year);
+    }
   });
 
   return [...years].sort((a, b) => a - b);
+}
+
+/**
+ * What a total's filter starts on: the all-time figure once there is more than
+ * one year to compare, and otherwise the only year there is — "Kaikki" is not
+ * offered then, so it cannot be the starting point.
+ *
+ * It lives here rather than beside YearFilter so the unit tests can reach it
+ * without pulling a StyleX component into a plain Node test run.
+ */
+export function getDefaultYear(years: number[]): YearSelection {
+  return years.length === 1 ? years[0] : 'all';
+}
+
+/**
+ * The year a total is actually showing, given what the admin last clicked and
+ * what the data now offers.
+ *
+ * The two can disagree: the loader revalidates while the page is open, and a
+ * selection made against the old data may name a year that no longer has a
+ * button — or be 'all' after the years shrank to one, which would print the
+ * all-time figure with nothing on screen offering it. Either way the total
+ * falls back to its default rather than showing a count no button explains.
+ */
+export function getSelectedYear(selected: YearSelection, years: number[]): YearSelection {
+  if (selected === 'all') {
+    return years.length > 1 ? 'all' : getDefaultYear(years);
+  }
+
+  return years.includes(selected) ? selected : getDefaultYear(years);
+}
+
+/**
+ * The oldest disc in a set that carries a usable date, so a total can say how
+ * far back it actually reaches.
+ *
+ * Worth printing because the two totals start in different places and neither
+ * start is obvious: the club only began recording a disposal date in September
+ * 2026, while the returns reach back to 2024 through the dates written into the
+ * Google Sheet notes.
+ */
+export function getEarliestDate({ discs, getDate }: DatedDiscs): Date | null {
+  let earliest: Date | null = null;
+
+  // A for...of rather than forEach: inside a callback TypeScript cannot see
+  // that `earliest` is reassigned, and narrows it to `null` for everything
+  // after the loop.
+  for (const disc of discs) {
+    const date = getDate(disc);
+
+    if (date !== null && toPlausibleYear(date) !== null && (earliest === null || date < earliest)) {
+      earliest = date;
+    }
+  }
+
+  return earliest;
 }
 
 /**
