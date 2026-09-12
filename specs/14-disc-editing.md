@@ -29,43 +29,51 @@ the disc list, so a correction costs a click rather than a hand-written `UPDATE`
 3. When the admin changes a field and presses "Tallenna muutokset" (save
    changes), the disc is updated and the page says "Kiekon tiedot tallennettu."
    (the disc's details were saved) above the form.
-4. When a required field is empty or a value is impossible, nothing is written
+4. When the admin types again after a save, the "tallennettu" note disappears:
+   what is on screen is no longer what is stored, so the line would be a lie.
+5. When a required field is empty or a value is impossible, nothing is written
    and the page comes back with a Finnish message under the offending field.
-5. When the admin ticks "Palautettu omistajalle" (returned to its owner) and
+6. When the admin ticks "Palautettu omistajalle" (returned to its owner) and
    gives a date, the disc leaves the public list exactly as the list's own
    row action would have left it.
-6. When the admin ticks "Myytävissä tai lahjoitettavissa" (available to be sold
+7. When the admin ticks "Myytävissä tai lahjoitettavissa" (available to be sold
    or donated) and gives a date, the disc leaves the public list and goes onto
    the retrieval list as a "kept by the club" errand — the same pair of writes
    the list's own disposal action makes.
-7. When the admin unticks either box, the disc comes back to the public list and
+8. When the admin unticks either box, the disc comes back to the public list and
    that box's date and method are cleared. This is the only way back: the list's
    row actions are one-way.
-8. When the admin presses "Peru" (cancel), they return to the disc list with
+9. When the admin presses "Peru" (cancel), they return to the disc list with
    nothing written.
-9. When the disc does not exist, or belongs to another club, the page answers
-   404 rather than an empty form.
+10. When the disc does not exist, or belongs to another club, the page answers
+    404 rather than an empty form.
 
 ## Data
 
 Every column below lives on `discs` and is written by this one form. Nothing here
 is new: the feature adds no migration.
 
-| Column                          | Type             | Null? | Edited as                                         |
-| ------------------------------- | ---------------- | ----- | ------------------------------------------------- |
-| `disc_name`                     | text             | no    | one text field, required                          |
-| `disc_colour`                   | text             | no    | one text field; empty is stored as `''`           |
-| `disc_manufacturer`             | text             | yes   | text field; empty is stored as `NULL`             |
-| `owner_name`                    | text             | yes   | text field; empty is stored as `NULL`             |
-| `owner_phone_number`            | text             | yes   | text field; empty is stored as `NULL`             |
-| `course`                        | text             | yes   | dropdown of this club's courses, plus "no course" |
-| `additional_info`               | text             | yes   | textarea; club-internal, never publicly shown     |
-| `is_returned_to_owner`          | boolean          | no    | checkbox                                          |
-| `returned_to_owner_date`        | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked |
-| `return_method`                 | smallint         | yes   | dropdown: 0 `Postitettu`, 1 `Noudettu`, or none   |
-| `can_be_sold_or_donated`        | boolean          | no    | checkbox                                          |
-| `can_be_sold_or_donated_date`   | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked |
-| `can_be_sold_or_donated_method` | smallint         | yes   | dropdown: 0 `Myydään`, 1 `Lahjoitetaan`, or none  |
+The disc itself is addressed by `external_id`, the uuid every disc carries —
+including one added through the web app, which has no Google Sheet row number to
+be addressed by. It is the key every other admin disc action uses, and it is
+never edited here.
+
+| Column                          | Type             | Null? | Edited as                                                         |
+| ------------------------------- | ---------------- | ----- | ----------------------------------------------------------------- |
+| `disc_name`                     | text             | no    | one text field, required                                          |
+| `disc_colour`                   | text             | no    | one text field; empty is stored as `''`                           |
+| `disc_manufacturer`             | text             | yes   | text field; empty is stored as `NULL`                             |
+| `owner_name`                    | text             | yes   | text field; empty is stored as `NULL`                             |
+| `owner_phone_number`            | text             | yes   | text field; empty is stored as `NULL`                             |
+| `course`                        | text             | yes   | dropdown of this club's courses, the disc's own, plus "no course" |
+| `additional_info`               | text             | yes   | textarea; club-internal, never publicly shown                     |
+| `is_returned_to_owner`          | boolean          | no    | checkbox                                                          |
+| `returned_to_owner_date`        | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked                 |
+| `return_method`                 | smallint         | yes   | dropdown: 0 `Postitettu`, 1 `Noudettu`, or none                   |
+| `can_be_sold_or_donated`        | boolean          | no    | checkbox                                                          |
+| `can_be_sold_or_donated_date`   | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked                 |
+| `can_be_sold_or_donated_method` | smallint         | yes   | dropdown: 0 `Myydään`, 1 `Lahjoitetaan`, or none                  |
+| `updated_at`                    | timestamptz      | yes   | not shown; set to now on every save                               |
 
 `disc_name` carries the plastic as well, joined the way the Google Sheet has
 always written it — "Destroyer, Star". The form edits the joined string as one
@@ -88,10 +96,6 @@ untouched for the same reason the list's row actions leave them alone.
 | `/discs/:externalId/edit` | GET       | signed-in admin | The form, filled in from the disc                             |
 | `/discs/:externalId/edit` | POST      | signed-in admin | Validates and saves; re-renders with errors or a success note |
 
-`external_id` is the uuid every disc carries, including one added through the web
-app, which has no Google Sheet row number to be addressed by. It is the same key
-every other admin disc action uses.
-
 The route is `/discs/…`, in the admin namespace beside `/discs/add` and
 `/discs/batch`, and deliberately not `/disc/…`: `/disc/:token` is the public
 owner link sent out in text messages (spec 05), and the two must not sit under
@@ -111,11 +115,19 @@ one prefix.
 - **Required.** `disc_name` must be non-empty after trimming: the public list is
   built around it and a blank row cannot be recognised by its owner.
 - **Lengths.** 200 characters for every field except `additional_info`, which
-  gets 500 — the same limits the submission form enforces, imported from
-  `toDiscDTO.ts` so the two cannot drift.
-- **Course.** A course must be one of `getDiscCourseNames(APP_CLUB_ID)`, or none
-  at all. A stray value would become an extra option in the list page's course
-  filter, which is why the submission form checks it too.
+  gets 500. Both live in `features/discs/fieldLimits.ts` and are read by the
+  submission form as well, so the two writers of these columns cannot drift
+  apart.
+- **Course.** A course must be one the form offered: one of
+  `getDiscCourseNames(APP_CLUB_ID)`, the one the disc is already filed under, or
+  none at all. The submission form allows only the first of those, because a
+  stray value there would become an extra option in the list page's course
+  filter; the disc's own value is already in the table and so already in the
+  filter, and refusing it would mean this page silently nulled the course of
+  every disc filed under a course the club has since stopped collecting from —
+  and of every Talin Tallaajat disc, since that club has no configured courses
+  at all. The action re-reads the disc to learn its stored course before
+  validating, which is the one read a save makes beyond the write.
 - **A disc has one ending.** `is_returned_to_owner` and `can_be_sold_or_donated`
   may not both be ticked: a disc that went home was not also sold. The form
   refuses the pair with "Kiekko ei voi olla sekä palautettu että myytävissä tai
@@ -156,20 +168,26 @@ one prefix.
   or the sync could produce — cannot be saved here until the admin unticks one.
   The form is also the place to untick it, so the way out is at hand, but the
   message does not say so.
-- The Google Sheets sync (spec 09) writes the same columns for a sheet-imported
-  disc. A correction made here to a disc that still has an `internal_disc_id`
-  can be overwritten by the next sync, which treats the sheet as the truth. The
-  form does not warn about this, and there is no per-column "edited by hand"
-  flag to make the sync skip it.
+- A correction made here to a sheet-imported disc is safe from the importer that
+  actually runs: `scripts/importPuskasoturitDiscs.ts` only inserts rows whose
+  `internal_disc_id` it has not seen, and never updates or deletes (spec 09). It
+  is not safe from `syncAllDiscs()`, the disabled sync action, which deletes the
+  club's discs and reinserts them from the sheet — that discards every edit made
+  here and mints new `external_id`s besides. Nothing in this form warns about
+  it, and there is no "edited by hand" flag that would make a sync skip a row.
 - There is no edit history: the previous value is gone. A save sets
   `updated_at`, which is the only trace — and this is the only disc write that
   maintains that column, so it means "last edited by hand here", not "last
   changed". A mis-edit is not recoverable from the app.
 - Two admins editing one disc at the same time: the last save wins silently,
   with no version check.
+- The course dropdown is not rendered at all when there is nothing to offer — a
+  club with no configured courses holding a disc with no course. The form then
+  writes `course: null`, which is what the disc already held, so nothing is
+  lost; but the column cannot be given a value from this page in that case.
 - The page is reachable only from the public disc list, which shows listed discs
   only. A returned or released disc can be edited by typing its URL, but has no
-  link pointing at it — so the un-return in scenario 6 needs a uuid in hand.
+  link pointing at it — so the un-return in scenario 8 needs a uuid in hand.
 
 ## Open questions
 

@@ -24,7 +24,7 @@ lifecycle actions and the club-internal notes.
 5. When the club records courses **and** the loaded discs name more than one, a "Rata" (course) radio row appears with "Kaikki radat" (all courses) plus one option per course found in the data.
 6. When a header is clicked, the table re-sorts (TanStack Table); default sort is `addedAt` descending. Column widths are pointer-draggable.
 7. When a disc has been held over three months, a red warning icon sits next to its "Lisätty" (added) date.
-8. When signed in, each row gains a checkbox, an SMS link, and the action icons (return, disposal, retrieval, course, notes, delete); the panels open as an extra row under the disc.
+8. When signed in, each row gains a checkbox, an SMS link, and the action icons (edit, return, disposal, retrieval, course, notes, delete); the panels open as an extra row under the disc. The pencil is a link to `/discs/:externalId/edit` (spec 14) rather than a panel — correcting a name or a phone number needs a text field, not a confirmation.
 9. When an admin action succeeds, `DiscListPage.reload()` re-fetches `/discs/data` **and** revalidates the root loader, so the retrieval badge in the menu stays in step.
 
 ## Data
