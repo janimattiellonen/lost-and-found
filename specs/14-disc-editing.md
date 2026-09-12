@@ -159,10 +159,28 @@ one prefix.
   attached.
 - Unticking "Myytävissä tai lahjoitettavissa" does not close the errand that
   ticking it opened. The disc comes back to the public list still on the
-  retrieval list, where it now shows as an ordinary pending fetch. That is not
-  obviously wrong — the disc is still on the shelf and somebody still has to go
-  and get it — but nothing decided it deliberately, and the errand still reads
-  "Myyntiin tai lahjoitukseen" for a disc that is no longer for sale.
+  retrieval list, reading "Myyntiin tai lahjoitukseen" for a disc that is no
+  longer for sale.
+
+  This is left alone deliberately, and it is worth saying why, because the
+  obvious fix does not exist. The state is **indistinguishable from one that is
+  already correct**: a disposal errand is written with `retrieval_method` null
+  (`queryRequestRetrievals`), so after the untick the row and the disc's flags
+  are identical, column for column, to a disc whose owner answered "keep it"
+  from their link before the club marked anything. Labelling that case
+  `kept-by-club` is a deliberate, tested decision in `toListedErrand`, and spec
+  05 documents it. No pure function can tell the two apart, because nothing in
+  the table separates them. `requested_by` was the column that could have, and
+  migration `20260904010000_owner_link_club_scope.sql` dropped it on purpose,
+  naming `owner_response_id` as the provenance link that would replace it.
+
+  So the two ways out are both somebody else's change: add that
+  `owner_response_id` link (a migration, a query and spec 05), or close the
+  errand on untick — which would break spec 05's rule that "a row is only ever
+  created or updated, never withdrawn". Neither belongs on a disc-editing
+  change. Anyone picking this up should start there rather than in
+  `retrievalErrand.ts`.
+
 - A row that already carries both `is_returned_to_owner` and
   `can_be_sold_or_donated` — which the schema permits, and which old sheet data
   or the sync could produce — cannot be saved here until the admin unticks one.
