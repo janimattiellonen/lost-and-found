@@ -32,6 +32,7 @@ import {
   ArrowUpwardIcon,
   CheckCircleIcon,
   DeleteIcon,
+  EditIcon,
   InfoIcon,
   InventoryIcon,
   PlaceIcon,
@@ -487,6 +488,18 @@ export default function DiscTable({
                 <span className="inline-flex items-center gap-2">
                   {row.original.externalId && (
                     <>
+                      {/* The one action that changes what the disc *is* rather
+                          than what became of it: a page of its own, since a
+                          typo in a name or a number needs a text field. */}
+                      <Link
+                        to={`/discs/${row.original.externalId}/edit`}
+                        aria-label={`Muokkaa kiekon ${row.original.discName} tietoja`}
+                        title="Muokkaa tietoja"
+                        className="inline-flex text-gray-300 hover:text-white"
+                      >
+                        <EditIcon width={18} height={18} />
+                      </Link>
+
                       <button
                         type="button"
                         aria-label={`Merkitse kiekko ${row.original.discName} palautetuksi`}
