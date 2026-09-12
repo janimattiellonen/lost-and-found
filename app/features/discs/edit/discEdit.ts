@@ -1,5 +1,5 @@
 import { isDisposalMethod, isReturnMethod, type DisposalMethodValue, type ReturnMethodValue } from '~/discMethods';
-import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/submission/toDiscDTO';
+import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/fieldLimits';
 import { isIsoDate } from '~/lib/api/validate';
 
 /**

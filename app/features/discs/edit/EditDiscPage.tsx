@@ -4,7 +4,7 @@ import { Form, useNavigation } from 'react-router';
 
 import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import { fieldNames, type DiscEditErrors, type DiscEditValues } from '~/features/discs/edit/discEdit';
-import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/submission/toDiscDTO';
+import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/fieldLimits';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';

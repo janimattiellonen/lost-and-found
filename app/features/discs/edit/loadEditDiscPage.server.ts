@@ -2,6 +2,7 @@ import { redirect } from 'react-router';
 
 import { currentClubId } from '~/config/clubs';
 import { getDiscCourseNames } from '~/config/courses';
+import { courseOptions } from '~/features/discs/edit/courseOptions';
 import { queryDiscForEdit } from '~/features/discs/edit/queryDiscForEdit.server';
 import { isExternalId } from '~/lib/api/validate';
 import { createSupabaseServerClient, isUserLoggedIn } from '~/models/utils';
@@ -33,5 +34,5 @@ export async function loadEditDiscPage(request: Request, externalId: string | un
   // `disc` is already a field-by-field projection built in queryDiscForEdit, not
   // the database row: the columns the form cannot write — the owner link token
   // above all — are never read, let alone sent.
-  return { disc, courses: getDiscCourseNames(clubId) };
+  return { disc, courses: courseOptions(getDiscCourseNames(clubId), disc.course) };
 }

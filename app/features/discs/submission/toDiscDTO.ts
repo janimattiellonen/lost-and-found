@@ -1,16 +1,10 @@
+import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/fieldLimits';
 import type { DiscDTO } from '~/types';
 
 import type { DiscSubmission } from './submitDiscs';
 
 /** The most discs one batch may carry. Guards against a runaway request. */
 export const MAX_BATCH_SIZE = 100;
-
-/** Exported so the edit form (features/discs/edit) enforces the same caps. */
-export const MAX_FIELD_LENGTH = 200;
-
-// The note is free text rather than one catalogue value, so it is allowed to
-// run longer than a disc name or a colour.
-export const MAX_ADDITIONAL_INFO_LENGTH = 500;
 
 /**
  * Joins the disc name and the plastic the way the Google Sheet has always

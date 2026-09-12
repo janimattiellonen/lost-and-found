@@ -1,7 +1,7 @@
 import { markRefusal, requireAdminJson } from '~/lib/api/resourceRoute.server';
 import { isExternalId, isIsoDate } from '~/lib/api/validate';
 import { isDisposalMethod } from '~/discMethods';
-import { queryRequestDisposalRetrievals } from '~/features/discs/retrieval/queryRequestDisposalRetrievals.server';
+import { requestDisposalErrand } from '~/features/discs/retrieval/requestDisposalErrand.server';
 import { markForDisposal } from '~/models/discs.server';
 import { createSupabaseServerClient } from '~/models/utils';
 
@@ -44,19 +44,10 @@ export async function handleDisposalRequest(request: Request): Promise<Response>
     // The disc is off the public list now but still on the shelf, so it goes on
     // the retrieval list. After the mark, not before: an errand for a disc the
     // club never released would be a trip for nothing.
-    //
-    // Its own catch, because the two writes are not one transaction and the
-    // admin has to be told which half happened — the message comes from the
-    // query, which knows how many discs it was asked about. Reporting a plain
-    // failure would be worse than either: the disc is marked, so a second
-    // attempt at the mark is not what he needs.
-    try {
-      await queryRequestDisposalRetrievals(createSupabaseServerClient(request), [externalId]);
-    } catch (retrievalError) {
-      const message =
-        retrievalError instanceof Error ? retrievalError.message : 'Noutolistalle lisääminen epäonnistui.';
+    const errandFailure = await requestDisposalErrand(createSupabaseServerClient(request), externalId);
 
-      return Response.json({ error: message }, { status: 500 });
+    if (errandFailure) {
+      return Response.json({ error: errandFailure }, { status: 500 });
     }
 
     return Response.json({ marked: true });
