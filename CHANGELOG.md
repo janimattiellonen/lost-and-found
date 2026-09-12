@@ -20,11 +20,13 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - Marking a bin emptied can record a day other than today: ticking "pvm" on a course's row opens a date picker, for when the bin was checked but logged later.
 - The statistics page breaks its two headline totals down by method: how many discs are waiting to be sold and how many donated, and how many went back to their owners by post and how many were picked up. Discs whose method was never filled in are shown as "Ei kirjattu" rather than dropped, so each breakdown still adds up to the total above it.
 - A checkbox under "Top 10 kadotettua kiekkomallia" on the statistics page counts discs by model rather than by the exact name typed in, so "Destroyer, Star", "Destroyer, Halo" and "destroyer" share one bar.
+- Every disc in the list has a pencil icon opening a page that edits it: name, colour, manufacturer, owner, phone number, course and the club's internal notes, so a typo is fixed in the app rather than in the database.
 
 ### Changed
 
 - The retrieval list is ordered newest request first, so the errands that have just come in are at the top.
 - Tapping an owner's phone number on the retrieval list or the responses view now opens a message to them instead of placing a call.
+- A disc marked returned or marked for sale by mistake can be put back on the public list: the edit page carries both marks as checkboxes, and unticking one clears its date and method. Every other way of making those marks is still one-way.
 
 ### Fixed
 
