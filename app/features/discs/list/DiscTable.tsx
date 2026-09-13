@@ -41,7 +41,7 @@ import {
   TextsmsIcon,
 } from '~/ui/icons';
 import Checkbox from '~/ui/Checkbox';
-import { dark, icon, space } from '~/styles/tokens.stylex';
+import { dark, font, icon, space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 import { formatPhoneNumber } from '~/utils';
@@ -726,7 +726,7 @@ const styles = stylex.create({
     width: '100%',
     borderCollapse: 'collapse',
     marginTop: space.md,
-    fontSize: '0.875rem',
+    fontSize: font.sizeSm,
     backgroundColor: dark.surface,
     color: dark.bodyText,
   },
@@ -735,7 +735,8 @@ const styles = stylex.create({
     boxSizing: 'border-box',
     textAlign: 'left',
     fontWeight: 700,
-    padding: '8px 12px',
+    paddingBlock: space.sm,
+    paddingInline: space.smd,
     color: dark.headingText,
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
@@ -749,7 +750,8 @@ const styles = stylex.create({
   tight: { width: '1%', whiteSpace: 'nowrap' },
   td: {
     boxSizing: 'border-box',
-    padding: '8px 12px',
+    paddingBlock: space.sm,
+    paddingInline: space.smd,
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
     borderBottomColor: 'rgba(255,255,255,0.08)',
