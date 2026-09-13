@@ -54,10 +54,12 @@ everything is computed in the browser from one fetch of the club's discs.
    never sum to the all-time total without it. The line is absent under "Kaikki"
    and absent when every disc is dated.
 8. "Seuralle palautetut kiekot" (discs returned to the club) — a monthly bar
-   chart of discs by `added_at`.
-9. "Omistajille palautetut kiekot" — a monthly bar chart of discs by the date
-   they went back to their owner.
-10. When a bar in either monthly chart is clicked, then a second chart appears
+   chart of discs by `added_at`, one month per row: the month name, then its
+   bar, then its count. The rows are headed by their year, so two years of
+   months read as two blocks rather than one run of twenty-five.
+9. "Omistajille palautetut kiekot" — the same monthly chart, of discs by the
+   date they went back to their owner.
+10. When a row in either monthly chart is clicked, then a second chart appears
     below it breaking that month down by day; the clicked bar turns blue.
 11. "Top 10 kadotettua kiekkomallia" (top 10 most-lost disc models) — a
     horizontal bar chart of the ten most frequent `disc_name` values.
@@ -203,19 +205,19 @@ way the total falls back to its default, so a count is never shown that no
 button explains.
 
 Both it and `filterDiscsByYear` place a disc through `toPlausibleYear`, which
-returns null for anything outside 2000 to next year. One live row's
-`returned_to_owner_text` begins "1.5.1012" — a mistyped 2012 — and the bound has
+returns null for anything outside 2000 to next year. Two live rows'
+`returned_to_owner_text` begins "23.7.202" and "17.7.10126", and the bound has
 to be shared rather than applied to the button list alone: if only the buttons
-rejected it, the disc would fall out of every year _and_ out of the
+rejected them, the discs would fall out of every year _and_ out of the
 "Päivämäärä puuttuu" count, and the years would quietly stop adding up.
 
 ## The charts
 
-| Chart                          | Component                  | Measures                                                        | Grouped by                                                                           | Bucket                                                                            |
-| ------------------------------ | -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Seuralle palautetut kiekot     | `DiscsReturnedToClub.tsx`  | Discs taken into the club's inventory                           | `addedAt`                                                                            | `"<month0>.<year>"` key, i.e. month within a year; drill-down by day of month     |
-| Omistajille palautetut kiekot  | `DiscsReturnedToOwner.tsx` | Discs with `isReturnedToOwner` **and** a resolvable return date | `returnedToOwnerDate`, falling back to a leading `d.M.yyyy` in `returnedToOwnerText` | `date-fns` month number **only — no year** (see gaps); drill-down by day of month |
-| Top 10 kadotettua kiekkomallia | `MostLostByDiscName.tsx`   | Row count per `discName`                                        | exact `discName` string, or the model name alone when grouping is on                 | none — all time; optionally split into `addedAt` years within each bar            |
+| Chart                          | Component                  | Measures                                                        | Grouped by                                                                           | Bucket                                                                        |
+| ------------------------------ | -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Seuralle palautetut kiekot     | `DiscsReturnedToClub.tsx`  | Discs taken into the club's inventory                           | `addedAt`                                                                            | `"<month0>.<year>"` key, i.e. month within a year; drill-down by day of month |
+| Omistajille palautetut kiekot  | `DiscsReturnedToOwner.tsx` | Discs with `isReturnedToOwner` **and** a resolvable return date | `returnedToOwnerDate`, falling back to a leading `d.M.yyyy` in `returnedToOwnerText` | `"<month0>.<year>"` key, i.e. month within a year; drill-down by day of month |
+| Top 10 kadotettua kiekkomallia | `MostLostByDiscName.tsx`   | Row count per `discName`                                        | exact `discName` string, or the model name alone when grouping is on                 | none — all time; optionally split into `addedAt` years within each bar        |
 
 ### Grouping by disc name
 
@@ -272,23 +274,59 @@ Grouping on the comma needs no vocabulary to maintain and no cross-feature
 import, and it covers the stored data; what it does not cover is listed under
 known gaps.
 
+Both monthly charts bucket by `toMonthAndYearKey` — `"<month0>.<year>"`, the
+month within its year. The returns chart used to key by the bare month number,
+which merged the same month of every year into one bar: "heinä 145" was 7 discs
+from 2024, 91 from 2025 and 45 from 2026 drawn as if they were one July. It also
+lost every January, because `mapBySeparator` skipped a row whose separator was
+falsy and `date-fns` `getMonth` is 0-based — the club chart survived that only
+because its key was the string `"0.2026"`, which is truthy. There is now no
+falsy guard: every separator a plausibly dated disc produces is kept.
+
+`mapBySeparator` also drops a date outside `toPlausibleYear`'s 2000..next-year
+bound, the same bound the year filters on the totals use, so one page does not
+treat a date as real in one place and not in another. Two live
+`returned_to_owner_text` values begin "23.7.202" and "17.7.10126"; unbounded,
+each would head a year block of its own at either end of a chart sorted by date.
+
 Shared helpers are in `app/features/stats/statsUtils.ts`
 (`mapBySeparator` → `sortMappedData` → `getAddedDiscCountByMonth` /
 `getAddedDiscCountByDaysInMonth`, plus `getDonatedOrSoldDiscs`,
 `getReturnedDiscs`, the year helpers and the two method breakdowns). Bars are sorted by date
-ascending; legends use
-`getMonthName(date, 'short')` in `fi-FI` for the monthly charts and `dd` for the
-daily ones.
+ascending; a row's label is `getMonthName(date, 'short')` in `fi-FI` on the
+monthly charts and `dd` on the daily ones, carried on the row itself
+(`mapBarData(data, toMonthOfYearRow | toDayRow)`) rather than in a
+second list beside it — while the two were separate, a label lined up with its bar only as
+long as both lists happened to be laid out to the same widths, and on a chart of
+two years of months they did not. The same row mapper carries the heading a row
+sits under: `toMonthOfYearRow` gives each month its year, and the drill-down's
+`toDayRow` gives none, because every one of its days is inside the one month the
+title already names.
 
 ## Rendering
 
-- `app/ui/BarChart.tsx` — vertical bars as `<button>`s, so a bar is clickable
-  and keyboard-reachable; bar height is `value / (max + 30)`, so charts with
-  small numbers look flat and no bar is ever full height. Hard-coded red bars,
-  blue on hover/selection, a red debug-looking `border: solid 1px red` around
-  each chart via the `className` passed by the stats components.
-- `app/ui/HorizontalBarChart.tsx` — same `max + 30` width formula, fixed 10rem
-  label column, no click handling. An entry with `segments` also draws the
+- `app/ui/BarChart.tsx` — horizontal bars, one row each, reading label, bar,
+  value. Bar width is `value / (max + 30)`, so charts with small numbers look
+  short and no bar is ever full width. A row is a whole `<button>` when the
+  chart has an `onBarClick`, so the click target is the row rather than the few
+  pixels a quiet month's bar comes to, and is keyboard-reachable; without one it
+  is a `<div>`, because a button that does nothing is a promise the chart cannot
+  keep. Pointing at or tabbing to a row turns its bar blue — held as component
+  state rather than a `:hover` rule on the bar, because the row is the target
+  and the bar is only part of it, so a quiet month lights up from its label too.
+  A row carrying a `group` is headed by it wherever it differs from the
+  row above — the chart draws the heading on that change alone rather than
+  regrouping the data, because the rows arrive in date order and a group is
+  always contiguous; one that was not would show as a repeated heading rather
+  than be silently reordered. Hard-coded red bars, blue on hover/selection, a
+  red debug-looking `border: solid 1px red` around each chart via the
+  `className` passed by the stats components.
+- `app/ui/HorizontalBarChart.tsx` — the same shape, with a wider 10rem label
+  column for disc names and no click handling. The two charts are deliberately
+  not one component: this one exists for the segmented second bar, which is half
+  its code and means nothing to a month, and folding them together would put
+  that behind a prop no monthly chart ever passes. If a third caller ever wants
+  a plain horizontal bar, that is the moment to merge them. An entry with `segments` also draws the
   stacked second bar described above, its parts separated by a 2px white gap.
   Parts are laid out with `flexGrow`, which fills whatever width the bar is
   given, so the bar's width is scaled by what the parts cover — that scaling is
@@ -350,24 +388,17 @@ daily ones.
 - Phone numbers are not selected at all here (the `owner_phone_number` masking
   in `getDiscsForStats` is dead code for the current select list).
 - The whole club's disc table crosses the wire on every page load, and every
-  recomputation runs on the full array — the drill-down charts recompute
-  `getAddedDiscCountByDaysInMonth` twice per render (once for the data, once for
-  the legend). With a few thousand discs this is fine; there is no pagination,
-  memoization or caching, so it grows linearly and forever.
+  recomputation runs on the full array. With a few thousand discs this is fine;
+  there is no pagination, memoization or caching, so it grows linearly and
+  forever.
 
 ## Edge cases & known gaps
 
-- `DiscsReturnedToOwner` groups by `getMonth(date)` alone, so **the same month
-  in different years is merged into one bar**; `DiscsReturnedToClub` includes
-  the year in its key. The two charts are not comparable.
-- `mapBySeparator` skips a row when the separator is falsy. `date-fns`
-  `getMonth` is 0-based, so **January is dropped from
-  `DiscsReturnedToOwner`** entirely. `DiscsReturnedToClub` is unaffected because
-  its separator is the string `"0.2026"`, which is truthy.
-- `DiscsReturnedToOwner`'s day drill-down is fed the _unfiltered_ `data`, not
-  the filtered set, so a disc with a parsable return note but
-  `isReturnedToOwner = false` appears in the day chart though not in the month
-  chart.
+- A month nobody returned a disc in gets no row at all rather than a row of
+  zero, so a gap in the sequence reads as if the month did not exist. Under the
+  year headings this is easier to miss than it was: the 2026 block of
+  "Omistajille palautetut kiekot" runs tammi, maalis, huhti with no sign that
+  helmi is absent.
 - With grouping off, `MostLostByDiscName` groups on the raw `discName`, so
   casing and spelling variants ("Destroyer" vs "destroyer") count as different
   models. Ties at the tenth place are broken arbitrarily either way — the sort
@@ -401,12 +432,12 @@ daily ones.
   all-time figure at all. That is deliberate — 495 would be read as 495 dated
   sales — but it does mean the only way to see it is to wait for 2027, when
   "Kaikki" returns on its own.
-- One row's `returned_to_owner_text` starts "1.5.1012". `toPlausibleYear`
-  bounds a year to 2000..next year, and both the button list and the filter go
-  through it, so the disc gets no button of its own and is counted under
-  "Päivämäärä puuttuu" rather than vanishing from both. `getReturnDate` still
-  parses it happily for the monthly chart, which has no such bound. Six further
-  returned discs have no parsable date at all.
+- Two rows' `returned_to_owner_text` starts "23.7.202" and "17.7.10126".
+  `toPlausibleYear` bounds a year to 2000..next year, and the button list, the
+  filter and the monthly charts all go through it, so those discs get no button
+  of their own, draw no bar, and are counted under "Päivämäärä puuttuu" rather
+  than vanishing from everything. Of the club's 451 discs flagged as returned,
+  446 carry a date this page can read and 5 carry none at all.
 - A year part is routinely narrower than its caption — "Firebird" was logged
   four times in 2024 and gets about a sixth of its bar for the nine characters
   of "2024 - 4". Staggering the captions onto two lines means a caption can only

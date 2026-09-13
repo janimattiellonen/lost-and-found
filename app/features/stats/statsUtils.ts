@@ -2,7 +2,7 @@ import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import type { MethodOption } from '~/lib/methodEnum';
 import type { DiscDTO } from '~/types';
 import type { BarValueType } from '~/ui/BarChart';
-import { getMonthName } from '~/utils';
+import { getMonth, getMonthName, getYear } from '~/utils';
 import { format, isWithinInterval, lastDayOfMonth, parse } from 'date-fns';
 
 export type LostDiscsProps = {
@@ -10,28 +10,47 @@ export type LostDiscsProps = {
 };
 
 export type AddedDiscCountByMonthType = {
-  dataTopic: number;
   amount: number;
   date?: Date;
 };
 
-export const mapBarData = (data: AddedDiscCountByMonthType[]): BarValueType[] => {
+/** What one row reads: its label, and the heading it sits under if it has one. */
+type ToBarRow = (item: AddedDiscCountByMonthType) => { label: string; group?: string };
+
+/**
+ * Chart rows, described one at a time by `toRow`. The label travels with its
+ * own value rather than in a second array beside it: the chart used to take the
+ * two apart, and a row could only line up with its label as long as both lists
+ * were laid out to the same widths.
+ */
+export const mapBarData = (data: AddedDiscCountByMonthType[], toRow: ToBarRow): BarValueType[] => {
   return data.map((item) => {
     return {
-      label: '',
+      ...toRow(item),
       value: item.amount,
       date: item.date,
     };
   });
 };
 
-export const getLegendItems = (data: AddedDiscCountByMonthType[]): string[] => {
-  return data.map((item) => getMonthName(item.date));
-};
+/** A month labelled by name, under the year it belongs to. */
+export const toMonthOfYearRow: ToBarRow = (item) => ({
+  label: getMonthName(item.date),
+  group: item.date ? String(getYear(item.date)) : undefined,
+});
 
-export const getLegendItems2 = (data: AddedDiscCountByMonthType[]): string[] => {
-  return data.map((item) => (item.date ? format(item.date, 'dd') : ''));
-};
+/** The day of the month, for the charts a clicked month opens. */
+export const toDayRow: ToBarRow = (item) => ({ label: item.date ? format(item.date, 'dd') : '' });
+
+/**
+ * One bar per month of one year, for both monthly charts.
+ *
+ * The month number alone is not enough: it merges the same month of every year
+ * into one bar, which is what "heinä 145" on the returns chart used to be —
+ * 7 discs from 2024, 91 from 2025 and 45 from 2026 in a bar labelled as if it
+ * were one July.
+ */
+export const toMonthAndYearKey = (date: Date): string => `${getMonth(date)}.${getYear(date)}`;
 
 export function mapBySeparator(
   data: DiscDTO[],
@@ -41,13 +60,21 @@ export function mapBySeparator(
   const mapped: { [key: number | string]: { value: number; date?: Date } } = {};
 
   data.forEach((item: DiscDTO) => {
-    // const date = new Date(item.addedAt);
     const date = getMonthData(item);
-    const separator = date ? getSeparator(date) : null;
 
-    if (!separator) {
+    // A date nobody could have meant is left out here as well as out of the
+    // year filters on the totals, so one page cannot treat the same date as
+    // real in one place and not in another. Two live rows read "23.7.202" and
+    // "17.7.10126"; unbounded, each would head a year block of its own at
+    // either end of a chart sorted by date.
+    if (date === null || toPlausibleYear(date) === null) {
       return;
     }
+
+    // Every separator a dated disc produces is kept. There used to be a
+    // `if (!separator) return` here, which dropped January from the returns
+    // chart for as long as its separator was the bare 0-based month number.
+    const separator = getSeparator(date);
 
     const prevValue: number = mapped[separator] ? mapped[separator].value : 0;
 
@@ -67,7 +94,6 @@ export function sortMappedData(mapped: {
   const keys = Object.keys(mapped);
   const res: AddedDiscCountByMonthType[] = keys.map((key) => {
     return {
-      dataTopic: parseInt(key, 10) + 1,
       amount: mapped[key].value,
       date: mapped[key].date,
     };
@@ -435,11 +461,11 @@ function getAddedDate(disc: DiscDTO): Date | null {
 /**
  * A disc's year, or null when it has no date or one nobody could have meant.
  *
- * The bound is 2000..next year. One live row's returned_to_owner_text begins
- * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
- * callers: if only the button list rejected it, the disc would drop out of
- * every year and out of the "Päivämäärä puuttuu" count too, and the years would
- * quietly stop adding up to the all-time total.
+ * The bound is 2000..next year. Two live rows' returned_to_owner_text begins
+ * "23.7.202" and "17.7.10126" — mistyped 2020-somethings — and they have to be
+ * treated as undated by every caller: if only the button list rejected them,
+ * the discs would drop out of every year and out of the "Päivämäärä puuttuu"
+ * count too, and the years would quietly stop adding up to the all-time total.
  */
 function toPlausibleYear(date: Date | null): number | null {
   if (date === null) {

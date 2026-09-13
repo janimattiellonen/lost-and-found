@@ -12,6 +12,10 @@ import {
   getSelectedYear,
   getStatsYears,
   getTopLostDiscsByDiscName,
+  getAddedDiscCountByMonth,
+  toMonthAndYearKey,
+  toMonthOfYearRow,
+  mapBarData,
 } from './statsUtils';
 import { DisposalMethod, ReturnMethod } from '~/discMethods';
 import type { DiscDTO } from '~/types';
@@ -487,5 +491,50 @@ describe('getTopLostDiscsByDiscName with splitByYear', () => {
 
     expect(stat.value).toBe(4);
     expect(stat.years?.map((year) => year.year)).toEqual([2024, 2026]);
+  });
+});
+
+describe('getAddedDiscCountByMonth', () => {
+  const returnedOn = (date: string): DiscDTO =>
+    disc({ isReturnedToOwner: true, returnedToOwnerDate: date, returnedToOwnerText: null });
+
+  it('gives each month of each year its own bar', () => {
+    const counted = getAddedDiscCountByMonth(
+      [returnedOn('2025-07-04'), returnedOn('2025-07-20'), returnedOn('2026-07-11')],
+      toMonthAndYearKey,
+      getReturnDate,
+    );
+
+    expect(counted.map((item) => item.amount)).toEqual([2, 1]);
+  });
+
+  it('keeps a bar whose separator is 0 — January, under a bare month number', () => {
+    const counted = getAddedDiscCountByMonth([returnedOn('2026-01-09')], (date) => date.getMonth(), getReturnDate);
+
+    expect(counted.map((item) => item.amount)).toEqual([1]);
+  });
+
+  it('leaves out a date nobody could have meant', () => {
+    const counted = getAddedDiscCountByMonth(
+      [returnedOn('2026-07-11'), disc({ isReturnedToOwner: true, returnedToOwnerText: '22.7.202' })],
+      toMonthAndYearKey,
+      getReturnDate,
+    );
+
+    expect(counted.map((item) => item.amount)).toEqual([1]);
+  });
+
+  it('sorts the bars oldest first, and labels each month under its year', () => {
+    const counted = getAddedDiscCountByMonth(
+      [returnedOn('2026-01-09'), returnedOn('2025-12-24'), returnedOn('2025-01-02')],
+      toMonthAndYearKey,
+      getReturnDate,
+    );
+
+    expect(mapBarData(counted, toMonthOfYearRow).map(({ label, group }) => `${group} ${label}`)).toEqual([
+      '2025 tammi',
+      '2025 joulu',
+      '2026 tammi',
+    ]);
   });
 });
