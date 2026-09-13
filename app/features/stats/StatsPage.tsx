@@ -1,16 +1,17 @@
 import DiscsReturnedToClub from '~/features/stats/DiscsReturnedToClub';
 import DiscsReturnedToOwner from '~/features/stats/DiscsReturnedToOwner';
-import MethodBreakdown from '~/features/stats/MethodBreakdown';
 import MostLostByDiscName from '~/features/stats/MostLostByDiscName';
 import {
+  getDisposalDate,
   getDisposalMethodCounts,
-  getDonatedOrSoldDiscCount,
+  getDonatedOrSoldDiscs,
+  getReturnDate,
   getReturnMethodCounts,
-  getReturnedDiscCount,
+  getReturnedDiscs,
 } from '~/features/stats/statsUtils';
+import TotalByYear from '~/features/stats/TotalByYear';
 import type { DiscDTO } from '~/types';
 import H2 from '~/ui/H2';
-import H3 from '~/ui/H3';
 
 import type { JSX } from 'react';
 
@@ -24,17 +25,17 @@ export default function StatsPage({ data }: Props): JSX.Element {
       <H2 className="mt-8 mb-8">Statistiikka</H2>
 
       <div>
-        <H3>Myytyjen / lahjoitettujen kiekkojen määrä</H3>
+        <TotalByYear
+          title="Myytyjen / lahjoitettujen kiekkojen määrä"
+          datedDiscs={{ discs: getDonatedOrSoldDiscs(data), getDate: getDisposalDate }}
+          getMethodCounts={getDisposalMethodCounts}
+        />
 
-        <p>{getDonatedOrSoldDiscCount(data)}</p>
-
-        <MethodBreakdown counts={getDisposalMethodCounts(data)} />
-
-        <H3>Omistajille palautettujen kiekkojen määrä</H3>
-
-        <p>{getReturnedDiscCount(data)}</p>
-
-        <MethodBreakdown counts={getReturnMethodCounts(data)} />
+        <TotalByYear
+          title="Omistajille palautettujen kiekkojen määrä"
+          datedDiscs={{ discs: getReturnedDiscs(data), getDate: getReturnDate }}
+          getMethodCounts={getReturnMethodCounts}
+        />
       </div>
 
       <H2 className="mt-4 mb-2">Seuralle palautetut kiekot</H2>
