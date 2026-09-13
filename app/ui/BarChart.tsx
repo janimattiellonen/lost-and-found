@@ -138,5 +138,5 @@ const styles = stylex.create({
   barBase: { height: '18px', flexShrink: 0 },
   // Dynamic per-bar width/colour.
   barDynamic: (width: number, colour: string) => ({ width: `${width}%`, backgroundColor: colour }),
-  barValue: { color: 'black' },
+  barValue: { color: color.textStrong },
 });

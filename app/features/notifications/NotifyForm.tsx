@@ -1,4 +1,6 @@
 import { useState, type JSX } from 'react';
+
+import * as stylex from '@stylexjs/stylex';
 import { Form, useActionData } from 'react-router';
 
 import Collapse from '~/ui/Collapse';
@@ -33,7 +35,7 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
           variant="outlined"
           size="large"
           fullWidth
-          style={{ maxWidth: '20rem' }}
+          {...stylex.props(styles.confirmationButton)}
           onClick={() => window.location.reload()}
         >
           Lähetä uusi ilmoitus
@@ -129,3 +131,10 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
     </div>
   );
 }
+
+const styles = stylex.create({
+  // fullWidth on a phone, but capped so it does not stretch across a desktop.
+  confirmationButton: {
+    maxWidth: '20rem',
+  },
+});
