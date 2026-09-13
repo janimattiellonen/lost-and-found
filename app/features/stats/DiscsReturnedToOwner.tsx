@@ -1,6 +1,6 @@
 import { useState, type JSX } from 'react';
 
-import { getMonth, getMonthName, getDayOfMonth, getYear } from '~/utils';
+import { getMonthName, getDayOfMonth, getYear } from '~/utils';
 import BarChart from '~/ui/BarChart';
 
 import type { LostDiscsProps } from '~/features/stats/statsUtils';
@@ -8,8 +8,8 @@ import {
   getAddedDiscCountByMonth,
   getAddedDiscCountByDaysInMonth,
   mapBarData,
-  getLegendItems,
-  getLegendItems2,
+  toMonthOfYearRow,
+  toDayRow,
   getReturnDate,
 } from '~/features/stats/statsUtils';
 import type { DiscDTO } from '~/types';
@@ -21,14 +21,13 @@ function filter(data: DiscDTO[]): DiscDTO[] {
 export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const filtered = filter(data);
-  const mapped = getAddedDiscCountByMonth(filtered, getMonth, getReturnDate);
+  const mapped = getAddedDiscCountByMonth(filtered, getReturnDate);
 
   return (
     <div>
       <BarChart
         className="[max-width:1200px] mb-8 [border:solid_1px_red] p-4"
-        data={mapBarData(mapped)}
-        legendItems={getLegendItems(mapped)}
+        data={mapBarData(mapped, toMonthOfYearRow)}
         title="Omistajille palautettujen kiekkojen määrä, kuukausittain"
         onBarClick={(value) => {
           if (value) {
@@ -40,9 +39,9 @@ export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Elem
       {selectedMonth && (
         <BarChart
           className="[max-width:1200px] [border:solid_1px_red] p-4"
-          data={mapBarData(getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getReturnDate))}
-          legendItems={getLegendItems2(
-            getAddedDiscCountByDaysInMonth(selectedMonth, data, getDayOfMonth, getReturnDate),
+          data={mapBarData(
+            getAddedDiscCountByDaysInMonth(selectedMonth, filtered, getDayOfMonth, getReturnDate),
+            toDayRow,
           )}
           title={`Omistajille palautettujen kiekkojen määrä, ${getMonthName(selectedMonth, 'long')}, ${getYear(
             selectedMonth,

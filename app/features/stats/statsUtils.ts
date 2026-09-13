@@ -2,36 +2,45 @@ import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import type { MethodOption } from '~/lib/methodEnum';
 import type { DiscDTO } from '~/types';
 import type { BarValueType } from '~/ui/BarChart';
-import { getMonthName } from '~/utils';
-import { format, isWithinInterval, lastDayOfMonth, parse } from 'date-fns';
+import { getMonth, getMonthName, getYear } from '~/utils';
+import { eachMonthOfInterval, format, isWithinInterval, lastDayOfMonth, parse, startOfMonth } from 'date-fns';
 
 export type LostDiscsProps = {
   data: DiscDTO[];
 };
 
 export type AddedDiscCountByMonthType = {
-  dataTopic: number;
   amount: number;
   date?: Date;
 };
 
-export const mapBarData = (data: AddedDiscCountByMonthType[]): BarValueType[] => {
+/** What one row reads: its label, and the heading it sits under if it has one. */
+type ToBarRow = (item: AddedDiscCountByMonthType) => { label: string; group?: string };
+
+/**
+ * Chart rows, described one at a time by `toRow`. The label travels with its
+ * own value rather than in a second array beside it: the chart used to take the
+ * two apart, and a row could only line up with its label as long as both lists
+ * were laid out to the same widths.
+ */
+export const mapBarData = (data: AddedDiscCountByMonthType[], toRow: ToBarRow): BarValueType[] => {
   return data.map((item) => {
     return {
-      label: '',
+      ...toRow(item),
       value: item.amount,
       date: item.date,
     };
   });
 };
 
-export const getLegendItems = (data: AddedDiscCountByMonthType[]): string[] => {
-  return data.map((item) => getMonthName(item.date));
-};
+/** A month labelled by name, under the year it belongs to. */
+export const toMonthOfYearRow: ToBarRow = (item) => ({
+  label: getMonthName(item.date),
+  group: item.date ? String(getYear(item.date)) : undefined,
+});
 
-export const getLegendItems2 = (data: AddedDiscCountByMonthType[]): string[] => {
-  return data.map((item) => (item.date ? format(item.date, 'dd') : ''));
-};
+/** The day of the month, for the charts a clicked month opens. */
+export const toDayRow: ToBarRow = (item) => ({ label: item.date ? format(item.date, 'dd') : '' });
 
 export function mapBySeparator(
   data: DiscDTO[],
@@ -41,13 +50,21 @@ export function mapBySeparator(
   const mapped: { [key: number | string]: { value: number; date?: Date } } = {};
 
   data.forEach((item: DiscDTO) => {
-    // const date = new Date(item.addedAt);
     const date = getMonthData(item);
-    const separator = date ? getSeparator(date) : null;
 
-    if (!separator) {
+    // A date nobody could have meant is left out here as well as out of the
+    // year filters on the totals, so one page cannot treat the same date as
+    // real in one place and not in another. Two live rows read "23.7.202" and
+    // "17.7.10126"; unbounded, each would head a year block of its own at
+    // either end of a chart sorted by date.
+    if (date === null || toPlausibleYear(date) === null) {
       return;
     }
+
+    // Every separator a dated disc produces is kept. There used to be a
+    // `if (!separator) return` here, which dropped January from the returns
+    // chart for as long as its separator was the bare 0-based month number.
+    const separator = getSeparator(date);
 
     const prevValue: number = mapped[separator] ? mapped[separator].value : 0;
 
@@ -67,7 +84,6 @@ export function sortMappedData(mapped: {
   const keys = Object.keys(mapped);
   const res: AddedDiscCountByMonthType[] = keys.map((key) => {
     return {
-      dataTopic: parseInt(key, 10) + 1,
       amount: mapped[key].value,
       date: mapped[key].date,
     };
@@ -92,12 +108,11 @@ export function sortMappedData(mapped: {
 
 export function getAddedDiscCountByMonth(
   data: DiscDTO[],
-  getSeparator: (date: Date) => number | string,
   getMonthData: (data: DiscDTO) => Date | null,
 ): AddedDiscCountByMonthType[] {
-  const mapped = mapBySeparator(data, getSeparator, getMonthData);
+  const mapped = mapBySeparator(data, toMonthAndYearKey, getMonthData);
 
-  return sortMappedData(mapped);
+  return withEmptyMonths(sortMappedData(mapped));
 }
 
 export function getAddedDiscCountByDaysInMonth(
@@ -433,13 +448,53 @@ function getAddedDate(disc: DiscDTO): Date | null {
 }
 
 /**
+ * One bar per month of one year, for both monthly charts.
+ *
+ * The month number alone is not enough: it merges the same month of every year
+ * into one bar, which is what "heinä 145" on the returns chart used to be —
+ * 7 discs from 2024, 91 from 2025 and 45 from 2026 in a bar labelled as if it
+ * were one July.
+ */
+const toMonthAndYearKey = (date: Date): string => `${getMonth(date)}.${getYear(date)}`;
+
+/**
+ * Every month from the first with a disc in it to the last, the empty ones
+ * included as zero.
+ *
+ * A month nobody returned a disc in has no bucket, and a chart that simply
+ * leaves it out reads as if it never happened: under the year headings the 2026
+ * block ran tammi, maalis, huhti with nothing saying helmi was a real month
+ * with nothing in it. Nothing is invented at the ends — the run starts and
+ * stops on months that have discs.
+ */
+function withEmptyMonths(counted: AddedDiscCountByMonthType[]): AddedDiscCountByMonthType[] {
+  const dated = counted.filter((item): item is AddedDiscCountByMonthType & { date: Date } => item.date !== undefined);
+
+  if (dated.length === 0) {
+    return counted;
+  }
+
+  const countedByMonth = new Map(dated.map((item) => [toMonthAndYearKey(item.date), item]));
+  const months = eachMonthOfInterval({
+    start: startOfMonth(dated[0].date),
+    end: startOfMonth(dated[dated.length - 1].date),
+  });
+
+  // Every row is dated the first of its month, counted or not. A counted month
+  // otherwise carries whichever day its first disc arrived on, and only the
+  // inserted ones read as the 1st — a difference nothing uses and everything
+  // reading these rows would have to know about.
+  return months.map((month) => ({ amount: countedByMonth.get(toMonthAndYearKey(month))?.amount ?? 0, date: month }));
+}
+
+/**
  * A disc's year, or null when it has no date or one nobody could have meant.
  *
- * The bound is 2000..next year. One live row's returned_to_owner_text begins
- * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
- * callers: if only the button list rejected it, the disc would drop out of
- * every year and out of the "Päivämäärä puuttuu" count too, and the years would
- * quietly stop adding up to the all-time total.
+ * The bound is 2000..next year. Two live rows' returned_to_owner_text begins
+ * "23.7.202" and "17.7.10126" — mistyped 2020-somethings — and they have to be
+ * treated as undated by every caller: if only the button list rejected them,
+ * the discs would drop out of every year and out of the "Päivämäärä puuttuu"
+ * count too, and the years would quietly stop adding up to the all-time total.
  */
 function toPlausibleYear(date: Date | null): number | null {
   if (date === null) {

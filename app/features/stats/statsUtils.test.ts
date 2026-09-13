@@ -12,7 +12,12 @@ import {
   getSelectedYear,
   getStatsYears,
   getTopLostDiscsByDiscName,
+  getAddedDiscCountByMonth,
+  toMonthOfYearRow,
+  mapBarData,
+  mapBySeparator,
 } from './statsUtils';
+import type { AddedDiscCountByMonthType } from './statsUtils';
 import { DisposalMethod, ReturnMethod } from '~/discMethods';
 import type { DiscDTO } from '~/types';
 
@@ -487,5 +492,71 @@ describe('getTopLostDiscsByDiscName with splitByYear', () => {
 
     expect(stat.value).toBe(4);
     expect(stat.years?.map((year) => year.year)).toEqual([2024, 2026]);
+  });
+});
+
+describe('getAddedDiscCountByMonth', () => {
+  const returnedOn = (date: string): DiscDTO =>
+    disc({ isReturnedToOwner: true, returnedToOwnerDate: date, returnedToOwnerText: null });
+
+  /** The months that actually have discs, as "<year> <month> <count>". */
+  const withDiscsIn = (counted: AddedDiscCountByMonthType[]): string[] =>
+    mapBarData(counted, toMonthOfYearRow)
+      .filter((row) => row.value > 0)
+      .map((row) => `${row.group} ${row.label} ${row.value}`);
+
+  it('gives each month of each year its own bar', () => {
+    const counted = getAddedDiscCountByMonth(
+      [returnedOn('2025-07-04'), returnedOn('2025-07-20'), returnedOn('2026-07-11')],
+      getReturnDate,
+    );
+
+    expect(withDiscsIn(counted)).toEqual(['2025 heinä 2', '2026 heinä 1']);
+  });
+
+  it('keeps a bucket whose key is 0 — January, under a bare month number', () => {
+    const mapped = mapBySeparator([returnedOn('2026-01-09')], (date) => date.getMonth(), getReturnDate);
+
+    expect(Object.keys(mapped)).toEqual(['0']);
+  });
+
+  it('leaves out a date nobody could have meant', () => {
+    const counted = getAddedDiscCountByMonth(
+      [returnedOn('2026-07-11'), disc({ isReturnedToOwner: true, returnedToOwnerText: '23.7.202' })],
+      getReturnDate,
+    );
+
+    expect(withDiscsIn(counted)).toEqual(['2026 heinä 1']);
+  });
+
+  it('fills in a month with no discs in it, as zero', () => {
+    const counted = getAddedDiscCountByMonth([returnedOn('2026-01-09'), returnedOn('2026-04-02')], getReturnDate);
+
+    expect(mapBarData(counted, toMonthOfYearRow).map(({ label, value }) => `${label} ${value}`)).toEqual([
+      'tammi 1',
+      'helmi 0',
+      'maalis 0',
+      'huhti 1',
+    ]);
+  });
+
+  it('fills the months between two years, and invents none at either end', () => {
+    const counted = getAddedDiscCountByMonth([returnedOn('2025-11-03'), returnedOn('2026-02-02')], getReturnDate);
+
+    expect(mapBarData(counted, toMonthOfYearRow).map(({ group, label }) => `${group} ${label}`)).toEqual([
+      '2025 marras',
+      '2025 joulu',
+      '2026 tammi',
+      '2026 helmi',
+    ]);
+  });
+
+  it('sorts the bars oldest first, and labels each month under its year', () => {
+    const counted = getAddedDiscCountByMonth(
+      [returnedOn('2026-01-09'), returnedOn('2025-12-24'), returnedOn('2025-01-02')],
+      getReturnDate,
+    );
+
+    expect(withDiscsIn(counted)).toEqual(['2025 tammi 1', '2025 joulu 1', '2026 tammi 1']);
   });
 });
