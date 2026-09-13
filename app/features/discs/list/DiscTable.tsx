@@ -41,7 +41,7 @@ import {
   TextsmsIcon,
 } from '~/ui/icons';
 import Checkbox from '~/ui/Checkbox';
-import { dark, space } from '~/styles/tokens.stylex';
+import { dark, icon, space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 import { formatPhoneNumber } from '~/utils';
@@ -170,6 +170,33 @@ const styles = stylex.create({
   },
   // Even rows a subtle shade lighter than the base, as in the old grid.
   rowEven: { backgroundColor: dark.rowAlt },
+  // The row actions. Each hue is part of the label, not decoration: an admin
+  // picks the right icon at a glance on a phone.
+  rowAction: { display: 'inline-flex' },
+  actionDelete: {
+    color: { default: icon.delete, ':hover': icon.deleteHover },
+    opacity: { default: 1, ':disabled': 0.4 },
+  },
+  // The neutral grey: the edit link, and the retrieval marker on a disc that is
+  // not on the list. It means "no state to report", which is why one style
+  // serves both.
+  actionNeutral: { color: { default: icon.edit, ':hover': icon.editHover } },
+  actionReturned: { color: { default: icon.returned, ':hover': icon.returnedHover } },
+  actionSellable: { color: { default: icon.sellable, ':hover': icon.sellableHover } },
+  actionRetrieval: { color: { default: icon.retrieval, ':hover': icon.retrievalHover } },
+  actionCourse: { color: { default: icon.course, ':hover': icon.courseHover } },
+  // `:disabled:hover` is spelled out because StyleX ranks `:hover` above
+  // `:disabled`, so the pair alone would let a disabled button light up under
+  // the pointer. See specs/15-design-system-tokens.md.
+  actionInfo: {
+    color: {
+      default: icon.info,
+      ':hover': icon.infoHover,
+      ':disabled': icon.disabled,
+      ':disabled:hover': icon.disabled,
+    },
+    cursor: { default: 'pointer', ':disabled': 'not-allowed' },
+  },
   sortIcon: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -355,7 +382,7 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
       title="Poista kiekko"
       disabled={isDeleting}
       onClick={handleClick}
-      className="inline-flex text-red-400 hover:text-red-300 disabled:opacity-40"
+      {...stylex.props(styles.rowAction, styles.actionDelete)}
     >
       <DeleteIcon width={18} height={18} />
     </button>
@@ -492,7 +519,7 @@ export default function DiscTable({
                         to={`/discs/${row.original.externalId}/edit`}
                         aria-label={`Muokkaa kiekon ${row.original.discName} tietoja`}
                         title="Muokkaa tietoja"
-                        className="inline-flex text-gray-300 hover:text-white"
+                        {...stylex.props(styles.rowAction, styles.actionNeutral)}
                       >
                         <EditIcon width={18} height={18} />
                       </Link>
@@ -503,7 +530,7 @@ export default function DiscTable({
                         title="Merkitse palautetuksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'return'}
                         onClick={() => toggleForm(row.original.externalId!, 'return')}
-                        className="inline-flex text-green-400 hover:text-green-300"
+                        {...stylex.props(styles.rowAction, styles.actionReturned)}
                       >
                         <CheckCircleIcon width={18} height={18} />
                       </button>
@@ -514,7 +541,7 @@ export default function DiscTable({
                         title="Merkitse myytäväksi tai lahjoitettavaksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'disposal'}
                         onClick={() => toggleForm(row.original.externalId!, 'disposal')}
-                        className="inline-flex text-sky-400 hover:text-sky-300"
+                        {...stylex.props(styles.rowAction, styles.actionSellable)}
                       >
                         <SellIcon width={18} height={18} />
                       </button>
@@ -540,11 +567,10 @@ export default function DiscTable({
                             openForm?.externalId === row.original.externalId && openForm.kind === 'retrieval'
                           }
                           onClick={() => toggleForm(row.original.externalId!, 'retrieval')}
-                          className={
-                            row.original.retrieval !== null
-                              ? 'inline-flex text-orange-400 hover:text-orange-300'
-                              : 'inline-flex text-gray-300 hover:text-white'
-                          }
+                          {...stylex.props(
+                            styles.rowAction,
+                            row.original.retrieval !== null ? styles.actionRetrieval : styles.actionNeutral,
+                          )}
                         >
                           <InventoryIcon width={18} height={18} />
                         </button>
@@ -561,7 +587,7 @@ export default function DiscTable({
                           title="Aseta rata"
                           aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'course'}
                           onClick={() => toggleForm(row.original.externalId!, 'course')}
-                          className="inline-flex text-violet-400 hover:text-violet-300"
+                          {...stylex.props(styles.rowAction, styles.actionCourse)}
                         >
                           <PlaceIcon width={18} height={18} />
                         </button>
@@ -577,7 +603,7 @@ export default function DiscTable({
                         disabled={!row.original.additionalInfo}
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'info'}
                         onClick={() => toggleForm(row.original.externalId!, 'info')}
-                        className="inline-flex text-amber-400 hover:text-amber-300 disabled:text-gray-500 disabled:hover:text-gray-500 disabled:cursor-not-allowed"
+                        {...stylex.props(styles.rowAction, styles.actionInfo)}
                       >
                         <InfoIcon width={18} height={18} />
                       </button>
