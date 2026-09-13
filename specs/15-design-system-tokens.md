@@ -33,10 +33,11 @@ The same names are also given to Tailwind, as colour aliases in
 `text-fg-muted` rather than `text-gray-500`. That is what turns each later
 conversion into a rename instead of a guess about what the grey was for.
 
-This spec covers the token set and those aliases. It does **not** convert any
-page off Tailwind; that is separate work, done component by component afterwards,
-and each step of it is a no-op precisely because the tokens were derived this
-way.
+This spec covers the token set, those aliases, and the first conversion done
+against them — the disc table's row-action icons, which moved off Tailwind to
+prove the vocabulary works before thirty-six more components are written against
+it. The remaining components are separate work, done one at a time, and each step
+of it is a no-op precisely because the tokens were derived this way.
 
 ## Actors
 
@@ -457,10 +458,11 @@ None. No route, loader or action is touched.
 | Entry point                                 | Purpose                                                                                                                                        |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/styles/palette.stylex.ts`              | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                  |
-| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. Roughly a third of it has no caller yet — see "Edge cases & known gaps".    |
+| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".      |
 | `app.css`                                   | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                |
 | `tailwind.config.ts`                        | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does. |
 | `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                 |
+| `app/features/discs/list/DiscTable.tsx`     | The first component converted off Tailwind: its row-action icons and its dark surface read from the tokens.                                    |
 | `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing. Reads both files as text.                                                              |
 
 ## Rules & constraints
@@ -487,9 +489,10 @@ None. No route, loader or action is touched.
    `createTheme` would let a second theme override the same variables later; that
    is deliberately out of scope, and the token names are chosen so it stays
    possible (`color.surface`, not `color.white`).
-5. **Tailwind stays installed and stays working.** Nothing is converted off it in
-   this work. Deleting Tailwind is only possible after the last of the 37 feature
-   components has moved, which is a long tail of separate changes.
+5. **Tailwind stays installed and stays working.** One component's row-action
+   icons moved off it here; the other 36 have not. Deleting Tailwind is only
+   possible after the last of them has moved, which is a long tail of separate
+   changes.
 6. **`app.css`'s element rules stay.** The `p`, `a` and `body` rules are ambient
    styling that StyleX components cannot see and cannot override without
    specificity tricks. They are left alone here and recorded as a gap below.
@@ -557,29 +560,28 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Thirty-two of the seventy-nine tokens are not used by anything yet, and the
+- **Seventeen of the seventy-nine tokens are not used by anything yet, and the
   Tailwind aliases are used by nothing at all.** That is the shape of the job —
   the vocabulary has to exist before a page can be converted to it — but it
   should be stated plainly rather than left to be discovered:
 
-  | Group                | Used                  | Unused                                                                                                       |
-  | -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
-  | `color` (34)         | 26                    | `textBody`, `textSubtle`, `accentBorderSubtle`, `link`, `dangerStrong`, `warning`, `success`, `successHover` |
-  | `dark` (10)          | 7, all by `DiscTable` | `text`, `textHover`, `border` — they belong to the inline forms, which are still Tailwind                    |
-  | `icon` (15)          | 0                     | all of them: `DiscTable`'s row actions are still `text-orange-400 hover:text-orange-300` and the rest        |
-  | `space` (7)          | 5                     | `smd`, `xxl`                                                                                                 |
-  | `font` (9)           | 6                     | `sizeXs`, `sizeLg`, `weightRegular`                                                                          |
-  | `size` (1)           | 1                     | —                                                                                                            |
-  | `radius` (3)         | 2                     | `lg`                                                                                                         |
-  | every Tailwind alias | 0                     | all of them                                                                                                  |
+  | Group                | Used                                 | Unused                                                                                                       |
+  | -------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+  | `color` (34)         | 26                                   | `textBody`, `textSubtle`, `accentBorderSubtle`, `link`, `dangerStrong`, `warning`, `success`, `successHover` |
+  | `dark` (10)          | 7, all by `DiscTable`                | `text`, `textHover`, `border` — they belong to the inline forms, which are still Tailwind                    |
+  | `icon` (15)          | 15, all by `DiscTable`'s row actions | —                                                                                                            |
+  | `space` (7)          | 5                                    | `smd`, `xxl`                                                                                                 |
+  | `font` (9)           | 6                                    | `sizeXs`, `sizeLg`, `weightRegular`                                                                          |
+  | `size` (1)           | 1                                    | —                                                                                                            |
+  | `radius` (3)         | 2                                    | `lg`                                                                                                         |
+  | every Tailwind alias | 0                                    | all of them                                                                                                  |
 
   `color.success` and `color.successHover` are unused because the save buttons
   they were named for are still `bg-green-700 hover:bg-green-800`; only the
   status box's `success*` tokens found a caller.
 
   Each unused token exists because a page that is still on Tailwind will need it
-  when it converts. Until then they are a promise rather than a fact, and the
-  size of this change is not the size of the improvement.
+  when it converts. Until then they are a promise rather than a fact.
 
 - **The success box is still built twice.** `ui/SuccessNote.tsx` and
   `features/discs/submission/AddDiscsPage.tsx` now draw it from the same three
@@ -597,6 +599,20 @@ None. No route, loader or action is touched.
   change what is on screen, which is outside what this work is allowed to do, so
   they keep three token names — `dark.headingText`, `dark.bodyText`, `dark.text`
   — and the decision is left to whoever next touches the table's design.
+- **StyleX ranks `:hover` above `:disabled`, which a conversion can walk into.**
+  StyleX gives `:hover` priority 3130 and `:disabled` 3092, so in a single
+  `color: { ':hover': …, ':disabled': … }` the hover value wins and a disabled
+  control lights up under the pointer. Tailwind has the same problem and the
+  same answer — the disc table's info button had always carried an explicit
+  disabled-and-hovered utility — so the StyleX version spells out
+  `':disabled:hover'`, which compiles to a higher priority (3222) than either.
+  Any component converted after this one that has a disabled state needs the
+  same combination; the plain pair is not enough.
+- **A Tailwind class name written in a comment still ships.** Tailwind scans
+  source files as plain text, so a comment naming the utility a conversion just
+  removed puts the rule back into the stylesheet for a class nothing uses. It
+  cost one dead rule here before it was noticed. Describe the class, do not
+  spell it.
 - **Four components gained a StyleX block for one rule.** `root.tsx`,
   `DiscListPage`, `NotifyForm` and `DiscListIntro` were pure Tailwind and now
   carry a `stylex.create` holding a single style, because their inline
