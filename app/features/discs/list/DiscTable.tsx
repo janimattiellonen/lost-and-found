@@ -130,91 +130,6 @@ const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
   return !isAfter(date, now);
 };
 
-// Dark table theme matching the previous react-data-grid rendering: a dark base
-// with light text, the header slightly darker, and even rows a subtly lighter
-// shade — not the harsh white/dark zebra of a light base. The values live in
-// the `dark` tokens; the two row dividers below are still literal because a
-// translucent white carries no brand identity.
-const styles = stylex.create({
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: space.md,
-    fontSize: '0.875rem',
-    backgroundColor: dark.surface,
-    color: dark.bodyText,
-  },
-  th: {
-    position: 'relative',
-    boxSizing: 'border-box',
-    textAlign: 'left',
-    fontWeight: 700,
-    padding: '8px 12px',
-    color: dark.headingText,
-    borderBottomWidth: '1px',
-    borderBottomStyle: 'solid',
-    borderBottomColor: 'rgba(255,255,255,0.15)',
-    userSelect: 'none',
-    backgroundColor: { default: dark.cell, ':hover': dark.cellHover },
-  },
-  thSortable: { cursor: 'pointer' },
-  thSorted: { backgroundColor: dark.cellSorted },
-  // Shrink a column to its content width (used for the "#" column).
-  tight: { width: '1%', whiteSpace: 'nowrap' },
-  td: {
-    boxSizing: 'border-box',
-    padding: '8px 12px',
-    borderBottomWidth: '1px',
-    borderBottomStyle: 'solid',
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-  },
-  // Even rows a subtle shade lighter than the base, as in the old grid.
-  rowEven: { backgroundColor: dark.rowAlt },
-  // The row actions. Each hue is part of the label, not decoration: an admin
-  // picks the right icon at a glance on a phone.
-  rowAction: { display: 'inline-flex' },
-  actionDelete: {
-    color: { default: icon.delete, ':hover': icon.deleteHover },
-    opacity: { default: 1, ':disabled': 0.4 },
-  },
-  // The neutral grey: the edit link, and the retrieval marker on a disc that is
-  // not on the list. It means "no state to report", which is why one style
-  // serves both.
-  actionNeutral: { color: { default: icon.edit, ':hover': icon.editHover } },
-  actionReturned: { color: { default: icon.returned, ':hover': icon.returnedHover } },
-  actionSellable: { color: { default: icon.sellable, ':hover': icon.sellableHover } },
-  actionRetrieval: { color: { default: icon.retrieval, ':hover': icon.retrievalHover } },
-  actionCourse: { color: { default: icon.course, ':hover': icon.courseHover } },
-  // `:disabled:hover` is spelled out because StyleX ranks `:hover` above
-  // `:disabled`, so the pair alone would let a disabled button light up under
-  // the pointer. See specs/15-design-system-tokens.md.
-  actionInfo: {
-    color: {
-      default: icon.info,
-      ':hover': icon.infoHover,
-      ':disabled': icon.disabled,
-      ':disabled:hover': icon.disabled,
-    },
-    cursor: { default: 'pointer', ':disabled': 'not-allowed' },
-  },
-  sortIcon: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    verticalAlign: 'middle',
-    marginInlineStart: space.xs,
-  },
-  resizer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    height: '100%',
-    width: '5px',
-    cursor: 'col-resize',
-    userSelect: 'none',
-    touchAction: 'none',
-  },
-});
-
 /** Columns sized by their content rather than by a resizable width. */
 function isTightColumn(columnId: string): boolean {
   return columnId === 'id' || columnId === 'actions' || columnId === 'select';
@@ -800,3 +715,88 @@ export default function DiscTable({
     </>
   );
 }
+
+// Dark table theme matching the previous react-data-grid rendering: a dark base
+// with light text, the header slightly darker, and even rows a subtly lighter
+// shade — not the harsh white/dark zebra of a light base. The values live in
+// the `dark` tokens; the two row dividers below are still literal because a
+// translucent white carries no brand identity.
+const styles = stylex.create({
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    marginTop: space.md,
+    fontSize: '0.875rem',
+    backgroundColor: dark.surface,
+    color: dark.bodyText,
+  },
+  th: {
+    position: 'relative',
+    boxSizing: 'border-box',
+    textAlign: 'left',
+    fontWeight: 700,
+    padding: '8px 12px',
+    color: dark.headingText,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'rgba(255,255,255,0.15)',
+    userSelect: 'none',
+    backgroundColor: { default: dark.cell, ':hover': dark.cellHover },
+  },
+  thSortable: { cursor: 'pointer' },
+  thSorted: { backgroundColor: dark.cellSorted },
+  // Shrink a column to its content width (used for the "#" column).
+  tight: { width: '1%', whiteSpace: 'nowrap' },
+  td: {
+    boxSizing: 'border-box',
+    padding: '8px 12px',
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  // Even rows a subtle shade lighter than the base, as in the old grid.
+  rowEven: { backgroundColor: dark.rowAlt },
+  // The row actions. Each hue is part of the label, not decoration: an admin
+  // picks the right icon at a glance on a phone.
+  rowAction: { display: 'inline-flex' },
+  actionDelete: {
+    color: { default: icon.delete, ':hover': icon.deleteHover },
+    opacity: { default: 1, ':disabled': 0.4 },
+  },
+  // The neutral grey: the edit link, and the retrieval marker on a disc that is
+  // not on the list. It means "no state to report", which is why one style
+  // serves both.
+  actionNeutral: { color: { default: icon.edit, ':hover': icon.editHover } },
+  actionReturned: { color: { default: icon.returned, ':hover': icon.returnedHover } },
+  actionSellable: { color: { default: icon.sellable, ':hover': icon.sellableHover } },
+  actionRetrieval: { color: { default: icon.retrieval, ':hover': icon.retrievalHover } },
+  actionCourse: { color: { default: icon.course, ':hover': icon.courseHover } },
+  // `:disabled:hover` is spelled out because StyleX ranks `:hover` above
+  // `:disabled`, so the pair alone would let a disabled button light up under
+  // the pointer. See specs/15-design-system-tokens.md.
+  actionInfo: {
+    color: {
+      default: icon.info,
+      ':hover': icon.infoHover,
+      ':disabled': icon.disabled,
+      ':disabled:hover': icon.disabled,
+    },
+    cursor: { default: 'pointer', ':disabled': 'not-allowed' },
+  },
+  sortIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    verticalAlign: 'middle',
+    marginInlineStart: space.xs,
+  },
+  resizer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    height: '100%',
+    width: '5px',
+    cursor: 'col-resize',
+    userSelect: 'none',
+    touchAction: 'none',
+  },
+});

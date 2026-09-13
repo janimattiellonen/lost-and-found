@@ -40,11 +40,18 @@ export const color = stylex.defineVars({
   dangerSurface: palette.red50,
   dangerBorder: palette.red200,
   dangerText: palette.red800,
+  // Error text outside a box, on a white page — the owner link page's failure
+  // line. It is `red600` like `dangerHover` and not `red800` like `dangerText`,
+  // because a lone red sentence needs less weight than one carried on a red
+  // surface. Two names for one value, because the two roles can move apart.
   dangerStrong: palette.red600,
   dangerSurfaceHover: palette.red500A04,
   dangerBorderTranslucent: palette.red500A50,
   warning: palette.amber700,
   success: palette.green700,
+  // The hover of a green button. It shares `green800` with `successText`
+  // below by coincidence, not by rule: one is a background under white text,
+  // the other is text on a pale green surface.
   successHover: palette.green800,
   successSurface: palette.green50,
   successBorder: palette.green200,
