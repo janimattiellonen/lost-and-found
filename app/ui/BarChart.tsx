@@ -54,8 +54,6 @@ export default function BarChart({ className, data, onBarClick, title }: BarChar
   });
 
   const outer = stylex.props(styles.outer);
-  const clickable = Boolean(onBarClick);
-  const Row = clickable ? 'button' : 'div';
 
   return (
     <div className={[outer.className, className].filter(Boolean).join(' ')} style={outer.style}>
@@ -65,6 +63,11 @@ export default function BarChart({ className, data, onBarClick, title }: BarChar
         // and a chart of small numbers stays visibly small.
         const width = Math.round((item.value / (highest + 30)) * 100);
         const startsGroup = item.group !== undefined && item.group !== data[index - 1]?.group;
+        // A row with nothing in it is not a target: it is drawn so the month is
+        // visibly a month with no discs rather than a month left out, and there
+        // is nothing for it to open.
+        const clickable = Boolean(onBarClick) && item.value > 0;
+        const Row = clickable ? 'button' : 'div';
 
         return (
           <Fragment key={index}>
@@ -72,12 +75,14 @@ export default function BarChart({ className, data, onBarClick, title }: BarChar
             <Row
               {...(clickable ? { type: 'button' as const } : {})}
               {...stylex.props(styles.row, clickable && styles.rowClickable)}
-              onClick={() => {
-                if (onBarClick) {
-                  setSelectedBar(index);
-                  onBarClick(item.date);
-                }
-              }}
+              onClick={
+                clickable && onBarClick
+                  ? () => {
+                      setSelectedBar(index);
+                      onBarClick(item.date);
+                    }
+                  : undefined
+              }
               onMouseEnter={clickable ? () => setActiveBar(index) : undefined}
               onMouseLeave={clickable ? () => setActiveBar(null) : undefined}
               onFocus={clickable ? () => setActiveBar(index) : undefined}

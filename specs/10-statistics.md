@@ -56,11 +56,14 @@ everything is computed in the browser from one fetch of the club's discs.
 8. "Seuralle palautetut kiekot" (discs returned to the club) — a monthly bar
    chart of discs by `added_at`, one month per row: the month name, then its
    bar, then its count. The rows are headed by their year, so two years of
-   months read as two blocks rather than one run of twenty-five.
+   months read as two blocks rather than one run of twenty-five. A month with no
+   discs in it is drawn as a row of zero, so the run of months is unbroken and
+   an empty month is visibly empty rather than absent.
 9. "Omistajille palautetut kiekot" — the same monthly chart, of discs by the
    date they went back to their owner.
 10. When a row in either monthly chart is clicked, then a second chart appears
-    below it breaking that month down by day; the clicked bar turns blue.
+    below it breaking that month down by day; the clicked bar turns blue. A
+    month of zero is not clickable — there is nothing for it to open.
 11. "Top 10 kadotettua kiekkomallia" (top 10 most-lost disc models) — a
     horizontal bar chart of the ten most frequent `disc_name` values.
 12. Under that title sits a checkbox, "Ryhmittele kiekon nimen mukaan" (group by
@@ -289,6 +292,16 @@ treat a date as real in one place and not in another. Two live
 `returned_to_owner_text` values begin "23.7.202" and "17.7.10126"; unbounded,
 each would head a year block of its own at either end of a chart sorted by date.
 
+`getAddedDiscCountByMonth` then fills the gaps: `withEmptyMonths` walks every
+month from the first that has a disc to the last and puts a zero row where there
+is no bucket. Nothing is invented at the ends — the run starts and stops on
+months that have discs — so the chart still says nothing about a season that has
+not happened yet. Without it a chart simply omitted the empty month, and under
+the year headings that read as if the month did not exist: the 2026 block ran
+tammi, maalis, huhti with nothing saying helmi was a real month with nothing in
+it. The day drill-down is not filled — a month's quiet days are not the same
+claim as a missing month, and thirty-one rows to show four would bury them.
+
 Shared helpers are in `app/features/stats/statsUtils.ts`
 (`mapBySeparator` → `sortMappedData` → `getAddedDiscCountByMonth` /
 `getAddedDiscCountByDaysInMonth`, plus `getDonatedOrSoldDiscs`,
@@ -311,7 +324,8 @@ title already names.
   chart has an `onBarClick`, so the click target is the row rather than the few
   pixels a quiet month's bar comes to, and is keyboard-reachable; without one it
   is a `<div>`, because a button that does nothing is a promise the chart cannot
-  keep. Pointing at or tabbing to a row turns its bar blue — held as component
+  keep. A row whose value is zero is a `<div>` for the same reason. Pointing at
+  or tabbing to a row turns its bar blue — held as component
   state rather than a `:hover` rule on the bar, because the row is the target
   and the bar is only part of it, so a quiet month lights up from its label too.
   A row carrying a `group` is headed by it wherever it differs from the
@@ -394,11 +408,6 @@ title already names.
 
 ## Edge cases & known gaps
 
-- A month nobody returned a disc in gets no row at all rather than a row of
-  zero, so a gap in the sequence reads as if the month did not exist. Under the
-  year headings this is easier to miss than it was: the 2026 block of
-  "Omistajille palautetut kiekot" runs tammi, maalis, huhti with no sign that
-  helmi is absent.
 - With grouping off, `MostLostByDiscName` groups on the raw `discName`, so
   casing and spelling variants ("Destroyer" vs "destroyer") count as different
   models. Ties at the tenth place are broken arbitrarily either way — the sort

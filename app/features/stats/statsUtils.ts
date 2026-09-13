@@ -3,7 +3,7 @@ import type { MethodOption } from '~/lib/methodEnum';
 import type { DiscDTO } from '~/types';
 import type { BarValueType } from '~/ui/BarChart';
 import { getMonth, getMonthName, getYear } from '~/utils';
-import { format, isWithinInterval, lastDayOfMonth, parse } from 'date-fns';
+import { eachMonthOfInterval, format, isWithinInterval, lastDayOfMonth, parse, startOfMonth } from 'date-fns';
 
 export type LostDiscsProps = {
   data: DiscDTO[];
@@ -123,7 +123,33 @@ export function getAddedDiscCountByMonth(
 ): AddedDiscCountByMonthType[] {
   const mapped = mapBySeparator(data, getSeparator, getMonthData);
 
-  return sortMappedData(mapped);
+  return withEmptyMonths(sortMappedData(mapped));
+}
+
+/**
+ * Every month from the first with a disc in it to the last, the empty ones
+ * included as zero.
+ *
+ * A month nobody returned a disc in has no bucket, and a chart that simply
+ * leaves it out reads as if it never happened: under the year headings the 2026
+ * block ran tammi, maalis, huhti with nothing saying helmi was a real month
+ * with nothing in it. Nothing is invented at the ends — the run starts and
+ * stops on months that have discs.
+ */
+function withEmptyMonths(counted: AddedDiscCountByMonthType[]): AddedDiscCountByMonthType[] {
+  const dated = counted.filter((item): item is AddedDiscCountByMonthType & { date: Date } => item.date !== undefined);
+
+  if (dated.length === 0) {
+    return counted;
+  }
+
+  const countedByMonth = new Map(dated.map((item) => [toMonthAndYearKey(item.date), item]));
+  const months = eachMonthOfInterval({
+    start: startOfMonth(dated[0].date),
+    end: startOfMonth(dated[dated.length - 1].date),
+  });
+
+  return months.map((month) => countedByMonth.get(toMonthAndYearKey(month)) ?? { amount: 0, date: month });
 }
 
 export function getAddedDiscCountByDaysInMonth(
