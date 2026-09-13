@@ -6,6 +6,14 @@ import type { Config } from 'tailwindcss';
 // to StyleX by renaming the class to `color.textMuted`, with no judgement call
 // about what the grey was for.
 //
+// Every name is grouped by what the colour paints — `fg` for text, `surface` for
+// a background, `line` for a border — with the solid brand fills (`accent`,
+// `danger`, `success`) as their own groups. Keep new entries in that shape, or a
+// class stops mapping onto exactly one token.
+//
+// Most values are Tailwind 3.3.3 defaults; the `dark*` greys and `caution700`
+// are not, and are commented as such in `palette.stylex.ts`.
+//
 // The values below repeat `app/styles/palette.stylex.ts`. They have to: StyleX
 // hashes the CSS variable names it emits (`palette.gray500` becomes
 // `--x1jb24h0`), so a config cannot write `var(--gray500)`, and StyleX rejects
@@ -17,6 +25,7 @@ import type { Config } from 'tailwindcss';
 // once. See specs/15-design-system-tokens.md.
 const palette = {
   gray100: '#f3f4f6',
+  gray200: '#e5e7eb',
   gray300: '#d1d5db',
   gray400: '#9ca3af',
   gray500: '#6b7280',
@@ -26,15 +35,24 @@ const palette = {
   white: '#ffffff',
   black: '#000000',
 
+  red50: '#fef2f2',
+  red200: '#fecaca',
   red300: '#fca5a5',
   red400: '#f87171',
   red500: '#ef4444',
   red600: '#dc2626',
+  red800: '#991b1b',
+
+  // Not Tailwind: the parser's 'unsure about this value' olive. See
+  // palette.stylex.ts for why it was not rounded to amber700.
+  caution700: '#8a6100',
 
   amber300: '#fcd34d',
   amber400: '#fbbf24',
   amber700: '#b45309',
 
+  green50: '#f0fdf4',
+  green200: '#bbf7d0',
   green300: '#86efac',
   green400: '#4ade80',
   green700: '#15803d',
@@ -82,6 +100,8 @@ export default {
           strong: palette.black,
           'on-accent': palette.white,
           link: palette.blue700,
+          danger: palette.red800,
+          success: palette.green800,
         },
         surface: {
           DEFAULT: palette.white,
@@ -90,9 +110,14 @@ export default {
           'accent-hover': palette.blue600A04,
           'accent-selected': palette.blue600A08,
           'danger-hover': palette.red500A04,
+          danger: palette.red50,
+          success: palette.green50,
         },
         line: {
           DEFAULT: palette.gray300,
+          subtle: palette.gray200,
+          success: palette.green200,
+          danger: palette.red200,
           accent: palette.blue600,
           'accent-subtle': palette.blue200,
           'accent-translucent': palette.blue600A50,
@@ -108,6 +133,7 @@ export default {
           strong: palette.red600,
         },
         warning: palette.amber700,
+        caution: palette.caution700,
         success: {
           DEFAULT: palette.green700,
           hover: palette.green800,

@@ -22,8 +22,7 @@ that renders it; those happen to agree. A primary blue is `color.accent`
 primitive and `blue-600` (`#2563eb`) in the page; those do not. Nobody can say
 which is correct, because nothing decides it.
 
-This work builds one token set that **is** the palette currently on screen,
-wherever the palette was a shared one. Every token's value is the Tailwind colour
+This work builds one token set that **is** the palette currently on screen. Every token's value is the Tailwind colour
 that the running site already shows, so
 converting a component from Tailwind classes to StyleX tokens is a visual no-op —
 the pixels do not move. Once every colour has one agreed name, changing the look
@@ -51,8 +50,8 @@ moves is either listed as a deliberate exception below or is a bug.
 ## User-facing behaviour
 
 1. When any page is loaded after this work, then it looks exactly as it did
-   before — same colours, same spacing, same type sizes — with the three
-   exceptions in scenarios 2 to 4.
+   before — same colours, same spacing, same type sizes — with the four
+   exceptions in scenarios 2 to 5.
 2. When a primary button, a focused text field, a checkbox or a radio is shown,
    then its blue changes from Material UI's `#1976d2` to Tailwind's `blue-600`
    (`#2563eb`), and its hover blue from `#1565c0` to `blue-700` (`#1d4ed8`).
@@ -74,7 +73,16 @@ moves is either listed as a deliberate exception below or is a bug.
    describe a marker the table does not draw. Pure `#ff0000` is not a colour
    anything else in the app uses.
 
-Scenarios 2 to 4 are the price of having one palette rather than three, and were
+5. When a success or error box is shown — after saving on the disc-entry page,
+   or in the `SuccessNote` that follows a form post — then its three colours move
+   from Material UI's green and red to Tailwind's. Two of the six are
+   imperceptible (a perceptual distance, ΔE, of 2.7 and 3.3, where roughly 2.3 is
+   the threshold at which a difference can be seen at all) and three are mild
+   (8.2 to 9.4). One is visible: the success box's border lightens from `#a5d6a7`
+   to `green200` (ΔE 12.5). The triad has to move as a unit — taking the cheap
+   two-thirds would leave a box whose border belonged to a different palette.
+
+Scenarios 2 to 5 are the price of having one palette rather than three, and were
 accepted deliberately rather than overlooked. Each is a shade change of the same
 hue, not a redesign. The alternative — keeping the Material UI values — was
 considered and rejected, because it leaves the app with two blues and three reds
@@ -94,38 +102,45 @@ Only the shades the app actually uses are listed; this is an inventory of what i
 on screen, not a copy of Tailwind's whole palette. Values are Tailwind 3.3.3's
 defaults, read from the installed package rather than typed from memory.
 
-| Token       | Value     | Where it is on screen today                         |
-| ----------- | --------- | --------------------------------------------------- |
-| `gray100`   | `#f3f4f6` | `color.surfaceMuted`                                |
-| `gray300`   | `#d1d5db` | `border-gray-300`, and light text on the dark table |
-| `gray400`   | `#9ca3af` | `text-gray-400` (the "Lisätiedot" caption)          |
-| `gray500`   | `#6b7280` | `text-gray-500` (17 uses), `color.textMuted`        |
-| `gray600`   | `#4b5563` | `text-gray-600` (12 uses)                           |
-| `gray700`   | `#374151` | `text-gray-700` (13 uses), `color.textSecondary`    |
-| `gray900`   | `#111827` | `color.textPrimary`, `text-gray-900`                |
-| `white`     | `#ffffff` | `bg-white`, `text-white`                            |
-| `black`     | `#000000` | `text-black` (the course name on the notify forms)  |
-| `red300`    | `#fca5a5` | delete icon, hover                                  |
-| `red400`    | `#f87171` | delete icon                                         |
-| `red500`    | `#ef4444` | `text-red-500` — the standard form error (10 uses)  |
-| `red600`    | `#dc2626` | the owner link page's error line                    |
-| `amber300`  | `#fcd34d` | info icon, hover                                    |
-| `amber400`  | `#fbbf24` | info icon                                           |
-| `amber700`  | `#b45309` | `text-amber-700` — the "owner gives up" notice      |
-| `green300`  | `#86efac` | "mark returned" icon, hover                         |
-| `green400`  | `#4ade80` | "mark returned" icon                                |
-| `green700`  | `#15803d` | `bg-green-700` — save buttons in the inline forms   |
-| `green800`  | `#166534` | those buttons' hover                                |
-| `blue50`    | `#eff6ff` | selected option card on the owner link page         |
-| `blue200`   | `#bfdbfe` | that card's inner divider                           |
-| `blue600`   | `#2563eb` | that card's border when selected                    |
-| `blue700`   | `#1d4ed8` | `text-blue-700` — `sms:` links                      |
-| `sky300`    | `#7dd3fc` | "mark sellable" icon, hover                         |
-| `sky400`    | `#38bdf8` | "mark sellable" icon                                |
-| `violet300` | `#c4b5fd` | "set course" icon, hover                            |
-| `violet400` | `#a78bfa` | "set course" icon                                   |
-| `orange300` | `#fdba74` | retrieval icon when the disc is on the list, hover  |
-| `orange400` | `#fb923c` | retrieval icon when the disc is on the list         |
+| Token        | Value     | Where it is on screen today                                      |
+| ------------ | --------- | ---------------------------------------------------------------- |
+| `gray100`    | `#f3f4f6` | `color.surfaceMuted`                                             |
+| `gray200`    | `#e5e7eb` | notification card border                                         |
+| `gray300`    | `#d1d5db` | `border-gray-300`, and light text on the dark table              |
+| `gray400`    | `#9ca3af` | `text-gray-400` (the "Lisätiedot" caption)                       |
+| `gray500`    | `#6b7280` | `text-gray-500` (17 uses), `color.textMuted`                     |
+| `gray600`    | `#4b5563` | `text-gray-600` (12 uses)                                        |
+| `gray700`    | `#374151` | `text-gray-700` (13 uses), `color.textSecondary`                 |
+| `gray900`    | `#111827` | `color.textPrimary`, `text-gray-900`                             |
+| `white`      | `#ffffff` | `bg-white`, `text-white`                                         |
+| `black`      | `#000000` | `text-black` (the course name on the notify forms)               |
+| `red300`     | `#fca5a5` | delete icon, hover                                               |
+| `red400`     | `#f87171` | delete icon                                                      |
+| `red500`     | `#ef4444` | `text-red-500` — the standard form error (10 uses)               |
+| `red50`      | `#fef2f2` | error box background                                             |
+| `red200`     | `#fecaca` | error box border                                                 |
+| `red600`     | `#dc2626` | the owner link page's error line                                 |
+| `red800`     | `#991b1b` | error box text                                                   |
+| `amber300`   | `#fcd34d` | info icon, hover                                                 |
+| `amber400`   | `#fbbf24` | info icon                                                        |
+| `amber700`   | `#b45309` | `text-amber-700` — the "owner gives up" notice                   |
+| `caution700` | `#8a6100` | a value the disc parser is unsure of — **not a Tailwind colour** |
+| `green300`   | `#86efac` | "mark returned" icon, hover                                      |
+| `green50`    | `#f0fdf4` | success box background                                           |
+| `green200`   | `#bbf7d0` | success box border                                               |
+| `green400`   | `#4ade80` | "mark returned" icon                                             |
+| `green700`   | `#15803d` | `bg-green-700` — save buttons in the inline forms                |
+| `green800`   | `#166534` | those buttons' hover                                             |
+| `blue50`     | `#eff6ff` | selected option card on the owner link page                      |
+| `blue200`    | `#bfdbfe` | that card's inner divider                                        |
+| `blue600`    | `#2563eb` | that card's border when selected                                 |
+| `blue700`    | `#1d4ed8` | `text-blue-700` — `sms:` links                                   |
+| `sky300`     | `#7dd3fc` | "mark sellable" icon, hover                                      |
+| `sky400`     | `#38bdf8` | "mark sellable" icon                                             |
+| `violet300`  | `#c4b5fd` | "set course" icon, hover                                         |
+| `violet400`  | `#a78bfa` | "set course" icon                                                |
+| `orange300`  | `#fdba74` | retrieval icon when the disc is on the list, hover               |
+| `orange400`  | `#fb923c` | retrieval icon when the disc is on the list                      |
 
 Five translucent entries, for a tint laid over whatever is behind it rather than
 a colour of its own — a button's hover wash, a highlighted menu row, an outlined
@@ -168,7 +183,7 @@ than a component quietly holding its own. Higher number is darker.
 (`#d1d5db`), which the row icons and the inline forms use. The two are three
 points apart and both sit on this one table. They are kept separate because
 merging them would change what is on screen, which this work does not do outside
-the three listed exceptions; the inconsistency is recorded as a gap instead.
+the four listed exceptions; the inconsistency is recorded as a gap instead.
 
 `dark500` was written `rgb(63, 60, 60)` in the component. It is spelled as hex
 here so every palette entry reads alike; StyleX compiles both spellings to the
@@ -197,6 +212,7 @@ Tailwind expressed until now.
 | `surface`                 | `white`      | unchanged                                             |
 | `surfaceMuted`            | `gray100`    | unchanged                                             |
 | `border`                  | `gray300`    | unchanged                                             |
+| `borderSubtle`            | `gray200`    | **new** — notification card border                    |
 | `accent`                  | `blue600`    | **changed** from `#1976d2` (see scenario 2)           |
 | `accentHover`             | `blue700`    | **changed** from `#1565c0`                            |
 | `accentSurface`           | `blue50`     | **new** — selected card background                    |
@@ -211,9 +227,16 @@ Tailwind expressed until now.
 | `dangerStrong`            | `red600`     | **new** — the owner link page's error line            |
 | `dangerSurfaceHover`      | `red500A04`  | **new** — outlined/text error button hover            |
 | `dangerBorderTranslucent` | `red500A50`  | **new** — outlined error button border                |
+| `dangerSurface`           | `red50`      | **new** — error box background                        |
+| `dangerBorder`            | `red200`     | **new** — error box border                            |
+| `dangerText`              | `red800`     | **new** — error box text                              |
 | `warning`                 | `amber700`   | **new** — the "owner gives up" notice                 |
 | `success`                 | `green700`   | **new** — save buttons                                |
 | `successHover`            | `green800`   | **new**                                               |
+| `successSurface`          | `green50`    | **new** — success box background                      |
+| `successBorder`           | `green200`   | **new** — success box border                          |
+| `successText`             | `green800`   | **new** — success box text                            |
+| `caution`                 | `caution700` | **new** — a value the parser guessed at               |
 
 A new `dark` group, for the disc table and the inline forms that open inside it.
 These exist because the table is a dark island in an otherwise light app, and the
@@ -251,6 +274,41 @@ semantic tokens rather than decoration. Each is a pair — resting and hovered.
 
 The `icon.retrieval` pair falls back to `icon.edit` when the disc is _not_ on the
 retrieval list, which is how `DiscTable` already behaves.
+
+### Status boxes, and the colour that stayed
+
+A success or error box is three colours that only make sense together — a tinted
+background, a border and a darker text. The app had two such triads, written as
+Material UI literals, and the success one was copied character for character into
+both `ui/SuccessNote.tsx` and `features/discs/submission/AddDiscsPage.tsx`. They
+are now `color.successSurface` / `successBorder` / `successText` and
+`color.dangerSurface` / `dangerBorder` / `dangerText`, so the two copies of the
+_colours_ became one name. The two copies of the _box_ did not — see the gap
+below.
+
+They were measured before being moved, rather than swapped on the assumption that
+"close enough" is close enough. Perceptual distance (ΔE) against the nearest
+Tailwind shade:
+
+| Was                          | Now        | ΔE       |
+| ---------------------------- | ---------- | -------- |
+| `#fdecea` error background   | `red50`    | 2.7      |
+| `#f5c2c0` error border       | `red200`   | 3.2      |
+| `#e8f5e9` success background | `green50`  | 3.3      |
+| `#8e0000` error text         | `red800`   | 9.4      |
+| `#1b5e20` success text       | `green800` | 8.2      |
+| `#a5d6a7` success border     | `green200` | **12.5** |
+
+Roughly 2.3 is where a difference becomes visible at all, so the first three are
+the same colour spelled differently and only the success border really changes.
+
+**`#8a6100` deliberately did not move.** The disc parser marks a value it guessed
+at in a dark olive, and the nearest Tailwind shade — `amber700`, which the app
+already uses as `color.warning` — is 26.8 ΔE away: a different colour, not a
+different spelling. Converting it would have been a design change smuggled in
+under a rename. It keeps its own palette entry, `caution700`, marked as
+non-Tailwind in the same way the disc table's greys are, and its own token,
+`color.caution`, held apart from `color.warning` on purpose.
 
 ### Non-colour tokens
 
@@ -380,7 +438,7 @@ None. No route, loader or action is touched.
 | Entry point                                 | Purpose                                                                                                                                        |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/styles/palette.stylex.ts`              | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                  |
-| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. Most of it is not imported by anything yet — see "Edge cases & known gaps". |
+| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. Roughly a third of it has no caller yet — see "Edge cases & known gaps".    |
 | `app.css`                                   | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                |
 | `tailwind.config.ts`                        | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does. |
 | `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                 |
@@ -391,7 +449,7 @@ None. No route, loader or action is touched.
 1. **A token's value is whatever is on screen today.** Every value in the palette
    was read out of the running code or out of `tailwindcss/colors`, not chosen.
    Where a token's value differs from what the code shows today, it appears in
-   "User-facing behaviour" as a numbered exception. There are three of them.
+   "User-facing behaviour" as a numbered exception. There are four of them.
 2. **Components import `tokens`, never `palette`.** The palette exists so that
    `gray500` is written down once; a component asking for `palette.gray500`
    instead of `color.textMuted` has skipped the layer that carries the meaning,
@@ -402,9 +460,9 @@ None. No route, loader or action is touched.
    to the palette and given a semantic name first. This is the rule the disc
    table's dark greys broke, and why nobody knew they existed; they are now in
    the palette and the table reads them from there. The rule binds new code. It
-   is not yet true of the whole app — fourteen literals survive in three
-   components, listed under "Edge cases & known gaps", because bringing them in
-   would change more colours than this work is allowed to change.
+   is not yet true of the whole app: the chart palettes, the QR poster's grey and
+   one branded cyan are still literals, listed under "Edge cases & known gaps"
+   with the reason each was left.
 4. **This work adds no dark mode and no theming.** The tokens are a single light
    theme plus one dark surface that happens to be inside it. StyleX's
    `createTheme` would let a second theme override the same variables later; that
@@ -464,47 +522,55 @@ None. No route, loader or action is touched.
   `color.accent` is `blue600`, the ten components using it have moved together;
   the same goes for `accentHover` and `danger`. Reverting one means reverting
   every caller of it, because the whole point is that they share the token.
-- **Only the branded alpha colours are tokenised.** The translucent accent and
-  danger tints became palette entries, because leaving them would have put MUI's
-  blue beside Tailwind's on the same button. The neutral ones did not: `Button`'s
-  drop shadows (`rgba(0,0,0,0.2)` and friends) and its disabled greys, the dark
-  table's `rgba(255,255,255,0.08)` row divider, and the inline forms'
-  `hover:bg-white/10` are all still literals in the components. They carry no
-  brand identity, so nothing about them drifts when the palette changes — but
-  they are outside the system, and a redesign of the dark table would have to
-  find them by grep.
-- **Most of what this work adds is not used by anything yet.** That is the shape
-  of the job — the vocabulary has to exist before the pages can be converted to
-  it — but it should be stated plainly rather than left to be discovered:
+- **The palette covers the app's brand colours, not every colour in it.**
+  Thirteen opaque literals and two translucent ones are still written in
+  components, and they are there on purpose rather than by oversight:
 
-  | Added                                                                                                                                                                   | Used by                                                                                            |
-  | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-  | `color`: the 3 changed values, `accentSurfaceHover`, `accentSurfaceSelected`, `accentBorderTranslucent`, `dangerHover`, `dangerSurfaceHover`, `dangerBorderTranslucent` | `Button`, `DiscSelector` and the components that already used `accent`/`danger`                    |
-  | `color`: `textBody`, `textSubtle`, `textStrong`, `link`, `warning`, `success`, `successHover`, `accentSurface`, `accentBorderSubtle`, `dangerStrong`                    | nothing                                                                                            |
-  | `dark` (10 tokens)                                                                                                                                                      | `DiscTable` only                                                                                   |
-  | `icon` (15 tokens)                                                                                                                                                      | nothing — `DiscTable`'s row actions are still `text-orange-400 hover:text-orange-300` and the rest |
-  | `space.smd`, `space.xxl`, `font.sizeXs`, `font.sizeLg`                                                                                                                  | nothing                                                                                            |
-  | every Tailwind alias in `theme.extend.colors`                                                                                                                           | nothing                                                                                            |
+  | Where                                                                      | What                                                                                                | Why it stayed                                                                                                                                                                                                                                             |
+  | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `ui/SegmentedBarChart.tsx`                                                 | `segmentColours`, eight hexes                                                                       | A categorical chart palette, picked for contrast and colour-blind separation — the comment above it records the reasoning. It is a data-visualisation concern, not a brand one, and folding it into this palette would lose that. It wants its own group. |
+  | `ui/BarChart.tsx`, `ui/SegmentedBarChart.tsx`                              | `'red'`, `'blue'` bar fills                                                                         | The same raw CSS keywords the overdue marker used before scenario 4. They are the most obviously convertible thing left, but converting them changes the statistics charts' colours, which nobody has asked for.                                          |
+  | `features/notifications/QrPosterButtons.tsx`, `BinFullQrPosterButtons.tsx` | `#555555`                                                                                           | Poster text, rendered for print rather than for the screen.                                                                                                                                                                                               |
+  | `features/messaging/MessageTemplatesPage.tsx`                              | `rgba(2, 208, 232, 0.85)`                                                                           | The cyan ring round the default message template. Translucent and branded — the one leftover that is neither neutral nor explained.                                                                                                                       |
+  | `ui/Button.tsx`, `ui/DiscTable.tsx`, the inline forms                      | `rgba(0,0,0,…)` shadows and disabled greys, `rgba(255,255,255,…)` row dividers, `hover:bg-white/10` | Neutral translucency. Nothing about them drifts when the palette changes.                                                                                                                                                                                 |
 
-  Each exists because a page that is still on Tailwind will need it. Until those
-  conversions happen, the tokens are a promise rather than a fact, and a reader
-  should not take the size of this change as the size of the improvement.
+  So the rule "no new hex in a component" binds new code, and every colour that
+  carries the app's identity is now in the palette — but a reader should not
+  read that as "there are no literals left".
 
-- **Fourteen colour literals survive outside the palette.** They are Material
-  UI's alert palettes — a tinted background, a border and a darker text colour
-  for a success, error or warning box — and they live in
-  `features/discs/submission/AddDiscsPage.tsx` (nine), `ui/SuccessNote.tsx`
-  (three) and `features/notifications/NotificationsPage.tsx` (two):
-  `#e8f5e9`/`#a5d6a7`/`#1b5e20` for success, `#fdecea`/`#f5c2c0`/`#8e0000` and
-  `#b71c1c` for error, `#8a6100` for a warning, plus `#e0e0e0` and `#f5f9ff`.
+- **Thirty-two of the seventy-nine tokens are not used by anything yet, and the
+  Tailwind aliases are used by nothing at all.** That is the shape of the job —
+  the vocabulary has to exist before a page can be converted to it — but it
+  should be stated plainly rather than left to be discovered:
 
-  They were left alone deliberately. Tailwind has no equivalent triad, so
-  tokenising them means either keeping Material UI values in a palette that
-  claims to be Tailwind's, or changing three more colours on screen — and the
-  three changes this work makes were each agreed in advance. Which of those to do
-  is a decision for whoever picks this up, not one to make silently while
-  renaming variables.
+  | Group                | Used                  | Unused                                                                                                       |
+  | -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+  | `color` (34)         | 26                    | `textBody`, `textSubtle`, `accentBorderSubtle`, `link`, `dangerStrong`, `warning`, `success`, `successHover` |
+  | `dark` (10)          | 7, all by `DiscTable` | `text`, `textHover`, `border` — they belong to the inline forms, which are still Tailwind                    |
+  | `icon` (15)          | 0                     | all of them: `DiscTable`'s row actions are still `text-orange-400 hover:text-orange-300` and the rest        |
+  | `space` (7)          | 5                     | `smd`, `xxl`                                                                                                 |
+  | `font` (9)           | 6                     | `sizeXs`, `sizeLg`, `weightRegular`                                                                          |
+  | `size` (1)           | 1                     | —                                                                                                            |
+  | `radius` (3)         | 2                     | `lg`                                                                                                         |
+  | every Tailwind alias | 0                     | all of them                                                                                                  |
 
+  `color.success` and `color.successHover` are unused because the save buttons
+  they were named for are still `bg-green-700 hover:bg-green-800`; only the
+  status box's `success*` tokens found a caller.
+
+  Each unused token exists because a page that is still on Tailwind will need it
+  when it converts. Until then they are a promise rather than a fact, and the
+  size of this change is not the size of the improvement.
+
+- **The success box is still built twice.** `ui/SuccessNote.tsx` and
+  `features/discs/submission/AddDiscsPage.tsx` now draw it from the same three
+  tokens, but they still restate the same padding, radius, border width and font
+  size around them, and `AddDiscsPage`'s error box has no `ui/` equivalent at
+  all. The colours were the part this work could fix; the missing abstraction is
+  a `StatusNote` taking a success/error variant, which `SuccessNote`'s two
+  existing callers (`EditDiscPage`, `EditMessageTemplatePage`) would also use.
+  That is a component refactor, not a token change, and belongs in its own piece
+  of work.
 - **Three light greys sit on the dark table and are deliberately not unified.**
   The column headings are `#ffffff`, the body text `#dddddd`, and the row icons
   and inline forms Tailwind's `gray300` (`#d1d5db`). The last two are three
@@ -543,3 +609,15 @@ visible in the code that results.
    so the token keeps the value character for character rather than being tidied
    into a neutral grey — changing it would be a design decision taken by
    accident. Worth revisiting if the dark table is ever redesigned.
+4. **Should the Material UI status triads — the green "it worked" and red "it
+   failed" boxes — move to Tailwind too?** **Yes, decided**, after measuring
+   each of the six values against its nearest Tailwind shade rather than
+   assuming they were close. Five of the six are between 2.7 and 9.4 ΔE; only
+   the success border, at 12.5, is a change a person would notice. The triad has
+   to move as a unit, so that one border was the price of the other five and of
+   deduplicating a triad that had been copied into two files.
+
+   The same measurement is why `#8a6100` did **not** move: at 26.8 ΔE from
+   `amber700` it is a different colour, and swapping it would have been a design
+   change disguised as a rename. Measuring first is what separated the two
+   cases; by eye they look like the same kind of problem.

@@ -8,8 +8,9 @@ import { palette } from './palette.stylex';
 //
 // Every value is the colour the running site already showed before the token
 // existed, so converting a component from Tailwind classes to these tokens does
-// not move any pixels. See specs/15-design-system-tokens.md for the three
-// deliberate exceptions (accent, accentHover, danger).
+// not move any pixels. See specs/15-design-system-tokens.md for the four
+// deliberate exceptions (accent, accentHover, danger, and the two status-box
+// triads).
 export const color = stylex.defineVars({
   textPrimary: palette.gray900,
   textSecondary: palette.gray700,
@@ -21,6 +22,7 @@ export const color = stylex.defineVars({
   surface: palette.white,
   surfaceMuted: palette.gray100,
   border: palette.gray300,
+  borderSubtle: palette.gray200,
 
   accent: palette.blue600,
   accentHover: palette.blue700,
@@ -34,12 +36,23 @@ export const color = stylex.defineVars({
 
   danger: palette.red500,
   dangerHover: palette.red600,
+  // The three parts of an error box. They move as a unit; splitting them is how
+  // the app ended up with a green box whose border belonged to another palette.
+  dangerSurface: palette.red50,
+  dangerBorder: palette.red200,
+  dangerText: palette.red800,
   dangerStrong: palette.red600,
   dangerSurfaceHover: palette.red500A04,
   dangerBorderTranslucent: palette.red500A50,
   warning: palette.amber700,
   success: palette.green700,
   successHover: palette.green800,
+  successSurface: palette.green50,
+  successBorder: palette.green200,
+  successText: palette.green800,
+  // A second, dimmer warning colour, for a value the disc parser guessed at
+  // rather than something the reader must act on. Deliberately not `warning`.
+  caution: palette.caution700,
 });
 
 // The disc list's table is a dark island in an otherwise light app, and the

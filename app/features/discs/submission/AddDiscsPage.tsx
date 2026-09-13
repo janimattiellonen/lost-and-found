@@ -479,7 +479,7 @@ const styles = stylex.create({
     gap: space.sm,
     marginBottom: space.md,
     fontSize: font.sizeSm,
-    color: '#8a6100',
+    color: color.caution,
   },
   applyButton: {
     marginTop: space.sm,
@@ -541,7 +541,7 @@ const styles = stylex.create({
   // on half of all entries and has never yet been wrong, which would make it
   // noise.
   flaggedCell: { display: 'flex', alignItems: 'baseline', gap: space.xs },
-  uncertain: { color: '#8a6100', cursor: 'help' },
+  uncertain: { color: color.caution, cursor: 'help' },
   none: { color: color.textMuted, fontStyle: 'italic' },
   // The static value is a button so a cell can be reached and opened by
   // keyboard as well as by clicking it.
@@ -583,7 +583,7 @@ const styles = stylex.create({
     fontFamily: 'inherit',
     fontSize: 'inherit',
     color: color.onAccent,
-    backgroundColor: { default: color.danger, ':hover': '#b71c1c' },
+    backgroundColor: { default: color.danger, ':hover': color.dangerHover },
     borderStyle: 'none',
     borderRadius: radius.sm,
     cursor: 'pointer',
@@ -623,8 +623,8 @@ const styles = stylex.create({
     borderWidth: '1px',
     borderStyle: 'solid',
   },
-  success: { color: '#1b5e20', backgroundColor: '#e8f5e9', borderColor: '#a5d6a7' },
-  error: { color: '#8e0000', backgroundColor: '#fdecea', borderColor: '#f5c2c0' },
+  success: { color: color.successText, backgroundColor: color.successSurface, borderColor: color.successBorder },
+  error: { color: color.dangerText, backgroundColor: color.dangerSurface, borderColor: color.dangerBorder },
   // Present for screen readers, out of the way visually.
   srOnly: {
     position: 'absolute',
