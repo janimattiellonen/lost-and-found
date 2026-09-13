@@ -466,7 +466,7 @@ const columns: { header: string; field: EditableField }[] = [
 const styles = stylex.create({
   page: { padding: space.lg, fontFamily: font.family, color: color.textPrimary },
   // The global CSS reset strips heading styles, so set them here.
-  heading: { fontSize: font.sizeXl, fontWeight: font.weightBold, marginBottom: space.sm },
+  heading: { fontSize: font.sizeXxl, fontWeight: font.weightBold, marginBottom: space.sm },
   intro: { marginBottom: space.lg, color: color.textSecondary },
   label: { display: 'block', fontWeight: font.weightBold, marginBottom: space.xs, color: color.textSecondary },
   form: { marginBottom: space.lg },

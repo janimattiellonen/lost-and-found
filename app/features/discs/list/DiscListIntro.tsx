@@ -1,7 +1,10 @@
 import type { JSX } from 'react';
 
+import * as stylex from '@stylexjs/stylex';
+
 import { getClubLostDiscsUrl } from '~/config/clubs';
-import { WarningIcon } from '~/ui/icons';
+import OverdueMarker from '~/features/discs/list/OverdueMarker';
+import { space } from '~/styles/tokens.stylex';
 
 type DiscListIntroProps = {
   clubId: number | null;
@@ -41,13 +44,16 @@ export default function DiscListIntro({ clubId }: DiscListIntroProps): JSX.Eleme
       <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
 
       <p>
-        <WarningIcon
-          title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
-          style={{ color: 'red', marginRight: '0.5rem' }}
-        />
+        <OverdueMarker {...stylex.props(styles.markerSpacing)} />
         Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
         pian myydä tai lahjoittaa.
       </p>
     </div>
   );
 }
+
+const styles = stylex.create({
+  markerSpacing: {
+    marginRight: space.sm,
+  },
+});

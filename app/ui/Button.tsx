@@ -10,8 +10,11 @@ type ButtonColor = 'primary' | 'error';
 type Size = 'small' | 'medium' | 'large';
 
 // StyleX replacement for MUI <Button>, faithful to the variants/colors/sizes the
-// app uses. Tokens: color.accent = MUI primary (#1976d2), color.danger = MUI
-// error (#d32f2f).
+// app uses. Every colour comes from `color` — the outlined and text variants
+// used to carry MUI's blue and red as hardcoded rgba(), which left them a
+// different hue from the contained variants once the tokens moved to Tailwind's
+// palette. The drop shadows are still literal; they are neutral black and carry
+// no brand identity. See specs/15-design-system-tokens.md.
 const styles = stylex.create({
   base: {
     display: 'inline-flex',
@@ -48,7 +51,7 @@ const styles = stylex.create({
   },
   containedError: {
     color: color.onAccent,
-    backgroundColor: { default: color.danger, ':hover': '#c62828' },
+    backgroundColor: { default: color.danger, ':hover': color.dangerHover },
     boxShadow: {
       default: '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
       ':hover': '0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12)',
@@ -58,27 +61,27 @@ const styles = stylex.create({
   // outlined
   outlinedPrimary: {
     color: color.accent,
-    backgroundColor: { default: 'transparent', ':hover': 'rgba(25,118,210,0.04)' },
+    backgroundColor: { default: 'transparent', ':hover': color.accentSurfaceHover },
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: { default: 'rgba(25,118,210,0.5)', ':hover': color.accent },
+    borderColor: { default: color.accentBorderTranslucent, ':hover': color.accent },
   },
   outlinedError: {
     color: color.danger,
-    backgroundColor: { default: 'transparent', ':hover': 'rgba(211,47,47,0.04)' },
+    backgroundColor: { default: 'transparent', ':hover': color.dangerSurfaceHover },
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: { default: 'rgba(211,47,47,0.5)', ':hover': color.danger },
+    borderColor: { default: color.dangerBorderTranslucent, ':hover': color.danger },
   },
 
   // text
   textPrimary: {
     color: color.accent,
-    backgroundColor: { default: 'transparent', ':hover': 'rgba(25,118,210,0.04)' },
+    backgroundColor: { default: 'transparent', ':hover': color.accentSurfaceHover },
   },
   textError: {
     color: color.danger,
-    backgroundColor: { default: 'transparent', ':hover': 'rgba(211,47,47,0.04)' },
+    backgroundColor: { default: 'transparent', ':hover': color.dangerSurfaceHover },
   },
 
   disabled: {

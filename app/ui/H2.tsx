@@ -8,8 +8,8 @@ const styles = stylex.create({
   h2: {
     fontWeight: font.weightBold,
     fontSize: {
-      default: font.sizeLg,
-      '@media (min-width: 600px)': font.sizeXl,
+      default: font.sizeXl,
+      '@media (min-width: 600px)': font.sizeXxl,
     },
   },
 });
