@@ -213,15 +213,30 @@ export function getStatsYears({ discs, getDate }: DatedDiscs): number[] {
 }
 
 /**
- * What a total's filter starts on: the all-time figure once there is more than
- * one year to compare, and otherwise the only year there is — "Kaikki" is not
- * offered then, so it cannot be the starting point.
+ * Whether a total is offered "Kaikki" (all) at all.
+ *
+ * Only once it spans more than one year. On a single year "Kaikki" is not even
+ * a synonym for that year — it also folds in every disc whose date was never
+ * recorded, so on the sale total it reads 496 beside 2026's 45.
+ *
+ * The buttons, the starting selection and the drift check all ask this one
+ * question, so the rule cannot be changed in one of them and missed in the
+ * other two.
+ */
+export function offersAllYears(years: number[]): boolean {
+  return years.length > 1;
+}
+
+/**
+ * What a total's filter starts on: the all-time figure when "Kaikki" is
+ * offered, and otherwise the only year there is. A total with no dated disc
+ * has no buttons at all, and falls back to the all-time figure.
  *
  * It lives here rather than beside YearFilter so the unit tests can reach it
  * without pulling a StyleX component into a plain Node test run.
  */
 export function getDefaultYear(years: number[]): YearSelection {
-  return years.length === 1 ? years[0] : 'all';
+  return offersAllYears(years) || years.length === 0 ? 'all' : years[0];
 }
 
 /**
@@ -236,7 +251,7 @@ export function getDefaultYear(years: number[]): YearSelection {
  */
 export function getSelectedYear(selected: YearSelection, years: number[]): YearSelection {
   if (selected === 'all') {
-    return years.length > 1 ? 'all' : getDefaultYear(years);
+    return offersAllYears(years) ? 'all' : getDefaultYear(years);
   }
 
   return years.includes(selected) ? selected : getDefaultYear(years);
@@ -298,86 +313,6 @@ export function getDisposalMethodCounts(data: DiscDTO[]): MethodCount[] {
  */
 export function getReturnMethodCounts(data: DiscDTO[]): MethodCount[] {
   return countByMethod(data.filter(isReturnedToOwner), (item) => item.returnMethod, returnMethodOptions);
-}
-
-/** The date the disc was logged. Set on every row, including web-added ones. */
-function getAddedDate(disc: DiscDTO): Date | null {
-  return disc.addedAt ? toDayDate(disc.addedAt) : null;
-}
-
-/**
- * A disc's year, or null when it has no date or one nobody could have meant.
- *
- * The bound is 2000..next year. One live row's returned_to_owner_text begins
- * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
- * callers: if only the button list rejected it, the disc would drop out of
- * every year and out of the "Päivämäärä puuttuu" count too, and the years would
- * quietly stop adding up to the all-time total.
- */
-function toPlausibleYear(date: Date | null): number | null {
-  if (date === null) {
-    return null;
-  }
-
-  const year = date.getFullYear();
-
-  return year >= 2000 && year <= new Date().getFullYear() + 1 ? year : null;
-}
-
-/**
- * The day out of a stored date column, whatever shape it arrives in.
- *
- * The two columns are not the same PostgreSQL type: `returned_to_owner_date`
- * comes back as "2026-07-16" and `can_be_sold_or_donated_date` as
- * "2026-09-04T00:00:00". Reading the first ten characters covers both, and
- * parsing that as a local day rather than handing the whole string to `Date`
- * keeps a date from sliding to the previous day in a timezone behind UTC.
- */
-function toDayDate(value: string): Date | null {
-  return toDate(value.slice(0, 10), 'y-MM-dd');
-}
-
-function toDate(value: string, pattern: string): Date | null {
-  const parsed = parse(value, pattern, new Date());
-
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-// Shared with the two disc sets above, so a breakdown can never be drawn from a
-// different set of discs than the total printed over it.
-function isDonatedOrSold(item: DiscDTO): boolean {
-  return Boolean(item.canBeSoldOrDonated);
-}
-
-function isReturnedToOwner(item: DiscDTO): boolean {
-  return Boolean(item.isReturnedToOwner);
-}
-
-/**
- * Splits an already-counted set of discs by the method stored against them.
- *
- * The labels come from the method enums rather than being retyped, so this and
- * the disc table can never disagree about what a stored `1` means.
- *
- * Discs with no method get their own line instead of being dropped: neither
- * column existed while the club ran on the Google Sheet, so most of the
- * inherited rows are null, and a breakdown that left them out would not add up
- * to the total printed above it. The line is omitted when there are none, so a
- * club that has always recorded the method never sees it.
- */
-function countByMethod(
-  discs: DiscDTO[],
-  getMethod: (disc: DiscDTO) => number | null | undefined,
-  options: readonly MethodOption[],
-): MethodCount[] {
-  const counts: MethodCount[] = options.map((option) => ({
-    label: option.label,
-    value: discs.filter((disc) => getMethod(disc) === option.value).length,
-  }));
-
-  const notRecorded = discs.filter((disc) => getMethod(disc) == null).length;
-
-  return notRecorded > 0 ? [...counts, { label: 'Ei kirjattu', value: notRecorded }] : counts;
 }
 
 /** One year of a model's total, for the stacked bar under it. */
@@ -490,4 +425,84 @@ function pickCommonestSpelling(spellings: Map<string, number>): string {
   }
 
   return commonest;
+}
+
+/** The date the disc was logged. Set on every row, including web-added ones. */
+function getAddedDate(disc: DiscDTO): Date | null {
+  return disc.addedAt ? toDayDate(disc.addedAt) : null;
+}
+
+/**
+ * A disc's year, or null when it has no date or one nobody could have meant.
+ *
+ * The bound is 2000..next year. One live row's returned_to_owner_text begins
+ * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
+ * callers: if only the button list rejected it, the disc would drop out of
+ * every year and out of the "Päivämäärä puuttuu" count too, and the years would
+ * quietly stop adding up to the all-time total.
+ */
+function toPlausibleYear(date: Date | null): number | null {
+  if (date === null) {
+    return null;
+  }
+
+  const year = date.getFullYear();
+
+  return year >= 2000 && year <= new Date().getFullYear() + 1 ? year : null;
+}
+
+/**
+ * The day out of a stored date column, whatever shape it arrives in.
+ *
+ * The two columns are not the same PostgreSQL type: `returned_to_owner_date`
+ * comes back as "2026-07-16" and `can_be_sold_or_donated_date` as
+ * "2026-09-04T00:00:00". Reading the first ten characters covers both, and
+ * parsing that as a local day rather than handing the whole string to `Date`
+ * keeps a date from sliding to the previous day in a timezone behind UTC.
+ */
+function toDayDate(value: string): Date | null {
+  return toDate(value.slice(0, 10), 'y-MM-dd');
+}
+
+function toDate(value: string, pattern: string): Date | null {
+  const parsed = parse(value, pattern, new Date());
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Shared with the two disc sets above, so a breakdown can never be drawn from a
+// different set of discs than the total printed over it.
+function isDonatedOrSold(item: DiscDTO): boolean {
+  return Boolean(item.canBeSoldOrDonated);
+}
+
+function isReturnedToOwner(item: DiscDTO): boolean {
+  return Boolean(item.isReturnedToOwner);
+}
+
+/**
+ * Splits an already-counted set of discs by the method stored against them.
+ *
+ * The labels come from the method enums rather than being retyped, so this and
+ * the disc table can never disagree about what a stored `1` means.
+ *
+ * Discs with no method get their own line instead of being dropped: neither
+ * column existed while the club ran on the Google Sheet, so most of the
+ * inherited rows are null, and a breakdown that left them out would not add up
+ * to the total printed above it. The line is omitted when there are none, so a
+ * club that has always recorded the method never sees it.
+ */
+function countByMethod(
+  discs: DiscDTO[],
+  getMethod: (disc: DiscDTO) => number | null | undefined,
+  options: readonly MethodOption[],
+): MethodCount[] {
+  const counts: MethodCount[] = options.map((option) => ({
+    label: option.label,
+    value: discs.filter((disc) => getMethod(disc) === option.value).length,
+  }));
+
+  const notRecorded = discs.filter((disc) => getMethod(disc) == null).length;
+
+  return notRecorded > 0 ? [...counts, { label: 'Ei kirjattu', value: notRecorded }] : counts;
 }

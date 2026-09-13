@@ -1,4 +1,5 @@
 import type { YearSelection } from '~/features/stats/statsUtils';
+import { offersAllYears } from '~/features/stats/statsUtils';
 import Button from '~/ui/Button';
 
 import type { JSX } from 'react';
@@ -27,7 +28,7 @@ export default function YearFilter({ years, selected, onSelect }: Props): JSX.El
     return null;
   }
 
-  const options: YearSelection[] = years.length > 1 ? [...years, 'all'] : years;
+  const options: YearSelection[] = offersAllYears(years) ? [...years, 'all'] : years;
 
   return (
     <div role="group" aria-label="Vuosi" className="mb-4 flex gap-1">

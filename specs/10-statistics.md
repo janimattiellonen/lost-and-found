@@ -190,6 +190,10 @@ once a second year has a dated disc; no date is hardcoded.
 `getEarliestDate` supplies the "Tiedot alkaen" line, skipping implausible dates
 the same way the buttons do.
 
+Whether "Kaikki" is offered at all is `offersAllYears`, asked by the buttons,
+by the starting selection and by the drift check below — one predicate, so the
+rule cannot be changed in one of the three and missed in the other two.
+
 **The selected year is derived, not stored.** `TotalByYear` keeps what was
 clicked, but renders `getSelectedYear(clicked, years)`. The loader revalidates
 while the page is open, and a click made against the older data can name a year
@@ -288,9 +292,14 @@ daily ones.
   stacked second bar described above, its parts separated by a 2px white gap.
   Parts are laid out with `flexGrow`, which fills whatever width the bar is
   given, so the bar's width is scaled by what the parts cover — that scaling is
-  the only thing that makes a shortfall visible. The
-  model's name is repeated in the label column beside that second bar, as is
-  its total at the end of it, so either bar reads on its own.
+  the only thing that makes a shortfall visible. A model with no parts at all
+  draws no second bar: the check is on the array's length, because an empty
+  array is truthy and would otherwise render a zero-width bar with a stray "0"
+  under it. The
+  model's name is repeated in the label column beside that second bar, and the
+  figure at its end is what its parts come to — equal to the model's total
+  whenever every disc is dated, which on live data is always — so either bar
+  reads on its own.
 - `app/features/stats/YearFilter.tsx` — the year buttons: `app/ui/Button.tsx`
   rather than hand-rolled CSS, `contained` for the selected year and `outlined`
   for the rest, inside a `role="group"` labelled "Vuosi" (year), the selected
@@ -415,7 +424,7 @@ daily ones.
 - `statsUtils.test.ts` covers `getTopLostDiscsByDiscName` (including the year
   split), the two method breakdowns, and the year helpers — `getReturnDate`,
   `getDisposalDate`, `filterDiscsByYear`, `getStatsYears`, `getEarliestDate`,
-  `getDefaultYear` and `getSelectedYear`. Nothing covers the month/day bucketing helpers or any stats
+  `getDefaultYear`, `getSelectedYear` and `offersAllYears`. Nothing covers the month/day bucketing helpers or any stats
   component, so neither `YearFilter`, `TotalByYear` nor the stacked bar has a
   test: the caption collision that staggering fixed
   was found by rendering the chart and looking at it, not by a test, and it

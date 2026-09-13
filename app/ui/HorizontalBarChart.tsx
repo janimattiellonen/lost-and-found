@@ -65,7 +65,9 @@ export default function HorizontalBarChart({ data }: HorizontalBarChartProps): J
               </div>
             </div>
 
-            {item.segments && (
+            {/* `&&` on the array alone would let an empty one through as
+                truthy, drawing a zero-width bar with a stray 0 beneath it. */}
+            {item.segments && item.segments.length > 0 && (
               <SegmentedBar
                 label={item.label}
                 total={item.value}

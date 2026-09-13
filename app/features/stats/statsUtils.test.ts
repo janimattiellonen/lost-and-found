@@ -7,6 +7,7 @@ import {
   getReturnDate,
   getReturnMethodCounts,
   getDefaultYear,
+  offersAllYears,
   getEarliestDate,
   getSelectedYear,
   getStatsYears,
@@ -404,6 +405,22 @@ describe('getEarliestDate, scoped to what is on screen', () => {
 
     expect(earliest?.getFullYear()).toBe(2025);
     expect(earliest?.getMonth()).toBe(3);
+  });
+});
+
+describe('offersAllYears', () => {
+  // The buttons, the starting selection and the drift check all ask this, so
+  // the rule cannot be changed in one place and missed in the others.
+  it('is false on a single year, where "Kaikki" would fold in the undated discs', () => {
+    expect(offersAllYears([2026])).toBe(false);
+  });
+
+  it('is true once a total spans a second year', () => {
+    expect(offersAllYears([2025, 2026])).toBe(true);
+  });
+
+  it('is false when nothing is dated', () => {
+    expect(offersAllYears([])).toBe(false);
   });
 });
 
