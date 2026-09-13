@@ -8,9 +8,8 @@ import { palette } from './palette.stylex';
 //
 // Every value is the colour the running site already showed before the token
 // existed, so converting a component from Tailwind classes to these tokens does
-// not move any pixels. See specs/15-design-system-tokens.md for the four
-// deliberate exceptions (accent, accentHover, danger, and the two status-box
-// triads).
+// not move any pixels. The seven deliberate exceptions are listed as numbered
+// scenarios under "User-facing behaviour" in specs/15-design-system-tokens.md.
 export const color = stylex.defineVars({
   textPrimary: palette.gray900,
   textSecondary: palette.gray700,
@@ -103,7 +102,7 @@ export const icon = stylex.defineVars({
 export const space = stylex.defineVars({
   xs: '4px', // 1
   sm: '8px', // 2
-  smd: '12px', // 3
+  smd: '12px', // 3 — sits between `sm` and `md`, which is what the name means
   md: '16px', // 4
   lg: '24px', // 6
   xl: '32px', // 8
@@ -120,7 +119,7 @@ export const font = stylex.defineVars({
   sizeMd: '1rem', // text-base
   sizeLg: '1.125rem', // text-lg
   sizeXl: '1.25rem', // text-xl
-  sizeXxl: '1.75rem',
+  sizeXxl: '1.75rem', // no Tailwind step; the page headings' size
   weightRegular: '400',
   weightBold: '700',
 });

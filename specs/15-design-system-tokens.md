@@ -50,8 +50,8 @@ moves is either listed as a deliberate exception below or is a bug.
 ## User-facing behaviour
 
 1. When any page is loaded after this work, then it looks exactly as it did
-   before — same colours, same spacing, same type sizes — with the four
-   exceptions in scenarios 2 to 5.
+   before — same colours, same spacing, same type sizes — with the seven
+   exceptions in scenarios 2 to 8.
 2. When a primary button, a focused text field, a checkbox or a radio is shown,
    then its blue changes from Material UI's `#1976d2` to Tailwind's `blue-600`
    (`#2563eb`), and its hover blue from `#1565c0` to `blue-700` (`#1d4ed8`).
@@ -82,7 +82,24 @@ moves is either listed as a deliberate exception below or is a bug.
    to `green200` (ΔE 12.5). The triad has to move as a unit — taking the cheap
    two-thirds would leave a box whose border belonged to a different palette.
 
-Scenarios 2 to 5 are the price of having one palette rather than three, and were
+6. When the pointer is over the delete button on the disc-entry page's parsed
+   rows, then its red darkens to `color.dangerHover` rather than to `#b71c1c`.
+   At ΔE 12.9 this is the **largest** visible change in the work — slightly
+   larger than the success border in scenario 5. It is here because `Button`
+   already darkened to `dangerHover` on the same gesture and this button did not:
+   one interaction was reaching for two different reds. The alternative was to
+   keep the two apart for ever with nothing to say which was correct.
+7. When an unread notification card is shown, then its background is
+   `color.accentSurface` rather than `#f5f9ff` (ΔE 2.2).
+8. When any notification card is shown, then its border is `color.borderSubtle`
+   rather than `#e0e0e0` (ΔE 3.3).
+
+Scenarios 7 and 8 are below the roughly 2.3 ΔE at which a difference becomes
+visible at all, so they are listed for completeness rather than because anyone
+will see them. They are listed because rule 1 requires every changed value to be
+listed, and an exception that is only recorded when it is large is not a rule.
+
+Scenarios 2 to 8 are the price of having one palette rather than three, and were
 accepted deliberately rather than overlooked. Each is a shade change of the same
 hue, not a redesign. The alternative — keeping the Material UI values — was
 considered and rejected, because it leaves the app with two blues and three reds
@@ -102,45 +119,45 @@ Only the shades the app actually uses are listed; this is an inventory of what i
 on screen, not a copy of Tailwind's whole palette. Values are Tailwind 3.3.3's
 defaults, read from the installed package rather than typed from memory.
 
-| Token        | Value     | Where it is on screen today                                      |
-| ------------ | --------- | ---------------------------------------------------------------- |
-| `gray100`    | `#f3f4f6` | `color.surfaceMuted`                                             |
-| `gray200`    | `#e5e7eb` | notification card border                                         |
-| `gray300`    | `#d1d5db` | `border-gray-300`, and light text on the dark table              |
-| `gray400`    | `#9ca3af` | `text-gray-400` (the "Lisätiedot" caption)                       |
-| `gray500`    | `#6b7280` | `text-gray-500` (17 uses), `color.textMuted`                     |
-| `gray600`    | `#4b5563` | `text-gray-600` (12 uses)                                        |
-| `gray700`    | `#374151` | `text-gray-700` (13 uses), `color.textSecondary`                 |
-| `gray900`    | `#111827` | `color.textPrimary`, `text-gray-900`                             |
-| `white`      | `#ffffff` | `bg-white`, `text-white`                                         |
-| `black`      | `#000000` | `text-black` (the course name on the notify forms)               |
-| `red300`     | `#fca5a5` | delete icon, hover                                               |
-| `red400`     | `#f87171` | delete icon                                                      |
-| `red500`     | `#ef4444` | `text-red-500` — the standard form error (10 uses)               |
-| `red50`      | `#fef2f2` | error box background                                             |
-| `red200`     | `#fecaca` | error box border                                                 |
-| `red600`     | `#dc2626` | the owner link page's error line                                 |
-| `red800`     | `#991b1b` | error box text                                                   |
-| `amber300`   | `#fcd34d` | info icon, hover                                                 |
-| `amber400`   | `#fbbf24` | info icon                                                        |
-| `amber700`   | `#b45309` | `text-amber-700` — the "owner gives up" notice                   |
-| `caution700` | `#8a6100` | a value the disc parser is unsure of — **not a Tailwind colour** |
-| `green300`   | `#86efac` | "mark returned" icon, hover                                      |
-| `green50`    | `#f0fdf4` | success box background                                           |
-| `green200`   | `#bbf7d0` | success box border                                               |
-| `green400`   | `#4ade80` | "mark returned" icon                                             |
-| `green700`   | `#15803d` | `bg-green-700` — save buttons in the inline forms                |
-| `green800`   | `#166534` | those buttons' hover                                             |
-| `blue50`     | `#eff6ff` | selected option card on the owner link page                      |
-| `blue200`    | `#bfdbfe` | that card's inner divider                                        |
-| `blue600`    | `#2563eb` | that card's border when selected                                 |
-| `blue700`    | `#1d4ed8` | `text-blue-700` — `sms:` links                                   |
-| `sky300`     | `#7dd3fc` | "mark sellable" icon, hover                                      |
-| `sky400`     | `#38bdf8` | "mark sellable" icon                                             |
-| `violet300`  | `#c4b5fd` | "set course" icon, hover                                         |
-| `violet400`  | `#a78bfa` | "set course" icon                                                |
-| `orange300`  | `#fdba74` | retrieval icon when the disc is on the list, hover               |
-| `orange400`  | `#fb923c` | retrieval icon when the disc is on the list                      |
+| Token        | Value     | Where it is on screen today                                                                 |
+| ------------ | --------- | ------------------------------------------------------------------------------------------- |
+| `gray100`    | `#f3f4f6` | `color.surfaceMuted`                                                                        |
+| `gray200`    | `#e5e7eb` | notification card border — replaces `#e0e0e0`, see scenario 8                               |
+| `gray300`    | `#d1d5db` | `border-gray-300`, and light text on the dark table                                         |
+| `gray400`    | `#9ca3af` | `text-gray-400` (the "Lisätiedot" caption)                                                  |
+| `gray500`    | `#6b7280` | `text-gray-500` (17 uses), `color.textMuted`                                                |
+| `gray600`    | `#4b5563` | `text-gray-600` (12 uses)                                                                   |
+| `gray700`    | `#374151` | `text-gray-700` (13 uses), `color.textSecondary`                                            |
+| `gray900`    | `#111827` | `color.textPrimary`, `text-gray-900`                                                        |
+| `white`      | `#ffffff` | `bg-white`, `text-white`                                                                    |
+| `black`      | `#000000` | the charts' bar labels; also `text-black` on the notify forms, still Tailwind               |
+| `red300`     | `#fca5a5` | delete icon, hover                                                                          |
+| `red400`     | `#f87171` | delete icon                                                                                 |
+| `red500`     | `#ef4444` | `text-red-500` — the standard form error (10 uses)                                          |
+| `red50`      | `#fef2f2` | error box background                                                                        |
+| `red200`     | `#fecaca` | error box border                                                                            |
+| `red600`     | `#dc2626` | the owner link page's error line                                                            |
+| `red800`     | `#991b1b` | error box text                                                                              |
+| `amber300`   | `#fcd34d` | info icon, hover                                                                            |
+| `amber400`   | `#fbbf24` | info icon                                                                                   |
+| `amber700`   | `#b45309` | `text-amber-700` — the "owner gives up" notice                                              |
+| `caution700` | `#8a6100` | a value the disc parser is unsure of — **not a Tailwind colour**                            |
+| `green300`   | `#86efac` | "mark returned" icon, hover                                                                 |
+| `green50`    | `#f0fdf4` | success box background                                                                      |
+| `green200`   | `#bbf7d0` | success box border                                                                          |
+| `green400`   | `#4ade80` | "mark returned" icon                                                                        |
+| `green700`   | `#15803d` | `bg-green-700` — save buttons in the inline forms                                           |
+| `green800`   | `#166534` | those buttons' hover                                                                        |
+| `blue50`     | `#eff6ff` | unread notification card — and the owner link page's selected card, which is still Tailwind |
+| `blue200`    | `#bfdbfe` | that card's inner divider                                                                   |
+| `blue600`    | `#2563eb` | that card's border when selected                                                            |
+| `blue700`    | `#1d4ed8` | `text-blue-700` — `sms:` links                                                              |
+| `sky300`     | `#7dd3fc` | "mark sellable" icon, hover                                                                 |
+| `sky400`     | `#38bdf8` | "mark sellable" icon                                                                        |
+| `violet300`  | `#c4b5fd` | "set course" icon, hover                                                                    |
+| `violet400`  | `#a78bfa` | "set course" icon                                                                           |
+| `orange300`  | `#fdba74` | retrieval icon when the disc is on the list, hover                                          |
+| `orange400`  | `#fb923c` | retrieval icon when the disc is on the list                                                 |
 
 Five translucent entries, for a tint laid over whatever is behind it rather than
 a colour of its own — a button's hover wash, a highlighted menu row, an outlined
@@ -162,7 +179,9 @@ and `DiscSelector.tsx` carried Material UI's blue and red as hardcoded
 the code missed, because it searched for hex. Left alone, a contained button
 would have turned Tailwind blue while the outlined button beside it kept MUI blue
 at 50% opacity. `Button.tsx` also had `#c62828` (MUI dark red) as its contained
-error hover, now `color.dangerHover`.
+error hover, and `AddDiscsPage.tsx` had `#b71c1c` on the same gesture. Both are
+now `color.dangerHover`; the second of them is scenario 6, because unlike the
+first it is a visible change.
 
 Plus the values the disc table uses for its dark surface. These are not Tailwind
 colours and never were — they were hardcoded in
@@ -183,7 +202,7 @@ than a component quietly holding its own. Higher number is darker.
 (`#d1d5db`), which the row icons and the inline forms use. The two are three
 points apart and both sit on this one table. They are kept separate because
 merging them would change what is on screen, which this work does not do outside
-the four listed exceptions; the inconsistency is recorded as a gap instead.
+the seven listed exceptions; the inconsistency is recorded as a gap instead.
 
 `dark500` was written `rgb(63, 60, 60)` in the component. It is spelled as hex
 here so every palette entry reads alike; StyleX compiles both spellings to the
@@ -208,14 +227,14 @@ Tailwind expressed until now.
 | `textBody`                | `gray600`    | **new** — `text-gray-600`                             |
 | `textMuted`               | `gray500`    | unchanged                                             |
 | `textSubtle`              | `gray400`    | **new** — `text-gray-400`                             |
-| `textStrong`              | `black`      | **new** — `text-black` on the notify forms            |
+| `textStrong`              | `black`      | **new** — the two charts' bar labels                  |
 | `surface`                 | `white`      | unchanged                                             |
 | `surfaceMuted`            | `gray100`    | unchanged                                             |
 | `border`                  | `gray300`    | unchanged                                             |
-| `borderSubtle`            | `gray200`    | **new** — notification card border                    |
+| `borderSubtle`            | `gray200`    | **new** — notification card border, was `#e0e0e0`     |
 | `accent`                  | `blue600`    | **changed** from `#1976d2` (see scenario 2)           |
 | `accentHover`             | `blue700`    | **changed** from `#1565c0`                            |
-| `accentSurface`           | `blue50`     | **new** — selected card background                    |
+| `accentSurface`           | `blue50`     | **new** — unread notification card, was `#f5f9ff`     |
 | `accentSurfaceHover`      | `blue600A04` | **new** — outlined/text button hover                  |
 | `accentSurfaceSelected`   | `blue600A08` | **new** — highlighted menu row                        |
 | `accentBorderSubtle`      | `blue200`    | **new** — selected card divider                       |
@@ -449,7 +468,7 @@ None. No route, loader or action is touched.
 1. **A token's value is whatever is on screen today.** Every value in the palette
    was read out of the running code or out of `tailwindcss/colors`, not chosen.
    Where a token's value differs from what the code shows today, it appears in
-   "User-facing behaviour" as a numbered exception. There are four of them.
+   "User-facing behaviour" as a numbered exception. There are seven of them.
 2. **Components import `tokens`, never `palette`.** The palette exists so that
    `gray500` is written down once; a component asking for `palette.gray500`
    instead of `color.textMuted` has skipped the layer that carries the meaning,
@@ -523,7 +542,7 @@ None. No route, loader or action is touched.
   the same goes for `accentHover` and `danger`. Reverting one means reverting
   every caller of it, because the whole point is that they share the token.
 - **The palette covers the app's brand colours, not every colour in it.**
-  Thirteen opaque literals and two translucent ones are still written in
+  Thirteen opaque literals and forty translucent ones are still written in
   components, and they are there on purpose rather than by oversight:
 
   | Where                                                                      | What                                                                                                | Why it stayed                                                                                                                                                                                                                                             |
@@ -578,10 +597,10 @@ None. No route, loader or action is touched.
   change what is on screen, which is outside what this work is allowed to do, so
   they keep three token names — `dark.headingText`, `dark.bodyText`, `dark.text`
   — and the decision is left to whoever next touches the table's design.
-- **Three components gained a StyleX block for one rule.** `root.tsx`,
-  `DiscListPage` and `NotifyForm` were pure Tailwind and now carry a
-  `stylex.create` holding a single style, because their inline `style={{…}}` had
-  to go somewhere. That is the right direction but it is not yet a conversion —
+- **Four components gained a StyleX block for one rule.** `root.tsx`,
+  `DiscListPage`, `NotifyForm` and `DiscListIntro` were pure Tailwind and now
+  carry a `stylex.create` holding a single style, because their inline
+  `style={{…}}` had to go somewhere. That is the right direction but it is not yet a conversion —
   the rest of each file is still Tailwind.
 
 ## Open questions
