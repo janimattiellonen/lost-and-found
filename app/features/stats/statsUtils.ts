@@ -173,17 +173,6 @@ export function getDisposalDate(disc: DiscDTO): Date | null {
   return disc.canBeSoldOrDonatedDate ? toDayDate(disc.canBeSoldOrDonatedDate) : null;
 }
 
-/** The date the disc was logged. Set on every row, including web-added ones. */
-function getAddedDate(disc: DiscDTO): Date | null {
-  if (!disc.addedAt) {
-    return null;
-  }
-
-  const parsed = new Date(disc.addedAt);
-
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
 /**
  * Narrows a set of discs to one year, and reports how many it could not place.
  *
@@ -279,25 +268,6 @@ export function getEarliestDate({ discs, getDate }: DatedDiscs): Date | null {
   return earliest;
 }
 
-/**
- * A disc's year, or null when it has no date or one nobody could have meant.
- *
- * The bound is 2000..next year. One live row's returned_to_owner_text begins
- * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
- * callers: if only the button list rejected it, the disc would drop out of
- * every year and out of the "Päivämäärä puuttuu" count too, and the years would
- * quietly stop adding up to the all-time total.
- */
-function toPlausibleYear(date: Date | null): number | null {
-  if (date === null) {
-    return null;
-  }
-
-  const year = date.getFullYear();
-
-  return year >= 2000 && year <= new Date().getFullYear() + 1 ? year : null;
-}
-
 /** The discs the club has released for sale or donation. */
 export function getDonatedOrSoldDiscs(data: DiscDTO[]): DiscDTO[] {
   return data.filter(isDonatedOrSold);
@@ -328,6 +298,30 @@ export function getDisposalMethodCounts(data: DiscDTO[]): MethodCount[] {
  */
 export function getReturnMethodCounts(data: DiscDTO[]): MethodCount[] {
   return countByMethod(data.filter(isReturnedToOwner), (item) => item.returnMethod, returnMethodOptions);
+}
+
+/** The date the disc was logged. Set on every row, including web-added ones. */
+function getAddedDate(disc: DiscDTO): Date | null {
+  return disc.addedAt ? toDayDate(disc.addedAt) : null;
+}
+
+/**
+ * A disc's year, or null when it has no date or one nobody could have meant.
+ *
+ * The bound is 2000..next year. One live row's returned_to_owner_text begins
+ * "1.5.1012" — a mistyped 2012 — and it has to be treated as undated by both
+ * callers: if only the button list rejected it, the disc would drop out of
+ * every year and out of the "Päivämäärä puuttuu" count too, and the years would
+ * quietly stop adding up to the all-time total.
+ */
+function toPlausibleYear(date: Date | null): number | null {
+  if (date === null) {
+    return null;
+  }
+
+  const year = date.getFullYear();
+
+  return year >= 2000 && year <= new Date().getFullYear() + 1 ? year : null;
 }
 
 /**
@@ -435,9 +429,9 @@ export function getTopLostDiscsByDiscName(data: DiscDTO[], options: TopLostDiscs
     group.value += 1;
     group.spellings.set(spelling, (group.spellings.get(spelling) ?? 0) + 1);
 
-    const year = getAddedDate(item)?.getFullYear();
+    const year = toPlausibleYear(getAddedDate(item));
 
-    if (year !== undefined) {
+    if (year !== null) {
       group.years.set(year, (group.years.get(year) ?? 0) + 1);
     }
 
@@ -468,9 +462,13 @@ function getDiscModelName(discName: string): string {
 }
 
 /**
- * A model's year tallies, ascending. A disc with an unreadable `addedAt` is
- * counted in the model's total but in no year, so the parts can fall short of
- * the bar above them; no live row is like that.
+ * A model's year tallies, ascending.
+ *
+ * A disc whose `addedAt` is unreadable, or dated outside `toPlausibleYear`'s
+ * bound, is counted in the model's total but in no year — the same rule the two
+ * headline totals apply, so a stray date cannot draw a segment of its own. The
+ * parts can therefore fall short of the total, and the chart draws that
+ * shortfall as a shorter bar rather than hiding it.
  */
 function toYearCounts(years: Map<number, number>): YearCount[] {
   return [...years.entries()].map(([year, value]) => ({ year, value })).sort((a, b) => a.year - b.year);

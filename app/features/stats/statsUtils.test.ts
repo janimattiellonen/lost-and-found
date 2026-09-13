@@ -385,6 +385,28 @@ describe('getEarliestDate', () => {
   });
 });
 
+describe('getEarliestDate, scoped to what is on screen', () => {
+  // The line under a total has to agree with the year selected beside it: on
+  // 2025 the returns total must not inherit the 2024 date of a year it is no
+  // longer showing.
+  it('reports the oldest date among the discs actually shown', () => {
+    const returns = {
+      discs: [
+        disc({ returnedToOwnerText: '3.9.2024 (Janimatti), noudettu' }),
+        disc({ returnedToOwnerDate: '2025-04-02' }),
+        disc({ returnedToOwnerDate: '2025-11-30' }),
+      ],
+      getDate: getReturnDate,
+    };
+
+    const shown = filterDiscsByYear(returns, 2025);
+    const earliest = getEarliestDate({ discs: shown.discs, getDate: returns.getDate });
+
+    expect(earliest?.getFullYear()).toBe(2025);
+    expect(earliest?.getMonth()).toBe(3);
+  });
+});
+
 describe('getDefaultYear', () => {
   it('starts on the only year there is, since "Kaikki" is not offered', () => {
     expect(getDefaultYear([2026])).toBe(2026);
@@ -436,5 +458,17 @@ describe('getTopLostDiscsByDiscName with splitByYear', () => {
 
     expect(stat.value).toBe(4);
     expect(stat.years?.reduce((total, year) => total + year.value, 0)).toBe(3);
+  });
+
+  // The same bound the two headline totals apply, so a stray added_at cannot
+  // draw a segment of its own.
+  it('gives an implausibly dated disc no year of its own', () => {
+    const [stat] = getTopLostDiscsByDiscName(
+      [...logged, disc({ discName: 'Destroyer', addedAt: '1012-08-12T00:00:00+00:00' })],
+      { groupByDiscName: true, splitByYear: true },
+    );
+
+    expect(stat.value).toBe(4);
+    expect(stat.years?.map((year) => year.year)).toEqual([2024, 2026]);
   });
 });

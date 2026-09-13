@@ -18,7 +18,7 @@ import { useState } from 'react';
 type Props = {
   title: string;
   /** The discs this total counts, and the date that places each in a year. */
-  set: DatedDiscs;
+  datedDiscs: DatedDiscs;
   getMethodCounts: (discs: DiscDTO[]) => MethodCount[];
 };
 
@@ -32,22 +32,26 @@ type Props = {
  * into the Google Sheet notes. A shared filter would have offered the sale
  * total years that can only ever read zero.
  */
-export default function TotalByYear({ title, set, getMethodCounts }: Props): JSX.Element {
-  const years = getStatsYears(set);
-  const [clicked, setClicked] = useState<YearSelection>(() => getDefaultYear(years));
+export default function TotalByYear({ title, datedDiscs, getMethodCounts }: Props): JSX.Element {
+  const years = getStatsYears(datedDiscs);
+  const [requestedYear, setRequestedYear] = useState<YearSelection>(() => getDefaultYear(years));
 
-  // What is clicked and what the data offers can drift apart when the loader
+  // What was clicked and what the data offers can drift apart when the loader
   // revalidates under an open page, so the shown year is derived, not stored.
-  const year = getSelectedYear(clicked, years);
+  const year = getSelectedYear(requestedYear, years);
 
-  const filtered = filterDiscsByYear(set, year);
-  const earliest = getEarliestDate(set);
+  const filtered = filterDiscsByYear(datedDiscs, year);
+
+  // Taken from the discs on screen, not from the whole total: under 2025 the
+  // returns line has to read a 2025 date, not the 2024 one it would inherit
+  // from the years it is no longer showing.
+  const earliest = getEarliestDate({ discs: filtered.discs, getDate: datedDiscs.getDate });
 
   return (
     <div>
       <H3>{title}</H3>
 
-      <YearFilter years={years} selected={year} onSelect={setClicked} />
+      <YearFilter years={years} selected={year} onSelect={setRequestedYear} />
 
       <p>{filtered.discs.length}</p>
 

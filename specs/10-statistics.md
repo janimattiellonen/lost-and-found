@@ -42,10 +42,11 @@ everything is computed in the browser from one fetch of the club's discs.
    sale/donation total shows one button, 2026, while the returns total shows
    2024, 2025, 2026 and Kaikki.
 6. Under each total's method breakdown a line reads "Tiedot alkaen 1.9.2026"
-   (data from 1.9.2026), giving the date of the oldest dated disc that total
-   counts, whichever year is selected. The two differ: 1.9.2026 for sales,
-   26.6.2024 for returns. The line is absent when the total has no dated disc
-   at all.
+   (data from 1.9.2026), giving the date of the oldest disc **currently shown**
+   — so it follows the year buttons rather than contradicting them: the returns
+   total reads 26.6.2024 under "Kaikki" and a 2025 date once 2025 is selected.
+   The two totals differ under "Kaikki": 1.9.2026 for sales, 26.6.2024 for
+   returns. The line is absent when nothing shown carries a date.
 7. When a year is selected and some discs in that total carry no usable date,
    then a further line reads "Päivämäärä puuttuu 451 kiekolta – ne eivät näy
    vuosivalinnoissa." (451 discs have no date — they do not appear under any
@@ -71,11 +72,14 @@ everything is computed in the browser from one fetch of the club's discs.
     also off by default and independent of the first. When it is ticked, then a
     second bar appears under each model's bar, the same length as it, divided
     into one part per year the model was logged in, earliest year leftmost. Each
-    part is captioned with its year and count — "2024 - 23" — and the model's
-    total is printed at the end of both bars. The year is taken from `addedAt`,
-    which every live row has, so in practice the parts sum to the bar above
-    them; a disc whose `addedAt` could not be read would be in the total and in
-    no part.
+    part is captioned with its year and count — "2024 - 23". The year is taken
+    from `addedAt`, which every live row has, so in practice the parts account
+    for the whole model and the second bar matches the first. A disc whose
+    `addedAt` cannot be read, or falls outside the plausible-year bound, is in
+    the model's total but in no part; the second bar is then drawn **shorter**
+    in proportion, and the figure at its end is what the parts come to rather
+    than the model's total, so the gap is visible instead of being stretched
+    away.
 
 ## Data source
 
@@ -245,8 +249,10 @@ single bulk insert, so all 1223 of Talin Tallaajat's discs read 2026 under it
 although 811 were logged in 2025. Across both clubs the two columns disagree
 about the year on 1149 rows.
 
-The split is drawn by `HorizontalBarChart`, which renders a second bar of the
-same length under the first when an entry has `years`. Parts are coloured from a
+The split is drawn by `HorizontalBarChart`, which renders a second bar under
+the first for any entry carrying `segments`. The chart itself knows nothing
+about years — `MostLostByDiscName.toChartStat` turns each `{ year, value }` into
+a captioned segment — so the same bar would serve any other breakdown. Parts are coloured from a
 fixed eight-hue categorical palette held in that file, assigned by the year's
 position in the chart's sorted list of every year on it, rather than by its
 position in this bar — so 2024 is the same colour on every row, and hiding a year never
@@ -278,8 +284,11 @@ daily ones.
   blue on hover/selection, a red debug-looking `border: solid 1px red` around
   each chart via the `className` passed by the stats components.
 - `app/ui/HorizontalBarChart.tsx` — same `max + 30` width formula, fixed 10rem
-  label column, no click handling. An entry with `years` also draws the stacked
-  second bar described above, its parts separated by a 2px white gap. The
+  label column, no click handling. An entry with `segments` also draws the
+  stacked second bar described above, its parts separated by a 2px white gap.
+  Parts are laid out with `flexGrow`, which fills whatever width the bar is
+  given, so the bar's width is scaled by what the parts cover — that scaling is
+  the only thing that makes a shortfall visible. The
   model's name is repeated in the label column beside that second bar, as is
   its total at the end of it, so either bar reads on its own.
 - `app/features/stats/YearFilter.tsx` — the year buttons: `app/ui/Button.tsx`
@@ -372,6 +381,9 @@ daily ones.
   "Päivämäärä puuttuu" line says so on screen; nothing backfills the column and
   nothing will. The club started recording the date in September 2026, so the
   earlier releases are simply not recoverable.
+- The top-10 year split and the two totals now apply the same plausible-year
+  bound, so a stray `added_at` cannot draw a segment of its own. Nothing checks
+  that the two rules stay in step beyond their sharing `toPlausibleYear`.
 - A total with no dated disc renders no filter at all and quietly shows its
   all-time figure. No live club is in that state — both have dated discs in both
   totals — and nothing on screen would say the filter is missing rather than

@@ -27,13 +27,13 @@ export default function StatsPage({ data }: Props): JSX.Element {
       <div>
         <TotalByYear
           title="Myytyjen / lahjoitettujen kiekkojen määrä"
-          set={{ discs: getDonatedOrSoldDiscs(data), getDate: getDisposalDate }}
+          datedDiscs={{ discs: getDonatedOrSoldDiscs(data), getDate: getDisposalDate }}
           getMethodCounts={getDisposalMethodCounts}
         />
 
         <TotalByYear
           title="Omistajille palautettujen kiekkojen määrä"
-          set={{ discs: getReturnedDiscs(data), getDate: getReturnDate }}
+          datedDiscs={{ discs: getReturnedDiscs(data), getDate: getReturnDate }}
           getMethodCounts={getReturnMethodCounts}
         />
       </div>

@@ -82,7 +82,15 @@ export default function HorizontalBarChart({ data }: HorizontalBarChartProps): J
 }
 
 /**
- * The second bar under a plain one: the same length, divided into its parts.
+ * The second bar under a plain one, divided into its parts.
+ *
+ * It is as long as the bar above only when the parts account for the whole
+ * total. They are laid out with `flexGrow`, which always fills whatever width
+ * the bar is given, so scaling that width by what the parts cover is the only
+ * thing that makes a shortfall visible — otherwise a total of 112 split into
+ * parts summing to 111 would silently stretch those parts across the full bar.
+ * The figure printed at the end is what the parts actually come to, for the
+ * same reason.
  *
  * The label is repeated beside it so a row still reads left to right when the
  * two bars are scrolled apart from their heading.
@@ -100,22 +108,29 @@ function SegmentedBar({
   segments: Segment[];
   segmentOrder: string[];
 }): JSX.Element {
+  const covered = segments.reduce((sum, segment) => sum + segment.value, 0);
+
   return (
     <div {...stylex.props(styles.wrapper)}>
       <div {...stylex.props(styles.label)}>{label}</div>
 
-      <div {...stylex.props(styles.segmentedBar, styles.widthDynamic(width))}>
+      <div {...stylex.props(styles.segmentedBar, styles.widthDynamic((width * covered) / total))}>
         <div {...stylex.props(styles.barBase, styles.segmentRow)}>
           {segments.map((segment) => (
             <div
               key={segment.label}
               {...stylex.props(
                 styles.segment,
-                styles.segmentDynamic(segment.value, segmentColours[segmentOrder.indexOf(segment.label)]),
+                // Past the eighth caption there is no hue left, and the part
+                // draws uncoloured rather than repeating one.
+                styles.segmentDynamic(
+                  segment.value,
+                  segmentColours[segmentOrder.indexOf(segment.label)] ?? 'transparent',
+                ),
               )}
             />
           ))}
-          <div {...stylex.props(styles.barValue)}>{total}</div>
+          <div {...stylex.props(styles.barValue)}>{covered}</div>
         </div>
 
         <div {...stylex.props(styles.captionRow)}>
