@@ -258,7 +258,7 @@ single bulk insert, so all 1223 of Talin Tallaajat's discs read 2026 under it
 although 811 were logged in 2025. Across both clubs the two columns disagree
 about the year on 1149 rows.
 
-The split is drawn by `HorizontalBarChart`, which renders a second bar under
+The split is drawn by `SegmentedBarChart`, which renders a second bar under
 the first for any entry carrying `segments`. The chart itself knows nothing
 about years — `MostLostByDiscName.toChartStat` turns each `{ year, value }` into
 a captioned segment — so the same bar would serve any other breakdown. Parts are coloured from a
@@ -340,12 +340,14 @@ title already names.
   than be silently reordered. Hard-coded red bars, blue on hover/selection, a
   red debug-looking `border: solid 1px red` around each chart via the
   `className` passed by the stats components.
-- `app/ui/HorizontalBarChart.tsx` — the same shape, with a wider 10rem label
-  column for disc names and no click handling. The two charts are deliberately
-  not one component: this one exists for the segmented second bar, which is half
-  its code and means nothing to a month, and folding them together would put
-  that behind a prop no monthly chart ever passes. If a third caller ever wants
-  a plain horizontal bar, that is the moment to merge them. An entry with `segments` also draws the
+- `app/ui/SegmentedBarChart.tsx` — the same shape, with a wider 10rem label
+  column for disc names and no click handling. It is named for the segmented
+  second bar because that is what it has and `BarChart` has not: both draw
+  horizontal bars, so "horizontal" told a reader choosing between them nothing.
+  The two are deliberately not one component: the second bar is half this file
+  and means nothing to a month, and folding them together would put it behind a
+  prop no monthly chart ever passes. If a third caller ever wants a plain
+  horizontal bar, that is the moment to merge them. An entry with `segments` also draws the
   stacked second bar described above, its parts separated by a 2px white gap.
   Parts are laid out with `flexGrow`, which fills whatever width the bar is
   given, so the bar's width is scaled by what the parts cover — that scaling is
