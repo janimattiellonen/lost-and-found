@@ -10,7 +10,7 @@ const styles = stylex.create({
     fontWeight: font.weightBold,
     fontSize: {
       default: font.sizeMd,
-      '@media (min-width: 600px)': font.sizeLg,
+      '@media (min-width: 600px)': font.sizeXl,
     },
   },
   ul: {

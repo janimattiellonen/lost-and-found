@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type JSX } from 'react';
+
+import * as stylex from '@stylexjs/stylex';
 import { useFetcher, useRevalidator } from 'react-router';
 import debounce from 'lodash.debounce';
 
@@ -160,8 +162,15 @@ export default function DiscListPage(): JSX.Element {
             <DiscTable discs={discs} courses={clubCourses} pendingRetrievals={pendingRetrievals} onChanged={reload} />
           </div>
         )}
-        {isFirstLoad && <CircularProgress style={{ width: '5rem', height: '5rem' }} />}
+        {isFirstLoad && <CircularProgress {...stylex.props(styles.firstLoadSpinner)} />}
       </div>
     </div>
   );
 }
+
+const styles = stylex.create({
+  firstLoadSpinner: {
+    width: '5rem',
+    height: '5rem',
+  },
+});

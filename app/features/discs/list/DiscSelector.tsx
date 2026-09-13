@@ -76,7 +76,7 @@ const styles = stylex.create({
   menuAbove: { bottom: 'calc(100% + 2px)' },
   menuClosed: { display: 'none' },
   item: { padding: '8px 12px', cursor: 'pointer' },
-  itemHighlighted: { backgroundColor: 'rgba(25,118,210,0.08)' },
+  itemHighlighted: { backgroundColor: color.accentSurfaceSelected },
 });
 
 export default function DiscSelector({ discNames, onChange }: DiscSelectorProps): JSX.Element {

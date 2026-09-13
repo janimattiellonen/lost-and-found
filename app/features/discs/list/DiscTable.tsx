@@ -26,6 +26,7 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
+import OverdueMarker from '~/features/discs/list/OverdueMarker';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -38,10 +39,9 @@ import {
   PlaceIcon,
   SellIcon,
   TextsmsIcon,
-  WarningIcon,
 } from '~/ui/icons';
 import Checkbox from '~/ui/Checkbox';
-import { space } from '~/styles/tokens.stylex';
+import { dark, space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 import { formatPhoneNumber } from '~/utils';
@@ -132,15 +132,17 @@ const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
 
 // Dark table theme matching the previous react-data-grid rendering: a dark base
 // with light text, the header slightly darker, and even rows a subtly lighter
-// shade (rgb(63,60,60)) — not the harsh white/dark zebra of a light base.
+// shade — not the harsh white/dark zebra of a light base. The values live in
+// the `dark` tokens; the two row dividers below are still literal because a
+// translucent white carries no brand identity.
 const styles = stylex.create({
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     marginTop: space.md,
     fontSize: '0.875rem',
-    backgroundColor: '#212121',
-    color: '#ddd',
+    backgroundColor: dark.surface,
+    color: dark.bodyText,
   },
   th: {
     position: 'relative',
@@ -148,15 +150,15 @@ const styles = stylex.create({
     textAlign: 'left',
     fontWeight: 700,
     padding: '8px 12px',
-    color: '#fff',
+    color: dark.headingText,
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
     borderBottomColor: 'rgba(255,255,255,0.15)',
     userSelect: 'none',
-    backgroundColor: { default: '#292929', ':hover': '#333' },
+    backgroundColor: { default: dark.cell, ':hover': dark.cellHover },
   },
   thSortable: { cursor: 'pointer' },
-  thSorted: { backgroundColor: '#383838' },
+  thSorted: { backgroundColor: dark.cellSorted },
   // Shrink a column to its content width (used for the "#" column).
   tight: { width: '1%', whiteSpace: 'nowrap' },
   td: {
@@ -167,7 +169,7 @@ const styles = stylex.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   // Even rows a subtle shade lighter than the base, as in the old grid.
-  rowEven: { backgroundColor: 'rgb(63, 60, 60)' },
+  rowEven: { backgroundColor: dark.rowAlt },
   sortIcon: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -465,12 +467,7 @@ export default function DiscTable({
         cell: ({ row }) => (
           <div className="flex gap-4 items-center">
             {formatDate(row.original.addedAt)}
-            {isInDangerOfBeingDonatedOrSold(row.original.addedAt) && (
-              <WarningIcon
-                title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
-                style={{ color: 'red' }}
-              />
-            )}
+            {isInDangerOfBeingDonatedOrSold(row.original.addedAt) && <OverdueMarker />}
           </div>
         ),
       },
