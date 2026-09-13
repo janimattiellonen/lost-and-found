@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 
 import { color, font, space } from '~/styles/tokens.stylex';
+import { toBarWidth } from '~/lib/barWidth';
 
 import type { JSX } from 'react';
 
@@ -54,7 +55,7 @@ export default function HorizontalBarChart({ data }: HorizontalBarChartProps): J
   return (
     <div>
       {data.map((item: Stat, index: number) => {
-        const width = Math.round((item.value / (highest + 30)) * 100);
+        const width = toBarWidth(item.value, highest);
 
         return (
           <div key={index}>

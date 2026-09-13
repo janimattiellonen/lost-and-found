@@ -3,6 +3,7 @@ import { Fragment, useState, type JSX } from 'react';
 import * as stylex from '@stylexjs/stylex';
 
 import H3 from '~/ui/H3';
+import { toBarWidth } from '~/lib/barWidth';
 import { color, font, space } from '~/styles/tokens.stylex';
 
 export type BarValueType = {
@@ -59,35 +60,32 @@ export default function BarChart({ className, data, onBarClick, title }: BarChar
     <div className={[outer.className, className].filter(Boolean).join(' ')} style={outer.style}>
       <H3>{title}</H3>
       {data.map((item: BarValueType, index: number) => {
-        // Same formula as the vertical chart had: no bar is ever full width,
-        // and a chart of small numbers stays visibly small.
-        const width = Math.round((item.value / (highest + 30)) * 100);
+        const width = toBarWidth(item.value, highest);
         const startsGroup = item.group !== undefined && item.group !== data[index - 1]?.group;
         // A row with nothing in it is not a target: it is drawn so the month is
         // visibly a month with no discs rather than a month left out, and there
         // is nothing for it to open.
         const clickable = Boolean(onBarClick) && item.value > 0;
         const Row = clickable ? 'button' : 'div';
+        const rowProps =
+          clickable && onBarClick
+            ? {
+                type: 'button' as const,
+                onClick: () => {
+                  setSelectedBar(index);
+                  onBarClick(item.date);
+                },
+                onMouseEnter: () => setActiveBar(index),
+                onMouseLeave: () => setActiveBar(null),
+                onFocus: () => setActiveBar(index),
+                onBlur: () => setActiveBar(null),
+              }
+            : {};
 
         return (
           <Fragment key={index}>
             {startsGroup && <div {...stylex.props(styles.groupHeading)}>{item.group}</div>}
-            <Row
-              {...(clickable ? { type: 'button' as const } : {})}
-              {...stylex.props(styles.row, clickable && styles.rowClickable)}
-              onClick={
-                clickable && onBarClick
-                  ? () => {
-                      setSelectedBar(index);
-                      onBarClick(item.date);
-                    }
-                  : undefined
-              }
-              onMouseEnter={clickable ? () => setActiveBar(index) : undefined}
-              onMouseLeave={clickable ? () => setActiveBar(null) : undefined}
-              onFocus={clickable ? () => setActiveBar(index) : undefined}
-              onBlur={clickable ? () => setActiveBar(null) : undefined}
-            >
+            <Row {...rowProps} {...stylex.props(styles.row, clickable && styles.rowClickable)}>
               <div {...stylex.props(styles.label)}>{item.label}</div>
               <div {...stylex.props(styles.track)}>
                 <div

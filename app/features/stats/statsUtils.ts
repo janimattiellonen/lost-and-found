@@ -42,16 +42,6 @@ export const toMonthOfYearRow: ToBarRow = (item) => ({
 /** The day of the month, for the charts a clicked month opens. */
 export const toDayRow: ToBarRow = (item) => ({ label: item.date ? format(item.date, 'dd') : '' });
 
-/**
- * One bar per month of one year, for both monthly charts.
- *
- * The month number alone is not enough: it merges the same month of every year
- * into one bar, which is what "heinä 145" on the returns chart used to be —
- * 7 discs from 2024, 91 from 2025 and 45 from 2026 in a bar labelled as if it
- * were one July.
- */
-export const toMonthAndYearKey = (date: Date): string => `${getMonth(date)}.${getYear(date)}`;
-
 export function mapBySeparator(
   data: DiscDTO[],
   getSeparator: (date: Date) => number | string,
@@ -118,38 +108,11 @@ export function sortMappedData(mapped: {
 
 export function getAddedDiscCountByMonth(
   data: DiscDTO[],
-  getSeparator: (date: Date) => number | string,
   getMonthData: (data: DiscDTO) => Date | null,
 ): AddedDiscCountByMonthType[] {
-  const mapped = mapBySeparator(data, getSeparator, getMonthData);
+  const mapped = mapBySeparator(data, toMonthAndYearKey, getMonthData);
 
   return withEmptyMonths(sortMappedData(mapped));
-}
-
-/**
- * Every month from the first with a disc in it to the last, the empty ones
- * included as zero.
- *
- * A month nobody returned a disc in has no bucket, and a chart that simply
- * leaves it out reads as if it never happened: under the year headings the 2026
- * block ran tammi, maalis, huhti with nothing saying helmi was a real month
- * with nothing in it. Nothing is invented at the ends — the run starts and
- * stops on months that have discs.
- */
-function withEmptyMonths(counted: AddedDiscCountByMonthType[]): AddedDiscCountByMonthType[] {
-  const dated = counted.filter((item): item is AddedDiscCountByMonthType & { date: Date } => item.date !== undefined);
-
-  if (dated.length === 0) {
-    return counted;
-  }
-
-  const countedByMonth = new Map(dated.map((item) => [toMonthAndYearKey(item.date), item]));
-  const months = eachMonthOfInterval({
-    start: startOfMonth(dated[0].date),
-    end: startOfMonth(dated[dated.length - 1].date),
-  });
-
-  return months.map((month) => countedByMonth.get(toMonthAndYearKey(month)) ?? { amount: 0, date: month });
 }
 
 export function getAddedDiscCountByDaysInMonth(
@@ -482,6 +445,46 @@ function pickCommonestSpelling(spellings: Map<string, number>): string {
 /** The date the disc was logged. Set on every row, including web-added ones. */
 function getAddedDate(disc: DiscDTO): Date | null {
   return disc.addedAt ? toDayDate(disc.addedAt) : null;
+}
+
+/**
+ * One bar per month of one year, for both monthly charts.
+ *
+ * The month number alone is not enough: it merges the same month of every year
+ * into one bar, which is what "heinä 145" on the returns chart used to be —
+ * 7 discs from 2024, 91 from 2025 and 45 from 2026 in a bar labelled as if it
+ * were one July.
+ */
+const toMonthAndYearKey = (date: Date): string => `${getMonth(date)}.${getYear(date)}`;
+
+/**
+ * Every month from the first with a disc in it to the last, the empty ones
+ * included as zero.
+ *
+ * A month nobody returned a disc in has no bucket, and a chart that simply
+ * leaves it out reads as if it never happened: under the year headings the 2026
+ * block ran tammi, maalis, huhti with nothing saying helmi was a real month
+ * with nothing in it. Nothing is invented at the ends — the run starts and
+ * stops on months that have discs.
+ */
+function withEmptyMonths(counted: AddedDiscCountByMonthType[]): AddedDiscCountByMonthType[] {
+  const dated = counted.filter((item): item is AddedDiscCountByMonthType & { date: Date } => item.date !== undefined);
+
+  if (dated.length === 0) {
+    return counted;
+  }
+
+  const countedByMonth = new Map(dated.map((item) => [toMonthAndYearKey(item.date), item]));
+  const months = eachMonthOfInterval({
+    start: startOfMonth(dated[0].date),
+    end: startOfMonth(dated[dated.length - 1].date),
+  });
+
+  // Every row is dated the first of its month, counted or not. A counted month
+  // otherwise carries whichever day its first disc arrived on, and only the
+  // inserted ones read as the 1st — a difference nothing uses and everything
+  // reading these rows would have to know about.
+  return months.map((month) => ({ amount: countedByMonth.get(toMonthAndYearKey(month))?.amount ?? 0, date: month }));
 }
 
 /**

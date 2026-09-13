@@ -9,7 +9,6 @@ import {
   mapBarData,
   toMonthOfYearRow,
   toDayRow,
-  toMonthAndYearKey,
 } from '~/features/stats/statsUtils';
 import type { DiscDTO } from '~/types';
 
@@ -24,7 +23,7 @@ function getMonthFromData(data: DiscDTO): Date | null {
 export default function DiscsReturnedToClub({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
 
-  const mapped = getAddedDiscCountByMonth(data, toMonthAndYearKey, getMonthFromData);
+  const mapped = getAddedDiscCountByMonth(data, getMonthFromData);
 
   return (
     <div>

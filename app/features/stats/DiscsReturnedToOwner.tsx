@@ -10,7 +10,6 @@ import {
   mapBarData,
   toMonthOfYearRow,
   toDayRow,
-  toMonthAndYearKey,
   getReturnDate,
 } from '~/features/stats/statsUtils';
 import type { DiscDTO } from '~/types';
@@ -22,7 +21,7 @@ function filter(data: DiscDTO[]): DiscDTO[] {
 export default function DiscsReturnedToOwner({ data }: LostDiscsProps): JSX.Element {
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const filtered = filter(data);
-  const mapped = getAddedDiscCountByMonth(filtered, toMonthAndYearKey, getReturnDate);
+  const mapped = getAddedDiscCountByMonth(filtered, getReturnDate);
 
   return (
     <div>

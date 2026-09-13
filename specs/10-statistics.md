@@ -294,7 +294,12 @@ each would head a year block of its own at either end of a chart sorted by date.
 
 `getAddedDiscCountByMonth` then fills the gaps: `withEmptyMonths` walks every
 month from the first that has a disc to the last and puts a zero row where there
-is no bucket. Nothing is invented at the ends — the run starts and stops on
+is no bucket. It keys those months by `toMonthAndYearKey` itself, which is why
+the function takes no separator from its caller — a caller that passed a
+different one would get gap-filling that disagreed with its own buckets. Every
+row it returns is dated the first of its month, counted or not; a counted month
+otherwise carries whichever day its first disc arrived on, which nothing uses and
+everything reading these rows would have to know about. Nothing is invented at the ends — the run starts and stops on
 months that have discs — so the chart still says nothing about a season that has
 not happened yet. Without it a chart simply omitted the empty month, and under
 the year headings that read as if the month did not exist: the 2026 block ran
@@ -446,7 +451,8 @@ title already names.
   filter and the monthly charts all go through it, so those discs get no button
   of their own, draw no bar, and are counted under "Päivämäärä puuttuu" rather
   than vanishing from everything. Of the club's 451 discs flagged as returned,
-  446 carry a date this page can read and 5 carry none at all.
+  444 carry a date a year can be read off, 2 are these, and 5 carry no date at
+  all — so "Päivämäärä puuttuu" reads 7, not 5.
 - A year part is routinely narrower than its caption — "Firebird" was logged
   four times in 2024 and gets about a sixth of its bar for the nine characters
   of "2024 - 4". Staggering the captions onto two lines means a caption can only
