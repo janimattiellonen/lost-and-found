@@ -6,7 +6,7 @@ import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
 import H3 from '~/ui/H3';
 
-import HorizontalBarChart from '~/ui/HorizontalBarChart';
+import SegmentedBarChart from '~/ui/SegmentedBarChart';
 
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -39,7 +39,7 @@ export default function MostLostByDiscName({ data }: DiscProps): JSX.Element {
         />
       </div>
 
-      <HorizontalBarChart data={stats.map(toChartStat)} />
+      <SegmentedBarChart data={stats.map(toChartStat)} />
     </div>
   );
 }

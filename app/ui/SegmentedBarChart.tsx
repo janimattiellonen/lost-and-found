@@ -18,7 +18,7 @@ type Stat = {
   segments?: Segment[];
 };
 
-type HorizontalBarChartProps = {
+type SegmentedBarChartProps = {
   data: Stat[];
 };
 
@@ -37,7 +37,7 @@ type HorizontalBarChartProps = {
  */
 const segmentColours = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
 
-export default function HorizontalBarChart({ data }: HorizontalBarChartProps): JSX.Element {
+export default function SegmentedBarChart({ data }: SegmentedBarChartProps): JSX.Element {
   let highest: number = 0;
 
   data.forEach((item: Stat) => {
