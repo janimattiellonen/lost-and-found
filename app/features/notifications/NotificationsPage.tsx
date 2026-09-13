@@ -199,7 +199,7 @@ const styles = stylex.create({
   card: {
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: '#e0e0e0',
+    borderColor: color.borderSubtle,
     borderRadius: radius.md,
     padding: space.md,
     marginBottom: space.md,
@@ -208,6 +208,6 @@ const styles = stylex.create({
   unread: {
     borderLeftWidth: '4px',
     borderLeftColor: color.accent,
-    backgroundColor: '#f5f9ff',
+    backgroundColor: color.accentSurface,
   },
 });

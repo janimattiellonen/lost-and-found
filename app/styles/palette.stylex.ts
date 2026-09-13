@@ -16,6 +16,7 @@ import * as stylex from '@stylexjs/stylex';
 // See specs/15-design-system-tokens.md.
 export const palette = stylex.defineVars({
   gray100: '#f3f4f6',
+  gray200: '#e5e7eb',
   gray300: '#d1d5db',
   gray400: '#9ca3af',
   gray500: '#6b7280',
@@ -25,15 +26,26 @@ export const palette = stylex.defineVars({
   white: '#ffffff',
   black: '#000000',
 
+  red50: '#fef2f2',
+  red200: '#fecaca',
   red300: '#fca5a5',
   red400: '#f87171',
   red500: '#ef4444',
   red600: '#dc2626',
+  red800: '#991b1b',
+
+  // Not a Tailwind colour. The disc parser marks a value it is unsure of in this
+  // dark olive, which is 27 ΔE from amber700 — a different colour, not a
+  // different spelling of the same one, so it keeps its own entry rather than
+  // being rounded into the palette's other warning shade.
+  caution700: '#8a6100',
 
   amber300: '#fcd34d',
   amber400: '#fbbf24',
   amber700: '#b45309',
 
+  green50: '#f0fdf4',
+  green200: '#bbf7d0',
   green300: '#86efac',
   green400: '#4ade80',
   green700: '#15803d',

@@ -1,6 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
 
-import { font, radius, space } from '~/styles/tokens.stylex';
+import { color, font, radius, space } from '~/styles/tokens.stylex';
 
 import type { JSX, ReactNode } from 'react';
 
@@ -11,9 +11,9 @@ const styles = stylex.create({
     borderWidth: '1px',
     borderStyle: 'solid',
     fontSize: font.sizeSm,
-    color: '#1b5e20',
-    backgroundColor: '#e8f5e9',
-    borderColor: '#a5d6a7',
+    color: color.successText,
+    backgroundColor: color.successSurface,
+    borderColor: color.successBorder,
   },
 });
 
