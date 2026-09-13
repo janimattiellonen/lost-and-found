@@ -9,6 +9,63 @@ type Variant = 'contained' | 'outlined' | 'text';
 type ButtonColor = 'primary' | 'error';
 type Size = 'small' | 'medium' | 'large';
 
+type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'> & {
+  variant?: Variant;
+  color?: ButtonColor;
+  size?: Size;
+  fullWidth?: boolean;
+  // When set, renders a React Router <Link> styled as a button (replaces the
+  // former MUI `component={Link}` polymorphism).
+  to?: string;
+  children: ReactNode;
+};
+
+export default function Button({
+  variant = 'text',
+  color: buttonColor = 'primary',
+  size = 'medium',
+  fullWidth,
+  to,
+  disabled,
+  className,
+  style,
+  children,
+  ...rest
+}: ButtonProps): JSX.Element {
+  const sx = stylex.props(
+    styles.base,
+    sizeStyle[size],
+    variantStyle[variant][buttonColor],
+    fullWidth && styles.fullWidth,
+    disabled && styles.disabled,
+  );
+  const merged = [sx.className, className].filter(Boolean).join(' ');
+  const mergedStyle = { ...sx.style, ...style };
+
+  if (to) {
+    // External schemes (sms:, mailto:, tel:, http:) must be plain anchors;
+    // React Router <Link> is only for in-app navigation.
+    if (/^[a-z][a-z0-9+.-]*:/i.test(to)) {
+      return (
+        <a href={to} className={merged} style={mergedStyle}>
+          {children}
+        </a>
+      );
+    }
+    return (
+      <Link to={to} className={merged} style={mergedStyle}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button {...rest} disabled={disabled} className={merged} style={mergedStyle}>
+      {children}
+    </button>
+  );
+}
+
 // StyleX replacement for MUI <Button>, faithful to the variants/colors/sizes the
 // app uses. Every colour comes from `color` — the outlined and text variants
 // used to carry MUI's blue and red as hardcoded rgba(), which left them a
@@ -105,60 +162,3 @@ const variantStyle = {
   outlined: { primary: styles.outlinedPrimary, error: styles.outlinedError },
   text: { primary: styles.textPrimary, error: styles.textError },
 } as const;
-
-type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'> & {
-  variant?: Variant;
-  color?: ButtonColor;
-  size?: Size;
-  fullWidth?: boolean;
-  // When set, renders a React Router <Link> styled as a button (replaces the
-  // former MUI `component={Link}` polymorphism).
-  to?: string;
-  children: ReactNode;
-};
-
-export default function Button({
-  variant = 'text',
-  color: buttonColor = 'primary',
-  size = 'medium',
-  fullWidth,
-  to,
-  disabled,
-  className,
-  style,
-  children,
-  ...rest
-}: ButtonProps): JSX.Element {
-  const sx = stylex.props(
-    styles.base,
-    sizeStyle[size],
-    variantStyle[variant][buttonColor],
-    fullWidth && styles.fullWidth,
-    disabled && styles.disabled,
-  );
-  const merged = [sx.className, className].filter(Boolean).join(' ');
-  const mergedStyle = { ...sx.style, ...style };
-
-  if (to) {
-    // External schemes (sms:, mailto:, tel:, http:) must be plain anchors;
-    // React Router <Link> is only for in-app navigation.
-    if (/^[a-z][a-z0-9+.-]*:/i.test(to)) {
-      return (
-        <a href={to} className={merged} style={mergedStyle}>
-          {children}
-        </a>
-      );
-    }
-    return (
-      <Link to={to} className={merged} style={mergedStyle}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <button {...rest} disabled={disabled} className={merged} style={mergedStyle}>
-      {children}
-    </button>
-  );
-}

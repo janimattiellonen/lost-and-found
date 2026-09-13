@@ -26,6 +26,15 @@ const repoRoot = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..'
 // to the first line that closes it at column 0 — and read the entries from it.
 // Anything outside the block (Tailwind's `theme`, StyleX's other groups) must
 // not be parsed, or an unrelated quoted value would be read as a colour.
+//
+// The entry pattern is deliberately loose about quote style, indentation and
+// the trailing comma, and every line inside the block that is not a comment or
+// blank must match it. A silently skipped line is the one failure these tests
+// could not survive: if a reformat made an entry unreadable in both files, the
+// comparisons below would pass while comparing nothing. So an unreadable line
+// is an error, not something to ignore.
+const ENTRY = /^\s*([A-Za-z][A-Za-z0-9]*):\s*(?:'([^']+)'|"([^"]+)"),?\s*$/;
+
 function parsePalette(source: string, file: string): Record<string, string> {
   const start = source.search(/\bpalette\b[^\n]*\{/);
   if (start === -1) throw new Error(`No palette object found in ${file}`);
@@ -33,8 +42,12 @@ function parsePalette(source: string, file: string): Record<string, string> {
   if (end === -1) throw new Error(`Palette object in ${file} is never closed at column 0`);
 
   const entries: Record<string, string> = {};
-  for (const [, name, value] of source.slice(start, end).matchAll(/^\s{2}([A-Za-z][A-Za-z0-9]*):\s*'([^']+)',$/gm)) {
-    entries[name] = value;
+  const body = source.slice(source.indexOf('{', start) + 1, end);
+  for (const line of body.split('\n')) {
+    if (line.trim() === '' || line.trim().startsWith('//')) continue;
+    const match = ENTRY.exec(line);
+    if (!match) throw new Error(`Cannot read palette entry in ${file}: ${line.trim()}`);
+    entries[match[1]] = match[2] ?? match[3];
   }
   if (Object.keys(entries).length === 0) throw new Error(`Parsed no palette entries from ${file}`);
   return entries;

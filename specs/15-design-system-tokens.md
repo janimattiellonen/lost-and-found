@@ -76,11 +76,12 @@ moves is either listed as a deliberate exception below or is a bug.
 
 5. When a success or error box is shown — after saving on the disc-entry page,
    or in the `SuccessNote` that follows a form post — then its three colours move
-   from Material UI's green and red to Tailwind's. Two of the six are
-   imperceptible (a perceptual distance, ΔE, of 2.7 and 3.3, where roughly 2.3 is
-   the threshold at which a difference can be seen at all) and three are mild
-   (8.2 to 9.4). One is visible: the success box's border lightens from `#a5d6a7`
-   to `green200` (ΔE 12.5). The triad has to move as a unit — taking the cheap
+   from Material UI's green and red to Tailwind's. Three of the six are at or
+   near the threshold of visibility (a perceptual distance, ΔE, of 2.7, 3.2 and
+   3.3, where roughly 2.3 is the point at which a difference can be seen at all)
+   — these are the same colour spelled differently by two palettes. Two are mild
+   (8.2 and 9.4). One is visible: the success box's border lightens from
+   `#a5d6a7` to `green200` (ΔE 12.5). The triad has to move as a unit — taking the cheap
    two-thirds would leave a box whose border belonged to a different palette.
 
 6. When the pointer is over the delete button on the disc-entry page's parsed
@@ -95,10 +96,11 @@ moves is either listed as a deliberate exception below or is a bug.
 8. When any notification card is shown, then its border is `color.borderSubtle`
    rather than `#e0e0e0` (ΔE 3.3).
 
-Scenarios 7 and 8 are below the roughly 2.3 ΔE at which a difference becomes
-visible at all, so they are listed for completeness rather than because anyone
-will see them. They are listed because rule 1 requires every changed value to be
-listed, and an exception that is only recorded when it is large is not a rule.
+Scenario 7, at 2.2 ΔE, is below the roughly 2.3 at which a difference becomes
+visible at all. Scenario 8, at 3.3, is just above it — in principle visible on a
+large flat area, in practice a one-pixel border. Both are listed because rule 1
+requires every changed value to be listed, and an exception that is only recorded
+when it is large is not a rule.
 
 Scenarios 2 to 8 are the price of having one palette rather than three, and were
 accepted deliberately rather than overlooked. Each is a shade change of the same
@@ -126,7 +128,7 @@ defaults, read from the installed package rather than typed from memory.
 | `gray200`    | `#e5e7eb` | notification card border — replaces `#e0e0e0`, see scenario 8                               |
 | `gray300`    | `#d1d5db` | `border-gray-300`, and light text on the dark table                                         |
 | `gray400`    | `#9ca3af` | `text-gray-400` (the "Lisätiedot" caption)                                                  |
-| `gray500`    | `#6b7280` | `text-gray-500` (17 uses), `color.textMuted`                                                |
+| `gray500`    | `#6b7280` | `text-gray-500` (15 uses), `color.textMuted`                                                |
 | `gray600`    | `#4b5563` | `text-gray-600` (12 uses)                                                                   |
 | `gray700`    | `#374151` | `text-gray-700` (13 uses), `color.textSecondary`                                            |
 | `gray900`    | `#111827` | `color.textPrimary`, `text-gray-900`                                                        |
@@ -554,7 +556,7 @@ None. No route, loader or action is touched.
   | `ui/BarChart.tsx`, `ui/SegmentedBarChart.tsx`                              | `'red'`, `'blue'` bar fills                                                                         | The same raw CSS keywords the overdue marker used before scenario 4. They are the most obviously convertible thing left, but converting them changes the statistics charts' colours, which nobody has asked for.                                          |
   | `features/notifications/QrPosterButtons.tsx`, `BinFullQrPosterButtons.tsx` | `#555555`                                                                                           | Poster text, rendered for print rather than for the screen.                                                                                                                                                                                               |
   | `features/messaging/MessageTemplatesPage.tsx`                              | `rgba(2, 208, 232, 0.85)`                                                                           | The cyan ring round the default message template. Translucent and branded — the one leftover that is neither neutral nor explained.                                                                                                                       |
-  | `ui/Button.tsx`, `ui/DiscTable.tsx`, the inline forms                      | `rgba(0,0,0,…)` shadows and disabled greys, `rgba(255,255,255,…)` row dividers, `hover:bg-white/10` | Neutral translucency. Nothing about them drifts when the palette changes.                                                                                                                                                                                 |
+  | `ui/Button.tsx`, `features/discs/list/DiscTable.tsx`, the inline forms     | `rgba(0,0,0,…)` shadows and disabled greys, `rgba(255,255,255,…)` row dividers, `hover:bg-white/10` | Neutral translucency. Nothing about them drifts when the palette changes.                                                                                                                                                                                 |
 
   So the rule "no new hex in a component" binds new code, and every colour that
   carries the app's identity is now in the palette — but a reader should not

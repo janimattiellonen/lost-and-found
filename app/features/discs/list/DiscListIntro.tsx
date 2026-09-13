@@ -44,7 +44,7 @@ export default function DiscListIntro({ clubId }: DiscListIntroProps): JSX.Eleme
       <p>Vinkki: taulukon otsikoita painamalla voit järjestää sisällön halutulla tavalla.</p>
 
       <p>
-        <OverdueMarker {...stylex.props(styles.markerSpacing)} />
+        <OverdueMarker style={styles.markerSpacing} />
         Jos lisäyspäivämäärän jälkeen näkyy kyseinen kuvake, on kiekko ollut seuran hallussa yli 3kk ja se saatetaan
         pian myydä tai lahjoittaa.
       </p>
