@@ -169,6 +169,9 @@ export default function DiscListPage(): JSX.Element {
 }
 
 const styles = stylex.create({
+  // Not a token: `size` holds control metrics that several components line up
+  // against, and this is one spinner's dimensions on one page. A token here
+  // would be a name with a single caller and no second opinion about its value.
   firstLoadSpinner: {
     width: '5rem',
     height: '5rem',

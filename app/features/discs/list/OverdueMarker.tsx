@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
@@ -16,7 +16,7 @@ type OverdueMarkerProps = {
   // The legend sets a gap between the marker and the sentence explaining it;
   // in the table the marker stands on its own.
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
 
 export default function OverdueMarker({ className, style }: OverdueMarkerProps): JSX.Element {
