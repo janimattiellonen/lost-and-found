@@ -78,8 +78,9 @@ export const palette = stylex.defineVars({
 
   // The disc table's dark surface, plus the two light greys it writes on that
   // surface. `dark200` is the table's body text and is NOT Tailwind's gray300
-  // (#d1d5db) — the two are three points apart and both appear on this one
-  // table, which is recorded as a gap rather than quietly unified.
+  // (#d1d5db) — they differ by 12, 8 and 2 per channel, enough to see, and both
+  // appear on this one table, which is recorded as a gap rather than quietly
+  // unified.
   // These are not Tailwind colours and never
   // were — they were hardcoded in DiscTable.tsx. Higher number is darker.
   // dark500 keeps `rgb(63, 60, 60)` character for character: it is the only

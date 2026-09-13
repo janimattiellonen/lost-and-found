@@ -51,22 +51,27 @@ moves is either listed as a deliberate exception below or is a bug.
 ## User-facing behaviour
 
 1. When any page is loaded after this work, then it looks exactly as it did
-   before — same colours, same spacing, same type sizes — with the seven
-   exceptions in scenarios 2 to 8.
+   before — same colours, same spacing, same type sizes — with the eight
+   exceptions in scenarios 2 to 9.
 2. When a primary button, a focused text field, a checkbox or a radio is shown,
    then its blue changes from Material UI's `#1976d2` to Tailwind's `blue-600`
    (`#2563eb`), and its hover blue from `#1565c0` to `blue-700` (`#1d4ed8`).
    These are the two shades of blue already used for links and for the selected
    card on the owner link page; the app ends up with one blue instead of two.
-   The change is small and slightly more saturated. It affects `Button`,
+   **This is the largest colour change in the work** — ΔE 29.8 and 32.5, more
+   than twice any other — and it is slightly more saturated. See the note on
+   measuring below: the blue region is where the simple formula exaggerates most,
+   and under the modern one these are 8.6 and 9.5, still the two largest. It
+   affects `Button`,
    `TextField`, `Select`, `Checkbox`, `RadioGroup`, `CircularProgress`,
    `AdminMenu`, `DiscSelector`, `AddDiscsPage` and `NotificationsPage`.
 3. When a destructive action or an error is shown through a StyleX component,
    then its red changes from Material UI's `#d32f2f` to Tailwind's `red-500`
-   (`#ef4444`) — the shade the Tailwind-styled form errors already use.
+   (`#ef4444`, ΔE 8.4) — the shade the Tailwind-styled form errors already use.
 4. When the disc list shows the warning marker on a disc the club has held for
    more than three months, then its colour changes from the raw CSS keyword `red`
-   (`#ff0000`) to `red-500`. Two components draw that marker — `DiscListIntro`,
+   (`#ff0000`) to `red-500` (ΔE 32.1, the second largest in the work, and the one
+   change here that is a correction rather than a cost). Two components draw that marker — `DiscListIntro`,
    which explains it in the legend, and `DiscTable`, which puts it beside the
    date — and they now share one `OverdueMarker` component
    (`features/discs/list/OverdueMarker.tsx`), which owns both the colour and the
@@ -86,8 +91,8 @@ moves is either listed as a deliberate exception below or is a bug.
 
 6. When the pointer is over the delete button on the disc-entry page's parsed
    rows, then its red darkens to `color.dangerHover` rather than to `#b71c1c`.
-   At ΔE 12.9 this is the **largest** visible change in the work — slightly
-   larger than the success border in scenario 5. It is here because `Button`
+   At ΔE 12.9 this is the largest of the reds, slightly more than the success
+   border in scenario 5, though well short of the blue in scenario 2. It is here because `Button`
    already darkened to `dangerHover` on the same gesture and this button did not:
    one interaction was reaching for two different reds. The alternative was to
    keep the two apart for ever with nothing to say which was correct.
@@ -95,14 +100,32 @@ moves is either listed as a deliberate exception below or is a bug.
    `color.accentSurface` rather than `#f5f9ff` (ΔE 2.2).
 8. When any notification card is shown, then its border is `color.borderSubtle`
    rather than `#e0e0e0` (ΔE 3.3).
+9. When the pointer is over a contained error `Button`, then its red darkens to
+   `color.dangerHover` rather than to `#c62828` (MUI dark red, ΔE 10.3). This is
+   the same unification as scenario 6, approached from the other side: the two
+   buttons that darken on hover were reaching for two different dark reds, and
+   this is the one that `AddDiscsPage` was measured against.
 
-Scenario 7, at 2.2 ΔE, is below the roughly 2.3 at which a difference becomes
-visible at all. Scenario 8, at 3.3, is just above it — in principle visible on a
-large flat area, in practice a one-pixel border. Both are listed because rule 1
-requires every changed value to be listed, and an exception that is only recorded
-when it is large is not a rule.
+### How these are measured
 
-Scenarios 2 to 8 are the price of having one palette rather than three, and were
+The ΔE figures above are CIE76 — the straight distance between two colours in
+CIELAB space, where roughly 2.3 is the point at which a difference becomes
+visible at all. It is the simplest of the standard formulas and the easiest to
+reproduce, which is why it is used here.
+
+It has one well-known weakness, and this work runs straight into it: in the blue
+region it exaggerates. Scenario 2's 29.8 is real arithmetic but overstates what
+the eye does with it; the later CIEDE2000 formula, which corrects for exactly
+this, puts the same change at 8.6. The ordering is unaffected — the blue is the
+largest move under both — so the figures are left as CIE76 throughout, with the
+CIEDE2000 value quoted in scenario 2 where the gap between the two is widest.
+
+Scenario 7, at 2.2, is below the visibility threshold. Scenario 8, at 3.3, is
+just above it — in principle visible on a large flat area, in practice a
+one-pixel border. Both are listed because rule 1 requires every changed value to
+be listed, and an exception that is only recorded when it is large is not a rule.
+
+Scenarios 2 to 9 are the price of having one palette rather than three, and were
 accepted deliberately rather than overlooked. Each is a shade change of the same
 hue, not a redesign. The alternative — keeping the Material UI values — was
 considered and rejected, because it leaves the app with two blues and three reds
@@ -183,8 +206,10 @@ the code missed, because it searched for hex. Left alone, a contained button
 would have turned Tailwind blue while the outlined button beside it kept MUI blue
 at 50% opacity. `Button.tsx` also had `#c62828` (MUI dark red) as its contained
 error hover, and `AddDiscsPage.tsx` had `#b71c1c` on the same gesture. Both are
-now `color.dangerHover`; the second of them is scenario 6, because unlike the
-first it is a visible change.
+now `color.dangerHover`: the `#b71c1c` change is scenario 6 and the `#c62828`
+change is scenario 9. Both are visible; an earlier draft of this spec called the
+first of them invisible and left it unnumbered, which is the mistake rule 1
+exists to prevent.
 
 Plus the values the disc table uses for its dark surface. These are not Tailwind
 colours and never were — they were hardcoded in
@@ -202,10 +227,11 @@ than a component quietly holding its own. Higher number is darker.
 | `dark900` | `#212121` | table header background          |
 
 `dark200` is the table's body text and is **not** Tailwind's `gray300`
-(`#d1d5db`), which the row icons and the inline forms use. The two are three
-points apart and both sit on this one table. They are kept separate because
-merging them would change what is on screen, which this work does not do outside
-the seven listed exceptions; the inconsistency is recorded as a gap instead.
+(`#d1d5db`), which the row icons and the inline forms use. They differ by
+12, 8 and 2 per channel — ΔE 4.6, above the threshold of visibility — and both
+sit on this one table. They are kept separate because merging them would change
+what is on screen, which this work does not do outside the eight listed
+exceptions; the inconsistency is recorded as a gap instead.
 
 `dark500` was written `rgb(63, 60, 60)` in the component. It is spelled as hex
 here so every palette entry reads alike; StyleX compiles both spellings to the
@@ -338,7 +364,7 @@ The existing `space`, `font`, `size` and `radius` groups are corrected to match
 Tailwind's scale, which is what the pages are actually laid out on. Tailwind's
 spacing step is `0.25rem`, so `mb-4` is 16px.
 
-`space` — three steps are added, because the pages use them and the token set had
+`space` — two steps are added, because the pages use them and the token set had
 no name for them. Existing names keep their values, so nothing that already uses
 `space.md` moves.
 
@@ -408,7 +434,11 @@ palette stays available. Replacing it would force every page onto the aliases in
 one change, breaking all 37 at once. The aliases are the intended path; nothing
 mechanically blocks the old one, and review is what keeps new code on it.
 
-The alias names are chosen so each Tailwind class maps to exactly one token:
+The alias names are chosen so each Tailwind class maps to exactly one token. The
+map is one-way: two tokens may hold the same value — `dangerStrong` and
+`dangerHover` are both `red600`, `successText` and `successHover` both `green800`
+— so a colour can be reachable by more than one name, but no class is ambiguous
+about which token it means.
 
 | Tailwind class                                         | Token                                 |
 | ------------------------------------------------------ | ------------------------------------- |
@@ -420,6 +450,8 @@ The alias names are chosen so each Tailwind class maps to exactly one token:
 | `text-fg-strong`                                       | `color.textStrong`                    |
 | `text-fg-on-accent`                                    | `color.onAccent`                      |
 | `text-fg-link`                                         | `color.link`                          |
+| `text-fg-danger`                                       | `color.dangerText`                    |
+| `text-fg-success`                                      | `color.successText`                   |
 | `bg-surface`                                           | `color.surface`                       |
 | `bg-surface-muted`                                     | `color.surfaceMuted`                  |
 | `bg-surface-accent`                                    | `color.accentSurface`                 |
@@ -457,22 +489,22 @@ because importing `palette.stylex.ts` from a test yields `var(--x1jb24h0)`, not
 
 None. No route, loader or action is touched.
 
-| Entry point                                 | Purpose                                                                                                                                        |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/styles/palette.stylex.ts`              | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                  |
-| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".      |
-| `app.css`                                   | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                |
-| `tailwind.config.ts`                        | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does. |
-| `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                 |
-| `app/features/discs/list/DiscTable.tsx`     | The first component converted off Tailwind: its row-action icons and its dark surface read from the tokens.                                    |
-| `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing. Reads both files as text.                                                              |
+| Entry point                                 | Purpose                                                                                                                                          |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app/styles/palette.stylex.ts`              | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                    |
+| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".        |
+| `app.css`                                   | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                  |
+| `tailwind.config.ts`                        | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does.   |
+| `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                   |
+| `app/features/discs/list/DiscTable.tsx`     | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind. |
+| `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing. Reads both files as text.                                                                |
 
 ## Rules & constraints
 
 1. **A token's value is whatever is on screen today.** Every value in the palette
    was read out of the running code or out of `tailwindcss/colors`, not chosen.
    Where a token's value differs from what the code shows today, it appears in
-   "User-facing behaviour" as a numbered exception. There are seven of them.
+   "User-facing behaviour" as a numbered exception. There are eight of them.
 2. **Components import `tokens`, never `palette`.** The palette exists so that
    `gray500` is written down once; a component asking for `palette.gray500`
    instead of `color.textMuted` has skipped the layer that carries the meaning,
@@ -492,9 +524,10 @@ None. No route, loader or action is touched.
    is deliberately out of scope, and the token names are chosen so it stays
    possible (`color.surface`, not `color.white`).
 5. **Tailwind stays installed and stays working.** One component's row-action
-   icons moved off it here; the other 36 have not. Deleting Tailwind is only
-   possible after the last of them has moved, which is a long tail of separate
-   changes.
+   icons moved off it here. 39 files still carry Tailwind classes — `DiscTable`
+   among them, because only its icons and its dark surface moved, not its
+   layout. Deleting Tailwind is only possible after the last of them has moved,
+   which is a long tail of separate changes.
 6. **`app.css`'s element rules stay.** The `p`, `a` and `body` rules are ambient
    styling that StyleX components cannot see and cannot override without
    specificity tricks. They are left alone here and recorded as a gap below.
@@ -562,7 +595,7 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Seventeen of the seventy-nine tokens are not used by anything yet, and the
+- **Sixteen of the seventy-nine tokens are not used by anything yet, and the
   Tailwind aliases are used by nothing at all.** That is the shape of the job —
   the vocabulary has to exist before a page can be converted to it — but it
   should be stated plainly rather than left to be discovered:
@@ -572,7 +605,7 @@ None. No route, loader or action is touched.
   | `color` (34)         | 26                                   | `textBody`, `textSubtle`, `accentBorderSubtle`, `link`, `dangerStrong`, `warning`, `success`, `successHover` |
   | `dark` (10)          | 7, all by `DiscTable`                | `text`, `textHover`, `border` — they belong to the inline forms, which are still Tailwind                    |
   | `icon` (15)          | 15, all by `DiscTable`'s row actions | —                                                                                                            |
-  | `space` (7)          | 5                                    | `smd`, `xxl`                                                                                                 |
+  | `space` (7)          | 6                                    | `xxl`                                                                                                        |
   | `font` (9)           | 6                                    | `sizeXs`, `sizeLg`, `weightRegular`                                                                          |
   | `size` (1)           | 1                                    | —                                                                                                            |
   | `radius` (3)         | 2                                    | `lg`                                                                                                         |
