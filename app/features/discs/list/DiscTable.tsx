@@ -26,6 +26,7 @@ import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
+import OverdueMarker from '~/features/discs/list/OverdueMarker';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -38,10 +39,9 @@ import {
   PlaceIcon,
   SellIcon,
   TextsmsIcon,
-  WarningIcon,
 } from '~/ui/icons';
 import Checkbox from '~/ui/Checkbox';
-import { space } from '~/styles/tokens.stylex';
+import { dark, font, icon, space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
 import { formatPhoneNumber } from '~/utils';
@@ -129,62 +129,6 @@ const isInDangerOfBeingDonatedOrSold = (dateStr: string): boolean => {
 
   return !isAfter(date, now);
 };
-
-// Dark table theme matching the previous react-data-grid rendering: a dark base
-// with light text, the header slightly darker, and even rows a subtly lighter
-// shade (rgb(63,60,60)) — not the harsh white/dark zebra of a light base.
-const styles = stylex.create({
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: space.md,
-    fontSize: '0.875rem',
-    backgroundColor: '#212121',
-    color: '#ddd',
-  },
-  th: {
-    position: 'relative',
-    boxSizing: 'border-box',
-    textAlign: 'left',
-    fontWeight: 700,
-    padding: '8px 12px',
-    color: '#fff',
-    borderBottomWidth: '1px',
-    borderBottomStyle: 'solid',
-    borderBottomColor: 'rgba(255,255,255,0.15)',
-    userSelect: 'none',
-    backgroundColor: { default: '#292929', ':hover': '#333' },
-  },
-  thSortable: { cursor: 'pointer' },
-  thSorted: { backgroundColor: '#383838' },
-  // Shrink a column to its content width (used for the "#" column).
-  tight: { width: '1%', whiteSpace: 'nowrap' },
-  td: {
-    boxSizing: 'border-box',
-    padding: '8px 12px',
-    borderBottomWidth: '1px',
-    borderBottomStyle: 'solid',
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-  },
-  // Even rows a subtle shade lighter than the base, as in the old grid.
-  rowEven: { backgroundColor: 'rgb(63, 60, 60)' },
-  sortIcon: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    verticalAlign: 'middle',
-    marginInlineStart: space.xs,
-  },
-  resizer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    height: '100%',
-    width: '5px',
-    cursor: 'col-resize',
-    userSelect: 'none',
-    touchAction: 'none',
-  },
-});
 
 /** Columns sized by their content rather than by a resizable width. */
 function isTightColumn(columnId: string): boolean {
@@ -353,7 +297,7 @@ function DeleteButton({ row, onDeleted }: DeleteButtonProps): JSX.Element | null
       title="Poista kiekko"
       disabled={isDeleting}
       onClick={handleClick}
-      className="inline-flex text-red-400 hover:text-red-300 disabled:opacity-40"
+      {...stylex.props(styles.rowAction, styles.actionDelete)}
     >
       <DeleteIcon width={18} height={18} />
     </button>
@@ -465,12 +409,7 @@ export default function DiscTable({
         cell: ({ row }) => (
           <div className="flex gap-4 items-center">
             {formatDate(row.original.addedAt)}
-            {isInDangerOfBeingDonatedOrSold(row.original.addedAt) && (
-              <WarningIcon
-                title={'Kiekko on ollut seuran hallussa yli 3kk ja se saatetaan pian myydä tai lahjoittaa'}
-                style={{ color: 'red' }}
-              />
-            )}
+            {isInDangerOfBeingDonatedOrSold(row.original.addedAt) && <OverdueMarker />}
           </div>
         ),
       },
@@ -495,7 +434,7 @@ export default function DiscTable({
                         to={`/discs/${row.original.externalId}/edit`}
                         aria-label={`Muokkaa kiekon ${row.original.discName} tietoja`}
                         title="Muokkaa tietoja"
-                        className="inline-flex text-gray-300 hover:text-white"
+                        {...stylex.props(styles.rowAction, styles.actionNeutral)}
                       >
                         <EditIcon width={18} height={18} />
                       </Link>
@@ -506,7 +445,7 @@ export default function DiscTable({
                         title="Merkitse palautetuksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'return'}
                         onClick={() => toggleForm(row.original.externalId!, 'return')}
-                        className="inline-flex text-green-400 hover:text-green-300"
+                        {...stylex.props(styles.rowAction, styles.actionReturned)}
                       >
                         <CheckCircleIcon width={18} height={18} />
                       </button>
@@ -517,7 +456,7 @@ export default function DiscTable({
                         title="Merkitse myytäväksi tai lahjoitettavaksi"
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'disposal'}
                         onClick={() => toggleForm(row.original.externalId!, 'disposal')}
-                        className="inline-flex text-sky-400 hover:text-sky-300"
+                        {...stylex.props(styles.rowAction, styles.actionSellable)}
                       >
                         <SellIcon width={18} height={18} />
                       </button>
@@ -543,11 +482,10 @@ export default function DiscTable({
                             openForm?.externalId === row.original.externalId && openForm.kind === 'retrieval'
                           }
                           onClick={() => toggleForm(row.original.externalId!, 'retrieval')}
-                          className={
-                            row.original.retrieval !== null
-                              ? 'inline-flex text-orange-400 hover:text-orange-300'
-                              : 'inline-flex text-gray-300 hover:text-white'
-                          }
+                          {...stylex.props(
+                            styles.rowAction,
+                            row.original.retrieval !== null ? styles.actionRetrieval : styles.actionNeutral,
+                          )}
                         >
                           <InventoryIcon width={18} height={18} />
                         </button>
@@ -564,7 +502,7 @@ export default function DiscTable({
                           title="Aseta rata"
                           aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'course'}
                           onClick={() => toggleForm(row.original.externalId!, 'course')}
-                          className="inline-flex text-violet-400 hover:text-violet-300"
+                          {...stylex.props(styles.rowAction, styles.actionCourse)}
                         >
                           <PlaceIcon width={18} height={18} />
                         </button>
@@ -580,7 +518,7 @@ export default function DiscTable({
                         disabled={!row.original.additionalInfo}
                         aria-expanded={openForm?.externalId === row.original.externalId && openForm.kind === 'info'}
                         onClick={() => toggleForm(row.original.externalId!, 'info')}
-                        className="inline-flex text-amber-400 hover:text-amber-300 disabled:text-gray-500 disabled:hover:text-gray-500 disabled:cursor-not-allowed"
+                        {...stylex.props(styles.rowAction, styles.actionInfo)}
                       >
                         <InfoIcon width={18} height={18} />
                       </button>
@@ -777,3 +715,90 @@ export default function DiscTable({
     </>
   );
 }
+
+// Dark table theme matching the previous react-data-grid rendering: a dark base
+// with light text, the header slightly darker, and even rows a subtly lighter
+// shade — not the harsh white/dark zebra of a light base. The values live in
+// the `dark` tokens; the two row dividers below are still literal because a
+// translucent white carries no brand identity.
+const styles = stylex.create({
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    marginTop: space.md,
+    fontSize: font.sizeSm,
+    backgroundColor: dark.surface,
+    color: dark.bodyText,
+  },
+  th: {
+    position: 'relative',
+    boxSizing: 'border-box',
+    textAlign: 'left',
+    fontWeight: 700,
+    paddingBlock: space.sm,
+    paddingInline: space.smd,
+    color: dark.headingText,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'rgba(255,255,255,0.15)',
+    userSelect: 'none',
+    backgroundColor: { default: dark.cell, ':hover': dark.cellHover },
+  },
+  thSortable: { cursor: 'pointer' },
+  thSorted: { backgroundColor: dark.cellSorted },
+  // Shrink a column to its content width (used for the "#" column).
+  tight: { width: '1%', whiteSpace: 'nowrap' },
+  td: {
+    boxSizing: 'border-box',
+    paddingBlock: space.sm,
+    paddingInline: space.smd,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  // Even rows a subtle shade lighter than the base, as in the old grid.
+  rowEven: { backgroundColor: dark.rowAlt },
+  // The row actions. Each hue is part of the label, not decoration: an admin
+  // picks the right icon at a glance on a phone.
+  rowAction: { display: 'inline-flex' },
+  actionDelete: {
+    color: { default: icon.delete, ':hover': icon.deleteHover },
+    opacity: { default: 1, ':disabled': 0.4 },
+  },
+  // The neutral grey: the edit link, and the retrieval marker on a disc that is
+  // not on the list. It means "no state to report", which is why one style
+  // serves both.
+  actionNeutral: { color: { default: icon.edit, ':hover': icon.editHover } },
+  actionReturned: { color: { default: icon.returned, ':hover': icon.returnedHover } },
+  actionSellable: { color: { default: icon.sellable, ':hover': icon.sellableHover } },
+  actionRetrieval: { color: { default: icon.retrieval, ':hover': icon.retrievalHover } },
+  actionCourse: { color: { default: icon.course, ':hover': icon.courseHover } },
+  // `:disabled:hover` is spelled out because StyleX ranks `:hover` above
+  // `:disabled`, so the pair alone would let a disabled button light up under
+  // the pointer. See specs/15-design-system-tokens.md.
+  actionInfo: {
+    color: {
+      default: icon.info,
+      ':hover': icon.infoHover,
+      ':disabled': icon.disabled,
+      ':disabled:hover': icon.disabled,
+    },
+    cursor: { default: 'pointer', ':disabled': 'not-allowed' },
+  },
+  sortIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    verticalAlign: 'middle',
+    marginInlineStart: space.xs,
+  },
+  resizer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    height: '100%',
+    width: '5px',
+    cursor: 'col-resize',
+    userSelect: 'none',
+    touchAction: 'none',
+  },
+});
