@@ -43,7 +43,7 @@ export default function SignInPage({ user, errors }: Props): JSX.Element {
             name="email"
           />
 
-          {errors?.email ? <p className="text-danger text-xs italic">{errors.email}</p> : null}
+          {errors?.email ? <p className="text-danger-strong text-xs italic">{errors.email}</p> : null}
         </div>
         <div className="mb-2">
           <Label htmlFor="password">Salasana</Label>
@@ -55,12 +55,12 @@ export default function SignInPage({ user, errors }: Props): JSX.Element {
             placeholder="Salasana"
           />
 
-          {errors?.password ? <p className="text-danger text-xs italic">{errors.password}</p> : null}
+          {errors?.password ? <p className="text-danger-strong text-xs italic">{errors.password}</p> : null}
         </div>
 
         <div className="mb-2">
           {errors?.invalidLogin ? (
-            <p className="text-danger text-xs italic">Virheellinen käyttäjätunnus tai salasana</p>
+            <p className="text-danger-strong text-xs italic">Virheellinen käyttäjätunnus tai salasana</p>
           ) : null}
         </div>
 
