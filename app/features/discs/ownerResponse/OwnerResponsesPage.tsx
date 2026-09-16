@@ -32,12 +32,12 @@ export default function OwnerResponsesPage({ responses, messageCategoryId }: Pro
     <div>
       <H2 className="mt-8 mb-2">Omistajien vastaukset</H2>
 
-      <p className="mb-6 max-w-2xl text-sm text-gray-600">
+      <p className="mb-6 max-w-2xl text-sm text-fg-body">
         Kiekkojen omistajien vastaukset tekstiviestin linkistä. Merkitse vastaus käsitellyksi, kun olet hoitanut asian –
         postitusosoite poistetaan samalla.
       </p>
 
-      {responses.length === 0 && <p className="text-gray-500">Ei uusia vastauksia.</p>}
+      {responses.length === 0 && <p className="text-fg-muted">Ei uusia vastauksia.</p>}
 
       {responses.map((response) => (
         <ResponseItem key={response.id} response={response} messageCategoryId={messageCategoryId} />
@@ -69,7 +69,7 @@ function ResponseItem({
             {response.discColour} {response.discName}
           </span>
 
-          <span className={response.choice === OwnerChoice.GivesUp ? 'text-sm text-amber-700' : 'text-sm'}>
+          <span className={response.choice === OwnerChoice.GivesUp ? 'text-sm text-warning' : 'text-sm'}>
             {ownerChoiceLabel(response.choice)}
             {method && ` · ${method}`}
           </span>
@@ -77,12 +77,9 @@ function ResponseItem({
           {/* The number first, the name after it in brackets: the number is
               what gets tapped, and only the digits belong inside the link. */}
           {(response.ownerPhoneNumber || response.ownerName) && (
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-fg-body">
               {response.ownerPhoneNumber && (
-                <a
-                  href={`sms:${toDiallablePhoneNumber(response.ownerPhoneNumber)}`}
-                  className="text-blue-700 underline"
-                >
+                <a href={`sms:${toDiallablePhoneNumber(response.ownerPhoneNumber)}`} className="text-fg-link underline">
                   {formatPhoneNumber(response.ownerPhoneNumber)}
                 </a>
               )}
@@ -93,7 +90,7 @@ function ResponseItem({
           {/* No address to show, and a reason: this one needs a message before
               anything can be posted. */}
           {response.hasMoreDiscs && (
-            <span className="mt-2 text-sm font-bold text-amber-700">
+            <span className="mt-2 text-sm font-bold text-warning">
               Useampia kiekkoja – sovi sisällöstä ja postikuluista viestitse.
             </span>
           )}
@@ -111,7 +108,7 @@ function ResponseItem({
             </span>
           )}
 
-          <span className="mt-2 text-xs text-gray-500">
+          <span className="mt-2 text-xs text-fg-muted">
             Vastattu {formatDateTime(response.respondedAt)}
             {response.discRegisteredAt && ` · Kiekko kirjattu ${formatDate(response.discRegisteredAt)}`}
           </span>
