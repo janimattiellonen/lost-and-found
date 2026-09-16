@@ -33,11 +33,15 @@ The same names are also given to Tailwind, as colour aliases in
 `text-fg-muted` rather than `text-gray-500`. That is what turns each later
 conversion into a rename instead of a guess about what the grey was for.
 
-This spec covers the token set, those aliases, and the first conversion done
-against them — the disc table's row-action icons, which moved off Tailwind to
-prove the vocabulary works before thirty-six more components are written against
-it. The remaining components are separate work, done one at a time, and each step
-of it is a no-op precisely because the tokens were derived this way.
+This spec covers the token set, those aliases, and the conversions done against
+them so far: the disc table's row-action icons first, to prove the vocabulary
+worked before anything else was written against it, and then four more pieces —
+the three inline forms that open inside the dark table, the status box, the
+owner-facing and sign-in pages, and the long tail of small admin components. Five
+files still carry stock Tailwind colour classes. The rest of the conversion is
+separate work, done a piece at a time, and each step is a no-op precisely because
+the tokens were derived this way — with the exceptions numbered above, which are
+the cases where a piece could not be both a no-op and correct.
 
 ## Actors
 
@@ -51,8 +55,8 @@ moves is either listed as a deliberate exception below or is a bug.
 ## User-facing behaviour
 
 1. When any page is loaded after this work, then it looks exactly as it did
-   before — same colours, same spacing, same type sizes — with the eight
-   exceptions in scenarios 2 to 9.
+   before — same colours, same spacing, same type sizes — with the ten
+   exceptions in scenarios 2 to 11.
 2. When a primary button, a focused text field, a checkbox or a radio is shown,
    then its blue changes from Material UI's `#1976d2` to Tailwind's `blue-600`
    (`#2563eb`), and its hover blue from `#1565c0` to `blue-700` (`#1d4ed8`).
@@ -80,7 +84,7 @@ moves is either listed as a deliberate exception below or is a bug.
    anything else in the app uses.
 
 5. When a success or error box is shown — after saving on the disc-entry page,
-   or in the `SuccessNote` that follows a form post — then its three colours move
+   or in the `StatusNote` that follows a form post — then its three colours move
    from Material UI's green and red to Tailwind's. Three of the six are at or
    near the threshold of visibility (a perceptual distance, ΔE, of 2.7, 3.2 and
    3.3, where roughly 2.3 is the point at which a difference can be seen at all)
@@ -105,6 +109,26 @@ moves is either listed as a deliberate exception below or is a bug.
    the same unification as scenario 6, approached from the other side: the two
    buttons that darken on hover were reaching for two different dark reds, and
    this is the one that `AddDiscsPage` was measured against.
+10. When the "it worked" or "it failed" box is shown on the disc-entry page,
+    then its text is 0.875rem rather than the 1rem it had been. Nothing else
+    about the box changes. The two boxes on that page and the two the shared
+    component draws elsewhere had agreed on padding, radius and border width and
+    disagreed on font size — the page's own box simply never set one, so it
+    inherited 1rem while the shared one asked for `font.sizeSm`. Drawing all four
+    from one component means one of the two values has to go; the smaller was
+    kept, because it is what the component already used on the two pages that
+    had been drawing from it. See the gap "The success box is no longer built
+    twice" below for what the unification actually removed.
+11. When a sign-in field fails validation, or the whole sign-in fails, then the
+    red of that message darkens from `red500` to `red600` (ΔE 10.7), matching the
+    failure line on the owner link page. The two pages had always disagreed about
+    this — one used `red500`, the other `red600` — for what is the same thing: a
+    red error sentence on a white page. Nothing before this named the role, so
+    nothing made the disagreement visible. `color.dangerStrong` is the name for
+    it, and it is `red600`, so the sign-in page moves rather than the token. At
+    ΔE 10.7 this sits between the delete-button hover of scenario 6 and the
+    success border of scenario 5; it is the only exception in this list that
+    exists to make two pages agree rather than to fold one palette into another.
 
 ### How these are measured
 
@@ -125,7 +149,7 @@ just above it — in principle visible on a large flat area, in practice a
 one-pixel border. Both are listed because rule 1 requires every changed value to
 be listed, and an exception that is only recorded when it is large is not a rule.
 
-Scenarios 2 to 9 are the price of having one palette rather than three, and were
+Scenarios 2 to 11 are the price of having one palette rather than three, and were
 accepted deliberately rather than overlooked. Each is a shade change of the same
 hue, not a redesign. The alternative — keeping the Material UI values — was
 considered and rejected, because it leaves the app with two blues and three reds
@@ -292,18 +316,19 @@ same Tailwind class means two different things depending on which side of that
 line it is on: `text-gray-300` is a faint grey on white in most of the app, but
 it is the _normal_ text colour inside the dark table.
 
-| Token              | Palette   | Role                             |
-| ------------------ | --------- | -------------------------------- |
-| `dark.surface`     | `dark900` | table header background          |
-| `dark.cell`        | `dark800` | header cell                      |
-| `dark.cellHover`   | `dark700` | header cell, hovered             |
-| `dark.cellSorted`  | `dark600` | header cell of the sorted column |
-| `dark.rowAlt`      | `dark500` | every second body row            |
-| `dark.headingText` | `white`   | column heading text              |
-| `dark.bodyText`    | `dark200` | table body text                  |
-| `dark.text`        | `gray300` | normal text on the dark surface  |
-| `dark.textHover`   | `white`   | that text, hovered               |
-| `dark.border`      | `gray300` | the cancel button's outline      |
+| Token              | Palette   | Role                              |
+| ------------------ | --------- | --------------------------------- |
+| `dark.surface`     | `dark900` | table header background           |
+| `dark.cell`        | `dark800` | header cell                       |
+| `dark.cellHover`   | `dark700` | header cell, hovered              |
+| `dark.cellSorted`  | `dark600` | header cell of the sorted column  |
+| `dark.rowAlt`      | `dark500` | every second body row             |
+| `dark.headingText` | `white`   | column heading text               |
+| `dark.bodyText`    | `dark200` | table body text                   |
+| `dark.text`        | `gray300` | normal text on the dark surface   |
+| `dark.textHover`   | `white`   | that text, hovered                |
+| `dark.border`      | `gray300` | the cancel button's outline       |
+| `dark.dangerText`  | `red300`  | an error line on the dark surface |
 
 A new `icon` group. The disc table's row actions are colour-coded so an admin can
 hit the right one at a glance on a phone; the hue is the label, which makes these
@@ -331,8 +356,9 @@ Material UI literals, and the success one was copied character for character int
 both `ui/SuccessNote.tsx` and `features/discs/submission/AddDiscsPage.tsx`. They
 are now `color.successSurface` / `successBorder` / `successText` and
 `color.dangerSurface` / `dangerBorder` / `dangerText`, so the two copies of the
-_colours_ became one name. The two copies of the _box_ did not — see the gap
-below.
+_colours_ became one name. The two copies of the _box_ followed later, into
+`ui/StatusNote.tsx`; scenario 10 is the one metric that had to move to get them
+there.
 
 They were measured before being moved, rather than swapped on the assumption that
 "close enough" is close enough. Perceptual distance (ΔE) against the nearest
@@ -414,8 +440,8 @@ and is left in place rather than removed, since removing it is not this work.
 
 ### Layer 3 — the same names in Tailwind: `tailwind.config.ts`
 
-`theme.extend.colors` gains one alias per semantic token, so the 37 components
-still on Tailwind can write `text-fg-muted` instead of `text-gray-500`. This is
+`theme.extend.colors` gains one alias per semantic token, so a component still on
+Tailwind can write `text-fg-muted` instead of `text-gray-500`. This is
 the half of the work that pays off during the migration rather than after it: a
 page written in semantic classes converts to StyleX by renaming `text-fg-muted`
 to `color.textMuted`, with no judgement call about what the grey was for.
@@ -430,8 +456,8 @@ right thing for a Tailwind page to write and renames to `space.md` just as
 mechanically.
 
 `extend` is used rather than replacing `theme.colors`, so Tailwind's stock
-palette stays available. Replacing it would force every page onto the aliases in
-one change, breaking all 37 at once. The aliases are the intended path; nothing
+palette stays available. Replacing it would have forced every page onto the
+aliases in one change, breaking all thirty-seven at once. The aliases are the intended path; nothing
 mechanically blocks the old one, and review is what keeps new code on it.
 
 The alias names are chosen so each Tailwind class maps to exactly one token. The
@@ -511,6 +537,8 @@ None. No route, loader or action is touched.
 | `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                   |
 | `app/features/discs/list/DiscTable.tsx`     | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind. |
 | `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                  |
+| `app/ui/StatusNote.tsx`                     | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                  |
+| the three inline forms                      | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, the only components with no `className` left at all.                 |
 
 ## Rules & constraints
 
@@ -536,26 +564,42 @@ None. No route, loader or action is touched.
    `createTheme` would let a second theme override the same variables later; that
    is deliberately out of scope, and the token names are chosen so it stays
    possible (`color.surface`, not `color.white`).
-5. **Tailwind stays installed and stays working.** One component's row-action
-   icons moved off it here. 39 files still carry Tailwind classes — `DiscTable`
-   among them, because only its icons and its dark surface moved, not its
-   layout. Deleting Tailwind is only possible after the last of them has moved,
-   which is a long tail of separate changes.
-6. **`app.css`'s element rules stay.** The `p`, `a` and `body` rules are ambient
+5. **Tailwind stays installed and stays working.** 50 files still carry Tailwind
+   classes — `DiscTable` among them, because its icons and its dark surface
+   moved but its layout did not. Only five of those files still take a _colour_
+   from Tailwind's stock palette; the rest have either converted or never used
+   one. Deleting Tailwind is only possible after the last of them has moved, and
+   that is mostly a layout job now rather than a colour one.
+6. **A light control on the dark surface keeps the light vocabulary.** The date
+   field inside the inline forms is a white input sitting on the dark table, and
+   its border is `color.border` while the cancel button beside it uses
+   `dark.border`. Both are `#d1d5db` today, which makes this look like an
+   inconsistency; it is not. The rule is that a token follows the surface the
+   element is painted on, not the surface it happens to sit near, so that the two
+   move apart correctly when either palette changes. The forms carry a comment
+   saying so, because the next reader will otherwise assume one of them is a
+   mistake.
+7. **`app.css`'s element rules stay.** The `p`, `a` and `body` rules are ambient
    styling that StyleX components cannot see and cannot override without
    specificity tricks. They are left alone here and recorded as a gap below.
-7. **The two copies of the palette must agree, and so must the two spellings
+8. **The two copies of the palette must agree, and so must the two spellings
    of a token.** `palette.stylex.ts` and `tailwind.config.ts` hold the same hex
    values, and the tests described in "Data" are the only thing that notices when
    they stop agreeing: one compares the two palettes, the other checks that each
    Tailwind alias points at the same palette entry as the token whose class-name
    spelling it is. Adding a colour means adding it in both places; the test
    failing is the reminder, not a review comment.
-8. **Verification is by eye, not by test.** There is no visual regression test in
+9. **Verification is by eye, not by test.** There is no visual regression test in
    this project, so "nothing moved" is checked by loading the affected pages.
-   The pages worth checking are the disc list (the dark table and its inline
-   forms), the owner link page, sign-in, add discs, the notify forms and the
-   admin menu on a phone width.
+   The pages worth checking are the disc list with each of the four inline forms
+   opened on the dark table (return, disposal, course, retrieval), the owner link
+   page, the retrieval list, sign-in, add discs with both its status boxes shown,
+   the notify forms and the admin menu on a phone width. Every conversion so far
+   has been argued from the compiled stylesheet — each token proven to emit the
+   hex the class it replaced emitted — which is strong evidence about colour and
+   no evidence at all about layout. The two things that most want a human eye are
+   the inline forms' line height and the date field's border, because those are
+   the two places where something other than a colour was touched.
 
 ## Edge cases & known gaps
 
@@ -567,10 +611,10 @@ None. No route, loader or action is touched.
   size.
 - **`text-gray-300` means two different things.** On the light pages it is a faint
   grey; inside the dark table and the inline forms that open in it, it is the
-  normal text colour. The `dark.text` token separates them, but until those
-  components are converted off Tailwind the class itself still carries both
-  meanings, and a careless find-and-replace across the repo would break one of
-  them.
+  normal text colour. The `dark.text` token separates them, and the three inline
+  forms have since been converted, so the only place the raw class still carries
+  the dark meaning is `DiscTable` itself. It is narrower than it was, not gone: a
+  careless find-and-replace across the repo would still break that one file.
 - **The disc table's dark surface is an island.** Five greys that match nothing
   else in the app, for one component. Naming them does not make them part of a
   system — it only makes them visible. Whether the table should be dark at all is
@@ -581,9 +625,11 @@ None. No route, loader or action is touched.
   paragraph without that margin has to override it. Left as is.
 - **Tailwind's stock palette is still reachable.** `theme.extend` adds the
   semantic aliases without removing `gray-500` and the rest, so a new page can
-  still write `text-gray-500` and nothing will complain. Until the 37 components
-  are converted most of them do exactly that. Replacing `theme.colors` outright
-  would close the hole, at the cost of breaking all 37 in one change.
+  still write `text-gray-500` and nothing will complain. Five files still do
+  exactly that: `DiscTable`, `EditDiscPage`, `EditMessageTemplatePage`,
+  `NotifyForm` and `BinFullForm`. Replacing `theme.colors` outright would close
+  the hole, and the cost of doing so is now five files rather than the
+  thirty-seven it would have been when the aliases were written.
 - **The palette is duplicated in two files.** `palette.stylex.ts` and
   `tailwind.config.ts` each hold the hex values, because StyleX's hashed variable
   names and its static-only `defineVars` rule leave no way to share one source
@@ -612,38 +658,75 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Sixteen of the seventy-nine tokens are not used by anything yet, and the
-  Tailwind aliases are used by nothing at all.** That is the shape of the job —
-  the vocabulary has to exist before a page can be converted to it — but it
-  should be stated plainly rather than left to be discovered:
+- **Six of the eighty tokens have no caller, and the Tailwind aliases have
+  fifty-three.** Both numbers were sixteen and zero when the token set was first
+  written; four conversions since then are what moved them. The point of
+  recording it is that the remainder is now small enough to be a list rather
+  than a shape:
 
-  | Group                | Used                                 | Unused                                                                                                       |
-  | -------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-  | `color` (34)         | 26                                   | `textBody`, `textSubtle`, `accentBorderSubtle`, `link`, `dangerStrong`, `warning`, `success`, `successHover` |
-  | `dark` (10)          | 7, all by `DiscTable`                | `text`, `textHover`, `border` — they belong to the inline forms, which are still Tailwind                    |
-  | `icon` (15)          | 15, all by `DiscTable`'s row actions | —                                                                                                            |
-  | `space` (7)          | 6                                    | `xxl`                                                                                                        |
-  | `font` (9)           | 6                                    | `sizeXs`, `sizeLg`, `weightRegular`                                                                          |
-  | `size` (1)           | 1                                    | —                                                                                                            |
-  | `radius` (3)         | 2                                    | `lg`                                                                                                         |
-  | every Tailwind alias | 0                                    | all of them                                                                                                  |
+  | Group        | Used | Unused                                                         |
+  | ------------ | ---- | -------------------------------------------------------------- |
+  | `color` (34) | 33   | `textSubtle`                                                   |
+  | `dark` (11)  | 10   | `textHover` — no inline form has a hover-text state to give it |
+  | `icon` (15)  | 15   | —                                                              |
+  | `space` (7)  | 6    | `xxl`                                                          |
+  | `font` (9)   | 7    | `sizeLg`, `weightRegular`                                      |
+  | `size` (1)   | 1    | —                                                              |
+  | `radius` (3) | 2    | `lg`                                                           |
 
-  `color.success` and `color.successHover` are unused because the save buttons
-  they were named for are still `bg-green-700 hover:bg-green-800`; only the
-  status box's `success*` tokens found a caller.
+  Twelve distinct Tailwind aliases are in use across 53 occurrences, the most
+  common being `text-fg-muted`, `text-fg-secondary` and `text-fg-body`. That
+  matters because the aliases were written before anything used them, and the
+  argument for writing them — that a later conversion becomes a rename rather
+  than a re-derivation — was untested until the pages below were converted. It
+  largely held: of 37 class occurrences on the owner-facing pages, 36 were
+  mechanical renames. The one that was not is scenario 11.
 
   Each unused token exists because a page that is still on Tailwind will need it
   when it converts. Until then they are a promise rather than a fact.
 
-- **The success box is still built twice.** `ui/SuccessNote.tsx` and
-  `features/discs/submission/AddDiscsPage.tsx` now draw it from the same three
-  tokens, but they still restate the same padding, radius, border width and font
-  size around them, and `AddDiscsPage`'s error box has no `ui/` equivalent at
-  all. The colours were the part this work could fix; the missing abstraction is
-  a `StatusNote` taking a success/error variant, which `SuccessNote`'s two
-  existing callers (`EditDiscPage`, `EditMessageTemplatePage`) would also use.
-  That is a component refactor, not a token change, and belongs in its own piece
-  of work.
+- **The success box is no longer built twice, but one caller stayed behind.**
+  `ui/StatusNote.tsx` now draws both outcomes from one component, taking a
+  success/error variant, and `ui/SuccessNote.tsx` was deleted rather than kept as
+  a wrapper — a second name for "StatusNote with variant=success" would have
+  rebuilt the duplication the component exists to remove. Its two callers
+  (`EditDiscPage`, `EditMessageTemplatePage`) and both of `AddDiscsPage`'s boxes
+  moved. What did not move: `EditDiscPage`'s form-level error is still a bare red
+  paragraph rather than a box, and converting it would be a visible change rather
+  than a refactor, so it was left. The two edit pages also still repeat the same
+  `{!isEdited && !isSaving && …}` guard around their note.
+- **`StatusNote` has no test, and cannot have one yet.** Vitest runs here in the
+  `node` environment over `app/**/*.test.ts`, with no jsdom (a browser-like
+  document implemented in Node) and no testing-library installed. A render test
+  would mean changing `vitest.config.ts` and adding dependencies, which is its own
+  piece of work. Every component in `app/ui/` is in the same position; this is the
+  first one whose absence is worth writing down, because it is the first that
+  carries a behavioural rule — which variant draws which triad.
+- **The three inline forms are the same form three times.** `DateAndMethodForm`,
+  `CourseForm` and `RetrievalMethodForm` now draw from the tokens, and the
+  conversion made the duplication more visible rather than less: nine style keys
+  (`form`, `title`, `legend`, `options`, `option`, `actions`, `saveButton`,
+  `cancelButton`, `error`) are repeated in all three, eight of them character for
+  character. They were deliberately not merged, for the same reason the status box
+  was not merged in the first round — a component refactor inside a conversion
+  makes the "no pixel moved" claim unreadable. The extraction is not purely
+  mechanical either: the three differ in real ways (one is generic over its method
+  value and carries a date field and a clear button, one wraps its options and has
+  no date, one cannot be submitted unanswered), so it has design decisions in it.
+  Its natural home is a new primitive in `app/ui/`.
+- **The phone-number block is duplicated between two pages.** It is byte-identical
+  in `OwnerResponsesPage.tsx` and `RetrievalListPage.tsx`, and converting those
+  pages meant editing both in lockstep — which is what a shared primitive would
+  have prevented. It will want the same edit again the next time the palette
+  moves.
+- **The token set names type sizes but not leading.** Tailwind's `text-xs` sets
+  `line-height: 1rem` as well as a font size; `font.sizeXs` sets only the size, and
+  `app.css` has no global `line-height` to fall back on, so converting a small
+  label to the token alone would silently drop it onto the browser's default
+  leading. The three inline forms therefore write `lineHeight: '1rem'` beside each
+  `font.sizeXs`, with a comment saying why. That is a literal in a component, which
+  the rules below otherwise forbid, and it is the honest sign that the scale is
+  half a scale. A `leading` group would fix it properly.
 - **Three light greys sit on the dark table and are deliberately not unified.**
   The column headings are `#ffffff`, the body text `#dddddd`, and the row icons
   and inline forms Tailwind's `gray300` (`#d1d5db`). The last two are three
