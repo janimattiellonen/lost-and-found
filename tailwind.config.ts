@@ -152,6 +152,7 @@ export default {
           text: palette.gray300,
           'text-hover': palette.white,
           border: palette.gray300,
+          'danger-text': palette.red300,
         },
         // The disc table's row actions are colour-coded so an admin can hit the
         // right one at a glance, which makes the hue part of the label.
