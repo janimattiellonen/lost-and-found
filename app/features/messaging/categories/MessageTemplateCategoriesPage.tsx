@@ -28,7 +28,7 @@ export default function MessageTemplateCategoriesPage({ categories, error }: Pro
     <div>
       <H2 className="mt-8 mb-2">Viestipohjien kategoriat</H2>
 
-      <p className="mb-6 max-w-2xl text-sm text-gray-600">
+      <p className="mb-6 max-w-2xl text-sm text-fg-body">
         Kategoria rajaa, mitkä viestipohjat ovat tarjolla missäkin tilanteessa. Viestipohja saa olla myös ilman
         kategoriaa. Kategorian poistaminen ei poista sen viestipohjia.
       </p>
@@ -42,7 +42,7 @@ export default function MessageTemplateCategoriesPage({ categories, error }: Pro
               it beside the row it just became. */}
           <TextField key={categories.length} id="new-category" name="name" fullWidth />
 
-          {error && error.categoryId === null && <p className="text-red-500 text-xs italic">{error.message}</p>}
+          {error && error.categoryId === null && <p className="text-danger text-xs italic">{error.message}</p>}
 
           <div className="mt-4 flex justify-end">
             <Button name="action" value="create" variant="contained" type="submit">
@@ -52,7 +52,7 @@ export default function MessageTemplateCategoriesPage({ categories, error }: Pro
         </Form>
       </Paper>
 
-      {categories.length === 0 && <p className="text-gray-500">Ei kategorioita.</p>}
+      {categories.length === 0 && <p className="text-fg-muted">Ei kategorioita.</p>}
 
       <Wrapper>
         {categories.map((category) => (
@@ -74,7 +74,7 @@ function CategoryRow({ category, error }: { category: MessageTemplateCategoryDTO
         <Label htmlFor={`category-${category.id}`}>Nimi</Label>
         <TextField id={`category-${category.id}`} name="name" defaultValue={category.name} fullWidth />
 
-        {rowError && <p className="text-red-500 text-xs italic">{rowError}</p>}
+        {rowError && <p className="text-danger text-xs italic">{rowError}</p>}
 
         <div className="mt-4 flex justify-end gap-4">
           <Button name="action" value="rename" type="submit">

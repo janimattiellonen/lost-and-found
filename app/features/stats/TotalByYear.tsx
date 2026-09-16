@@ -57,10 +57,10 @@ export default function TotalByYear({ title, datedDiscs, getMethodCounts }: Prop
 
       <MethodBreakdown counts={getMethodCounts(filtered.discs)} />
 
-      {earliest && <p className="mt-1 mb-1 ml-4 text-sm text-gray-500">Tiedot alkaen {format(earliest, 'd.M.y')}</p>}
+      {earliest && <p className="mt-1 mb-1 ml-4 text-sm text-fg-muted">Tiedot alkaen {format(earliest, 'd.M.y')}</p>}
 
       {filtered.undated > 0 && (
-        <p className="mt-1 mb-4 ml-4 text-sm text-gray-500">
+        <p className="mt-1 mb-4 ml-4 text-sm text-fg-muted">
           Päivämäärä puuttuu {filtered.undated} kiekolta – ne eivät näy vuosivalinnoissa.
         </p>
       )}
