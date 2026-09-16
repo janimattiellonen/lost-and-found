@@ -2,6 +2,10 @@ import { useState, type FormEvent, type JSX } from 'react';
 
 import { format } from 'date-fns';
 
+import * as stylex from '@stylexjs/stylex';
+
+import { color, dark, font, radius, space } from '~/styles/tokens.stylex';
+
 /** One radio option: the value that gets persisted, and its Finnish label. */
 export type MethodOption<V extends number = number> = { value: V; label: string };
 
@@ -58,16 +62,16 @@ export default function DateAndMethodForm<V extends number>({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
+    <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>
       {/* The form opens inside the dark disc table, so its text has to be
-          light: the gray-600 of a form on a white page all but disappeared
-          against the row behind it. */}
-      <p className="basis-full text-xs text-gray-300">
+          light: the muted grey of a form on a white page all but disappeared
+          against the row behind it. That is what `dark.text` names. */}
+      <p {...stylex.props(styles.title)}>
         {title}: <b>{discName}</b>
       </p>
 
       <div>
-        <label htmlFor={`${idPrefix}-date`} className="block text-xs font-bold text-gray-300 mb-1">
+        <label htmlFor={`${idPrefix}-date`} {...stylex.props(styles.label)}>
           {dateLabel}
         </label>
         <input
@@ -76,15 +80,15 @@ export default function DateAndMethodForm<V extends number>({
           required
           value={date}
           onChange={(event) => setDate(event.currentTarget.value)}
-          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900"
+          {...stylex.props(styles.dateInput)}
         />
       </div>
 
       <fieldset>
-        <legend className="text-xs font-bold text-gray-300 mb-1">{methodLabel}</legend>
-        <div className="flex items-center gap-4">
+        <legend {...stylex.props(styles.legend)}>{methodLabel}</legend>
+        <div {...stylex.props(styles.options)}>
           {options.map((option) => (
-            <label key={option.value} className="inline-flex items-center gap-1">
+            <label key={option.value} {...stylex.props(styles.option)}>
               <input
                 type="radio"
                 name={`${idPrefix}-method`}
@@ -100,28 +104,103 @@ export default function DateAndMethodForm<V extends number>({
             type="button"
             disabled={method === null}
             onClick={() => setMethod(null)}
-            className="text-xs underline text-gray-300 disabled:opacity-40 disabled:no-underline"
+            {...stylex.props(styles.clearButton)}
           >
             Tyhjennä
           </button>
         </div>
       </fieldset>
 
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="bg-green-700 hover:bg-green-800 disabled:opacity-40 text-white rounded px-3 py-1"
-        >
+      <div {...stylex.props(styles.actions)}>
+        <button type="submit" disabled={isSaving} {...stylex.props(styles.saveButton)}>
           {isSaving ? 'Tallennetaan...' : submitLabel}
         </button>
 
-        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-white/10 rounded px-3 py-1">
+        <button type="button" onClick={onCancel} {...stylex.props(styles.cancelButton)}>
           Peruuta
         </button>
       </div>
 
-      {error && <p className="basis-full text-red-300">{error}</p>}
+      {error && <p {...stylex.props(styles.error)}>{error}</p>}
     </form>
   );
 }
+
+const styles = stylex.create({
+  // Tailwind's smallest type step sets a line height as well as a size, and the
+  // token set has a name only for the size, so every `font.sizeXs` here is
+  // followed by the height that came with it. Dropping it would leave the text
+  // on the browser's default leading, which is not the same box.
+  form: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'flex-end',
+    gap: space.lg,
+    paddingBlock: space.sm,
+  },
+  title: {
+    flexBasis: '100%',
+    fontSize: font.sizeXs,
+    lineHeight: '1rem',
+    color: dark.text,
+  },
+  label: {
+    display: 'block',
+    marginBottom: space.xs,
+    fontSize: font.sizeXs,
+    lineHeight: '1rem',
+    fontWeight: font.weightBold,
+    color: dark.text,
+  },
+  // A white field sitting on the dark island, so its border is the light
+  // surface's `color.border` rather than the dark group's — the same grey, but
+  // the role that explains why it is there.
+  dateInput: {
+    paddingBlock: space.xs,
+    paddingInline: space.sm,
+    color: color.textPrimary,
+    backgroundColor: color.surface,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: color.border,
+    borderRadius: radius.sm,
+  },
+  legend: {
+    marginBottom: space.xs,
+    fontSize: font.sizeXs,
+    lineHeight: '1rem',
+    fontWeight: font.weightBold,
+    color: dark.text,
+  },
+  options: { display: 'flex', alignItems: 'center', gap: space.md },
+  option: { display: 'inline-flex', alignItems: 'center', gap: space.xs },
+  clearButton: {
+    fontSize: font.sizeXs,
+    lineHeight: '1rem',
+    color: dark.text,
+    textDecorationLine: { default: 'underline', ':disabled': 'none' },
+    opacity: { default: 1, ':disabled': 0.4 },
+  },
+  actions: { display: 'flex', alignItems: 'center', gap: space.sm },
+  saveButton: {
+    paddingBlock: space.xs,
+    paddingInline: space.smd,
+    color: color.onAccent,
+    backgroundColor: { default: color.success, ':hover': color.successHover },
+    borderRadius: radius.sm,
+    opacity: { default: 1, ':disabled': 0.4 },
+  },
+  // The cancel button's wash is neutral translucency and stays a literal: it is
+  // white over whatever row is behind it, and nothing about it drifts when the
+  // palette does.
+  cancelButton: {
+    paddingBlock: space.xs,
+    paddingInline: space.smd,
+    backgroundColor: { default: 'transparent', ':hover': 'rgba(255,255,255,0.1)' },
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: dark.border,
+    borderRadius: radius.sm,
+  },
+  error: { flexBasis: '100%', color: dark.dangerText },
+});

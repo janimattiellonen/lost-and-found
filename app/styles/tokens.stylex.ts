@@ -81,6 +81,12 @@ export const dark = stylex.defineVars({
   text: palette.gray300,
   textHover: palette.white,
   border: palette.gray300,
+  // An inline form's error line. It shares `red300` with `icon.deleteHover`,
+  // which is the whole reason it needs a name of its own: a sentence the admin
+  // has to read and a delete icon under the pointer are two unrelated roles
+  // that happen to have landed on one shade, and reaching for the icon's name
+  // here would make the next palette change move both together.
+  dangerText: palette.red300,
 });
 
 // The disc table's row actions are colour-coded so an admin can hit the right
