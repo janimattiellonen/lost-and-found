@@ -40,6 +40,20 @@ The marker records only that a review happened, not that it was any good — it 
 be written without running anything. It exists to turn "forgot" into "chose to
 skip", which is as far as a file can go.
 
+### While the design system is in flight
+
+Design system work does not go to `master`. It goes to `design-system`, a
+temporary integration branch, so the conversion lands in pieces that can each be
+reviewed on their own without master carrying a half-converted app. Branch off
+`design-system`, target your PR at it, and review against it —
+`/code-review design-system`. Against `master` the review re-reports every slice
+that has already landed, which is how a real finding gets lost in a list of
+things already dealt with.
+
+Delete this section when `design-system` merges. An instruction that outlives its
+branch is the same failure the review just caught in `tokens.stylex.ts`: a
+comment pointing confidently at something that has moved.
+
 ## Before you say it is done
 
 - `npm test`
