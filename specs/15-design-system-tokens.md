@@ -461,6 +461,7 @@ about which token it means.
 | `bg-accent`, `bg-accent-hover`                         | `color.accent`, `color.accentHover`   |
 | `text-danger`, `text-danger-strong`                    | `color.danger`, `color.dangerStrong`  |
 | `text-warning`                                         | `color.warning`                       |
+| `text-caution`                                         | `color.caution`                       |
 | `bg-success`, `bg-success-hover`                       | `color.success`, `color.successHover` |
 | `bg-dark-surface`, `bg-dark-cell`, `text-dark-text`, … | the `dark` group                      |
 | `text-icon-delete`, `text-icon-delete-hover`, …        | the `icon` group                      |
@@ -485,6 +486,18 @@ two sets disagree. It compares source text instead of importing the modules,
 because importing `palette.stylex.ts` from a test yields `var(--x1jb24h0)`, not
 `#6b7280`.
 
+Agreeing on the values is not enough on its own, because an alias can hold a
+value both files agree on and still name the wrong one — `border-line-success`
+painted with the pale `green50` rather than `green200` is a correct hex in the
+wrong place. So a second test reads the aliases and the tokens the same way and
+checks each alias against the palette entry its token holds. The table above is
+what it checks against, written out once in the test because the two spellings
+are not mechanically related for the `color` group (`accentSurface` is
+`surface.accent`, with the words the other way round); for `dark` and `icon`
+they are kebab-case and camel-case of the same name, so those are derived. It
+also fails when an alias exists that the table does not mention, or a token that
+no alias names, which is what stops the table falling behind either file.
+
 ## Routes & entry points
 
 None. No route, loader or action is touched.
@@ -497,7 +510,7 @@ None. No route, loader or action is touched.
 | `tailwind.config.ts`                        | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does.   |
 | `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                   |
 | `app/features/discs/list/DiscTable.tsx`     | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind. |
-| `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing. Reads both files as text.                                                                |
+| `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                  |
 
 ## Rules & constraints
 
@@ -531,11 +544,13 @@ None. No route, loader or action is touched.
 6. **`app.css`'s element rules stay.** The `p`, `a` and `body` rules are ambient
    styling that StyleX components cannot see and cannot override without
    specificity tricks. They are left alone here and recorded as a gap below.
-7. **The two copies of the palette must agree.** `palette.stylex.ts` and
-   `tailwind.config.ts` hold the same hex values, and the unit test described in
-   "Data" is the only thing that notices when they stop agreeing. Adding a colour
-   means adding it in both places; the test failing is the reminder, not a
-   review comment.
+7. **The two copies of the palette must agree, and so must the two spellings
+   of a token.** `palette.stylex.ts` and `tailwind.config.ts` hold the same hex
+   values, and the tests described in "Data" are the only thing that notices when
+   they stop agreeing: one compares the two palettes, the other checks that each
+   Tailwind alias points at the same palette entry as the token whose class-name
+   spelling it is. Adding a colour means adding it in both places; the test
+   failing is the reminder, not a review comment.
 8. **Verification is by eye, not by test.** There is no visual regression test in
    this project, so "nothing moved" is checked by loading the affected pages.
    The pages worth checking are the disc list (the dark table and its inline
@@ -572,9 +587,11 @@ None. No route, loader or action is touched.
 - **The palette is duplicated in two files.** `palette.stylex.ts` and
   `tailwind.config.ts` each hold the hex values, because StyleX's hashed variable
   names and its static-only `defineVars` rule leave no way to share one source
-  (both attempts are recorded under "Data"). A text-comparing unit test is the
-  guard. It catches a value that changed in one file and not the other; it does
-  not catch a colour someone decided not to add to either.
+  (both attempts are recorded under "Data"). Text-comparing unit tests are the
+  guard: one over the palette values, one over the aliases that name them. They
+  catch a value that changed in one file and not the other, and an alias that
+  drifted onto the wrong palette entry; they do not catch a colour someone
+  decided not to add to either.
 - **The three changed values cannot be un-changed selectively later.** Once
   `color.accent` is `blue600`, the ten components using it have moved together;
   the same goes for `accentHover` and `danger`. Reverting one means reverting

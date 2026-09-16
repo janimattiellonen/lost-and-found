@@ -8,7 +8,7 @@ import { palette } from './palette.stylex';
 //
 // Every value is the colour the running site already showed before the token
 // existed, so converting a component from Tailwind classes to these tokens does
-// not move any pixels. The seven deliberate exceptions are listed as numbered
+// not move any pixels. The eight deliberate exceptions are listed as numbered
 // scenarios under "User-facing behaviour" in specs/15-design-system-tokens.md.
 export const color = stylex.defineVars({
   textPrimary: palette.gray900,

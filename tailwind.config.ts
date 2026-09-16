@@ -21,8 +21,8 @@ import type { Config } from 'tailwindcss';
 // `app/styles/palette.test.ts` fails the build when the copies drift apart.
 //
 // `extend` rather than a replacement for `theme.colors`: the stock palette stays
-// reachable, because removing it would move all 37 unconverted components at
-// once. See specs/15-design-system-tokens.md.
+// reachable, because removing it would move all 37 components that still carry
+// Tailwind classes at once — 36 of them entirely, and `DiscTable`'s layout. See specs/15-design-system-tokens.md.
 const palette = {
   gray100: '#f3f4f6',
   gray200: '#e5e7eb',
