@@ -37,30 +37,30 @@ export default function SignInPage({ user, errors }: Props): JSX.Element {
           <Label htmlFor="email">Sähköpostiosoite</Label>
           <input
             id="email"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-fg-secondary leading-tight focus:outline-none focus:shadow-outline"
             type="email"
             placeholder="Sähköpostiosoite"
             name="email"
           />
 
-          {errors?.email ? <p className="text-red-500 text-xs italic">{errors.email}</p> : null}
+          {errors?.email ? <p className="text-danger text-xs italic">{errors.email}</p> : null}
         </div>
         <div className="mb-2">
           <Label htmlFor="password">Salasana</Label>
           <input
             id="password"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-fg-secondary leading-tight focus:outline-none focus:shadow-outline"
             type="password"
             name="password"
             placeholder="Salasana"
           />
 
-          {errors?.password ? <p className="text-red-500 text-xs italic">{errors.password}</p> : null}
+          {errors?.password ? <p className="text-danger text-xs italic">{errors.password}</p> : null}
         </div>
 
         <div className="mb-2">
           {errors?.invalidLogin ? (
-            <p className="text-red-500 text-xs italic">Virheellinen käyttäjätunnus tai salasana</p>
+            <p className="text-danger text-xs italic">Virheellinen käyttäjätunnus tai salasana</p>
           ) : null}
         </div>
 
