@@ -11,7 +11,7 @@ import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
 import H2 from '~/ui/H2';
 import Label from '~/ui/Label';
-import SuccessNote from '~/ui/SuccessNote';
+import StatusNote from '~/ui/StatusNote';
 import TextField from '~/ui/TextField';
 import Wrapper from '~/ui/Wrapper';
 
@@ -53,7 +53,9 @@ export default function EditMessageTemplatePage({
 
       <TemplateTokenHelp />
 
-      <SuccessNote className="mb-4">{!isEdited && !isSaving && notice}</SuccessNote>
+      <StatusNote variant="success" className="mb-4">
+        {!isEdited && !isSaving && notice}
+      </StatusNote>
 
       <Form
         method="post"
