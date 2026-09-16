@@ -136,7 +136,15 @@ const styles = stylex.create({
     paddingBlock: space.xs,
     paddingInline: space.smd,
     color: color.onAccent,
-    backgroundColor: { default: color.success, ':hover': color.successHover },
+    // `:disabled:hover` compiles to a higher priority than either `:hover`
+    // (3130) or `:disabled` (3092), which is what stops a button that cannot be
+    // pressed lighting up under the pointer. The two states sit on different
+    // properties here, so nothing forced this — see the spec's scenario 12.
+    backgroundColor: {
+      default: color.success,
+      ':hover': color.successHover,
+      ':disabled:hover': color.success,
+    },
     borderRadius: radius.sm,
     opacity: { default: 1, ':disabled': 0.4 },
   },

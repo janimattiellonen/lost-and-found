@@ -79,7 +79,7 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
                 <FormControlLabel key={c.slug} value={c.name} control={<Radio />} label={c.name} />
               ))}
             </RadioGroup>
-            {courseError && <p className="text-red-500 text-xs italic">{courseError}</p>}
+            {courseError && <p className="text-danger-strong text-xs italic">{courseError}</p>}
           </Wrapper>
         )}
 

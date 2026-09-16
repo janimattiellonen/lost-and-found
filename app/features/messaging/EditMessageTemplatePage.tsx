@@ -80,7 +80,7 @@ export default function EditMessageTemplatePage({
             }}
           />
 
-          {errors?.content && <p className="text-red-500 text-xs italic">{errors.content}</p>}
+          {errors?.content && <p className="text-danger-strong text-xs italic">{errors.content}</p>}
         </Wrapper>
 
         <TemplateCategorySelect categories={categories} selected={messageTemplate?.categoryId ?? null} />

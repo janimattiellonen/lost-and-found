@@ -42,7 +42,7 @@ export default function MessageTemplateCategoriesPage({ categories, error }: Pro
               it beside the row it just became. */}
           <TextField key={categories.length} id="new-category" name="name" fullWidth />
 
-          {error && error.categoryId === null && <p className="text-danger text-xs italic">{error.message}</p>}
+          {error && error.categoryId === null && <p className="text-danger-strong text-xs italic">{error.message}</p>}
 
           <div className="mt-4 flex justify-end">
             <Button name="action" value="create" variant="contained" type="submit">
@@ -74,7 +74,7 @@ function CategoryRow({ category, error }: { category: MessageTemplateCategoryDTO
         <Label htmlFor={`category-${category.id}`}>Nimi</Label>
         <TextField id={`category-${category.id}`} name="name" defaultValue={category.name} fullWidth />
 
-        {rowError && <p className="text-danger text-xs italic">{rowError}</p>}
+        {rowError && <p className="text-danger-strong text-xs italic">{rowError}</p>}
 
         <div className="mt-4 flex justify-end gap-4">
           <Button name="action" value="rename" type="submit">

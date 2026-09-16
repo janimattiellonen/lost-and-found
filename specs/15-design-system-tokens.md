@@ -55,8 +55,8 @@ moves is either listed as a deliberate exception below or is a bug.
 ## User-facing behaviour
 
 1. When any page is loaded after this work, then it looks exactly as it did
-   before — same colours, same spacing, same type sizes — with the ten
-   exceptions in scenarios 2 to 11.
+   before — same colours, same spacing, same type sizes — with the eleven
+   exceptions in scenarios 2 to 12.
 2. When a primary button, a focused text field, a checkbox or a radio is shown,
    then its blue changes from Material UI's `#1976d2` to Tailwind's `blue-600`
    (`#2563eb`), and its hover blue from `#1565c0` to `blue-700` (`#1d4ed8`).
@@ -119,16 +119,29 @@ moves is either listed as a deliberate exception below or is a bug.
     kept, because it is what the component already used on the two pages that
     had been drawing from it. See the gap "The success box is no longer built
     twice" below for what the unification actually removed.
-11. When a sign-in field fails validation, or the whole sign-in fails, then the
-    red of that message darkens from `red500` to `red600` (ΔE 10.7), matching the
-    failure line on the owner link page. The two pages had always disagreed about
-    this — one used `red500`, the other `red600` — for what is the same thing: a
-    red error sentence on a white page. Nothing before this named the role, so
-    nothing made the disagreement visible. `color.dangerStrong` is the name for
-    it, and it is `red600`, so the sign-in page moves rather than the token. At
-    ΔE 10.7 this sits between the delete-button hover of scenario 6 and the
-    success border of scenario 5; it is the only exception in this list that
-    exists to make two pages agree rather than to fold one palette into another.
+11. When any red error sentence is shown on a white page, then it is `red600`
+    rather than `red500` (ΔE 10.7). This is one role — a validation message or a
+    failure line, outside a box, on a light surface — and the app had been
+    spelling it two ways: `red600` on the owner link page, `red500` in seven
+    other places. `color.dangerStrong` is the name for the role and it is
+    `red600`, so the seven move rather than the token. They are sign-in's three
+    messages, `EditDiscPage`'s form error and its field error, the message
+    template pages' two content errors, and `NotifyForm`'s course error. At ΔE
+    10.7 this sits between the delete-button hover of scenario 6 and the success
+    border of scenario 5; it is the only exception in this list that exists to
+    make pages agree with each other rather than to fold one palette into
+    another.
+12. When the pointer is over a save button that cannot be pressed — an inline
+    form with nothing filled in, or one already saving — then it no longer
+    darkens. Tailwind applies `hover:` to a disabled button, so all three inline
+    forms had done this all along, and `RetrievalMethodForm` starts disabled,
+    which made it the default state rather than an edge case. The conversion
+    reproduced it faithfully and the rule below on StyleX's ordering is what it
+    should have applied instead: the button now spells out `':disabled:hover'`,
+    whose priority beats both. This is the only exception here that fixes a
+    behaviour rather than changing a colour, and it is a change of two frames of
+    animation on a control that does nothing — listed because rule 1 asks for
+    every visible change, not only the interesting ones.
 
 ### How these are measured
 
@@ -149,7 +162,7 @@ just above it — in principle visible on a large flat area, in practice a
 one-pixel border. Both are listed because rule 1 requires every changed value to
 be listed, and an exception that is only recorded when it is large is not a rule.
 
-Scenarios 2 to 11 are the price of having one palette rather than three, and were
+Scenarios 2 to 12 are the price of having one palette rather than three, and were
 accepted deliberately rather than overlooked. Each is a shade change of the same
 hue, not a redesign. The alternative — keeping the Material UI values — was
 considered and rejected, because it leaves the app with two blues and three reds
@@ -254,7 +267,7 @@ than a component quietly holding its own. Higher number is darker.
 (`#d1d5db`), which the row icons and the inline forms use. They differ by
 12, 8 and 2 per channel — ΔE 4.6, above the threshold of visibility — and both
 sit on this one table. They are kept separate because merging them would change
-what is on screen, which this work does not do outside the eight listed
+what is on screen, which this work does not do outside the eleven listed
 exceptions; the inconsistency is recorded as a gap instead.
 
 `dark500` was written `rgb(63, 60, 60)` in the component. It is spelled as hex
@@ -545,7 +558,11 @@ None. No route, loader or action is touched.
 1. **A token's value is whatever is on screen today.** Every value in the palette
    was read out of the running code or out of `tailwindcss/colors`, not chosen.
    Where a token's value differs from what the code shows today, it appears in
-   "User-facing behaviour" as a numbered exception. There are eight of them.
+   "User-facing behaviour" as a numbered exception. There are eleven of them,
+   scenarios 2 to 12 — the list starts at 2 because scenario 1 is the rule that
+   everything else stayed put — and keeping that count right is part of the rule: a review
+   of this spec has twice found the number stale while the list itself was
+   complete.
 2. **Components import `tokens`, never `palette`.** The palette exists so that
    `gray500` is written down once; a component asking for `palette.gray500`
    instead of `color.textMuted` has skipped the layer that carries the meaning,
@@ -566,7 +583,7 @@ None. No route, loader or action is touched.
    possible (`color.surface`, not `color.white`).
 5. **Tailwind stays installed and stays working.** 50 files still carry Tailwind
    classes — `DiscTable` among them, because its icons and its dark surface
-   moved but its layout did not. Only five of those files still take a _colour_
+   moved but its layout did not. Only four of those files still take a _colour_
    from Tailwind's stock palette; the rest have either converted or never used
    one. Deleting Tailwind is only possible after the last of them has moved, and
    that is mostly a layout job now rather than a colour one.
@@ -594,12 +611,15 @@ None. No route, loader or action is touched.
    The pages worth checking are the disc list with each of the four inline forms
    opened on the dark table (return, disposal, course, retrieval), the owner link
    page, the retrieval list, sign-in, add discs with both its status boxes shown,
-   the notify forms and the admin menu on a phone width. Every conversion so far
-   has been argued from the compiled stylesheet — each token proven to emit the
-   hex the class it replaced emitted — which is strong evidence about colour and
-   no evidence at all about layout. The two things that most want a human eye are
-   the inline forms' line height and the date field's border, because those are
-   the two places where something other than a colour was touched.
+   the notify forms and the admin menu on a phone width. What has been checked
+   without eyes is that each token emits the same hex as the class it replaced,
+   in some cases by compiling the stylesheet and reading the rules back. That is
+   strong evidence about colour and none at all about layout, and none of it is
+   recorded in this repository — it lived in the working notes of the people who
+   did the conversions, so a reader should treat this paragraph as a description
+   of what was intended rather than a receipt. The two things that most want a
+   human eye are the inline forms' line height and the date field's border,
+   because those are the two places where something other than a colour moved.
 
 ## Edge cases & known gaps
 
@@ -625,9 +645,12 @@ None. No route, loader or action is touched.
   paragraph without that margin has to override it. Left as is.
 - **Tailwind's stock palette is still reachable.** `theme.extend` adds the
   semantic aliases without removing `gray-500` and the rest, so a new page can
-  still write `text-gray-500` and nothing will complain. Five files still do
-  exactly that: `DiscTable`, `EditDiscPage`, `EditMessageTemplatePage`,
-  `NotifyForm` and `BinFullForm`. Replacing `theme.colors` outright would close
+  still write `text-gray-500` and nothing will complain. Four files still do
+  exactly that: `DiscTable` (`text-gray-400`), `EditDiscPage` (`text-gray-500`),
+  and `NotifyForm` and `BinFullForm`, which share a `text-black` and two greys.
+  A review of this spec found the list wrong once already — it had said five and
+  missed `SelectedDiscsActions`, whose amber notice has since been converted —
+  so the list is worth re-deriving rather than trusting. Replacing `theme.colors` outright would close
   the hole, and the cost of doing so is now five files rather than the
   thirty-seven it would have been when the aliases were written.
 - **The palette is duplicated in two files.** `palette.stylex.ts` and
@@ -679,8 +702,9 @@ None. No route, loader or action is touched.
   matters because the aliases were written before anything used them, and the
   argument for writing them — that a later conversion becomes a rename rather
   than a re-derivation — was untested until the pages below were converted. It
-  largely held: of 37 class occurrences on the owner-facing pages, 36 were
-  mechanical renames. The one that was not is scenario 11.
+  largely held: of 37 class occurrences on the owner-facing pages, 34 were
+  mechanical renames. The three that were not are sign-in's error lines, which
+  became scenario 11.
 
   Each unused token exists because a page that is still on Tailwind will need it
   when it converts. Until then they are a promise rather than a fact.
@@ -714,6 +738,12 @@ None. No route, loader or action is touched.
   value and carries a date field and a clear button, one wraps its options and has
   no date, one cannot be submitted unanswered), so it has design decisions in it.
   Its natural home is a new primitive in `app/ui/`.
+- **`StatusNote`'s `className` carries two styling systems at once.** Two callers
+  pass a Tailwind `mb-4`; `AddDiscsPage` passes a StyleX class name. Both are
+  strings of classes and both work, so this is not a defect — it is what a prop
+  shaped like an escape hatch looks like in an app that is half converted. It
+  will stop being ambiguous when the last caller is StyleX, and until then the
+  prop cannot be typed any more tightly than `string`.
 - **The phone-number block is duplicated between two pages.** It is byte-identical
   in `OwnerResponsesPage.tsx` and `RetrievalListPage.tsx`, and converting those
   pages meant editing both in lockstep — which is what a shared primitive would
@@ -742,7 +772,11 @@ None. No route, loader or action is touched.
   disabled-and-hovered utility — so the StyleX version spells out
   `':disabled:hover'`, which compiles to a higher priority (3222) than either.
   Any component converted after this one that has a disabled state needs the
-  same combination; the plain pair is not enough.
+  same combination; the plain pair is not enough. The three inline forms are the
+  first conversion to walk into it from the other side: their two states sat on
+  different properties, so nothing compiled wrong and the omission was invisible
+  until someone asked what a disabled button does under the pointer. Scenario 12
+  is the answer.
 - **A Tailwind class name written in a comment still ships.** Tailwind scans
   source files as plain text, so a comment naming the utility a conversion just
   removed puts the rule back into the stylesheet for a class nothing uses. It

@@ -8,7 +8,8 @@ import type { JSX, ReactNode } from 'react';
 type Variant = 'success' | 'error';
 
 type Props = {
-  variant: Variant;
+  /** Only read when there are children: an empty box has no outcome to colour. */
+  variant?: Variant;
   children: ReactNode;
   /** Applied to the live region, which is where a caller's spacing belongs. */
   className?: string;
@@ -23,7 +24,7 @@ type Props = {
  * page before the message lands and a screen reader announces it rather than
  * missing an element that appeared at the same moment as its text.
  */
-export default function StatusNote({ variant, children, className }: Props): JSX.Element {
+export default function StatusNote({ variant = 'success', children, className }: Props): JSX.Element {
   return (
     <div role="status" aria-live="polite" className={className}>
       {children && <p {...stylex.props(styles.note, styles[variant])}>{children}</p>}

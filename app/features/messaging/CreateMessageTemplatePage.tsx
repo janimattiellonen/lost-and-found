@@ -37,7 +37,7 @@ export default function CreateMessageTemplatePage({ categories, errors }: Props)
           <Label htmlFor="content">Sisältö</Label>
           <TextField name="content" id="content" multiline rows={9} fullWidth />
 
-          {errors?.content && <p className="text-danger text-xs italic">{errors.content}</p>}
+          {errors?.content && <p className="text-danger-strong text-xs italic">{errors.content}</p>}
         </Wrapper>
 
         <TemplateCategorySelect categories={categories} selected={null} />

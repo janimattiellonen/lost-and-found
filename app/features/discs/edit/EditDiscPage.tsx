@@ -56,7 +56,7 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
         {!isEdited && !isSaving && saved && 'Kiekon tiedot tallennettu.'}
       </StatusNote>
 
-      {errors?.form && <p className="mb-4 text-red-500 text-sm">{errors.form}</p>}
+      {errors?.form && <p className="mb-4 text-danger-strong text-sm">{errors.form}</p>}
 
       <Form
         method="post"
@@ -292,5 +292,5 @@ function MarkSection({ mark, isMarked, onToggle, errors }: MarkSectionProps): JS
 }
 
 function FieldError({ message }: { message?: string }): JSX.Element | null {
-  return message ? <p className="text-red-500 text-xs italic">{message}</p> : null;
+  return message ? <p className="text-danger-strong text-xs italic">{message}</p> : null;
 }

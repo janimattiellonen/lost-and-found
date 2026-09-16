@@ -374,10 +374,9 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
 
       {/* Announced politely so the outcome reaches a screen reader too. The gap
           above the box is applied only when there is a box, because an empty
-          live region has to keep taking no room at all, and the variant with
-          nothing to report is arbitrary: no box is drawn for it. */}
+          live region has to keep taking no room at all. */}
       <StatusNote
-        variant={feedback?.variant ?? 'success'}
+        variant={feedback?.variant}
         className={feedback ? stylex.props(styles.feedbackGap).className : undefined}
       >
         {feedback?.message}
