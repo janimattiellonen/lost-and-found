@@ -16,6 +16,7 @@ import { submitDiscs, toSubmission } from '~/features/discs/submission/submitDis
 import { DeleteIcon } from '~/ui/icons';
 import FormControlLabel from '~/ui/FormControlLabel';
 import { Radio, RadioGroup } from '~/ui/RadioGroup';
+import StatusNote from '~/ui/StatusNote';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
 
 type AddDiscsPageProps = {
@@ -144,6 +145,19 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
     setConfirmingDelete(null);
     setIsConfirmingClear(false);
   }
+
+  // What the save came to, if it has come to anything yet. One value rather than
+  // two branches in the markup, so the box is written once and only its colour
+  // depends on the outcome.
+  const feedback: { variant: 'success' | 'error'; message: string } | null =
+    submitState.status === 'success'
+      ? {
+          variant: 'success',
+          message: `Tallennettu. ${submitState.savedCount} ${submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.`,
+        }
+      : submitState.status === 'error'
+        ? { variant: 'error', message: submitState.message }
+        : null;
 
   return (
     <div {...stylex.props(styles.page)}>
@@ -358,18 +372,16 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
           ))}
       </div>
 
-      {/* Announced politely so the outcome reaches a screen reader too. */}
-      <div role="status" aria-live="polite">
-        {submitState.status === 'success' && (
-          <p {...stylex.props(styles.feedback, styles.success)}>
-            Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
-          </p>
-        )}
-
-        {submitState.status === 'error' && (
-          <p {...stylex.props(styles.feedback, styles.error)}>{submitState.message}</p>
-        )}
-      </div>
+      {/* Announced politely so the outcome reaches a screen reader too. The gap
+          above the box is applied only when there is a box, because an empty
+          live region has to keep taking no room at all, and the variant with
+          nothing to report is arbitrary: no box is drawn for it. */}
+      <StatusNote
+        variant={feedback?.variant ?? 'success'}
+        className={feedback ? stylex.props(styles.feedbackGap).className : undefined}
+      >
+        {feedback?.message}
+      </StatusNote>
     </div>
   );
 }
@@ -616,15 +628,9 @@ const styles = stylex.create({
     backgroundColor: { default: color.border, ':hover': color.border },
     cursor: 'not-allowed',
   },
-  feedback: {
-    padding: space.md,
-    marginTop: space.md,
-    borderRadius: radius.sm,
-    borderWidth: '1px',
-    borderStyle: 'solid',
-  },
-  success: { color: color.successText, backgroundColor: color.successSurface, borderColor: color.successBorder },
-  error: { color: color.dangerText, backgroundColor: color.dangerSurface, borderColor: color.dangerBorder },
+  // The box itself is ui/StatusNote; what stays here is the room it needs
+  // between the save button and itself.
+  feedbackGap: { marginTop: space.md },
   // Present for screen readers, out of the way visually.
   srOnly: {
     position: 'absolute',

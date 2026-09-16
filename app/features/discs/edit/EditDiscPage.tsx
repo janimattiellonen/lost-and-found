@@ -12,7 +12,7 @@ import H2 from '~/ui/H2';
 import Label from '~/ui/Label';
 import type { MethodOption } from '~/lib/methodEnum';
 import Select, { MenuItem } from '~/ui/Select';
-import SuccessNote from '~/ui/SuccessNote';
+import StatusNote from '~/ui/StatusNote';
 import TextField from '~/ui/TextField';
 import Wrapper from '~/ui/Wrapper';
 
@@ -52,7 +52,9 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
     <div>
       <H2 className="mt-8 mb-4">Muokkaa kiekon tietoja</H2>
 
-      <SuccessNote className="mb-4">{!isEdited && !isSaving && saved && 'Kiekon tiedot tallennettu.'}</SuccessNote>
+      <StatusNote variant="success" className="mb-4">
+        {!isEdited && !isSaving && saved && 'Kiekon tiedot tallennettu.'}
+      </StatusNote>
 
       {errors?.form && <p className="mb-4 text-red-500 text-sm">{errors.form}</p>}
 
