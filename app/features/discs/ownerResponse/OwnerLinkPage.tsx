@@ -149,22 +149,50 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
 }
 
 /**
- * What each way of getting the disc back asks of the owner next, or null for
- * one that asks nothing.
+ * What each way of getting the disc back tells the owner, or asks of them, once
+ * they have chosen it.
  *
- * Returned rather than written as a chain of `&&` inside the option, so a
- * method with no follow-up gives back nothing at all: an empty panel would
- * still draw its own outline under the option.
+ * A switch here rather than a chain of `&&` inside the option: every method now
+ * has something to say under it, and which one says what is easier to check in
+ * one list than spread through the JSX.
+ *
+ * Returns `JSX.Element` rather than `ReactNode`, which is what makes the missing
+ * `default` safe: `ReactNode` includes `undefined`, so a switch that stopped
+ * covering every method would fall off the end and still typecheck, and the new
+ * option would render with an empty panel under it. Narrowed, that same gap is
+ * TS2366 at this line instead.
  */
-function followUp(method: HandoverMethodValue, clubPayment: ClubPayment | null): ReactNode {
+function followUp(method: HandoverMethodValue, clubPayment: ClubPayment | null): JSX.Element {
   switch (method) {
     case HandoverMethod.ByMail:
       return <ShippingAddress clubPayment={clubPayment} />;
     case HandoverMethod.PickedUpFromHome:
       return <PickupNote />;
-    default:
-      return null;
+    case HandoverMethod.PickedUpFromStorage:
+      return <StorageNote />;
   }
+}
+
+/**
+ * Collecting the disc from the club's koppi.
+ *
+ * The option stays on offer and choosing it still answers the same way — an
+ * owner in no hurry is welcome to it. The note only says what the club knows
+ * and the owner cannot: the koppi is cleared irregularly, so this is much the
+ * slowest of the three. Said under the option rather than as a general warning,
+ * because it is only true of this one.
+ *
+ * Only Talin Tallaajat owners ever see this: the option is offered while
+ * `disc_is_in_storage()` is true, and that reads `clubs.stores_discs_offsite`,
+ * which no other club sets. So this needs no club check of its own.
+ */
+function StorageNote(): JSX.Element {
+  return (
+    <p className="text-gray-700">
+      Kopilta haku onnistuu hyvin satunnaisesti, joten jos haluat saada kiekkosi nopeasti takaisin, valitse postitus tai
+      nouto.
+    </p>
+  );
 }
 
 /**

@@ -30,6 +30,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - The retrieval list is ordered newest request first, so the errands that have just come in are at the top.
 - Tapping an owner's phone number on the retrieval list or the responses view now opens a message to them instead of placing a call.
 - A disc marked returned or marked for sale by mistake can be put back on the public list: the edit page carries both marks as checkboxes, and unticking one clears its date and method. Every other way of making those marks is still one-way.
+- Choosing "Noudan kiekon seuran kopilta" on the owner's link page warns that the koppi is emptied only occasionally, and points an owner in a hurry at post or collection instead. Talin Tallaajat only, since theirs is the only koppi discs wait in.
 
 ### Fixed
 
