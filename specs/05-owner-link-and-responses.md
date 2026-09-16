@@ -32,8 +32,15 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    address fields — the answer is submitted with no address and the page says
    the club will be in touch.
 6. Collecting from the admin names only the district ("Kiekon voi noutaa Espoon
-   Lintuvaarasta") and promises a message; collecting from the koppi asks
-   nothing further.
+   Lintuvaarasta") and promises a message. Collecting from the koppi asks nothing
+   further, but warns that it is slow: "Kopilta haku onnistuu hyvin
+   satunnaisesti, joten jos haluat saada kiekkosi nopeasti takaisin, valitse
+   postitus tai nouto." (collection from the koppi happens only occasionally, so
+   choose post or collection if you want the disc back quickly). The option
+   stays and nothing about the answer changes — an owner in no hurry is welcome
+   to it — the warning only says what choosing it means for how long the wait is.
+   Only Talin Tallaajat owners ever read it, because only that club has a koppi
+   to collect from.
 7. After a submit: "Kiitos vastauksesta!" plus a link back to the same page —
    answering again is how a choice or a typo is changed.
    - An answer of "I want it back" that asks for post or for collection from
