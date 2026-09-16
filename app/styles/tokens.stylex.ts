@@ -79,6 +79,10 @@ export const dark = stylex.defineVars({
   headingText: palette.white,
   bodyText: palette.dark200,
   text: palette.gray300,
+  // The info panel's caption, a step dimmer than the text under it. It is the
+  // dark surface's own subtle grey, not the light pages' `color.textSubtle`,
+  // even though both are `gray400` today.
+  textSubtle: palette.gray400,
   textHover: palette.white,
   border: palette.gray300,
   // An inline form's error line. It shares `red300` with `icon.deleteHover`,

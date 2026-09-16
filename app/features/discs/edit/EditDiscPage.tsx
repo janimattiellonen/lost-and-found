@@ -119,7 +119,7 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
             fullWidth
             defaultValue={disc.additionalInfo ?? ''}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-fg-muted">
             Seuran sisäinen muistiinpano. Ei näy julkisella listalla. Enintään {MAX_ADDITIONAL_INFO_LENGTH} merkkiä.
           </p>
 
@@ -198,7 +198,7 @@ function TextRow({ field, label, hint, value, error }: TextRowProps): JSX.Elemen
         inputProps={{ maxLength: MAX_FIELD_LENGTH }}
       />
 
-      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-fg-muted">{hint}</p>}
 
       <FieldError message={error} />
     </Wrapper>

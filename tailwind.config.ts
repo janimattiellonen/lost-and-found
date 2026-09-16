@@ -89,92 +89,112 @@ const palette = {
 export default {
   content: ['./app/**/*.{js,jsx,ts,tsx}'],
   theme: {
-    extend: {
-      colors: {
-        fg: {
-          primary: palette.gray900,
-          secondary: palette.gray700,
-          body: palette.gray600,
-          muted: palette.gray500,
-          subtle: palette.gray400,
-          strong: palette.black,
-          'on-accent': palette.white,
-          link: palette.blue700,
-          danger: palette.red800,
-          success: palette.green800,
-        },
-        surface: {
-          DEFAULT: palette.white,
-          muted: palette.gray100,
-          accent: palette.blue50,
-          'accent-hover': palette.blue600A04,
-          'accent-selected': palette.blue600A08,
-          'danger-hover': palette.red500A04,
-          danger: palette.red50,
-          success: palette.green50,
-        },
-        line: {
-          DEFAULT: palette.gray300,
-          subtle: palette.gray200,
-          success: palette.green200,
-          danger: palette.red200,
-          accent: palette.blue600,
-          'accent-subtle': palette.blue200,
-          'accent-translucent': palette.blue600A50,
-          'danger-translucent': palette.red500A50,
-        },
-        accent: {
-          DEFAULT: palette.blue600,
-          hover: palette.blue700,
-        },
-        danger: {
-          DEFAULT: palette.red500,
-          hover: palette.red600,
-          strong: palette.red600,
-        },
-        warning: palette.amber700,
-        caution: palette.caution700,
-        success: {
-          DEFAULT: palette.green700,
-          hover: palette.green800,
-        },
-        // The disc table's dark island. `text-gray-300` is a faint grey on the
-        // light pages but the normal text colour here, which is why these are
-        // their own names rather than the stock greys.
-        dark: {
-          surface: palette.dark900,
-          cell: palette.dark800,
-          'cell-hover': palette.dark700,
-          'cell-sorted': palette.dark600,
-          'row-alt': palette.dark500,
-          'heading-text': palette.white,
-          'body-text': palette.dark200,
-          text: palette.gray300,
-          'text-hover': palette.white,
-          border: palette.gray300,
-          'danger-text': palette.red300,
-        },
-        // The disc table's row actions are colour-coded so an admin can hit the
-        // right one at a glance, which makes the hue part of the label.
-        icon: {
-          delete: palette.red400,
-          'delete-hover': palette.red300,
-          edit: palette.gray300,
-          'edit-hover': palette.white,
-          returned: palette.green400,
-          'returned-hover': palette.green300,
-          sellable: palette.sky400,
-          'sellable-hover': palette.sky300,
-          retrieval: palette.orange400,
-          'retrieval-hover': palette.orange300,
-          course: palette.violet400,
-          'course-hover': palette.violet300,
-          info: palette.amber400,
-          'info-hover': palette.amber300,
-          disabled: palette.gray500,
-        },
+    // `colors` outright, not `extend.colors`: the stock palette is gone, so
+    // `text-gray-500` no longer compiles and a semantic name is the only way to
+    // say a colour. Every component was converted first — see the spec's "Rules
+    // & constraints" — so this closes a hole rather than breaking anything.
+    // Tailwind's own defaults that pointed into the stock palette are carried
+    // over explicitly below.
+    colors: {
+      // Not colours so much as the absence of one; Preflight and several
+      // utilities expect these to exist.
+      transparent: 'transparent',
+      current: 'currentColor',
+      inherit: 'inherit',
+      fg: {
+        primary: palette.gray900,
+        secondary: palette.gray700,
+        body: palette.gray600,
+        muted: palette.gray500,
+        subtle: palette.gray400,
+        strong: palette.black,
+        'on-accent': palette.white,
+        link: palette.blue700,
+        danger: palette.red800,
+        success: palette.green800,
+      },
+      surface: {
+        DEFAULT: palette.white,
+        muted: palette.gray100,
+        accent: palette.blue50,
+        'accent-hover': palette.blue600A04,
+        'accent-selected': palette.blue600A08,
+        'danger-hover': palette.red500A04,
+        danger: palette.red50,
+        success: palette.green50,
+      },
+      line: {
+        DEFAULT: palette.gray300,
+        subtle: palette.gray200,
+        success: palette.green200,
+        danger: palette.red200,
+        accent: palette.blue600,
+        'accent-subtle': palette.blue200,
+        'accent-translucent': palette.blue600A50,
+        'danger-translucent': palette.red500A50,
+      },
+      accent: {
+        DEFAULT: palette.blue600,
+        hover: palette.blue700,
+      },
+      danger: {
+        DEFAULT: palette.red500,
+        hover: palette.red600,
+        strong: palette.red600,
+      },
+      warning: palette.amber700,
+      caution: palette.caution700,
+      success: {
+        DEFAULT: palette.green700,
+        hover: palette.green800,
+      },
+      // The disc table's dark island. `text-gray-300` is a faint grey on the
+      // light pages but the normal text colour here, which is why these are
+      // their own names rather than the stock greys.
+      dark: {
+        surface: palette.dark900,
+        cell: palette.dark800,
+        'cell-hover': palette.dark700,
+        'cell-sorted': palette.dark600,
+        'row-alt': palette.dark500,
+        'heading-text': palette.white,
+        'body-text': palette.dark200,
+        text: palette.gray300,
+        'text-subtle': palette.gray400,
+        'text-hover': palette.white,
+        border: palette.gray300,
+        'danger-text': palette.red300,
+      },
+      // The disc table's row actions are colour-coded so an admin can hit the
+      // right one at a glance, which makes the hue part of the label.
+      icon: {
+        delete: palette.red400,
+        'delete-hover': palette.red300,
+        edit: palette.gray300,
+        'edit-hover': palette.white,
+        returned: palette.green400,
+        'returned-hover': palette.green300,
+        sellable: palette.sky400,
+        'sellable-hover': palette.sky300,
+        retrieval: palette.orange400,
+        'retrieval-hover': palette.orange300,
+        course: palette.violet400,
+        'course-hover': palette.violet300,
+        info: palette.amber400,
+        'info-hover': palette.amber300,
+        disabled: palette.gray500,
       },
     },
+    // Preflight and the bare `border` utility read `borderColor.DEFAULT`, which
+    // in Tailwind's own theme is `gray200`. That name no longer exists here, so
+    // the value is carried over by hand — it is the same `gray200` the eight
+    // bare `border` utilities in this app have always drawn. Spreading `colors`
+    // keeps `border-line` and the rest working.
+    borderColor: ({ theme }) => ({
+      ...theme('colors'),
+      DEFAULT: palette.gray200,
+    }),
+    extend: {},
   },
   plugins: [],
 } satisfies Config;

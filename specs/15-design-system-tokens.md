@@ -468,10 +468,26 @@ because those tokens were derived from Tailwind's own scale in the first place �
 right thing for a Tailwind page to write and renames to `space.md` just as
 mechanically.
 
-`extend` is used rather than replacing `theme.colors`, so Tailwind's stock
-palette stays available. Replacing it would have forced every page onto the
-aliases in one change, breaking all thirty-seven at once. The aliases are the intended path; nothing
-mechanically blocks the old one, and review is what keeps new code on it.
+`theme.colors` is **replaced**, not extended. Tailwind's stock palette is gone:
+`text-gray-500` no longer compiles, so a semantic name is not the recommended way
+to say a colour, it is the only way. This was done last rather than first — while
+any component still read a stock colour, replacing the palette would have broken
+it, so the order was thirty-seven conversions and then the lock. A rule that a
+review has to enforce became one the build enforces.
+
+Two of Tailwind's own defaults pointed into the palette that is now gone, and are
+carried over by hand in `tailwind.config.ts`:
+
+- `borderColor.DEFAULT` is Tailwind's `gray200`, and it is what the bare `border`
+  utility and Preflight draw. Eight elements in this app use bare `border`, so the
+  value is written out explicitly; the emitted Preflight rule
+  (`border: 0 solid #e5e7eb`) is byte-identical to the one before the change.
+- `transparent`, `current` and `inherit` are kept as names. They are not colours
+  and have no palette entry, but Preflight and several utilities expect them.
+
+Nothing else needed carrying: the app uses no `ring`, `divide`, `placeholder`,
+`fill` or `stroke` utility, which is the only reason this was a four-line change
+rather than an audit.
 
 The alias names are chosen so each Tailwind class maps to exactly one token. The
 map is one-way: two tokens may hold the same value — `dangerStrong` and
@@ -537,6 +553,13 @@ they are kebab-case and camel-case of the same name, so those are derived. It
 also fails when an alias exists that the table does not mention, or a token that
 no alias names, which is what stops the table falling behind either file.
 
+One narrow exception exists inside it. `transparent`, `current` and `inherit` are
+names in `theme.colors` with no palette entry behind them, so the test allows
+those three — by name _and_ by value, so the exception cannot widen into a way of
+writing a literal colour into the config unnoticed. That it had to be added at all
+is the guard working: replacing `theme.colors` made the test fail immediately,
+because it refuses to skip a line it cannot read rather than passing over it.
+
 ## Routes & entry points
 
 None. No route, loader or action is touched.
@@ -581,12 +604,12 @@ None. No route, loader or action is touched.
    `createTheme` would let a second theme override the same variables later; that
    is deliberately out of scope, and the token names are chosen so it stays
    possible (`color.surface`, not `color.white`).
-5. **Tailwind stays installed and stays working.** 50 files still carry Tailwind
-   classes — `DiscTable` among them, because its icons and its dark surface
-   moved but its layout did not. Only four of those files still take a _colour_
-   from Tailwind's stock palette; the rest have either converted or never used
-   one. Deleting Tailwind is only possible after the last of them has moved, and
-   that is mostly a layout job now rather than a colour one.
+5. **Tailwind stays installed and stays working, but its palette does not.** 50
+   files still carry Tailwind classes — `DiscTable` among them, because its icons
+   and its dark surface moved but its layout did not. None of them takes a colour
+   from Tailwind's stock palette any more: `theme.colors` is replaced, so those
+   class names no longer exist. What is left is a layout job, not a colour one,
+   and deleting Tailwind altogether is only possible once that is done too.
 6. **A light control on the dark surface keeps the light vocabulary.** The date
    field inside the inline forms is a white input sitting on the dark table, and
    its border is `color.border` while the cancel button beside it uses
@@ -643,16 +666,19 @@ None. No route, loader or action is touched.
   `a { text-decoration: underline }` apply to everything, including the inside of
   StyleX components that did not ask for them. A component that wants a
   paragraph without that margin has to override it. Left as is.
-- **Tailwind's stock palette is still reachable.** `theme.extend` adds the
-  semantic aliases without removing `gray-500` and the rest, so a new page can
-  still write `text-gray-500` and nothing will complain. Four files still do
-  exactly that: `DiscTable` (`text-gray-400`), `EditDiscPage` (`text-gray-500`),
-  and `NotifyForm` and `BinFullForm`, which share a `text-black` and two greys.
-  A review of this spec found the list wrong once already — it had said five and
-  missed `SelectedDiscsActions`, whose amber notice has since been converted —
-  so the list is worth re-deriving rather than trusting. Replacing `theme.colors` outright would close
-  the hole, and the cost of doing so is now five files rather than the
-  thirty-seven it would have been when the aliases were written.
+- **Tailwind's stock palette is no longer reachable.** This was a known gap and
+  is now closed: `theme.colors` is replaced rather than extended, so a new page
+  writing `text-gray-500` gets no rule and an obviously unstyled element, instead
+  of a colour nobody chose. The last four files to hold a stock colour —
+  `DiscTable`, `EditDiscPage`, `NotifyForm` and `BinFullForm`, seven classes
+  between them — were converted first. The change removed six now-dead rules from
+  the stylesheet and added two of identical value, which is the whole of its
+  effect on what a person sees.
+
+  Worth keeping in mind for whoever finds this section later: the gap took three
+  rounds to close, and each round's list of remaining files was wrong at least
+  once. The list is cheap to re-derive and was repeatedly wrong when trusted.
+
 - **The palette is duplicated in two files.** `palette.stylex.ts` and
   `tailwind.config.ts` each hold the hex values, because StyleX's hashed variable
   names and its static-only `defineVars` rule leave no way to share one source
@@ -681,23 +707,26 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Six of the eighty tokens have no caller, and the Tailwind aliases have
-  fifty-three.** Both numbers were sixteen and zero when the token set was first
-  written; four conversions since then are what moved them. The point of
-  recording it is that the remainder is now small enough to be a list rather
-  than a shape:
+- **Five of the eighty-one tokens have no caller, and the Tailwind aliases have
+  sixty-seven.** Both numbers were sixteen and zero when the token set was first
+  written; five rounds of conversion since then are what moved them. The point of
+  recording it is that the remainder is now a list rather than a shape:
 
   | Group        | Used | Unused                                                         |
   | ------------ | ---- | -------------------------------------------------------------- |
-  | `color` (34) | 33   | `textSubtle`                                                   |
-  | `dark` (11)  | 10   | `textHover` — no inline form has a hover-text state to give it |
+  | `color` (34) | 34   | —                                                              |
+  | `dark` (12)  | 11   | `textHover` — no inline form has a hover-text state to give it |
   | `icon` (15)  | 15   | —                                                              |
   | `space` (7)  | 6    | `xxl`                                                          |
   | `font` (9)   | 7    | `sizeLg`, `weightRegular`                                      |
   | `size` (1)   | 1    | —                                                              |
   | `radius` (3) | 2    | `lg`                                                           |
 
-  Twelve distinct Tailwind aliases are in use across 53 occurrences, the most
+  Every colour token now has a caller. The five that do not are a space, two type
+  values and a radius — the non-colour half of the set, which no conversion has
+  had a reason to reach for yet.
+
+  Thirteen distinct Tailwind aliases are in use across 67 occurrences, the most
   common being `text-fg-muted`, `text-fg-secondary` and `text-fg-body`. That
   matters because the aliases were written before anything used them, and the
   argument for writing them — that a later conversion becomes a rename rather

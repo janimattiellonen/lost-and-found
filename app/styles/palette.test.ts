@@ -145,11 +145,17 @@ function parseTokenGroup(source: string, group: string): Record<string, string> 
   return entries;
 }
 
-// Read `theme.extend.colors` as `group.name` (or a bare `name` at the top of it)
+const KEYWORD_COLOURS: Record<string, string> = {
+  transparent: 'transparent',
+  current: 'currentColor',
+  inherit: 'inherit',
+};
+
+// Read `theme.colors` as `group.name` (or a bare `name` at the top of it)
 // against the palette entry each one points at, by walking the braces rather
 // than trusting indentation.
 function parseTailwindAliases(source: string): Record<string, string> {
-  const start = source.search(/colors:\s*\{/);
+  const start = source.search(/^\s{4}colors:\s*\{/m);
   if (start === -1) throw new Error('No colors object found in tailwind.config.ts');
 
   const aliases: Record<string, string> = {};
@@ -171,6 +177,13 @@ function parseTailwindAliases(source: string): Record<string, string> {
       group = opening[1];
       continue;
     }
+    // `transparent`, `current` and `inherit` are not colours and have no palette
+    // entry; Preflight and several utilities need them to exist. They are allowed
+    // by name and by value, so the exception cannot widen into a way of writing a
+    // literal colour into the config without the palette noticing.
+    const keyword = /^([A-Za-z][A-Za-z0-9-]*): '([a-zA-Z]+)',$/.exec(text);
+    if (keyword && KEYWORD_COLOURS[keyword[1]] === keyword[2]) continue;
+
     const entry = /^'?([A-Za-z][A-Za-z0-9-]*)'?:\s*palette\.([A-Za-z0-9]+),$/.exec(text);
     if (!entry) throw new Error(`Cannot read alias in tailwind.config.ts: ${text}`);
     aliases[group === null ? entry[1] : `${group}.${entry[1]}`] = entry[2];

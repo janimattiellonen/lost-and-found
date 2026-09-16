@@ -168,7 +168,7 @@ type OpenPanel = { externalId: string; kind: PanelKind };
 function AdditionalInfoPanel({ row }: { row: Row }): JSX.Element {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs uppercase tracking-wide text-gray-400">Lisätiedot – {row.discName}</span>
+      <span className="text-xs uppercase tracking-wide text-dark-text-subtle">Lisätiedot – {row.discName}</span>
       <span className="whitespace-pre-wrap">{row.additionalInfo}</span>
     </div>
   );
