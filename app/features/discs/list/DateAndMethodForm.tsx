@@ -1,10 +1,11 @@
-import { useState, type FormEvent, type JSX } from 'react';
+import { useState, type JSX } from 'react';
 
 import { format } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
 
 import { color, dark, font, radius, space } from '~/styles/tokens.stylex';
+import InlineForm, { InlineFormOption, InlineFormOptions } from '~/ui/InlineForm';
 
 /** One radio option: the value that gets persisted, and its Finnish label. */
 export type MethodOption<V extends number = number> = { value: V; label: string };
@@ -46,30 +47,18 @@ export default function DateAndMethodForm<V extends number>({
 }: DateAndMethodFormProps<V>): JSX.Element {
   const [date, setDate] = useState(() => format(new Date(), 'y-MM-dd'));
   const [method, setMethod] = useState<V | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-
-    setIsSaving(true);
-    setError(null);
-
-    const message = await onSubmit(date, method);
-
-    setIsSaving(false);
-    setError(message);
-  };
 
   return (
-    <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>
-      {/* The form opens inside the dark disc table, so its text has to be
-          light: the muted grey of a form on a white page all but disappeared
-          against the row behind it. That is what `dark.text` names. */}
-      <p {...stylex.props(styles.title)}>
-        {title}: <b>{discName}</b>
-      </p>
-
+    <InlineForm
+      title={
+        <>
+          {title}: <b>{discName}</b>
+        </>
+      }
+      submitLabel={submitLabel}
+      onSubmit={() => onSubmit(date, method)}
+      onCancel={onCancel}
+    >
       <div>
         <label htmlFor={`${idPrefix}-date`} {...stylex.props(styles.label)}>
           {dateLabel}
@@ -84,66 +73,37 @@ export default function DateAndMethodForm<V extends number>({
         />
       </div>
 
-      <fieldset>
-        <legend {...stylex.props(styles.legend)}>{methodLabel}</legend>
-        <div {...stylex.props(styles.options)}>
-          {options.map((option) => (
-            <label key={option.value} {...stylex.props(styles.option)}>
-              <input
-                type="radio"
-                name={`${idPrefix}-method`}
-                value={option.value}
-                checked={method === option.value}
-                onChange={() => setMethod(option.value)}
-              />
-              {option.label}
-            </label>
-          ))}
+      <InlineFormOptions legend={methodLabel}>
+        {options.map((option) => (
+          <InlineFormOption key={option.value}>
+            <input
+              type="radio"
+              name={`${idPrefix}-method`}
+              value={option.value}
+              checked={method === option.value}
+              onChange={() => setMethod(option.value)}
+            />
+            {option.label}
+          </InlineFormOption>
+        ))}
 
-          <button
-            type="button"
-            disabled={method === null}
-            onClick={() => setMethod(null)}
-            {...stylex.props(styles.clearButton)}
-          >
-            Tyhjennä
-          </button>
-        </div>
-      </fieldset>
-
-      <div {...stylex.props(styles.actions)}>
-        <button type="submit" disabled={isSaving} {...stylex.props(styles.saveButton)}>
-          {isSaving ? 'Tallennetaan...' : submitLabel}
+        <button
+          type="button"
+          disabled={method === null}
+          onClick={() => setMethod(null)}
+          {...stylex.props(styles.clearButton)}
+        >
+          Tyhjennä
         </button>
-
-        <button type="button" onClick={onCancel} {...stylex.props(styles.cancelButton)}>
-          Peruuta
-        </button>
-      </div>
-
-      {error && <p {...stylex.props(styles.error)}>{error}</p>}
-    </form>
+      </InlineFormOptions>
+    </InlineForm>
   );
 }
 
+// Only the three styles this form does not share with the other two: the date
+// field and its label, which no other inline form has, and the clear button
+// that goes with the nullable method. The shell lives in `ui/InlineForm`.
 const styles = stylex.create({
-  // Tailwind's smallest type step sets a line height as well as a size, and the
-  // token set has a name only for the size, so every `font.sizeXs` here is
-  // followed by the height that came with it. Dropping it would leave the text
-  // on the browser's default leading, which is not the same box.
-  form: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'flex-end',
-    gap: space.lg,
-    paddingBlock: space.sm,
-  },
-  title: {
-    flexBasis: '100%',
-    fontSize: font.sizeXs,
-    lineHeight: '1rem',
-    color: dark.text,
-  },
   label: {
     display: 'block',
     marginBottom: space.xs,
@@ -165,15 +125,6 @@ const styles = stylex.create({
     borderColor: color.border,
     borderRadius: radius.sm,
   },
-  legend: {
-    marginBottom: space.xs,
-    fontSize: font.sizeXs,
-    lineHeight: '1rem',
-    fontWeight: font.weightBold,
-    color: dark.text,
-  },
-  options: { display: 'flex', alignItems: 'center', gap: space.md },
-  option: { display: 'inline-flex', alignItems: 'center', gap: space.xs },
   clearButton: {
     fontSize: font.sizeXs,
     lineHeight: '1rem',
@@ -181,34 +132,4 @@ const styles = stylex.create({
     textDecorationLine: { default: 'underline', ':disabled': 'none' },
     opacity: { default: 1, ':disabled': 0.4 },
   },
-  actions: { display: 'flex', alignItems: 'center', gap: space.sm },
-  saveButton: {
-    paddingBlock: space.xs,
-    paddingInline: space.smd,
-    color: color.onAccent,
-    // `:disabled:hover` compiles to a higher priority than either `:hover`
-    // (3130) or `:disabled` (3092), which is what stops a button that cannot be
-    // pressed lighting up under the pointer. The two states sit on different
-    // properties here, so nothing forced this — see the spec's scenario 12.
-    backgroundColor: {
-      default: color.success,
-      ':hover': color.successHover,
-      ':disabled:hover': color.success,
-    },
-    borderRadius: radius.sm,
-    opacity: { default: 1, ':disabled': 0.4 },
-  },
-  // The cancel button's wash is neutral translucency and stays a literal: it is
-  // white over whatever row is behind it, and nothing about it drifts when the
-  // palette does.
-  cancelButton: {
-    paddingBlock: space.xs,
-    paddingInline: space.smd,
-    backgroundColor: { default: 'transparent', ':hover': 'rgba(255,255,255,0.1)' },
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: dark.border,
-    borderRadius: radius.sm,
-  },
-  error: { flexBasis: '100%', color: dark.dangerText },
 });
