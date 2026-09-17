@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
 
-import { color, dark, font, radius, space } from '~/styles/tokens.stylex';
+import { color, dark, font, leading, radius, space } from '~/styles/tokens.stylex';
 import InlineForm, { InlineFormOption, InlineFormOptions } from '~/ui/InlineForm';
 
 /** One radio option: the value that gets persisted, and its Finnish label. */
@@ -108,7 +108,7 @@ const styles = stylex.create({
     display: 'block',
     marginBottom: space.xs,
     fontSize: font.sizeXs,
-    lineHeight: '1rem',
+    lineHeight: leading.xs,
     fontWeight: font.weightBold,
     color: dark.text,
   },
@@ -127,7 +127,7 @@ const styles = stylex.create({
   },
   clearButton: {
     fontSize: font.sizeXs,
-    lineHeight: '1rem',
+    lineHeight: leading.xs,
     color: dark.text,
     textDecorationLine: { default: 'underline', ':disabled': 'none' },
     opacity: { default: 1, ':disabled': 0.4 },

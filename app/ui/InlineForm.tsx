@@ -2,7 +2,7 @@ import { useState, type FormEvent, type JSX, type ReactNode } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
-import { color, dark, font, radius, space } from '~/styles/tokens.stylex';
+import { color, dark, font, leading, radius, space } from '~/styles/tokens.stylex';
 
 type InlineFormProps = {
   /** The line above the fields. A node, so a caller can emphasise part of it. */
@@ -106,10 +106,9 @@ export function InlineFormOption({ children }: { children: ReactNode }): JSX.Ele
 }
 
 const styles = stylex.create({
-  // Tailwind's smallest type step sets a line height as well as a size, and the
-  // token set has a name only for the size, so every `font.sizeXs` here is
-  // followed by the height that came with it. Dropping it would leave the text
-  // on the browser's default leading, which is not the same box.
+  // A size and its leading are picked as a pair: `font.sizeXs` with
+  // `leading.xs`, the height the type scale gives that step. Setting the size
+  // alone would drop the text onto the browser's default leading.
   form: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -120,13 +119,13 @@ const styles = stylex.create({
   title: {
     flexBasis: '100%',
     fontSize: font.sizeXs,
-    lineHeight: '1rem',
+    lineHeight: leading.xs,
     color: dark.text,
   },
   legend: {
     marginBottom: space.xs,
     fontSize: font.sizeXs,
-    lineHeight: '1rem',
+    lineHeight: leading.xs,
     fontWeight: font.weightBold,
     color: dark.text,
   },
