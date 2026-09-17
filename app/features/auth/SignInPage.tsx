@@ -1,6 +1,7 @@
 import { Form, useOutletContext } from 'react-router';
 
 import type { LoginErrors } from '~/features/auth/signInWithForm.server';
+import FieldError from '~/ui/FieldError';
 import Button from '~/ui/Button';
 import Label from '~/ui/Label';
 
@@ -43,7 +44,7 @@ export default function SignInPage({ user, errors }: Props): JSX.Element {
             name="email"
           />
 
-          {errors?.email ? <p className="text-danger-strong text-xs italic">{errors.email}</p> : null}
+          {errors?.email ? <FieldError>{errors.email}</FieldError> : null}
         </div>
         <div className="mb-2">
           <Label htmlFor="password">Salasana</Label>
@@ -55,13 +56,11 @@ export default function SignInPage({ user, errors }: Props): JSX.Element {
             placeholder="Salasana"
           />
 
-          {errors?.password ? <p className="text-danger-strong text-xs italic">{errors.password}</p> : null}
+          {errors?.password ? <FieldError>{errors.password}</FieldError> : null}
         </div>
 
         <div className="mb-2">
-          {errors?.invalidLogin ? (
-            <p className="text-danger-strong text-xs italic">Virheellinen käyttäjätunnus tai salasana</p>
-          ) : null}
+          {errors?.invalidLogin ? <FieldError>Virheellinen käyttäjätunnus tai salasana</FieldError> : null}
         </div>
 
         <Button variant="contained" type="submit">

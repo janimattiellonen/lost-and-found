@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import * as stylex from '@stylexjs/stylex';
 
 import { color, dark, font, leading, radius, space } from '~/styles/tokens.stylex';
-import InlineForm, { InlineFormOption, InlineFormOptions } from '~/ui/InlineForm';
+import InlineForm, { InlineFormOption, InlineFormOptions } from '../InlineForm';
 
 /** One radio option: the value that gets persisted, and its Finnish label. */
 export type MethodOption<V extends number = number> = { value: V; label: string };

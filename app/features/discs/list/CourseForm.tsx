@@ -1,6 +1,6 @@
 import { useState, type JSX } from 'react';
 
-import InlineForm, { InlineFormOption, InlineFormOptions } from '~/ui/InlineForm';
+import InlineForm, { InlineFormOption, InlineFormOptions } from '../InlineForm';
 
 /** The value the "no course" radio carries; empty so it cannot collide with a real name. */
 const NO_COURSE = '';

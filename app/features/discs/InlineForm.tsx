@@ -52,10 +52,14 @@ export default function InlineForm({
     setIsSaving(true);
     setError(null);
 
-    const message = await onSubmit();
-
-    setIsSaving(false);
-    setError(message);
+    // `finally`, because `onSubmit` is a caller's function and may throw: an
+    // invariant it checks, a network layer that rejects. Without this the form
+    // would sit saying it is saving for ever, with no way back to the button.
+    try {
+      setError(await onSubmit());
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

@@ -734,7 +734,7 @@ const styles = stylex.create({
     position: 'relative',
     boxSizing: 'border-box',
     textAlign: 'left',
-    fontWeight: 700,
+    fontWeight: font.weightBold,
     paddingBlock: space.sm,
     paddingInline: space.smd,
     color: dark.headingText,

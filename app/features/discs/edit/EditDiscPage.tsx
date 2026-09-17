@@ -5,6 +5,7 @@ import { Form, useNavigation } from 'react-router';
 import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import { fieldNames, type DiscEditErrors, type DiscEditValues } from '~/features/discs/edit/discEdit';
 import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/fieldLimits';
+import FieldError from '~/ui/FieldError';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -105,7 +106,7 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
               ))}
             </Select>
 
-            <FieldError message={errors?.course} />
+            <FieldError>{errors?.course}</FieldError>
           </Wrapper>
         )}
 
@@ -123,7 +124,7 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
             Seuran sisäinen muistiinpano. Ei näy julkisella listalla. Enintään {MAX_ADDITIONAL_INFO_LENGTH} merkkiä.
           </p>
 
-          <FieldError message={errors?.additionalInfo} />
+          <FieldError>{errors?.additionalInfo}</FieldError>
         </Wrapper>
 
         {/* Both marks take a disc off the public list, so they sit apart from
@@ -200,7 +201,7 @@ function TextRow({ field, label, hint, value, error }: TextRowProps): JSX.Elemen
 
       {hint && <p className="mt-1 text-xs text-fg-muted">{hint}</p>}
 
-      <FieldError message={error} />
+      <FieldError>{error}</FieldError>
     </Wrapper>
   );
 }
@@ -265,7 +266,7 @@ function MarkSection({ mark, isMarked, onToggle, errors }: MarkSectionProps): JS
             <Label htmlFor={dateName}>Päivämäärä</Label>
             <TextField id={dateName} name={dateName} type="date" defaultValue={mark.dateValue ?? ''} />
 
-            <FieldError message={errors?.[mark.dateField]} />
+            <FieldError>{errors?.[mark.dateField]}</FieldError>
           </div>
 
           <div>
@@ -283,14 +284,10 @@ function MarkSection({ mark, isMarked, onToggle, errors }: MarkSectionProps): JS
               ))}
             </Select>
 
-            <FieldError message={errors?.[mark.methodField]} />
+            <FieldError>{errors?.[mark.methodField]}</FieldError>
           </div>
         </div>
       )}
     </Wrapper>
   );
-}
-
-function FieldError({ message }: { message?: string }): JSX.Element | null {
-  return message ? <p className="text-danger-strong text-xs italic">{message}</p> : null;
 }

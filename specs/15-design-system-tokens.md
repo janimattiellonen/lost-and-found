@@ -37,8 +37,9 @@ This spec covers the token set, those aliases, and the conversions done against
 them so far: the disc table's row-action icons first, to prove the vocabulary
 worked before anything else was written against it, and then four more pieces —
 the three inline forms that open inside the dark table, the status box, the
-owner-facing and sign-in pages, and the long tail of small admin components. Five
-files still carry stock Tailwind colour classes. The rest of the conversion is
+owner-facing and sign-in pages, and the long tail of small admin components. No
+file takes a colour from Tailwind's stock palette any more, and none can: that
+palette has been removed from the config. The rest of the conversion is
 separate work, done a piece at a time, and each step is a no-op precisely because
 the tokens were derived this way — with the exceptions numbered above, which are
 the cases where a piece could not be both a no-op and correct.
@@ -122,11 +123,13 @@ moves is either listed as a deliberate exception below or is a bug.
 11. When any red error sentence is shown on a white page, then it is `red600`
     rather than `red500` (ΔE 10.7). This is one role — a validation message or a
     failure line, outside a box, on a light surface — and the app had been
-    spelling it two ways: `red600` on the owner link page, `red500` in seven
+    spelling it two ways: `red600` on the owner link page, `red500` in ten
     other places. `color.dangerStrong` is the name for the role and it is
-    `red600`, so the seven move rather than the token. They are sign-in's three
-    messages, `EditDiscPage`'s form error and its field error, the message
-    template pages' two content errors, and `NotifyForm`'s course error. At ΔE
+    `red600`, so the ten move rather than the token. They are sign-in's three
+    messages, `EditDiscPage`'s form error and its field error, two on the
+    message-template categories page, one each on the pages that create and edit
+    a template, and `NotifyForm`'s course error. Eight of them are now drawn by
+    `ui/FieldError`, which is the shape they had all been repeating. At ΔE
     10.7 this sits between the delete-button hover of scenario 6 and the success
     border of scenario 5; it is the only exception in this list that exists to
     make pages agree with each other rather than to fold one palette into
@@ -585,21 +588,22 @@ because it refuses to skip a line it cannot read rather than passing over it.
 
 None. No route, loader or action is touched.
 
-| Entry point                                   | Purpose                                                                                                                                                              |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/styles/palette.stylex.ts`                | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                                        |
-| `app/styles/tokens.stylex.ts`                 | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".                            |
-| `app.css`                                     | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                                      |
-| `tailwind.config.ts`                          | Layer 3. Semantic colour aliases replacing `theme.colors`, so a page still on Tailwind names a colour the way a StyleX component does — and cannot name a stock one. |
-| `app/features/discs/list/OverdueMarker.tsx`   | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                                       |
-| `app/features/discs/list/DiscTable.tsx`       | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind.                     |
-| `app/styles/palette.test.ts`                  | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                                      |
-| `app/ui/StatusNote.tsx`                       | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                                      |
-| the three inline forms                        | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, the only components with no `className` left at all.                                     |
-| `app/ui/InlineForm.tsx`                       | The chrome those three share: the form, its title, its two buttons and its error line. The fields are passed in.                                                     |
-| `app/ui/ContactLine.tsx`                      | An owner's phone number, tappable as a message, with their name. Shared by the responses view and the retrieval list.                                                |
-| `app/ui/StatusNote.test.tsx`                  | The first component test in this project. Runs in the `component` vitest project, which has a DOM and compiles StyleX.                                               |
-| `vitest.config.ts`, `test/setup-component.ts` | Two test projects: `node` for plain TypeScript, `component` for anything with JSX in it.                                                                             |
+| Entry point                                   | Purpose                                                                                                                                                                                                                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/styles/palette.stylex.ts`                | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                                                                                                 |
+| `app/styles/tokens.stylex.ts`                 | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".                                                                                     |
+| `app.css`                                     | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                                                                                               |
+| `tailwind.config.ts`                          | Layer 3. Semantic colour aliases replacing `theme.colors`, so a page still on Tailwind names a colour the way a StyleX component does — and cannot name a stock one.                                                          |
+| `app/features/discs/list/OverdueMarker.tsx`   | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                                                                                                |
+| `app/features/discs/list/DiscTable.tsx`       | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind.                                                                              |
+| `app/styles/palette.test.ts`                  | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                                                                                               |
+| `app/ui/StatusNote.tsx`                       | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                                                                                               |
+| the three inline forms                        | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, as are the primitives they draw from.                                                                                                             |
+| `app/features/discs/InlineForm.tsx`           | The chrome the three inline forms share: the form, its title, its two buttons and its error line. The fields are passed in. It sits in the feature rather than in `app/ui/` because it knows it opens on the dark disc table. |
+| `app/ui/FieldError.tsx`                       | The red line under a field that failed validation — the same paragraph, written out in eight places before this existed. It owns the "nothing is wrong" case, so a caller hands over whatever it has.                         |
+| `app/ui/ContactLine.tsx`                      | An owner's phone number, tappable as a message, with their name. Shared by the responses view and the retrieval list.                                                                                                         |
+| `app/ui/StatusNote.test.tsx`                  | The first component test in this project. Runs in the `component` vitest project, which has a DOM and compiles StyleX.                                                                                                        |
+| `vitest.config.ts`, `test/setup-component.ts` | Two test projects: `node` for plain TypeScript, `component` for anything with JSX in it.                                                                                                                                      |
 
 ## Rules & constraints
 
@@ -629,7 +633,7 @@ None. No route, loader or action is touched.
    `createTheme` would let a second theme override the same variables later; that
    is deliberately out of scope, and the token names are chosen so it stays
    possible (`color.surface`, not `color.white`).
-5. **Tailwind stays installed and stays working, but its palette does not.** 50
+5. **Tailwind stays installed and stays working, but its palette does not.** 51
    files still carry Tailwind classes — `DiscTable` among them, because its icons
    and its dark surface moved but its layout did not. None of them takes a colour
    from Tailwind's stock palette any more: `theme.colors` is replaced, so those
@@ -732,8 +736,8 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Ten of the eighty-six tokens have no caller, and the Tailwind aliases have
-  sixty-five.** Both numbers were sixteen and zero when the token set was first
+- **Nine of the eighty-six tokens have no caller, and the Tailwind aliases have
+  fifty-four.** Both numbers were sixteen and zero when the token set was first
   written. The remainder is now a list rather than a shape:
 
   | Group         | Used | Unused                                                         |
@@ -743,11 +747,11 @@ None. No route, loader or action is touched.
   | `icon` (15)   | 15   | —                                                              |
   | `space` (7)   | 6    | `xxl`                                                          |
   | `font` (9)    | 7    | `sizeLg`, `weightRegular`                                      |
-  | `leading` (5) | 1    | `sm`, `md`, `lg`, `xl`                                         |
+  | `leading` (5) | 2    | `md`, `lg`, `xl`                                               |
   | `size` (1)    | 1    | —                                                              |
   | `radius` (3)  | 2    | `lg`                                                           |
 
-  Four of the ten are leading values for sizes no converted component uses yet;
+  Three of the nine are leading values for sizes no converted component uses yet;
   they exist so a size and its height are always picked as a pair, which is the
   point of having named them. `color.textSubtle` and `font.sizeLg` are the two a
   reader might expect to be in use and which are not.
@@ -758,7 +762,7 @@ None. No route, loader or action is touched.
   `tokens.stylex.ts` naming another token reads exactly like a use of it. Derive
   it with that file excluded, or it will read high again.
 
-  Thirteen distinct Tailwind aliases are in use across 65 occurrences, the most
+  Twelve distinct Tailwind aliases are in use across 54 occurrences, the most
   common being `text-fg-muted`, `text-fg-secondary` and `text-fg-body`. That
   matters because the aliases were written before anything used them, and the
   argument for writing them — that a later conversion becomes a rename rather
@@ -806,7 +810,7 @@ None. No route, loader or action is touched.
   not this project's fault and cannot be fixed from here.
 
 - **The three inline forms are one form now, with the fields passed in.**
-  `app/ui/InlineForm.tsx` owns the chrome the three shared — the form element,
+  `app/features/discs/InlineForm.tsx` owns the chrome the three shared — the form element,
   the title, the actions row with its two buttons and their Finnish labels, and
   the error line — plus `InlineFormOptions` and `InlineFormOption` for the radio
   groups. The fields themselves are `children`, because the three differ in kind
@@ -867,6 +871,14 @@ None. No route, loader or action is touched.
   file, with no second copy to drift from and no alias to point at the wrong
   thing, so there would be nothing for a guard to compare.
 
+- **Adding a colour means editing four files.** `palette.stylex.ts` for the
+  value, `tokens.stylex.ts` for the name, `tailwind.config.ts` for the class, and
+  the alias table inside `palette.test.ts` that maps the third to the second.
+  Three are unavoidable and explained above; the fourth is the price of guarding
+  the correspondence at all, since the two spellings are not mechanically related
+  for the `color` group. Each of the four fails loudly when it is the one
+  forgotten, which is the difference between a cost and a trap — but four files
+  is the real cost of a new colour.
 - **`InlineForm` owns an async submit lifecycle, and that is worth a second
   opinion.** A primitive in `app/ui/` now holds `isSaving`, holds the error a
   failed save returned, and decides when to call the caller's handler. That is

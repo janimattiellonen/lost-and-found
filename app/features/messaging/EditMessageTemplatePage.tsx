@@ -6,6 +6,7 @@ import type { MessageTemplateErrors } from '~/features/messaging/createMessageTe
 import type { MessageTemplateCategoryDTO, MessageTemplateDTO } from '~/types';
 import TemplateCategorySelect from '~/features/messaging/TemplateCategorySelect';
 import TemplateTokenHelp from '~/features/messaging/TemplateTokenHelp';
+import FieldError from '~/ui/FieldError';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -80,7 +81,7 @@ export default function EditMessageTemplatePage({
             }}
           />
 
-          {errors?.content && <p className="text-danger-strong text-xs italic">{errors.content}</p>}
+          <FieldError>{errors?.content}</FieldError>
         </Wrapper>
 
         <TemplateCategorySelect categories={categories} selected={messageTemplate?.categoryId ?? null} />

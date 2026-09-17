@@ -1,6 +1,6 @@
 import { useState, type JSX } from 'react';
 
-import InlineForm, { InlineFormOption, InlineFormOptions } from '~/ui/InlineForm';
+import InlineForm, { InlineFormOption, InlineFormOptions } from '../InlineForm';
 
 import { retrievalMethodOptions, type RetrievalMethodValue } from './retrievalMethod';
 

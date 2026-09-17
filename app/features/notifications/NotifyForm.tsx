@@ -3,6 +3,7 @@ import { useState, type JSX } from 'react';
 import * as stylex from '@stylexjs/stylex';
 import { Form, useActionData } from 'react-router';
 
+import FieldError from '~/ui/FieldError';
 import Collapse from '~/ui/Collapse';
 import { RadioGroup, Radio } from '~/ui/RadioGroup';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -79,7 +80,7 @@ export default function NotifyForm({ course }: NotifyFormProps): JSX.Element {
                 <FormControlLabel key={c.slug} value={c.name} control={<Radio />} label={c.name} />
               ))}
             </RadioGroup>
-            {courseError && <p className="text-danger-strong text-xs italic">{courseError}</p>}
+            <FieldError>{courseError}</FieldError>
           </Wrapper>
         )}
 
