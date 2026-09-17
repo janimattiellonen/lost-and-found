@@ -63,12 +63,14 @@ describe('StatusNote', () => {
   });
 
   it('puts a caller class on the live region, where a page keeps its spacing', () => {
+    // Any class will do; the contract is where it lands, not what it says. A
+    // real caller passes spacing here, in whichever system that caller uses.
     render(
-      <StatusNote variant="success" className="mb-4">
+      <StatusNote variant="success" className="caller-class">
         Teksti
       </StatusNote>,
     );
 
-    expect(screen.getByRole('status').className).toBe('mb-4');
+    expect(screen.getByRole('status').className).toBe('caller-class');
   });
 });

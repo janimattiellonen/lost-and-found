@@ -52,9 +52,16 @@ export default function RetrievalMethodForm({
       }
       submitLabel={current === null ? 'Lisää noutolistalle' : 'Tallenna noutotapa'}
       canSubmit={retrievalMethod !== null}
-      // `canSubmit` already keeps this from being called unanswered; the null
-      // branch is what tells the type checker so.
-      onSubmit={async () => (retrievalMethod === null ? null : onSubmit(retrievalMethod))}
+      // `canSubmit` already keeps this from being called unanswered. The check
+      // is here to tell the type checker so — and it throws rather than
+      // returning, because `null` is how this handler reports success and a
+      // silent "saved fine" is the wrong way to describe a broken invariant.
+      onSubmit={async () => {
+        if (retrievalMethod === null) {
+          throw new Error('InlineForm submitted while canSubmit was false');
+        }
+        return onSubmit(retrievalMethod);
+      }}
       onCancel={onCancel}
     >
       <InlineFormOptions legend="Omistaja haluaa kiekon">

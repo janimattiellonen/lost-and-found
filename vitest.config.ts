@@ -24,9 +24,17 @@ export default defineConfig({
   test: {
     // The StyleX plugin leaves file handles open — around 250 of them, which the
     // hanging-process reporter attributes to its source scan — so Vitest waits
-    // for them before exiting. The tests have finished and the exit code is
-    // unaffected; this stops the default ten seconds being added to every run.
-    // It is a plugin leak, not a test leak: the node project exits immediately.
+    // for them before exiting. It is a plugin leak and not a test leak: the node
+    // project alongside it exits immediately.
+    //
+    // A run still prints a line saying something is keeping the process alive.
+    // This does not silence that; it caps the wait at a second instead of the
+    // default ten. The tests have finished by then and the exit code is
+    // unaffected.
+    //
+    // It sits at the root rather than on the component project that causes it,
+    // which looks wrong and is not: set per-project it has no effect — the close
+    // timeout is read from the root config.
     teardownTimeout: 1_000,
     projects: [
       {

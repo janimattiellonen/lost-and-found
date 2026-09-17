@@ -341,6 +341,7 @@ it is the _normal_ text colour inside the dark table.
 | `dark.text`        | `gray300` | normal text on the dark surface   |
 | `dark.textHover`   | `white`   | that text, hovered                |
 | `dark.border`      | `gray300` | the cancel button's outline       |
+| `dark.textSubtle`  | `gray400` | the info panel's caption          |
 | `dark.dangerText`  | `red300`  | an error line on the dark surface |
 
 A new `icon` group. The disc table's row actions are colour-coded so an admin can
@@ -472,8 +473,9 @@ and is left in place rather than removed, since removing it is not this work.
 
 ### Layer 3 — the same names in Tailwind: `tailwind.config.ts`
 
-`theme.extend.colors` gains one alias per semantic token, so a component still on
-Tailwind can write `text-fg-muted` instead of `text-gray-500`. This is
+`theme.colors` holds one alias per semantic token, so a component still on
+Tailwind writes `text-fg-muted` — and, since the replacement described below,
+cannot write `text-gray-500` at all. This is
 the half of the work that pays off during the migration rather than after it: a
 page written in semantic classes converts to StyleX by renaming `text-fg-muted`
 to `color.textMuted`, with no judgement call about what the grey was for.
@@ -583,21 +585,21 @@ because it refuses to skip a line it cannot read rather than passing over it.
 
 None. No route, loader or action is touched.
 
-| Entry point                                   | Purpose                                                                                                                                          |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `app/styles/palette.stylex.ts`                | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                    |
-| `app/styles/tokens.stylex.ts`                 | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".        |
-| `app.css`                                     | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                  |
-| `tailwind.config.ts`                          | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does.   |
-| `app/features/discs/list/OverdueMarker.tsx`   | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                   |
-| `app/features/discs/list/DiscTable.tsx`       | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind. |
-| `app/styles/palette.test.ts`                  | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                  |
-| `app/ui/StatusNote.tsx`                       | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                  |
-| the three inline forms                        | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, the only components with no `className` left at all.                 |
-| `app/ui/InlineForm.tsx`                       | The chrome those three share: the form, its title, its two buttons and its error line. The fields are passed in.                                 |
-| `app/ui/ContactLine.tsx`                      | An owner's phone number, tappable as a message, with their name. Shared by the responses view and the retrieval list.                            |
-| `app/ui/StatusNote.test.tsx`                  | The first component test in this project. Runs in the `component` vitest project, which has a DOM and compiles StyleX.                           |
-| `vitest.config.ts`, `test/setup-component.ts` | Two test projects: `node` for plain TypeScript, `component` for anything with JSX in it.                                                         |
+| Entry point                                   | Purpose                                                                                                                                                              |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/styles/palette.stylex.ts`                | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                                        |
+| `app/styles/tokens.stylex.ts`                 | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".                            |
+| `app.css`                                     | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                                      |
+| `tailwind.config.ts`                          | Layer 3. Semantic colour aliases replacing `theme.colors`, so a page still on Tailwind names a colour the way a StyleX component does — and cannot name a stock one. |
+| `app/features/discs/list/OverdueMarker.tsx`   | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                                       |
+| `app/features/discs/list/DiscTable.tsx`       | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind.                     |
+| `app/styles/palette.test.ts`                  | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                                      |
+| `app/ui/StatusNote.tsx`                       | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                                      |
+| the three inline forms                        | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, the only components with no `className` left at all.                                     |
+| `app/ui/InlineForm.tsx`                       | The chrome those three share: the form, its title, its two buttons and its error line. The fields are passed in.                                                     |
+| `app/ui/ContactLine.tsx`                      | An owner's phone number, tappable as a message, with their name. Shared by the responses view and the retrieval list.                                                |
+| `app/ui/StatusNote.test.tsx`                  | The first component test in this project. Runs in the `component` vitest project, which has a DOM and compiles StyleX.                                               |
+| `vitest.config.ts`, `test/setup-component.ts` | Two test projects: `node` for plain TypeScript, `component` for anything with JSX in it.                                                                             |
 
 ## Rules & constraints
 
@@ -730,25 +732,31 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Eight of the eighty-six tokens have no caller, and the Tailwind aliases have
+- **Ten of the eighty-six tokens have no caller, and the Tailwind aliases have
   sixty-five.** Both numbers were sixteen and zero when the token set was first
   written. The remainder is now a list rather than a shape:
 
   | Group         | Used | Unused                                                         |
   | ------------- | ---- | -------------------------------------------------------------- |
-  | `color` (34)  | 34   | —                                                              |
+  | `color` (34)  | 33   | `textSubtle`                                                   |
   | `dark` (12)   | 11   | `textHover` — no inline form has a hover-text state to give it |
   | `icon` (15)   | 15   | —                                                              |
   | `space` (7)   | 6    | `xxl`                                                          |
-  | `font` (9)    | 8    | `weightRegular`                                                |
+  | `font` (9)    | 7    | `sizeLg`, `weightRegular`                                      |
   | `leading` (5) | 1    | `sm`, `md`, `lg`, `xl`                                         |
   | `size` (1)    | 1    | —                                                              |
   | `radius` (3)  | 2    | `lg`                                                           |
 
-  Every colour token has a caller. Four of the eight that do not are the leading
-  values for sizes no converted component uses yet — they exist so that a size
-  and its height are always picked as a pair, which is the whole point of having
-  named them.
+  Four of the ten are leading values for sizes no converted component uses yet;
+  they exist so a size and its height are always picked as a pair, which is the
+  point of having named them. `color.textSubtle` and `font.sizeLg` are the two a
+  reader might expect to be in use and which are not.
+
+  This count has now been wrong in three consecutive rounds, most recently in the
+  commit that rewrote this bullet. The cause each time was the same: a script
+  counting a token's own definition file as a caller, because a comment in
+  `tokens.stylex.ts` naming another token reads exactly like a use of it. Derive
+  it with that file excluded, or it will read high again.
 
   Thirteen distinct Tailwind aliases are in use across 65 occurrences, the most
   common being `text-fg-muted`, `text-fg-secondary` and `text-fg-body`. That
@@ -820,10 +828,12 @@ None. No route, loader or action is touched.
   callers never use. The comment explaining why the date field uses the light
   vocabulary moved with it.
 
-  The emitted stylesheet is byte-identical across this change, down to the
-  content hash: StyleX derives its class names from property and value rather
-  than from the file they were written in, so moving a style between files moves
-  nothing at all.
+  The emitted stylesheet is byte-identical across **the extraction commit**,
+  down to the content hash, because StyleX derives class names from property and
+  value rather than from the file they were written in — moving a style between
+  files moves nothing. That is a claim about that one commit and not about this
+  round: the `leading` group below deliberately changed the stylesheet, turning a
+  literal `line-height` into the same value read from a variable.
 
 - **The phone-number block is one component now.** `app/ui/ContactLine.tsx`
   renders the tappable number and the owner's name, and both pages call it

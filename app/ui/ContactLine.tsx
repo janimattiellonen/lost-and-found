@@ -1,3 +1,6 @@
+import * as stylex from '@stylexjs/stylex';
+
+import { color, font, leading } from '~/styles/tokens.stylex';
 import { formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 
 import type { JSX } from 'react';
@@ -26,9 +29,9 @@ export default function ContactLine({ phoneNumber, name }: Props): JSX.Element |
   }
 
   return (
-    <span className="text-sm text-fg-body">
+    <span {...stylex.props(styles.line)}>
       {phoneNumber && (
-        <a href={`sms:${toDiallablePhoneNumber(phoneNumber)}`} className="text-fg-link underline">
+        <a href={`sms:${toDiallablePhoneNumber(phoneNumber)}`} {...stylex.props(styles.link)}>
           {formatPhoneNumber(phoneNumber)}
         </a>
       )}
@@ -36,3 +39,19 @@ export default function ContactLine({ phoneNumber, name }: Props): JSX.Element |
     </span>
   );
 }
+
+const styles = stylex.create({
+  // A size and its line height are picked as a pair; that is what the `leading`
+  // group is for.
+  line: {
+    fontSize: font.sizeSm,
+    lineHeight: leading.sm,
+    color: color.textBody,
+  },
+  // `app.css` underlines every anchor already. Saying it here too means the
+  // component keeps its underline if that rule is ever narrowed.
+  link: {
+    color: color.link,
+    textDecorationLine: 'underline',
+  },
+});
