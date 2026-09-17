@@ -8,7 +8,7 @@ import type { JSX } from 'react';
  */
 export default function TemplateTokenHelp(): JSX.Element {
   return (
-    <p className="mb-4 text-sm text-gray-600">
+    <p className="mb-4 text-sm text-fg-body">
       Voit käyttää viestissä seuraavia: <code>[disc]</code> kiekon nimi, <code>[colour]</code> kiekon väri,{' '}
       <code>[course]</code> radan nimi (Äijänpelto), <code>[courses]</code> radan nimi genetiivissä (Äijänpellon, esim.
       &rdquo;on löytynyt [courses] radalta&rdquo;), <code>[link]</code> linkki, josta omistaja voi kertoa haluaako

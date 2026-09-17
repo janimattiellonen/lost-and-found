@@ -26,6 +26,11 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 
 ### Changed
 
+- The blue on buttons, radios, checkboxes and the loading spinner, the red on the sign-out and delete buttons, and the warning marker beside an overdue disc's date each shift a shade, so that the app's blues and reds come from one set of colours instead of two that had disagreed about the same shade.
+- The green "it worked" and red "it failed" boxes take their colours from that same set; the green box's border is the one a person would notice, being lighter than before.
+- The "it worked" and "it failed" boxes on the disc-entry page are drawn a little smaller, matching the same boxes elsewhere in the app — they are now one component rather than four hand-built copies, and one text size had to win.
+- Every red error message that sits on a white page — sign-in, the disc edit page, the message template pages, the notify form — is a slightly darker red, so that one kind of message has one colour instead of the two it had drifted into.
+- A save button inside the disc list's inline forms no longer darkens when the pointer is over it while it cannot be pressed.
 - The two monthly charts on the statistics page draw their bars across the page, one month per row, reading month name, bar and count — the month names used to sit in a row of their own under the bars and drifted out of step with them. The rows sit under the year they belong to, and a month with no discs in it is drawn as a row of zero rather than left out, so a quiet month is visibly quiet instead of missing.
 - The retrieval list is ordered newest request first, so the errands that have just come in are at the top.
 - Tapping an owner's phone number on the retrieval list or the responses view now opens a message to them instead of placing a call.

@@ -1,4 +1,6 @@
-import { useState, type FormEvent, type JSX } from 'react';
+import { useState, type JSX } from 'react';
+
+import InlineForm, { InlineFormOption, InlineFormOptions } from '../InlineForm';
 
 import { retrievalMethodOptions, type RetrievalMethodValue } from './retrievalMethod';
 
@@ -40,65 +42,42 @@ export default function RetrievalMethodForm({
   onCancel,
 }: Props): JSX.Element {
   const [retrievalMethod, setRetrievalMethod] = useState<RetrievalMethodValue | null>(current);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-
-    if (retrievalMethod === null) {
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-
-    const message = await onSubmit(retrievalMethod);
-
-    setIsSaving(false);
-    setError(message);
-  };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
-      {/* Light text: the form opens inside the dark disc table. */}
-      <p className="basis-full text-xs text-gray-300">
-        {isOnList ? 'Muuta noutotapaa' : 'Lisää noutolistalle'}: <b>{discName}</b>
-      </p>
-
-      <fieldset>
-        <legend className="text-xs font-bold text-gray-300 mb-1">Omistaja haluaa kiekon</legend>
-        <div className="flex items-center gap-4">
-          {retrievalMethodOptions.map((option) => (
-            <label key={option.value} className="inline-flex items-center gap-1">
-              <input
-                type="radio"
-                name={`${idPrefix}-method`}
-                value={option.value}
-                checked={retrievalMethod === option.value}
-                onChange={() => setRetrievalMethod(option.value)}
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={isSaving || retrievalMethod === null}
-          className="bg-green-700 hover:bg-green-800 disabled:opacity-40 text-white rounded px-3 py-1"
-        >
-          {isSaving ? 'Tallennetaan...' : current === null ? 'Lisää noutolistalle' : 'Tallenna noutotapa'}
-        </button>
-
-        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-white/10 rounded px-3 py-1">
-          Peruuta
-        </button>
-      </div>
-
-      {error && <p className="basis-full text-red-300">{error}</p>}
-    </form>
+    <InlineForm
+      title={
+        <>
+          {isOnList ? 'Muuta noutotapaa' : 'Lisää noutolistalle'}: <b>{discName}</b>
+        </>
+      }
+      submitLabel={current === null ? 'Lisää noutolistalle' : 'Tallenna noutotapa'}
+      canSubmit={retrievalMethod !== null}
+      // `canSubmit` already keeps this from being called unanswered. The check
+      // is here to tell the type checker so — and it throws rather than
+      // returning, because `null` is how this handler reports success and a
+      // silent "saved fine" is the wrong way to describe a broken invariant.
+      onSubmit={async () => {
+        if (retrievalMethod === null) {
+          throw new Error('InlineForm submitted while canSubmit was false');
+        }
+        return onSubmit(retrievalMethod);
+      }}
+      onCancel={onCancel}
+    >
+      <InlineFormOptions legend="Omistaja haluaa kiekon">
+        {retrievalMethodOptions.map((option) => (
+          <InlineFormOption key={option.value}>
+            <input
+              type="radio"
+              name={`${idPrefix}-method`}
+              value={option.value}
+              checked={retrievalMethod === option.value}
+              onChange={() => setRetrievalMethod(option.value)}
+            />
+            {option.label}
+          </InlineFormOption>
+        ))}
+      </InlineFormOptions>
+    </InlineForm>
   );
 }

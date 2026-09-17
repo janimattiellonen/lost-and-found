@@ -14,12 +14,14 @@ import {
 } from 'react-router';
 
 import { createBrowserClient } from '@supabase/ssr';
+import * as stylex from '@stylexjs/stylex';
 
 import { createSupabaseServerClientWithHeaders } from '~/models/utils';
 
 import AdminMenu from '~/ui/AdminMenu';
 import Header from '~/ui/Header';
 import { getClubFavicon } from '~/config/clubs';
+import { space } from '~/styles/tokens.stylex';
 import { loadResponseCount } from '~/features/discs/ownerResponse/loadResponseCount.server';
 import { loadRetrievalCount } from '~/features/discs/retrieval/loadRetrievalCount.server';
 // Side-effect import so Vite processes app.css through PostCSS/Tailwind in both
@@ -118,9 +120,7 @@ export default function App() {
             responseCount={responseCount}
           />
         )}
-        {/* The menu spans the viewport edges; everything below keeps the page inset
-            that used to come from the body margin. */}
-        <div style={{ margin: '1rem' }}>
+        <div {...stylex.props(styles.page)}>
           {showHeader && <Header clubId={parseInt(env.CLUB_ID, 10)} clubName={env.CLUB_NAME} />}
           <Outlet context={{ supabase, session }} />
         </div>
@@ -131,3 +131,11 @@ export default function App() {
     </html>
   );
 }
+
+const styles = stylex.create({
+  // The admin menu spans the viewport edges; everything below keeps the page
+  // inset that used to come from the body margin.
+  page: {
+    margin: space.md,
+  },
+});

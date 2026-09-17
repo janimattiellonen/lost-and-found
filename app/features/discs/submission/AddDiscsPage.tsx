@@ -16,6 +16,7 @@ import { submitDiscs, toSubmission } from '~/features/discs/submission/submitDis
 import { DeleteIcon } from '~/ui/icons';
 import FormControlLabel from '~/ui/FormControlLabel';
 import { Radio, RadioGroup } from '~/ui/RadioGroup';
+import StatusNote from '~/ui/StatusNote';
 import { color, font, radius, space } from '~/styles/tokens.stylex';
 
 type AddDiscsPageProps = {
@@ -144,6 +145,19 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
     setConfirmingDelete(null);
     setIsConfirmingClear(false);
   }
+
+  // What the save came to, if it has come to anything yet. One value rather than
+  // two branches in the markup, so the box is written once and only its colour
+  // depends on the outcome.
+  const feedback: { variant: 'success' | 'error'; message: string } | null =
+    submitState.status === 'success'
+      ? {
+          variant: 'success',
+          message: `Tallennettu. ${submitState.savedCount} ${submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.`,
+        }
+      : submitState.status === 'error'
+        ? { variant: 'error', message: submitState.message }
+        : null;
 
   return (
     <div {...stylex.props(styles.page)}>
@@ -358,18 +372,15 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
           ))}
       </div>
 
-      {/* Announced politely so the outcome reaches a screen reader too. */}
-      <div role="status" aria-live="polite">
-        {submitState.status === 'success' && (
-          <p {...stylex.props(styles.feedback, styles.success)}>
-            Tallennettu. {submitState.savedCount} {submitState.savedCount === 1 ? 'kiekko' : 'kiekkoa'} lisättiin.
-          </p>
-        )}
-
-        {submitState.status === 'error' && (
-          <p {...stylex.props(styles.feedback, styles.error)}>{submitState.message}</p>
-        )}
-      </div>
+      {/* Announced politely so the outcome reaches a screen reader too. The gap
+          above the box is applied only when there is a box, because an empty
+          live region has to keep taking no room at all. */}
+      <StatusNote
+        variant={feedback?.variant}
+        className={feedback ? stylex.props(styles.feedbackGap).className : undefined}
+      >
+        {feedback?.message}
+      </StatusNote>
     </div>
   );
 }
@@ -466,7 +477,7 @@ const columns: { header: string; field: EditableField }[] = [
 const styles = stylex.create({
   page: { padding: space.lg, fontFamily: font.family, color: color.textPrimary },
   // The global CSS reset strips heading styles, so set them here.
-  heading: { fontSize: font.sizeXl, fontWeight: font.weightBold, marginBottom: space.sm },
+  heading: { fontSize: font.sizeXxl, fontWeight: font.weightBold, marginBottom: space.sm },
   intro: { marginBottom: space.lg, color: color.textSecondary },
   label: { display: 'block', fontWeight: font.weightBold, marginBottom: space.xs, color: color.textSecondary },
   form: { marginBottom: space.lg },
@@ -479,7 +490,7 @@ const styles = stylex.create({
     gap: space.sm,
     marginBottom: space.md,
     fontSize: font.sizeSm,
-    color: '#8a6100',
+    color: color.caution,
   },
   applyButton: {
     marginTop: space.sm,
@@ -541,7 +552,7 @@ const styles = stylex.create({
   // on half of all entries and has never yet been wrong, which would make it
   // noise.
   flaggedCell: { display: 'flex', alignItems: 'baseline', gap: space.xs },
-  uncertain: { color: '#8a6100', cursor: 'help' },
+  uncertain: { color: color.caution, cursor: 'help' },
   none: { color: color.textMuted, fontStyle: 'italic' },
   // The static value is a button so a cell can be reached and opened by
   // keyboard as well as by clicking it.
@@ -583,7 +594,7 @@ const styles = stylex.create({
     fontFamily: 'inherit',
     fontSize: 'inherit',
     color: color.onAccent,
-    backgroundColor: { default: color.danger, ':hover': '#b71c1c' },
+    backgroundColor: { default: color.danger, ':hover': color.dangerHover },
     borderStyle: 'none',
     borderRadius: radius.sm,
     cursor: 'pointer',
@@ -616,15 +627,9 @@ const styles = stylex.create({
     backgroundColor: { default: color.border, ':hover': color.border },
     cursor: 'not-allowed',
   },
-  feedback: {
-    padding: space.md,
-    marginTop: space.md,
-    borderRadius: radius.sm,
-    borderWidth: '1px',
-    borderStyle: 'solid',
-  },
-  success: { color: '#1b5e20', backgroundColor: '#e8f5e9', borderColor: '#a5d6a7' },
-  error: { color: '#8e0000', backgroundColor: '#fdecea', borderColor: '#f5c2c0' },
+  // The box itself is ui/StatusNote; what stays here is the room it needs
+  // between the save button and itself.
+  feedbackGap: { marginTop: space.md },
   // Present for screen readers, out of the way visually.
   srOnly: {
     position: 'absolute',

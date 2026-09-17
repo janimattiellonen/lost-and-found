@@ -5,6 +5,7 @@ import { Form, useNavigation } from 'react-router';
 import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import { fieldNames, type DiscEditErrors, type DiscEditValues } from '~/features/discs/edit/discEdit';
 import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/fieldLimits';
+import FieldError from '~/ui/FieldError';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -12,7 +13,7 @@ import H2 from '~/ui/H2';
 import Label from '~/ui/Label';
 import type { MethodOption } from '~/lib/methodEnum';
 import Select, { MenuItem } from '~/ui/Select';
-import SuccessNote from '~/ui/SuccessNote';
+import StatusNote from '~/ui/StatusNote';
 import TextField from '~/ui/TextField';
 import Wrapper from '~/ui/Wrapper';
 
@@ -52,9 +53,11 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
     <div>
       <H2 className="mt-8 mb-4">Muokkaa kiekon tietoja</H2>
 
-      <SuccessNote className="mb-4">{!isEdited && !isSaving && saved && 'Kiekon tiedot tallennettu.'}</SuccessNote>
+      <StatusNote variant="success" className="mb-4">
+        {!isEdited && !isSaving && saved && 'Kiekon tiedot tallennettu.'}
+      </StatusNote>
 
-      {errors?.form && <p className="mb-4 text-red-500 text-sm">{errors.form}</p>}
+      {errors?.form && <p className="mb-4 text-danger-strong text-sm">{errors.form}</p>}
 
       <Form
         method="post"
@@ -103,7 +106,7 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
               ))}
             </Select>
 
-            <FieldError message={errors?.course} />
+            <FieldError>{errors?.course}</FieldError>
           </Wrapper>
         )}
 
@@ -117,11 +120,11 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
             fullWidth
             defaultValue={disc.additionalInfo ?? ''}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-fg-muted">
             Seuran sisäinen muistiinpano. Ei näy julkisella listalla. Enintään {MAX_ADDITIONAL_INFO_LENGTH} merkkiä.
           </p>
 
-          <FieldError message={errors?.additionalInfo} />
+          <FieldError>{errors?.additionalInfo}</FieldError>
         </Wrapper>
 
         {/* Both marks take a disc off the public list, so they sit apart from
@@ -196,9 +199,9 @@ function TextRow({ field, label, hint, value, error }: TextRowProps): JSX.Elemen
         inputProps={{ maxLength: MAX_FIELD_LENGTH }}
       />
 
-      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-fg-muted">{hint}</p>}
 
-      <FieldError message={error} />
+      <FieldError>{error}</FieldError>
     </Wrapper>
   );
 }
@@ -263,7 +266,7 @@ function MarkSection({ mark, isMarked, onToggle, errors }: MarkSectionProps): JS
             <Label htmlFor={dateName}>Päivämäärä</Label>
             <TextField id={dateName} name={dateName} type="date" defaultValue={mark.dateValue ?? ''} />
 
-            <FieldError message={errors?.[mark.dateField]} />
+            <FieldError>{errors?.[mark.dateField]}</FieldError>
           </div>
 
           <div>
@@ -281,14 +284,10 @@ function MarkSection({ mark, isMarked, onToggle, errors }: MarkSectionProps): JS
               ))}
             </Select>
 
-            <FieldError message={errors?.[mark.methodField]} />
+            <FieldError>{errors?.[mark.methodField]}</FieldError>
           </div>
         </div>
       )}
     </Wrapper>
   );
-}
-
-function FieldError({ message }: { message?: string }): JSX.Element | null {
-  return message ? <p className="text-red-500 text-xs italic">{message}</p> : null;
 }

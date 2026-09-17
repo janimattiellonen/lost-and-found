@@ -127,7 +127,7 @@ export default function SelectedDiscsActions({ selected, onClear, onChanged }: P
     if (notice?.kind === 'done' || notice?.kind === 'warning') {
       return (
         <p
-          className={notice.kind === 'warning' ? 'mb-4 text-sm font-bold text-amber-700' : 'mb-4 text-sm'}
+          className={notice.kind === 'warning' ? 'mb-4 text-sm font-bold text-warning' : 'mb-4 text-sm'}
           aria-live="polite"
         >
           {notice.text}

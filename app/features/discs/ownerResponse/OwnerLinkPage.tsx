@@ -51,7 +51,7 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
     return (
       <Centered>
         <H2 className="mb-4">Linkki ei ole enää käytössä</H2>
-        <p className="text-gray-700 text-center">
+        <p className="text-fg-secondary text-center">
           Kiekko on ehkä jo palautettu tai luovutettu. Ota yhteyttä seuraan, jos asia on vielä kesken.
         </p>
         <ContactNote contactEmail={contactEmail} className="mt-6 text-center" />
@@ -64,7 +64,7 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
       <Centered>
         <div className="text-5xl mb-6">&#9989;</div>
         <H2 className="mb-4">Kiitos vastauksesta!</H2>
-        <p className="text-gray-700 mb-8 text-center text-lg">
+        <p className="text-fg-secondary mb-8 text-center text-lg">
           Seura hoitaa asian eteenpäin. Voit muuttaa valintaasi samasta linkistä, jos tulee muutoksia.
         </p>
         <Button variant="outlined" size="large" to={`${OWNER_LINK_PATH}/${token}`}>
@@ -85,14 +85,14 @@ export default function OwnerLinkPage({ disc, clubPayment, contactEmail, token, 
       <p className="mb-1 text-lg font-bold">
         {disc.discColour} {disc.discName}
       </p>
-      {disc.discManufacturer && <p className="mb-1 text-gray-700">{disc.discManufacturer}</p>}
-      {disc.phoneNumberEnding && <p className="mb-6 text-gray-700">Puhelinnumero ****{disc.phoneNumberEnding}</p>}
+      {disc.discManufacturer && <p className="mb-1 text-fg-secondary">{disc.discManufacturer}</p>}
+      {disc.phoneNumberEnding && <p className="mb-6 text-fg-secondary">Puhelinnumero ****{disc.phoneNumberEnding}</p>}
 
-      <p className="text-gray-700 mb-8 leading-relaxed">
+      <p className="text-fg-secondary mb-8 leading-relaxed">
         Tämän lomakkeen kautta voit ilmoittaa, haluatko kiekon takaisin vai lahjoitatko kiekon seuralle.
       </p>
 
-      {result && 'error' in result && <p className="mb-6 text-red-600">{result.error}</p>}
+      {result && 'error' in result && <p className="mb-6 text-danger-strong">{result.error}</p>}
 
       <Form method="post">
         {/* Each follow-up question is nested inside the answer that raises it,
@@ -188,7 +188,7 @@ function followUp(method: HandoverMethodValue, clubPayment: ClubPayment | null):
  */
 function StorageNote(): JSX.Element {
   return (
-    <p className="text-gray-700">
+    <p className="text-fg-secondary">
       Kopilta haku onnistuu hyvin satunnaisesti, joten jos haluat saada kiekkosi nopeasti takaisin, valitse postitus tai
       nouto.
     </p>
@@ -204,7 +204,9 @@ function StorageNote(): JSX.Element {
  */
 function PickupNote(): JSX.Element {
   return (
-    <p className="text-gray-700">Kiekon voi noutaa Espoon Lintuvaarasta. Saat pian viestin, jossa tarkemmat ohjeet.</p>
+    <p className="text-fg-secondary">
+      Kiekon voi noutaa Espoon Lintuvaarasta. Saat pian viestin, jossa tarkemmat ohjeet.
+    </p>
   );
 }
 
@@ -235,7 +237,7 @@ function ShippingAddress({ clubPayment }: { clubPayment: ClubPayment | null }): 
       </label>
 
       {hasMoreDiscs ? (
-        <p className="text-gray-700">Sinuun otetaan pian yhteyttä.</p>
+        <p className="text-fg-secondary">Sinuun otetaan pian yhteyttä.</p>
       ) : (
         <PostingDetails clubPayment={clubPayment} />
       )}
@@ -255,7 +257,7 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
     <div>
       <p className="mb-2 font-bold">Ohjeet</p>
 
-      <ul className="mb-6 list-disc space-y-2 pl-5 text-gray-700">
+      <ul className="mb-6 list-disc space-y-2 pl-5 text-fg-secondary">
         <li>
           Maksa MobilePaylla {formatPostageFee()} numeroon <strong>{POSTAGE_PAYEE_NUMBER}</strong> ({POSTAGE_PAYEE_NAME}
           ).
@@ -325,7 +327,7 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
         />
       </Wrapper>
 
-      <p className="mt-2 text-sm text-gray-600">
+      <p className="mt-2 text-sm text-fg-body">
         Osoitetta käytetään vain tämän kiekon postittamiseen, ja se poistetaan kun kiekko on lähetetty.
       </p>
     </div>
@@ -340,7 +342,7 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
  */
 function ContactNote({ contactEmail, className }: { contactEmail: string; className?: string }): JSX.Element {
   return (
-    <p className={`text-sm text-gray-600 ${className ?? ''}`}>
+    <p className={`text-sm text-fg-body ${className ?? ''}`}>
       Jos jokin ei toimi tai haluat kysyä jotain, ota yhteyttä{' '}
       <a className="underline" href={`mailto:${contactEmail}`}>
         {contactEmail}
@@ -371,13 +373,17 @@ type ChoiceProps<V extends number> = {
  */
 function Choice<V extends number>({ name, value, checked, onChange, label, children }: ChoiceProps<V>): JSX.Element {
   return (
-    <div className={`mb-2 rounded border ${checked ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white'}`}>
+    <div
+      className={`mb-2 rounded border ${checked ? 'border-line-accent bg-surface-accent' : 'border-line bg-surface'}`}
+    >
       <label className="flex cursor-pointer items-center gap-3 px-4 py-3">
         <input type="radio" name={name} value={value} checked={checked} onChange={() => onChange(value)} />
         <span>{label}</span>
       </label>
 
-      {checked && children && <div className="rounded-b border-t border-blue-200 bg-white px-4 py-4">{children}</div>}
+      {checked && children && (
+        <div className="rounded-b border-t border-line-accent-subtle bg-surface px-4 py-4">{children}</div>
+      )}
     </div>
   );
 }

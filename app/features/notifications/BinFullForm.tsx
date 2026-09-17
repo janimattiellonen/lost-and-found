@@ -21,7 +21,7 @@ export default function BinFullForm({ course, alreadySubmitted }: BinFullFormPro
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
         <div className="text-5xl mb-6">&#9989;</div>
         <H2 className="mb-4">Kiitos ilmoituksesta!</H2>
-        <p className="text-gray-600 text-center text-lg">Ilmoitus täydestä löytökiekkolaatikosta on vastaanotettu.</p>
+        <p className="text-fg-body text-center text-lg">Ilmoitus täydestä löytökiekkolaatikosta on vastaanotettu.</p>
       </div>
     );
   }
@@ -30,9 +30,9 @@ export default function BinFullForm({ course, alreadySubmitted }: BinFullFormPro
     <div className="px-6 py-8 max-w-lg mx-auto">
       <H2 className="mb-2">Löytökiekkolaatikko täynnä?</H2>
 
-      <p className="text-black font-bold mb-4 text-sm">{course.name}</p>
+      <p className="text-fg-strong font-bold mb-4 text-sm">{course.name}</p>
 
-      <p className="text-gray-700 mb-8 text-base leading-relaxed">
+      <p className="text-fg-secondary mb-8 text-base leading-relaxed">
         Onko löytökiekkolaatikko täynnä niin, että kiekkoja ei enää mahdu sisään? Ilmoita siitä painamalla alla olevaa
         nappia.
       </p>

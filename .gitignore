@@ -18,3 +18,5 @@ node_modules
 /.playwright/
 # The review-gate marker: local state, not shared
 .claude/.review-state
+# Agent worktrees: whole checkouts, created and removed by the harness
+.claude/worktrees/

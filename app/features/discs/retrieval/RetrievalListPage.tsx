@@ -2,8 +2,9 @@ import { Form } from 'react-router';
 
 import { retrievalErrandLabel, supersededRequestLabel } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
-import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatDate } from '~/utils';
 import Button from '~/ui/Button';
+import ContactLine from '~/ui/ContactLine';
 import H2 from '~/ui/H2';
 import Paper from '~/ui/Paper';
 
@@ -30,12 +31,12 @@ export default function RetrievalListPage({ discs }: Props): JSX.Element {
     <div>
       <H2 className="mt-8 mb-2">Noutolista</H2>
 
-      <p className="mb-6 max-w-2xl text-sm text-gray-600">
+      <p className="mb-6 max-w-2xl text-sm text-fg-body">
         Kiekot, joita ei ole vielä haettu: omistajien pyytämät sekä myyntiin tai lahjoitukseen menevät. Merkitse kiekko
         noudetuksi, kun se on sinulla – kiekon palautus omistajalle merkitään erikseen kiekkolistalla.
       </p>
 
-      {discs.length === 0 && <p className="text-gray-500">Noutolistalla ei ole kiekkoja.</p>}
+      {discs.length === 0 && <p className="text-fg-muted">Noutolistalla ei ole kiekkoja.</p>}
 
       {discs.map((disc) => (
         <RetrievalListItem key={disc.externalId} disc={disc} />
@@ -58,7 +59,7 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             {disc.discColour} {disc.discName}
           </span>
 
-          <span className="text-sm text-gray-600">{errand}</span>
+          <span className="text-sm text-fg-body">{errand}</span>
 
           {/* The club has decided to keep a disc its owner had asked for. Both
               facts are true and they disagree, so the card says both rather
@@ -66,29 +67,16 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
               the admin there is a message to send before the disc goes to the
               bring-and-buy table. */}
           {superseded !== null && (
-            <span className="text-sm font-bold text-amber-700">{supersededRequestLabel(superseded)}</span>
+            <span className="text-sm font-bold text-warning">{supersededRequestLabel(superseded)}</span>
           )}
 
-          {/* A link rather than plain digits: the number is here to be texted
-              from the same phone the list is read on, so it opens a message to
-              the owner rather than placing a call. The name comes after it in
-              brackets, outside the link — only the digits are tappable. */}
-          {(disc.ownerPhoneNumber || disc.ownerName) && (
-            <span className="text-sm text-gray-600">
-              {disc.ownerPhoneNumber && (
-                <a href={`sms:${toDiallablePhoneNumber(disc.ownerPhoneNumber)}`} className="text-blue-700 underline">
-                  {formatPhoneNumber(disc.ownerPhoneNumber)}
-                </a>
-              )}
-              {disc.ownerName && (disc.ownerPhoneNumber ? ` (${disc.ownerName})` : disc.ownerName)}
-            </span>
-          )}
+          <ContactLine phoneNumber={disc.ownerPhoneNumber} name={disc.ownerName} />
 
           {/* The dates last and together, as on the answers page: the request
               date is what the card is read for -- one from three weeks ago is
               one to ask about -- and the day the disc was written down says how
               long it has been on the shelf. */}
-          <span className="mt-2 text-xs text-gray-500">
+          <span className="mt-2 text-xs text-fg-muted">
             Pyydetty {formatDate(disc.requestedAt)} · Kirjattu {formatDate(disc.addedAt)}
           </span>
         </div>

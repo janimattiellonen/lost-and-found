@@ -1,6 +1,11 @@
-import { useState, type FormEvent, type JSX } from 'react';
+import { useState, type JSX } from 'react';
 
 import { format } from 'date-fns';
+
+import * as stylex from '@stylexjs/stylex';
+
+import { color, dark, font, leading, radius, space } from '~/styles/tokens.stylex';
+import InlineForm, { InlineFormOption, InlineFormOptions } from '../InlineForm';
 
 /** One radio option: the value that gets persisted, and its Finnish label. */
 export type MethodOption<V extends number = number> = { value: V; label: string };
@@ -42,32 +47,20 @@ export default function DateAndMethodForm<V extends number>({
 }: DateAndMethodFormProps<V>): JSX.Element {
   const [date, setDate] = useState(() => format(new Date(), 'y-MM-dd'));
   const [method, setMethod] = useState<V | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-
-    setIsSaving(true);
-    setError(null);
-
-    const message = await onSubmit(date, method);
-
-    setIsSaving(false);
-    setError(message);
-  };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-6 py-2">
-      {/* The form opens inside the dark disc table, so its text has to be
-          light: the gray-600 of a form on a white page all but disappeared
-          against the row behind it. */}
-      <p className="basis-full text-xs text-gray-300">
-        {title}: <b>{discName}</b>
-      </p>
-
+    <InlineForm
+      title={
+        <>
+          {title}: <b>{discName}</b>
+        </>
+      }
+      submitLabel={submitLabel}
+      onSubmit={() => onSubmit(date, method)}
+      onCancel={onCancel}
+    >
       <div>
-        <label htmlFor={`${idPrefix}-date`} className="block text-xs font-bold text-gray-300 mb-1">
+        <label htmlFor={`${idPrefix}-date`} {...stylex.props(styles.label)}>
           {dateLabel}
         </label>
         <input
@@ -76,52 +69,67 @@ export default function DateAndMethodForm<V extends number>({
           required
           value={date}
           onChange={(event) => setDate(event.currentTarget.value)}
-          className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-900"
+          {...stylex.props(styles.dateInput)}
         />
       </div>
 
-      <fieldset>
-        <legend className="text-xs font-bold text-gray-300 mb-1">{methodLabel}</legend>
-        <div className="flex items-center gap-4">
-          {options.map((option) => (
-            <label key={option.value} className="inline-flex items-center gap-1">
-              <input
-                type="radio"
-                name={`${idPrefix}-method`}
-                value={option.value}
-                checked={method === option.value}
-                onChange={() => setMethod(option.value)}
-              />
-              {option.label}
-            </label>
-          ))}
+      <InlineFormOptions legend={methodLabel}>
+        {options.map((option) => (
+          <InlineFormOption key={option.value}>
+            <input
+              type="radio"
+              name={`${idPrefix}-method`}
+              value={option.value}
+              checked={method === option.value}
+              onChange={() => setMethod(option.value)}
+            />
+            {option.label}
+          </InlineFormOption>
+        ))}
 
-          <button
-            type="button"
-            disabled={method === null}
-            onClick={() => setMethod(null)}
-            className="text-xs underline text-gray-300 disabled:opacity-40 disabled:no-underline"
-          >
-            Tyhjennä
-          </button>
-        </div>
-      </fieldset>
-
-      <div className="flex items-center gap-2">
         <button
-          type="submit"
-          disabled={isSaving}
-          className="bg-green-700 hover:bg-green-800 disabled:opacity-40 text-white rounded px-3 py-1"
+          type="button"
+          disabled={method === null}
+          onClick={() => setMethod(null)}
+          {...stylex.props(styles.clearButton)}
         >
-          {isSaving ? 'Tallennetaan...' : submitLabel}
+          Tyhjennä
         </button>
-
-        <button type="button" onClick={onCancel} className="border border-gray-300 hover:bg-white/10 rounded px-3 py-1">
-          Peruuta
-        </button>
-      </div>
-
-      {error && <p className="basis-full text-red-300">{error}</p>}
-    </form>
+      </InlineFormOptions>
+    </InlineForm>
   );
 }
+
+// Only the three styles this form does not share with the other two: the date
+// field and its label, which no other inline form has, and the clear button
+// that goes with the nullable method. The shell lives in `ui/InlineForm`.
+const styles = stylex.create({
+  label: {
+    display: 'block',
+    marginBottom: space.xs,
+    fontSize: font.sizeXs,
+    lineHeight: leading.xs,
+    fontWeight: font.weightBold,
+    color: dark.text,
+  },
+  // A white field sitting on the dark island, so its border is the light
+  // surface's `color.border` rather than the dark group's — the same grey, but
+  // the role that explains why it is there.
+  dateInput: {
+    paddingBlock: space.xs,
+    paddingInline: space.sm,
+    color: color.textPrimary,
+    backgroundColor: color.surface,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: color.border,
+    borderRadius: radius.sm,
+  },
+  clearButton: {
+    fontSize: font.sizeXs,
+    lineHeight: leading.xs,
+    color: dark.text,
+    textDecorationLine: { default: 'underline', ':disabled': 'none' },
+    opacity: { default: 1, ':disabled': 0.4 },
+  },
+});

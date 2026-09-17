@@ -39,7 +39,7 @@ export default function EmptyingLogItem({ item }: EmptyingLogItemProps): JSX.Ele
             control={
               <Checkbox checked={usesCustomDate} onChange={(event) => setUsesCustomDate(event.currentTarget.checked)} />
             }
-            label={<span className="text-xs text-gray-500">pvm</span>}
+            label={<span className="text-xs text-fg-muted">pvm</span>}
           />
         </div>
 

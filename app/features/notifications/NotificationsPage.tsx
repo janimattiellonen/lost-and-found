@@ -44,7 +44,7 @@ export default function NotificationsPage({ notifications, binFullNotifications 
         </div>
       )}
 
-      {notifications.length === 0 && <p className="text-gray-500">Ei ilmoituksia.</p>}
+      {notifications.length === 0 && <p className="text-fg-muted">Ei ilmoituksia.</p>}
 
       {notifications.map((notification: DiscFoundNotificationDTO) => (
         <NotificationItem key={notification.id} notification={notification} />
@@ -72,7 +72,7 @@ export default function NotificationsPage({ notifications, binFullNotifications 
         </div>
       )}
 
-      {binFullNotifications.length === 0 && <p className="text-gray-500">Ei ilmoituksia.</p>}
+      {binFullNotifications.length === 0 && <p className="text-fg-muted">Ei ilmoituksia.</p>}
 
       {binFullNotifications.map((notification: BinFullNotificationDTO) => (
         <BinFullNotificationItem key={notification.id} notification={notification} />
@@ -89,7 +89,7 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
 
   return (
     <div {...stylex.props(styles.card, isUnread && styles.unread)}>
-      <div className="text-sm text-gray-500 mb-2">
+      <div className="text-sm text-fg-muted mb-2">
         {formatDateTime(notification.createdAt)}
         {notification.courseName && <span className="ml-4">{notification.courseName}</span>}
         {notification.readAt && <span className="ml-4">Luettu: {formatDateTime(notification.readAt)}</span>}
@@ -121,7 +121,7 @@ function NotificationItem({ notification }: { notification: DiscFoundNotificatio
         </div>
       )}
 
-      {!hasContactInfo && !notification.message && <div className="text-gray-500 italic mb-2">Ei lisätietoja</div>}
+      {!hasContactInfo && !notification.message && <div className="text-fg-muted italic mb-2">Ei lisätietoja</div>}
 
       <div className="flex gap-2 mt-2">
         {isUnread && (
@@ -159,7 +159,7 @@ function BinFullNotificationItem({ notification }: { notification: BinFullNotifi
 
   return (
     <div {...stylex.props(styles.card, isUnread && styles.unread)}>
-      <div className="text-sm text-gray-500 mb-2">
+      <div className="text-sm text-fg-muted mb-2">
         {formatDateTime(notification.createdAt)}
         <span className="ml-4">{notification.courseName}</span>
         {notification.readAt && <span className="ml-4">Luettu: {formatDateTime(notification.readAt)}</span>}
@@ -199,7 +199,7 @@ const styles = stylex.create({
   card: {
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: '#e0e0e0',
+    borderColor: color.borderSubtle,
     borderRadius: radius.md,
     padding: space.md,
     marginBottom: space.md,
@@ -208,6 +208,6 @@ const styles = stylex.create({
   unread: {
     borderLeftWidth: '4px',
     borderLeftColor: color.accent,
-    backgroundColor: '#f5f9ff',
+    backgroundColor: color.accentSurface,
   },
 });

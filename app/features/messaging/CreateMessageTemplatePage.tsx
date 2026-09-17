@@ -4,6 +4,7 @@ import type { MessageTemplateErrors } from '~/features/messaging/createMessageTe
 import TemplateCategorySelect from '~/features/messaging/TemplateCategorySelect';
 import TemplateTokenHelp from '~/features/messaging/TemplateTokenHelp';
 import type { MessageTemplateCategoryDTO } from '~/types';
+import FieldError from '~/ui/FieldError';
 import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import FormControlLabel from '~/ui/FormControlLabel';
@@ -37,7 +38,7 @@ export default function CreateMessageTemplatePage({ categories, errors }: Props)
           <Label htmlFor="content">Sisältö</Label>
           <TextField name="content" id="content" multiline rows={9} fullWidth />
 
-          {errors?.content && <p className="text-red-500 text-xs italic">{errors.content}</p>}
+          <FieldError>{errors?.content}</FieldError>
         </Wrapper>
 
         <TemplateCategorySelect categories={categories} selected={null} />

@@ -161,7 +161,7 @@ const styles = stylex.create({
   barBase: { position: 'relative', height: '25px', marginBottom: space.sm },
   // Dynamic per-bar width/colour.
   barDynamic: (width: number, colour: string) => ({ width: `${width}%`, backgroundColor: colour }),
-  barValue: { position: 'absolute', right: '-25px', color: 'black' },
+  barValue: { position: 'absolute', right: '-25px', color: color.textStrong },
   // The segmented bar matches the plain bar above it, so the two are comparable
   // by eye and the parts visibly sum to the whole.
   segmentedBar: { marginBottom: space.md },

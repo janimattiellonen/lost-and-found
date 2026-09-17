@@ -17,7 +17,11 @@ const features = fs
 export default tseslint.config(
   // Replaces the former .eslintignore.
   {
-    ignores: ['node_modules', 'build', '.react-router', '.cache', '.vercel', '.output'],
+    // These are directory names, so they only match at the root. `.claude/`
+    // holds the agent worktrees, each of which is a whole checkout with its own
+    // `build/` — without this line, lint fails on minified output the moment one
+    // exists, which is confusing in exactly the way a tool should not be.
+    ignores: ['node_modules', 'build', '.react-router', '.cache', '.vercel', '.output', '.claude'],
   },
 
   // Lint JS/TS/JSX/TSX (flat config drops the old --ext flag).
