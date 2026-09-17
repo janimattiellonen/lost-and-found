@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DiscDTO } from '~/types';
-import { formatPhoneNumber, getDistinctCourses } from '~/utils';
+import { formatPhoneNumber, getDistinctCourses, toDiallablePhoneNumber } from '~/utils';
 
 function disc(course?: string | null): DiscDTO {
   return { discName: 'Destroyer', course } as DiscDTO;
@@ -22,6 +22,25 @@ describe('getDistinctCourses', () => {
 
   it('returns nothing for a club that records no course at all', () => {
     expect(getDistinctCourses([disc(null), disc(null)])).toEqual([]);
+  });
+});
+
+describe('toDiallablePhoneNumber', () => {
+  it('strips the grouping spaces an `sms:` target cannot take', () => {
+    expect(toDiallablePhoneNumber('050 123 4567')).toBe('0501234567');
+    expect(toDiallablePhoneNumber('+372 333 4444')).toBe('+3723334444');
+  });
+
+  it('leaves a number that was never grouped alone', () => {
+    expect(toDiallablePhoneNumber('0501234567')).toBe('0501234567');
+  });
+
+  it('takes what formatPhoneNumber produces and gives back what went in', () => {
+    // The two run back to back at every call site — one to show the number, one
+    // to link it — so the pair has to round-trip rather than merely work apart.
+    for (const raw of ['0501234567', '0411234567', '+3723334444', '05012345678']) {
+      expect(toDiallablePhoneNumber(formatPhoneNumber(raw))).toBe(raw);
+    }
   });
 });
 
