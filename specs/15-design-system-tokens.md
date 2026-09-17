@@ -431,6 +431,25 @@ that use it, so the callers move to the token that preserves their current size:
 | `sizeXl`  | `1.25rem`  | `text-xl`   | **changed** from `1.75rem`            |
 | `sizeXxl` | `1.75rem`  | —           | **new**, holds the old `sizeXl` value |
 
+`leading` — added later, once a conversion showed the scale was only half a
+scale: `font.sizeXs` set a size while Tailwind's `text-xs` sets a size _and_ a
+line height, so converting a small label to the token alone would have dropped it
+onto the browser's default leading. Values read out of the installed
+`tailwindcss/defaultTheme`.
+
+| Token | Value     | Paired with   |
+| ----- | --------- | ------------- |
+| `xs`  | `1rem`    | `font.sizeXs` |
+| `sm`  | `1.25rem` | `font.sizeSm` |
+| `md`  | `1.5rem`  | `font.sizeMd` |
+| `lg`  | `1.75rem` | `font.sizeLg` |
+| `xl`  | `1.75rem` | `font.sizeXl` |
+
+`font.sizeXxl` has no leading: it has no step in Tailwind's scale, so there is no
+height to read out, and inventing one would be a design decision taken by
+accident. A size and its leading are meant to be picked as a pair — that is what
+the group is for.
+
 Four call sites move so that their rendered size does not change. The original
 survey counted two; it had read `InfoBox`'s `sizeLg` as the heading that also
 carries Tailwind's `text-lg`, but those are two different elements — the token is
@@ -564,17 +583,21 @@ because it refuses to skip a line it cannot read rather than passing over it.
 
 None. No route, loader or action is touched.
 
-| Entry point                                 | Purpose                                                                                                                                          |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `app/styles/palette.stylex.ts`              | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                    |
-| `app/styles/tokens.stylex.ts`               | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".        |
-| `app.css`                                   | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                  |
-| `tailwind.config.ts`                        | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does.   |
-| `app/features/discs/list/OverdueMarker.tsx` | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                   |
-| `app/features/discs/list/DiscTable.tsx`     | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind. |
-| `app/styles/palette.test.ts`                | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                  |
-| `app/ui/StatusNote.tsx`                     | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                  |
-| the three inline forms                      | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, the only components with no `className` left at all.                 |
+| Entry point                                   | Purpose                                                                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app/styles/palette.stylex.ts`                | Layer 1. Imported only by `tokens.stylex.ts`.                                                                                                    |
+| `app/styles/tokens.stylex.ts`                 | Layer 2. The file a component imports for a colour, size or space. About a fifth of it has no caller yet — see "Edge cases & known gaps".        |
+| `app.css`                                     | Unchanged. Still holds the three `@tailwind` directives and four element rules.                                                                  |
+| `tailwind.config.ts`                          | Layer 3. Semantic colour aliases in `theme.extend.colors`, so a page still on Tailwind can name a colour the same way a StyleX component does.   |
+| `app/features/discs/list/OverdueMarker.tsx`   | The warning marker the table and its legend both draw. New; it exists so the two cannot drift.                                                   |
+| `app/features/discs/list/DiscTable.tsx`       | The first component to draw from the tokens: its row-action icons, its dark surface and its cell metrics. Its layout classes are still Tailwind. |
+| `app/styles/palette.test.ts`                  | Fails when the two copies of the palette stop agreeing, or when an alias names a colour its token does not. Reads both as text.                  |
+| `app/ui/StatusNote.tsx`                       | The "it worked" / "it failed" box, taking a success or error variant. New; it replaced `ui/SuccessNote.tsx`, which was deleted.                  |
+| the three inline forms                        | `DateAndMethodForm`, `CourseForm`, `RetrievalMethodForm` — fully on StyleX, the only components with no `className` left at all.                 |
+| `app/ui/InlineForm.tsx`                       | The chrome those three share: the form, its title, its two buttons and its error line. The fields are passed in.                                 |
+| `app/ui/ContactLine.tsx`                      | An owner's phone number, tappable as a message, with their name. Shared by the responses view and the retrieval list.                            |
+| `app/ui/StatusNote.test.tsx`                  | The first component test in this project. Runs in the `component` vitest project, which has a DOM and compiles StyleX.                           |
+| `vitest.config.ts`, `test/setup-component.ts` | Two test projects: `node` for plain TypeScript, `component` for anything with JSX in it.                                                         |
 
 ## Rules & constraints
 
@@ -707,26 +730,27 @@ None. No route, loader or action is touched.
   carries the app's identity is now in the palette — but a reader should not
   read that as "there are no literals left".
 
-- **Five of the eighty-one tokens have no caller, and the Tailwind aliases have
-  sixty-seven.** Both numbers were sixteen and zero when the token set was first
-  written; five rounds of conversion since then are what moved them. The point of
-  recording it is that the remainder is now a list rather than a shape:
+- **Eight of the eighty-six tokens have no caller, and the Tailwind aliases have
+  sixty-five.** Both numbers were sixteen and zero when the token set was first
+  written. The remainder is now a list rather than a shape:
 
-  | Group        | Used | Unused                                                         |
-  | ------------ | ---- | -------------------------------------------------------------- |
-  | `color` (34) | 34   | —                                                              |
-  | `dark` (12)  | 11   | `textHover` — no inline form has a hover-text state to give it |
-  | `icon` (15)  | 15   | —                                                              |
-  | `space` (7)  | 6    | `xxl`                                                          |
-  | `font` (9)   | 7    | `sizeLg`, `weightRegular`                                      |
-  | `size` (1)   | 1    | —                                                              |
-  | `radius` (3) | 2    | `lg`                                                           |
+  | Group         | Used | Unused                                                         |
+  | ------------- | ---- | -------------------------------------------------------------- |
+  | `color` (34)  | 34   | —                                                              |
+  | `dark` (12)   | 11   | `textHover` — no inline form has a hover-text state to give it |
+  | `icon` (15)   | 15   | —                                                              |
+  | `space` (7)   | 6    | `xxl`                                                          |
+  | `font` (9)    | 8    | `weightRegular`                                                |
+  | `leading` (5) | 1    | `sm`, `md`, `lg`, `xl`                                         |
+  | `size` (1)    | 1    | —                                                              |
+  | `radius` (3)  | 2    | `lg`                                                           |
 
-  Every colour token now has a caller. The five that do not are a space, two type
-  values and a radius — the non-colour half of the set, which no conversion has
-  had a reason to reach for yet.
+  Every colour token has a caller. Four of the eight that do not are the leading
+  values for sizes no converted component uses yet — they exist so that a size
+  and its height are always picked as a pair, which is the whole point of having
+  named them.
 
-  Thirteen distinct Tailwind aliases are in use across 67 occurrences, the most
+  Thirteen distinct Tailwind aliases are in use across 65 occurrences, the most
   common being `text-fg-muted`, `text-fg-secondary` and `text-fg-body`. That
   matters because the aliases were written before anything used them, and the
   argument for writing them — that a later conversion becomes a rename rather
@@ -748,44 +772,99 @@ None. No route, loader or action is touched.
   paragraph rather than a box, and converting it would be a visible change rather
   than a refactor, so it was left. The two edit pages also still repeat the same
   `{!isEdited && !isSaving && …}` guard around their note.
-- **`StatusNote` has no test, and cannot have one yet.** Vitest runs here in the
-  `node` environment over `app/**/*.test.ts`, with no jsdom (a browser-like
-  document implemented in Node) and no testing-library installed. A render test
-  would mean changing `vitest.config.ts` and adding dependencies, which is its own
-  piece of work. Every component in `app/ui/` is in the same position; this is the
-  first one whose absence is worth writing down, because it is the first that
-  carries a behavioural rule — which variant draws which triad.
-- **The three inline forms are the same form three times.** `DateAndMethodForm`,
-  `CourseForm` and `RetrievalMethodForm` now draw from the tokens, and the
-  conversion made the duplication more visible rather than less: nine style keys
-  (`form`, `title`, `legend`, `options`, `option`, `actions`, `saveButton`,
-  `cancelButton`, `error`) are repeated in all three, eight of them character for
-  character. They were deliberately not merged, for the same reason the status box
-  was not merged in the first round — a component refactor inside a conversion
-  makes the "no pixel moved" claim unreadable. The extraction is not purely
-  mechanical either: the three differ in real ways (one is generic over its method
-  value and carries a date field and a clear button, one wraps its options and has
-  no date, one cannot be submitted unanswered), so it has design decisions in it.
-  Its natural home is a new primitive in `app/ui/`.
-- **`StatusNote`'s `className` carries two styling systems at once.** Two callers
-  pass a Tailwind `mb-4`; `AddDiscsPage` passes a StyleX class name. Both are
-  strings of classes and both work, so this is not a defect — it is what a prop
-  shaped like an escape hatch looks like in an app that is half converted. It
-  will stop being ambiguous when the last caller is StyleX, and until then the
-  prop cannot be typed any more tightly than `string`.
-- **The phone-number block is duplicated between two pages.** It is byte-identical
-  in `OwnerResponsesPage.tsx` and `RetrievalListPage.tsx`, and converting those
-  pages meant editing both in lockstep — which is what a shared primitive would
-  have prevented. It will want the same edit again the next time the palette
-  moves.
-- **The token set names type sizes but not leading.** Tailwind's `text-xs` sets
-  `line-height: 1rem` as well as a font size; `font.sizeXs` sets only the size, and
-  `app.css` has no global `line-height` to fall back on, so converting a small
-  label to the token alone would silently drop it onto the browser's default
-  leading. The three inline forms therefore write `lineHeight: '1rem'` beside each
-  `font.sizeXs`, with a comment saying why. That is a literal in a component, which
-  the rules below otherwise forbid, and it is the honest sign that the scale is
-  half a scale. A `leading` group would fix it properly.
+- **`app/ui/` can now be tested, and `StatusNote` is.** This was a gap and is
+  closed. Vitest runs two projects: the existing one in the `node` environment
+  over `app/**/*.test.ts`, and a second in jsdom (a browser-like document
+  implemented in Node) over `app/**/*.test.tsx`. The split is by extension
+  because that is the honest description of the difference — a test with JSX in
+  it needs a document and one without it does not.
+
+  The component project carries the same `@stylexjs/unplugin` the app builds
+  with, and it has to: `stylex.defineVars` throws at runtime rather than
+  degrading, so importing any component drags in the token set and fails before a
+  test body runs. `app/ui/StatusNote.test.tsx` pins the behaviour the component
+  added when it replaced four hand-built copies — the live region stays in the
+  page when there is nothing to report, no box is drawn for an empty region, and
+  the two outcomes are told apart consistently. It does not assert colours: those
+  are tokens, settled by `palette.test.ts` and by the build, and StyleX class
+  names are content hashes, so the test compares them to each other rather than
+  to any particular name.
+
+  The plugin leaks file handles — around 250, which the hanging-process reporter
+  attributes to its source scan — so Vitest waits for them at exit.
+  `teardownTimeout` bounds that to a second rather than the default ten. The
+  tests have finished by then and the exit code is unaffected, but the run still
+  prints a line saying something is keeping the process alive, and that line is
+  not this project's fault and cannot be fixed from here.
+
+- **The three inline forms are one form now, with the fields passed in.**
+  `app/ui/InlineForm.tsx` owns the chrome the three shared — the form element,
+  the title, the actions row with its two buttons and their Finnish labels, and
+  the error line — plus `InlineFormOptions` and `InlineFormOption` for the radio
+  groups. The fields themselves are `children`, because the three differ in kind
+  rather than in degree: one is generic over its method value and carries a date
+  field and a clear button, one wraps its options, one cannot be submitted
+  unanswered. Passing them in is what stops this becoming the bad abstraction —
+  no form needs a flag for what another form has.
+
+  It took more than the chrome. The submit handler was character-for-character
+  identical in all three, and the `isSaving` and `error` state existed only to
+  feed the save button and the error line, which the shell now owns; callers keep
+  their own field state and hand over a function. `RetrievalMethodForm`'s "cannot
+  submit unanswered" guard survives as a `canSubmit` prop, which both disables
+  the button and refuses the handler.
+
+  `DateAndMethodForm` keeps its own three styles — the label, the date field and
+  the clear button — because only one of the three forms has them, and moving
+  them into a primitive would mean a component carrying styles two of its three
+  callers never use. The comment explaining why the date field uses the light
+  vocabulary moved with it.
+
+  The emitted stylesheet is byte-identical across this change, down to the
+  content hash: StyleX derives its class names from property and value rather
+  than from the file they were written in, so moving a style between files moves
+  nothing at all.
+
+- **The phone-number block is one component now.** `app/ui/ContactLine.tsx`
+  renders the tappable number and the owner's name, and both pages call it
+  unconditionally because it owns the "neither value is present" case itself. It
+  is named for what it renders rather than for the number alone, since it renders
+  both. The decision that tapping opens a message rather than a call is now
+  recorded in one place instead of paraphrased differently in two.
+- **The type scale has its leading.** This was a gap — the token set named sizes
+  but not line heights, so the inline forms wrote `lineHeight: '1rem'` as a
+  literal beside each `font.sizeXs`, which the rules otherwise forbid. A
+  `leading` group now carries the five heights, read out of the installed
+  `tailwindcss/defaultTheme` rather than transcribed:
+
+  | Token        | Value     | Paired with   |
+  | ------------ | --------- | ------------- |
+  | `leading.xs` | `1rem`    | `font.sizeXs` |
+  | `leading.sm` | `1.25rem` | `font.sizeSm` |
+  | `leading.md` | `1.5rem`  | `font.sizeMd` |
+  | `leading.lg` | `1.75rem` | `font.sizeLg` |
+  | `leading.xl` | `1.75rem` | `font.sizeXl` |
+
+  `font.sizeXxl` gets no entry. It is `1.75rem` and has no step in Tailwind's
+  scale, so there is no height to read out, and inventing one would be the design
+  decision rule 1 forbids.
+
+  No Tailwind aliases were added for these, and the reason is the same one that
+  already exempts spacing and type sizes: `theme.fontSize` and `theme.lineHeight`
+  were not replaced, so Tailwind's own type utilities still carry these exact
+  heights. An alias would be a second spelling of a value Tailwind already has.
+  `palette.test.ts` gains no guard either — `leading` is written down once, in one
+  file, with no second copy to drift from and no alias to point at the wrong
+  thing, so there would be nothing for a guard to compare.
+
+- **`InlineForm` owns an async submit lifecycle, and that is worth a second
+  opinion.** A primitive in `app/ui/` now holds `isSaving`, holds the error a
+  failed save returned, and decides when to call the caller's handler. That is
+  more behaviour than the other files in that directory carry, and `canSubmit`
+  does two jobs under one name — it disables the button and guards the handler.
+  Both were deliberate and both are defensible; neither has been through a real
+  review. Recorded here so the next person knows it was a choice rather than an
+  accident.
 - **Three light greys sit on the dark table and are deliberately not unified.**
   The column headings are `#ffffff`, the body text `#dddddd`, and the row icons
   and inline forms Tailwind's `gray300` (`#d1d5db`). The last two are three
