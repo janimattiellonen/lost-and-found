@@ -2,8 +2,9 @@ import { Form } from 'react-router';
 
 import { retrievalErrandLabel, supersededRequestLabel } from './retrievalErrand';
 import type { RetrievalListDisc } from './discRetrieval';
-import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatDate } from '~/utils';
 import Button from '~/ui/Button';
+import ContactLine from '~/ui/ContactLine';
 import H2 from '~/ui/H2';
 import Paper from '~/ui/Paper';
 
@@ -69,20 +70,7 @@ function RetrievalListItem({ disc }: { disc: RetrievalListDisc }): JSX.Element {
             <span className="text-sm font-bold text-warning">{supersededRequestLabel(superseded)}</span>
           )}
 
-          {/* A link rather than plain digits: the number is here to be texted
-              from the same phone the list is read on, so it opens a message to
-              the owner rather than placing a call. The name comes after it in
-              brackets, outside the link — only the digits are tappable. */}
-          {(disc.ownerPhoneNumber || disc.ownerName) && (
-            <span className="text-sm text-fg-body">
-              {disc.ownerPhoneNumber && (
-                <a href={`sms:${toDiallablePhoneNumber(disc.ownerPhoneNumber)}`} className="text-fg-link underline">
-                  {formatPhoneNumber(disc.ownerPhoneNumber)}
-                </a>
-              )}
-              {disc.ownerName && (disc.ownerPhoneNumber ? ` (${disc.ownerName})` : disc.ownerName)}
-            </span>
-          )}
+          <ContactLine phoneNumber={disc.ownerPhoneNumber} name={disc.ownerName} />
 
           {/* The dates last and together, as on the answers page: the request
               date is what the card is read for -- one from three weeks ago is
