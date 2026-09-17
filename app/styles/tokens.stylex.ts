@@ -141,6 +141,24 @@ export const font = stylex.defineVars({
   weightBold: '700',
 });
 
+// Every step of Tailwind's type scale sets a line height as well as a size, so
+// a token that names only the size is half a step: a component reaching for
+// `font.sizeXs` alone lands on the browser's default leading, and `app.css` has
+// no global line-height to catch it. These are the heights Tailwind 3.3.3 pairs
+// with the sizes above, read out of `tailwindcss/defaultTheme`, and the names
+// line up with `font.size*` so the two are picked as a pair.
+//
+// `font.sizeXxl` has no entry here: it has no step in Tailwind's scale either,
+// so there is no leading to read out, and inventing one would be a design
+// decision rather than a name for what is on screen.
+export const leading = stylex.defineVars({
+  xs: '1rem', // with font.sizeXs
+  sm: '1.25rem', // with font.sizeSm
+  md: '1.5rem', // with font.sizeMd
+  lg: '1.75rem', // with font.sizeLg
+  xl: '1.75rem', // with font.sizeXl
+});
+
 // Shared control metrics, so a text field, a combobox and a row of radios line
 // up to the same height when they sit side by side in a filter row.
 export const size = stylex.defineVars({
