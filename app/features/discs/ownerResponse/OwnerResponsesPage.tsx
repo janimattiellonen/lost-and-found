@@ -3,8 +3,9 @@ import { Form } from 'react-router';
 import { handoverMethodLabel } from '~/features/discs/handoverMethod';
 import { ownerChoiceLabel, OwnerChoice } from './ownerChoice';
 import type { OwnerResponseSummary } from './ownerResponse';
-import { formatDate, formatDateTime, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatDate, formatDateTime } from '~/utils';
 import Button from '~/ui/Button';
+import ContactLine from '~/ui/ContactLine';
 import H2 from '~/ui/H2';
 import Paper from '~/ui/Paper';
 
@@ -74,18 +75,7 @@ function ResponseItem({
             {method && ` · ${method}`}
           </span>
 
-          {/* The number first, the name after it in brackets: the number is
-              what gets tapped, and only the digits belong inside the link. */}
-          {(response.ownerPhoneNumber || response.ownerName) && (
-            <span className="text-sm text-fg-body">
-              {response.ownerPhoneNumber && (
-                <a href={`sms:${toDiallablePhoneNumber(response.ownerPhoneNumber)}`} className="text-fg-link underline">
-                  {formatPhoneNumber(response.ownerPhoneNumber)}
-                </a>
-              )}
-              {response.ownerName && (response.ownerPhoneNumber ? ` (${response.ownerName})` : response.ownerName)}
-            </span>
-          )}
+          <ContactLine phoneNumber={response.ownerPhoneNumber} name={response.ownerName} />
 
           {/* No address to show, and a reason: this one needs a message before
               anything can be posted. */}
