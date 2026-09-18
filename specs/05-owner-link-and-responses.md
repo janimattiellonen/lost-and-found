@@ -27,7 +27,13 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    "Noudan kiekon seuran kopilta" (post it / I'll collect it / I'll collect it
    from the club's koppi).
 4. Choosing post shows the postage fee, the MobilePay payee, the club's optional
-   voluntary payment, and the five address fields; submitting stores them.
+   voluntary payment, and the five address fields; submitting stores them. The
+   instructions above the fields ask for two things the club cannot supply
+   itself: "Mainitse kiekon nimi viesti-kohdassa." (mention the disc's name in
+   the message field), because a MobilePay payment carries nothing else that
+   ties it to a disc, and "Älä unohda asunnon/rapun numeroa." (don't forget the
+   flat/stairwell number), appended to "Muista antaa koko osoite!" because an
+   address without one is the parcel that comes back.
 5. Ticking "Minulla on useampia kiekkoja" (I have several discs) unmounts the
    address fields — the answer is submitted with no address and the page says
    the club will be in touch.
