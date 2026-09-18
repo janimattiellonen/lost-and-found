@@ -260,7 +260,7 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
       <ul className="mb-6 list-disc space-y-2 pl-5 text-fg-secondary">
         <li>
           Maksa MobilePaylla {formatPostageFee()} numeroon <strong>{POSTAGE_PAYEE_NUMBER}</strong> ({POSTAGE_PAYEE_NAME}
-          ).
+          ). Mainitse kiekon nimi viesti-kohdassa.
         </li>
         {clubPayment && (
           <li>
@@ -271,7 +271,7 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
         <li>
           Ilmoita tekstiviestitse numeroon <strong>{POSTAGE_PAYEE_NUMBER}</strong> kun olet maksanut.
         </li>
-        <li>Muista antaa koko osoite!</li>
+        <li>Muista antaa koko osoite! Älä unohda asunnon/rapun numeroa.</li>
       </ul>
 
       <p className="mb-4 font-bold">Postitusosoite</p>
