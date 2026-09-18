@@ -260,7 +260,7 @@ function PostingDetails({ clubPayment }: { clubPayment: ClubPayment | null }): J
       <ul className="mb-6 list-disc space-y-2 pl-5 text-fg-secondary">
         <li>
           Maksa MobilePaylla {formatPostageFee()} numeroon <strong>{POSTAGE_PAYEE_NUMBER}</strong> ({POSTAGE_PAYEE_NAME}
-          ). Mainitse kiekon nimi viesti-kohdassa.
+          ). Mainitse kiekon nimi &quot;Viesti&quot;-kenttään.
         </li>
         {clubPayment && (
           <li>

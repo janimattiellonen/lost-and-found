@@ -29,8 +29,8 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
 4. Choosing post shows the postage fee, the MobilePay payee, the club's optional
    voluntary payment, and the five address fields; submitting stores them. The
    instructions above the fields ask for two things the club cannot supply
-   itself: "Mainitse kiekon nimi viesti-kohdassa." (mention the disc's name in
-   the message field), because a MobilePay payment carries nothing else that
+   itself: "Mainitse kiekon nimi \"Viesti\"-kenttään." (mention the disc's name in
+   the "Viesti" field), because a MobilePay payment carries nothing else that
    ties it to a disc, and "Älä unohda asunnon/rapun numeroa." (don't forget the
    flat/stairwell number), appended to "Muista antaa koko osoite!" because an
    address without one is the parcel that comes back.
