@@ -36,7 +36,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - Tapping an owner's phone number on the retrieval list or the responses view now opens a message to them instead of placing a call.
 - A disc marked returned or marked for sale by mistake can be put back on the public list: the edit page carries both marks as checkboxes, and unticking one clears its date and method. Every other way of making those marks is still one-way.
 - Choosing "Noudan kiekon seuran kopilta" on the owner's link page warns that the koppi is emptied only occasionally, and points an owner in a hurry at post or collection instead. Talin Tallaajat only, since theirs is the only koppi discs wait in.
-- The posting instructions on the owner's link page ask for two things they used to leave out: the disc's name in the MobilePay message field, and the flat or stairwell number in the address.
+- The posting instructions on the owner's link page ask for two things they used to leave out: the disc's name in MobilePay's "Viesti" field, and the flat or stairwell number in the address.
 
 ### Fixed
 
