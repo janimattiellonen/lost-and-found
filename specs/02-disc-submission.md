@@ -16,7 +16,7 @@ Sheet as the entry point for discs found by the club itself.
 
 ## User-facing behaviour
 
-1. When the admin types a line into "Kiekon tiedot" (disc details) and presses Enter, `parseDiscText` runs and a row is appended to the draft table; the field clears for the next disc.
+1. When the admin types a line into "Kiekon tiedot" (disc details) and presses Enter, `parseDiscText` runs and a row is appended to the draft table; that one field clears for the next disc, and nothing else on the page does.
 2. When the club records courses, a "Rata" radio row offers each course plus "Ei radan tietoa" (no course info); the choice applies to rows added **from then on**, never to what was typed. A "Aseta rata ... kaikille riveille" / "Poista rata kaikilta riveiltä" button retro-fits the whole draft.
 3. When some rows lack a course, a quiet `role="status"` reminder counts them. It never blocks saving.
 4. When the parser had to choose between two makers (`confidence.manufacturer === 'low'`), the Valmistaja cell is flagged with "?" and "Valmistaja on epävarma – tarkista.".
@@ -94,6 +94,7 @@ answered with rendered HTML.
 - `requireAdminJson` enforces POST-only (405), a live session (401) and a parseable JSON body (400).
 - The client never sends a club id; `handleCreateRequest` reads `APP_CLUB_ID`.
 - The course is never read out of the typed text — the radio selection is its only source, and the Rata cell is not editable.
+- The Rata radios are uncontrolled inputs that sit inside the same `<form>` as the entry field, with `course` in React state mirroring them. Entering a disc therefore clears that field by hand rather than calling `form.reset()`, which would also put the radios back on their "Ei radan tietoa" default while `course` still held the chosen one — the rows would keep being filed correctly and the radios would say otherwise.
 - There is no autocomplete on the entry field; the dictionary is used for parsing only.
 - `submitDiscs` never throws: a dropped connection or a non-JSON response comes back as an error result, and a 2xx without a numeric `savedCount` is treated as a failure.
 - `draftStorage.toDraftRow` re-validates every restored field, because localStorage survives a deploy that changes the row shape and is writable by anything on the origin.
@@ -105,6 +106,7 @@ answered with rendered HTML.
 - `additionalInfo` is parsed as a note but there is no length check client-side; a >500-char note is only rejected by the server, after the admin has typed it.
 - The parser has no confidence signal for anything but the manufacturer, and only `low` is surfaced (`medium` fires on about half of all entries, so showing it would be noise).
 - An owner name written in lower case is dropped into `unmatched` rather than the owner field.
+- The reverse costs more: a capitalised word the dictionary does not know is read as part of the owner's name rather than flagged. A plastic missing from `parser/data/*.json` therefore does not land in "Ohitettu" where it would be noticed — it is saved as an owner called "Q-Line Matti K.", with the plastic field left empty. Adding the missing plastic is the only fix; nothing warns that one is missing.
 - A second disc name, plastic or colour in one line is discarded into `unmatched` (the slot is already taken).
 - `disc_colour` is stored as `''` rather than NULL when no colour was recognised, unlike every other unparsed field.
 - Nothing deduplicates: the same disc typed twice is inserted twice.
