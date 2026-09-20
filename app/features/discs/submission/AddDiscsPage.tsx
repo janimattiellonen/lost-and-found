@@ -34,9 +34,10 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
   // away. Read through useSyncExternalStore, which serves the empty server
   // snapshot until hydration is done and so restores without a mismatch.
   const rows = useSyncExternalStore(subscribeToDraft, getDraftSnapshot, getServerDraftSnapshot);
-  // The course new rows are filed under. Kept across entries, since a batch is
-  // normally one bin's worth. The course is never read out of the typed text:
-  // this selection is its only source.
+  // The course new rows are filed under, and what the radios show -- the group
+  // is controlled, so this is the only place the selection lives. Kept across
+  // entries, since a batch is normally one bin's worth. The course is never
+  // read out of the typed text: this selection is its only source.
   const [course, setCourse] = useState<string>(NO_COURSE);
   // The entry field is read and cleared through a ref rather than through the
   // form, so that entering a disc touches that one input and nothing else.
@@ -112,8 +113,7 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
       { id: nextDraftId(current), input: text, course: course || null, ...parseDiscText(text) },
     ]);
 
-    // Clearing this field rather than the whole form is deliberate; spec 02
-    // records why.
+    // This one input, never form.reset() -- spec 02 records why.
     field.value = '';
   }
 
@@ -192,11 +192,16 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
         {courses.length > 0 && (
           <div {...stylex.props(styles.courseField)}>
             <span {...stylex.props(styles.label)}>Rata</span>
-            <RadioGroup row name="course" onChange={(event) => setCourse((event.target as HTMLInputElement).value)}>
+            <RadioGroup
+              row
+              name="course"
+              value={course}
+              onChange={(event) => setCourse((event.target as HTMLInputElement).value)}
+            >
               {courses.map((name) => (
                 <FormControlLabel key={name} control={<Radio />} value={name} label={name} />
               ))}
-              <FormControlLabel control={<Radio defaultChecked />} value={NO_COURSE} label="Ei radan tietoa" />
+              <FormControlLabel control={<Radio />} value={NO_COURSE} label="Ei radan tietoa" />
             </RadioGroup>
             <p {...stylex.props(styles.hint)}>Valinta koskee tästä eteenpäin lisättäviä kiekkoja.</p>
 
