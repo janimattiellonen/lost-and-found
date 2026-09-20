@@ -210,6 +210,14 @@ describe('parseDiscText — manufacturer inference', () => {
     expect(parseDiscText('C-Line punainen').manufacturer).toBe('Discmania');
   });
 
+  it('infers the manufacturer from Q-Line, the newest Discmania plastic', () => {
+    expect(fields('Q-Line MD3 sininen')).toMatchObject({
+      discName: 'MD3',
+      plastic: 'Q-Line',
+      manufacturer: 'Discmania',
+    });
+  });
+
   it('infers the manufacturer from the disc name alone', () => {
     expect(parseDiscText('Undertaker punainen').manufacturer).toBe('Discraft');
   });
