@@ -20,7 +20,7 @@ Sheet as the entry point for discs found by the club itself.
 2. When the club records courses, a "Rata" radio row offers each course plus "Ei radan tietoa" (no course info); the choice applies to rows added **from then on**, never to what was typed. A "Aseta rata ... kaikille riveille" / "Poista rata kaikilta riveiltä" button retro-fits the whole draft.
 3. When some rows lack a course, a quiet `role="status"` reminder counts them. It never blocks saving.
 4. When the parser had to choose between two makers (`confidence.manufacturer === 'low'`), the Valmistaja cell is flagged with "?" and "Valmistaja on epävarma – tarkista.".
-5. When a word could not be placed, it appears in the "Ohitettu" (skipped) column, so a typo is visible rather than silently lost.
+5. When a word could not be placed **and does not start with a capital letter**, it appears in the "Ohitettu" (skipped) column, so a typo is visible rather than silently lost. A capitalised one is read as part of the owner's name instead, which is the gap recorded below.
 6. When any cell is clicked, it becomes an input: Enter or blur commits, Esc cancels. Editing Valmistaja by hand raises its confidence to `high` and clears the flag.
 7. When a row's delete icon is pressed, an inline "Poistetaanko?" yes/no replaces it. "Tyhjennä välimuisti" (clear cache) drops the whole draft, also behind a confirm.
 8. When "Tallenna kiekot" (save discs) is pressed, the batch is POSTed to `/discs/create`; on success the page shows "Tallennettu. N kiekkoa lisättiin." and the draft — memory and localStorage — is cleared.
@@ -106,7 +106,7 @@ answered with rendered HTML.
 - `additionalInfo` is parsed as a note but there is no length check client-side; a >500-char note is only rejected by the server, after the admin has typed it.
 - The parser has no confidence signal for anything but the manufacturer, and only `low` is surfaced (`medium` fires on about half of all entries, so showing it would be noise).
 - An owner name written in lower case is dropped into `unmatched` rather than the owner field.
-- The reverse costs more: a capitalised word the dictionary does not know is read as part of the owner's name rather than flagged. A plastic missing from `parser/data/*.json` therefore does not land in "Ohitettu" where it would be noticed — it is saved as an owner called "Q-Line Matti K.", with the plastic field left empty. Adding the missing plastic is the only fix; nothing warns that one is missing.
+- The reverse costs more: a capitalised word the dictionary does not know is read as part of the owner's name rather than flagged. A plastic the dictionary does not carry therefore never lands in "Ohitettu" where it would be noticed — it is saved as an owner called "Q-Line Matti K.", with the plastic field left empty, which is exactly what Discmania's Q-Line did until it was added to `aliases.ts`. Adding the missing spelling there is the only fix, and nothing warns that one is missing.
 - A second disc name, plastic or colour in one line is discarded into `unmatched` (the slot is already taken).
 - `disc_colour` is stored as `''` rather than NULL when no colour was recognised, unlike every other unparsed field.
 - Nothing deduplicates: the same disc typed twice is inserted twice.
