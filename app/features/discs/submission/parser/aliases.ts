@@ -11,6 +11,9 @@ export const aliases: DictionaryEntry[] = [
   // "K1 Line" wording that is common in Finnish disc listings.
   { kind: PLASTIC, value: 'K1 Line', manufacturer: 'Kastaplast' },
 
+  // Discmania's Q-Line is newer than the vendored file, which stops at Vapor.
+  { kind: PLASTIC, value: 'Q-Line', manufacturer: 'Discmania' },
+
   // Manufacturer spellings people actually type. Short forms are only safe
   // where they do not clash with a disc name -- "Clash", "Mint" and "Viking"
   // are all discs, so those makers are matched by their full name only.
