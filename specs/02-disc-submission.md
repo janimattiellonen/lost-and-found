@@ -94,7 +94,7 @@ answered with rendered HTML.
 - `requireAdminJson` enforces POST-only (405), a live session (401) and a parseable JSON body (400).
 - The client never sends a club id; `handleCreateRequest` reads `APP_CLUB_ID`.
 - The course is never read out of the typed text — the radio selection is its only source, and the Rata cell is not editable.
-- The Rata radios are uncontrolled inputs that sit inside the same `<form>` as the entry field, with `course` in React state mirroring them. Entering a disc therefore clears that field by hand rather than calling `form.reset()`, which would also put the radios back on their "Ei radan tietoa" default while `course` still held the chosen one — the rows would keep being filed correctly and the radios would say otherwise.
+- The Rata radios are a controlled `RadioGroup` (`ui/RadioGroup.tsx`): `course` is the only place the selection lives, and the radios render from it. Being controlled is not on its own enough, because the group sits in the same `<form>` as the entry field and `form.reset()` writes to the DOM without going through React. A reset puts the radios back on whatever was checked when they mounted — "Ei radan tietoa" — while `course` keeps the chosen course, and only the next render corrects them. Entering a disc therefore clears that one input through a ref and never resets the form.
 - There is no autocomplete on the entry field; the dictionary is used for parsing only.
 - `submitDiscs` never throws: a dropped connection or a non-JSON response comes back as an error result, and a 2xx without a numeric `savedCount` is treated as a failure.
 - `draftStorage.toDraftRow` re-validates every restored field, because localStorage survives a deploy that changes the row shape and is writable by anything on the origin.
