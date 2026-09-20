@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore, type FormEvent, type JSX, type KeyboardEvent } from 'react';
+import { useRef, useState, useSyncExternalStore, type FormEvent, type JSX, type KeyboardEvent } from 'react';
 
 import * as stylex from '@stylexjs/stylex';
 
@@ -38,6 +38,9 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
   // normally one bin's worth. The course is never read out of the typed text:
   // this selection is its only source.
   const [course, setCourse] = useState<string>(NO_COURSE);
+  // The entry field is read and cleared through a ref rather than through the
+  // form, so that entering a disc touches that one input and nothing else.
+  const discTextRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<EditTarget | null>(null);
   // The row whose delete button has been pressed and is awaiting a yes/no.
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
@@ -97,15 +100,10 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
 
-    const field = event.currentTarget.elements.namedItem('discText');
+    const field = discTextRef.current;
+    const text = field?.value.trim() ?? '';
 
-    if (!(field instanceof HTMLInputElement)) {
-      return;
-    }
-
-    const text = field.value.trim();
-
-    if (text.length === 0) {
+    if (field === null || text.length === 0) {
       return;
     }
 
@@ -114,10 +112,8 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
       { id: nextDraftId(current), input: text, course: course || null, ...parseDiscText(text) },
     ]);
 
-    // Clear the one field, not the form: form.reset() would also put the
-    // uncontrolled course radios back on their "Ei radan tietoa" default while
-    // `course` still held the chosen one, so the row said one thing and the
-    // radios another.
+    // Clearing this field rather than the whole form is deliberate; spec 02
+    // records why.
     field.value = '';
   }
 
@@ -180,6 +176,7 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
           Kiekon tiedot
         </label>
         <input
+          ref={discTextRef}
           id="discText"
           name="discText"
           type="text"
