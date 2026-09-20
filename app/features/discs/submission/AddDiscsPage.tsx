@@ -97,9 +97,13 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
 
-    const form = event.currentTarget;
-    const input = new FormData(form).get('discText');
-    const text = typeof input === 'string' ? input.trim() : '';
+    const field = event.currentTarget.elements.namedItem('discText');
+
+    if (!(field instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const text = field.value.trim();
 
     if (text.length === 0) {
       return;
@@ -110,8 +114,11 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
       { id: nextDraftId(current), input: text, course: course || null, ...parseDiscText(text) },
     ]);
 
-    // Clear so the next disc can be typed straight away.
-    form.reset();
+    // Clear the one field, not the form: form.reset() would also put the
+    // uncontrolled course radios back on their "Ei radan tietoa" default while
+    // `course` still held the chosen one, so the row said one thing and the
+    // radios another.
+    field.value = '';
   }
 
   // Only worth nagging about for a club that records a course at all.
