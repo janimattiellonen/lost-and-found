@@ -12,7 +12,10 @@ export const aliases: DictionaryEntry[] = [
   { kind: PLASTIC, value: 'K1 Line', manufacturer: 'Kastaplast' },
 
   // Discmania's Q-Line is newer than the vendored file, which stops at Vapor.
+  // Both spellings, for the same reason "K1 Line" is here: the hyphen is often
+  // dropped, and an unrecognised capitalised word is read as an owner's name.
   { kind: PLASTIC, value: 'Q-Line', manufacturer: 'Discmania' },
+  { kind: PLASTIC, value: 'Q Line', manufacturer: 'Discmania' },
 
   // Manufacturer spellings people actually type. Short forms are only safe
   // where they do not clash with a disc name -- "Clash", "Mint" and "Viking"

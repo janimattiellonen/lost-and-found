@@ -218,6 +218,15 @@ describe('parseDiscText — manufacturer inference', () => {
     });
   });
 
+  it('reads Q-Line with the hyphen dropped, as it is often typed', () => {
+    expect(fields('Q Line MD3 sininen Matti K.')).toMatchObject({
+      discName: 'MD3',
+      plastic: 'Q Line',
+      manufacturer: 'Discmania',
+      ownerName: 'Matti K.',
+    });
+  });
+
   it('infers the manufacturer from the disc name alone', () => {
     expect(parseDiscText('Undertaker punainen').manufacturer).toBe('Discraft');
   });
