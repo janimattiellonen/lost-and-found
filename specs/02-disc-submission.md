@@ -17,7 +17,7 @@ Sheet as the entry point for discs found by the club itself.
 ## User-facing behaviour
 
 1. When the admin types a line into "Kiekon tiedot" (disc details) and presses Enter, `parseDiscText` runs and a row is appended to the draft table; that one field clears for the next disc, and nothing else on the page does.
-2. When the club records courses, a "Rata" radio row offers each course plus "Ei radan tietoa" (no course info); the choice applies to rows added **from then on**, never to what was typed. A "Aseta rata ... kaikille riveille" / "Poista rata kaikilta riveiltä" button retro-fits the whole draft.
+2. When the club records courses, a "Rata" radio row offers each course plus "Ei radan tietoa" (no course info); the choice applies to rows added **from then on**, never to what was typed, and the radios keep showing it as disc after disc is entered. A "Aseta rata ... kaikille riveille" / "Poista rata kaikilta riveiltä" button retro-fits the whole draft.
 3. When some rows lack a course, a quiet `role="status"` reminder counts them. It never blocks saving.
 4. When the parser had to choose between two makers (`confidence.manufacturer === 'low'`), the Valmistaja cell is flagged with "?" and "Valmistaja on epävarma – tarkista.".
 5. When a word could not be placed **and does not start with a capital letter**, it appears in the "Ohitettu" (skipped) column, so a typo is visible rather than silently lost. A capitalised one is read as part of the owner's name instead, which is the gap recorded below.

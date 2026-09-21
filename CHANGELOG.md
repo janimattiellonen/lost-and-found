@@ -44,7 +44,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - The day breakdown under "Omistajille palautetut kiekot" counts the same discs as the month bar that opened it. A disc carrying a readable return date but not marked as returned used to appear in the day chart and nowhere else.
 - A message written for several selected discs at once names the course the disc was found on. It had been left blank there — "on löytynyt radalta" — while the same template filled the course in correctly when the message was opened for a single disc.
 - The disc-entry parser knows Discmania's Q-Line. The word used to be unrecognised, and an unrecognised capitalised word is read as part of the owner's name — so a Q-Line disc was saved with an empty plastic and an owner called "Q-Line Matti K.".
-- Entering a disc on the add-discs page no longer puts the "Rata" radios back on "Ei radan tietoa". The chosen course was still being applied to each new row, but the radios said otherwise.
+- Entering a disc on the add-discs page no longer puts the "Rata" radios back on "Ei radan tietoa". The chosen course went on being applied to each new row while the radios said otherwise, and picking "Ei radan tietoa" back did nothing, because the radios already showed it — the only way out was to select some other course first.
 
 ## 2026-09 — Getting a disc back to its owner
 
