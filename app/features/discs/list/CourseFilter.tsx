@@ -23,14 +23,7 @@ export default function CourseFilter({ courses, onChange }: CourseFilterProps): 
   return (
     <div>
       <span {...stylex.props(styles.label)}>Rata</span>
-      <RadioGroup
-        row
-        name="course"
-        onChange={(e) => {
-          const { value } = e.target as HTMLInputElement;
-          onChange(value === ALL_COURSES ? null : value);
-        }}
-      >
+      <RadioGroup row name="course" onChange={(value) => onChange(value === ALL_COURSES ? null : value)}>
         <FormControlLabel control={<Radio defaultChecked />} value={ALL_COURSES} label="Kaikki radat" />
         {courses.map((course) => (
           <FormControlLabel key={course} control={<Radio />} value={course} label={course} />

@@ -102,9 +102,14 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
     event.preventDefault();
 
     const field = discTextRef.current;
-    const text = field?.value.trim() ?? '';
 
-    if (field === null || text.length === 0) {
+    if (field === null) {
+      return;
+    }
+
+    const text = field.value.trim();
+
+    if (text.length === 0) {
       return;
     }
 
@@ -192,12 +197,7 @@ export default function AddDiscsPage({ courses }: AddDiscsPageProps): JSX.Elemen
         {courses.length > 0 && (
           <div {...stylex.props(styles.courseField)}>
             <span {...stylex.props(styles.label)}>Rata</span>
-            <RadioGroup
-              row
-              name="course"
-              value={course}
-              onChange={(event) => setCourse((event.target as HTMLInputElement).value)}
-            >
+            <RadioGroup row name="course" value={course} onChange={setCourse}>
               {courses.map((name) => (
                 <FormControlLabel key={name} control={<Radio />} value={name} label={name} />
               ))}
