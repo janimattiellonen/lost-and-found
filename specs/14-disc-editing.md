@@ -115,9 +115,9 @@ one prefix.
 - **Required.** `disc_name` must be non-empty after trimming: the public list is
   built around it and a blank row cannot be recognised by its owner.
 - **Lengths.** 200 characters for every field except `additional_info`, which
-  gets 500. Both live in `features/discs/fieldLimits.ts` and are read by the
-  submission form as well, so the two writers of these columns cannot drift
-  apart.
+  gets 500. Both live in `app/discFieldLimits.ts` and are read by the
+  submission form and the composer's phone editor (spec 06) as well, so the
+  writers of these columns cannot drift apart.
 - **Course.** A course must be one the form offered: one of
   `getDiscCourseNames(APP_CLUB_ID)`, the one the disc is already filed under, or
   none at all. The submission form allows only the first of those, because a
@@ -194,9 +194,10 @@ one prefix.
   here and mints new `external_id`s besides. Nothing in this form warns about
   it, and there is no "edited by hand" flag that would make a sync skip a row.
 - There is no edit history: the previous value is gone. A save sets
-  `updated_at`, which is the only trace — and this is the only disc write that
-  maintains that column, so it means "last edited by hand here", not "last
-  changed". A mis-edit is not recoverable from the app.
+  `updated_at`, which is the only trace — and this form and the composer's
+  phone editor (spec 06) are the only disc writes that maintain that column, so
+  it means "last edited by hand", not "last changed". A mis-edit is not
+  recoverable from the app.
 - Two admins editing one disc at the same time: the last save wins silently,
   with no version check.
 - The course dropdown is not rendered at all when there is nothing to offer — a

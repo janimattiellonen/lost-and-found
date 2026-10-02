@@ -22,29 +22,39 @@ for that reason instead of every template the club has.
 
 1. Admin clicks the message icon on a disc row → `/message/send/<externalId>`,
    "Viestin luonti" (composing a message).
-2. The page seeds the phone number from the disc and the message body from the
-   club's default template; both stay editable.
-3. Picking another template from "Viestipohja" replaces the body.
-4. "Esikatselu" (preview) renders the body with tokens substituted and newlines
+2. The page shows the disc's phone number, grouped for reading, and seeds the
+   message body from the club's default template. The body stays editable; the
+   number is read-only text, changed only through the editor in the next step.
+   A disc with no number shows "Ei puhelinnumeroa" (no phone number).
+3. "Muokkaa puhelinnumeroa" (edit phone number) beside the number opens an
+   inline editor in its place: a phone field seeded with the current number,
+   "Tallenna" (save) and "Peruuta" (cancel). "Tallenna" writes the number to the
+   disc itself — it reads "Tallennetaan..." while the save is in flight — and on
+   success the editor closes and the number on the page, and in the `sms:` link,
+   is the saved one. A refused save keeps the editor open with the reason under
+   the field. "Peruuta" closes the editor and changes nothing. In a batch this
+   is how a wrong number is fixed without leaving the owner the admin is on.
+4. Picking another template from "Viestipohja" replaces the body.
+5. "Esikatselu" (preview) renders the body with tokens substituted and newlines
    as `<br/>`, live as it is typed.
-5. "Lähetä tekstiviesti" (send sms) opens
+6. "Lähetä tekstiviesti" (send sms) opens
    `sms:<number>&body=<substituted message>` — the OS's own messaging app takes
    over from there.
-6. "Merkitse viesti lähetetyksi" (mark the message as sent) posts the rendered
+7. "Merkitse viesti lähetetyksi" (mark the message as sent) posts the rendered
    body to the route's action and writes a `message_log` row; the button then
    reads "Lähetetty" and is disabled.
-7. Earlier messages for the same disc appear under "Lähetetyt viestit".
-8. "Peru" (cancel) leaves for the disc list.
-9. From a multi-disc selection, "Lähetä sms N henkilölle" opens
-   `/message/send-batch?ids=<uuid,uuid,…>` and the same composer is worked
-   through one owner at a time, with a "Kiekko 3 / 12" progress line. Recording
-   a send _or_ cancelling moves on; the last one returns to the list.
-10. `/message-templates` ("Viestipohjat") lists this club's templates, the
+8. Earlier messages for the same disc appear under "Lähetetyt viestit".
+9. "Peru" (cancel) leaves for the disc list.
+10. From a multi-disc selection, "Lähetä sms N henkilölle" opens
+    `/message/send-batch?ids=<uuid,uuid,…>` and the same composer is worked
+    through one owner at a time, with a "Kiekko 3 / 12" progress line. Recording
+    a send _or_ cancelling moves on; the last one returns to the list.
+11. `/message-templates` ("Viestipohjat") lists this club's templates, the
     default one outlined. Each card shows its category under the content —
     "Kategoria: Omistajan vastaus", or "Kategoria: ei mitään" (none) for a
     template in no category. Per template: "Merkitse oletukseksi" (make
     default), "Muokkaa" (edit), "Poista" (delete, confirmed).
-11. `/message-template/create` and `/message-template/:id/edit` are a textarea,
+12. `/message-template/create` and `/message-template/:id/edit` are a textarea,
     a "Kategoria" dropdown and an "Oletusviestipohja" (default template)
     checkbox, with the token help line above. The dropdown lists this club's
     categories plus "Ei kategoriaa" (no category), which is what a new template
@@ -54,15 +64,15 @@ for that reason instead of every template the club has.
     after the redirect from the create form) or "Viestipohja tallennettu."
     (saved) line, which disappears again as soon as the form is edited — what is
     on screen is then no longer what is stored.
-12. "Hallitse kategorioita" (manage categories) on `/message-templates` opens
+13. "Hallitse kategorioita" (manage categories) on `/message-templates` opens
     `/message-template-categories` ("Viestipohjien kategoriat"): one page with a
     "Lisää kategoria" (add a category) field at the top and a row per existing
     category, each row a name field with "Tallenna" (save) and "Poista" (delete,
     confirmed — the confirmation says the templates in it are kept).
-13. Deleting a category does not delete its templates. They stay, with no
+14. Deleting a category does not delete its templates. They stay, with no
     category, and the list on `/message-templates` shows them as
     "Kategoria: ei mitään".
-14. On `/responses` (spec 05) each answer card carries "Lähetä viesti" (send a
+15. On `/responses` (spec 05) each answer card carries "Lähetä viesti" (send a
     message), which opens the same composer for that answer's disc with the
     template dropdown narrowed to the owner-response category.
 
@@ -134,6 +144,13 @@ A club added later needs a row of its own here and in that map.
 
 Mapped by `app/models/MessageLogMapper.ts` → `MessageLogDTO`.
 
+**`discs`** — messaging's only write to a disc is the phone editor's, and it
+touches exactly two columns: `owner_phone_number` (text, nullable)
+gets the saved number, and `updated_at` is set to now.
+`queryUpdateOwnerPhoneNumber.server.ts` does it, scoped by `external_id` — the
+disc's uuid — and `club_id`. `updated_at` is set because spec 14 reads it as
+"last edited by hand", and a corrected number is exactly that.
+
 **Why uuid-keyed:** `internal_disc_id` is a Sheet row number, so a web-added disc
 has none. Both the send page and its log were addressed by that id, which made
 web-added discs unmessageable. The migration backfilled `external_id` by joining
@@ -146,6 +163,7 @@ club — and left the old column for the history it already holds.
 | -------------------------------------- | --------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `/message/send/:externalId?category=N` | GET, POST | signed in             | Compose for one disc; POST records the send. `category` narrows the template dropdown                                       |
 | `/message/send-batch?ids=…`            | GET, POST | signed in             | Compose for a selection; POST records one send                                                                              |
+| `/message/phone-number`                | POST      | signed in             | Resource route: saves one disc's phone number from the composer's editor. JSON in, JSON out                                 |
 | `/message-templates`                   | GET, POST | signed in             | List; POST is `action=delete` or `action=default`                                                                           |
 | `/message-template/create`             | GET, POST | signed in on GET only | Create a template                                                                                                           |
 | `/message-template/:id/edit?created=1` | GET, POST | signed in on GET only | Edit a template. `created=1` is what the create form's redirect leaves behind, and only decides which success line is shown |
@@ -324,6 +342,42 @@ The tokens are documented to the admin by
   the filter is every template of the club; `{ categoryId: n }` is one
   category's; `{ categoryId: null }` is the templates in **no** category, which
   is the fallback above and not "any category".
+- **The phone editor saves to the disc, not to the message.** The number on the
+  composer used to be a free input that changed only the `sms:` link for that
+  one send; a typo fixed there was back the next time the disc was messaged, and
+  the disc list never saw the correction. It is now read-only and the editor is
+  the only way to change it, so the number the text goes to is always the one
+  stored.
+- `/message/phone-number` is a resource route — a route file with an action
+  and no page, answering JSON — rather than an action on the two composer
+  routes, because both pages need the same save and a plain JSON `fetch` to a
+  page route is answered with a rendered document. It is guarded by
+  `requireAdminJson`: anything but POST is a 405, a signed-out request a 401
+  ("Kirjautuminen on vanhentunut. Kirjaudu uudelleen."), an unreadable body a 400. Then
+  `handlePhoneNumberRequest` checks the uuid (422 "Virheellinen kiekon
+  tunniste.") and the number, and a disc this club has no row for is a 404
+  "Kiekkoa ei löytynyt.". The write is scoped to `APP_CLUB_ID`, so a uuid of the
+  other club's disc matches nothing.
+- `parseOwnerPhoneNumber` (`ownerPhoneNumber.ts`) trims the number, requires it
+  ("Puhelinnumero on pakollinen.", 422) and caps it at `MAX_FIELD_LENGTH`, 200
+  characters ("Puhelinnumero on liian pitkä (enintään 200 merkkiä).", 422) —
+  the limit in `app/discFieldLimits.ts` that the submission and edit forms use
+  for the same column. It is **not** format-checked, for the reason spec 14
+  gives: imported rows hold values like "050 123 4567 (äiti)", and a pattern
+  would refuse the very correction the editor is for. It cannot be cleared
+  here, unlike in the edit form: a number removed while messaging leaves
+  nothing to send to, and the edit form is still there for that.
+- The editor opens on the number as stored, not the grouped form shown beside
+  it, and a number saved unchanged is not posted at all. Either slip would bump
+  `updated_at` — "edited by hand" — for an edit that never happened.
+- The saved value is the trimmed one the server returns, and that is what the
+  composer then shows, grouped by `formatPhoneNumber` like the seeded number.
+- "Peruuta" is disabled while a save is in flight: the post would land anyway,
+  so a cancel pressed then would close the editor on a number that had in fact
+  been saved.
+- "Muokkaa puhelinnumeroa" appears only when the disc has an `external_id`,
+  which since the backfill every disc does; the check is what lets the
+  editor be handed one.
 - Batch selection (`sendBatchSelection.ts`): ids come from the `ids` query
   parameter, split on commas, trimmed, uuid-validated, deduplicated, and kept
   **in the order the admin saw them**. `MAX_BATCH_SIZE = 100`, because the
@@ -397,9 +451,11 @@ The tokens are documented to the admin by
 - `markAsSent` ignores the Supabase error and unconditionally
   `console.log`s `Error: undefined` on success. A failed insert is reported to
   the admin as "Lähetetty".
-- The phone field in `MessageComposer` is `type="email" name="email"
-placeholder="Sähköpostiosoite"` — leftover markup; the value is used as a
-  phone number and the name is never read.
+- A corrected number is saved to one disc only. An owner who lost three discs
+  has the number on three rows, and fixing it while messaging about one leaves
+  the other two wrong — including later discs of the same batch, which were
+  loaded before the save and still show the old number when their turn comes.
+  Nothing matches discs by owner, so nothing offers to fix the rest.
 - The `sms:` href uses `&body=` rather than the `?body=` of RFC 5724; it works
   on iOS, not uniformly elsewhere. Left alone when the body encoding was fixed,
   because the two are independent: with the body escaped there is no stray `?`
