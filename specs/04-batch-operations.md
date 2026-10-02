@@ -131,8 +131,7 @@ report state machine; `SelectedDiscsActions.tsx` renders the bar.
   screen), so the button can never tick a disc that is hidden.
   The day is the first ten characters of `added_at` (`y-MM-dd`), compared as text. A disc
   with no `added_at` is never "newest", and neither is one dated after the browser's today:
-  the sheet sync stores whatever date was typed, and the statistics already exclude live
-  rows such as "17.7.10126" for the same reason. Without that bound, one disc mistyped into
+  the sheet sync stores whatever date was typed. Without that bound, one disc mistyped into
   a future year would be the newest for ever and the button would tick only it.
 - It **replaces** the selection rather than adding to it, so the count in the bar is the
   count of discs it found, not that plus whatever was ticked before.
