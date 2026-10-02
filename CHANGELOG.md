@@ -23,6 +23,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - Every disc in the list has a pencil icon opening a page that edits it: name, colour, manufacturer, owner, phone number, course and the club's internal notes, so a typo is fixed in the app rather than in the database.
 - Each of the statistics page's two headline totals filters by year, offering only the years that total has a dated disc in — so the sale/donation total shows 2026 alone while the returns total reaches back to 2024. "Kaikki" appears only once a total spans more than one year, because on a single year it would silently fold in every disc whose date was never recorded. Under each total a line gives the date its data starts from, and another says how many discs no year can show.
 - A second checkbox under "Top 10 kadotettua kiekkomallia", "Näytä vuosien mukaan", puts a second bar under each model split into the years its discs were logged, each part captioned with its year and count.
+- "Valitse uusimmat" above the disc list ticks every disc added on the most recent day that has a phone number, ready to be texted, so discs without a number no longer have to be skipped by hand.
 
 ### Changed
 
