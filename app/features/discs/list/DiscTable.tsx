@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState, type JSX } from 'react';
 
 import { Link, useOutletContext } from 'react-router';
 
-import { add, format, isAfter } from 'date-fns';
+import { add, isAfter } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -64,6 +64,12 @@ type DiscTableProps = {
    * cannot disagree about whether this club files discs under a course.
    */
   courses?: string[];
+  /**
+   * The day the most recently added disc in the whole list was added, before
+   * any filter — what "Valitse uusimmat" calls newest. Null when no disc has a
+   * usable date.
+   */
+  newestDay?: string | null;
 };
 
 interface Row {
@@ -311,6 +317,7 @@ export default function DiscTable({
   onChanged,
   courses = [],
   pendingRetrievals = null,
+  newestDay = null,
 }: DiscTableProps): JSX.Element | null {
   const showCourse = courses.length > 0;
 
@@ -575,10 +582,11 @@ export default function DiscTable({
     .filter((disc): disc is Row & { externalId: string } => disc.externalId != null)
     .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: !!disc.ownerPhoneNumber }));
 
-  // From the discs on screen, as the bar counts them: the list's filters have
-  // already been applied to the discs this table is given. Today is the
-  // browser's, since that is the admin's day.
-  const newestIds = newestDiscIdsWithPhoneNumber(rows, format(new Date(), 'y-MM-dd'));
+  // The newest day is the whole list's, but the discs ticked are the ones on
+  // screen, as the bar counts them: the list's filters have already been
+  // applied to the discs this table is given. A filter that hides the newest
+  // day leaves nothing to tick rather than making an older day "newest".
+  const newestIds = newestDiscIdsWithPhoneNumber(rows, newestDay);
 
   const selectNewest = (): void =>
     setRowSelection(Object.fromEntries(newestIds.map((externalId) => [externalId, true])));

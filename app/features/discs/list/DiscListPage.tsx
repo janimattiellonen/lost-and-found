@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type JSX } from 'react';
 import * as stylex from '@stylexjs/stylex';
 import { useFetcher, useRevalidator } from 'react-router';
 import debounce from 'lodash.debounce';
+import { format } from 'date-fns';
 
 import H2 from '~/ui/H2';
 import Button from '~/ui/Button';
@@ -17,6 +18,7 @@ import type { DiscDTO, EmptyingLogDTO } from '~/types';
 import DiscSelector from '~/features/discs/list/DiscSelector';
 import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
+import { latestAddedDay } from '~/features/discs/list/newestDiscs';
 import NumberSearch from '~/ui/NumberSearch';
 import { getDiscCourseNames } from '~/config/courses';
 import type { StoredErrand } from '~/features/discs/retrieval/retrievalErrand';
@@ -79,6 +81,14 @@ export default function DiscListPage(): JSX.Element {
 
     return filtered;
   }, [fetcher.data, discTerm, phoneNumberTerm, courseTerm]);
+
+  // Taken over the whole list, before the filters above: "Valitse uusimmat"
+  // means the discs added last, not the newest of whatever a filter left. Today
+  // is the browser's, since that is the admin's day.
+  const newestDay = useMemo<string | null>(
+    () => latestAddedDay(fetcher.data?.data ?? [], format(new Date(), 'y-MM-dd')),
+    [fetcher.data],
+  );
 
   useEffect(() => {
     fetcher.load('/discs/data');
@@ -159,7 +169,13 @@ export default function DiscListPage(): JSX.Element {
             for the first load only, when there is nothing to show yet. */}
         {hasDiscs && (
           <div aria-busy={isReloading} className={isReloading ? 'opacity-50 transition-opacity' : undefined}>
-            <DiscTable discs={discs} courses={clubCourses} pendingRetrievals={pendingRetrievals} onChanged={reload} />
+            <DiscTable
+              discs={discs}
+              newestDay={newestDay}
+              courses={clubCourses}
+              pendingRetrievals={pendingRetrievals}
+              onChanged={reload}
+            />
           </div>
         )}
         {isFirstLoad && <CircularProgress {...stylex.props(styles.firstLoadSpinner)} />}

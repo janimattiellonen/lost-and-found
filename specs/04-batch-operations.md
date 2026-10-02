@@ -24,10 +24,11 @@ single request.
    select-all**; the one shortcut is the next item.
 3. When the admin presses "Valitse uusimmat" (select the newest), above the table, the
    selection is replaced by the newest discs that have a phone number — the ones to text
-   after an evening of adding discs. "Newest" means every shown disc whose `added_at` falls
-   on the same day as the most recently added shown disc; of those, only the ones with an
-   owner phone number are ticked. The button is disabled when no such disc exists — when the
-   newest day's discs all lack a number, it does not reach back to an earlier day.
+   after an evening of adding discs. "Newest" means every disc whose `added_at` falls on
+   the same day as the most recently added disc in the whole list; of those, only the ones
+   shown and with an owner phone number are ticked. The button is disabled when no such
+   disc exists — when the newest day's discs all lack a number, or a filter hides them all,
+   it does not reach back to an earlier day.
 4. When the admin picks an action and presses "Suorita" (run), `window.confirm` states
    what will happen and to how many — e.g. "Poistetaanko 12 kiekkoa? Poistoa ei voi
    peruuttaa."
@@ -118,10 +119,14 @@ report state machine; `SelectedDiscsActions.tsx` renders the bar.
   is the mis-click worth designing out. This button ticks one day's discs with a number,
   which is the set an admin texts after adding a batch — and messaging writes nothing. The
   writes behind it still sit behind the 20-disc cap and the `window.confirm`.
-- The newest discs are picked by `newestDiscIdsWithPhoneNumber`
-  (`app/features/discs/list/newestDiscs.ts`), from the rows the table is showing — after the
-  disc-name, phone-number and course filters above it. That matches how the bar counts a
-  selection (only what is on screen), so the button can never tick a disc that is hidden.
+- The newest day and the discs ticked come from two different lists, in
+  `app/features/discs/list/newestDiscs.ts`. `latestAddedDay` finds the day over the whole
+  loaded list, before the disc-name, phone-number and course filters above the table
+  (`DiscListPage` computes it and hands it to `DiscTable`), because the request defines new
+  as "the latest added discs", and the newest day _of a filtered list_ can be weeks old.
+  `newestDiscIdsWithPhoneNumber` then picks that day's discs from the rows the table is
+  showing — after the filters. That matches how the bar counts a selection (only what is on
+  screen), so the button can never tick a disc that is hidden.
   The day is the first ten characters of `added_at` (`y-MM-dd`), compared as text. A disc
   with no `added_at` is never "newest", and neither is one dated after the browser's today:
   the sheet sync stores whatever date was typed, and the statistics already exclude live
@@ -175,6 +180,10 @@ reports the shortfall without calling it an error.
 - Nothing tests `handleBatchRequest.server.ts` itself; the validation branches (dedup, cap,
   missing date) are covered only by reading.
 - The confirmation names no discs — the selection is behind the dialog on screen.
+- With a filter on, the button ticks only the newest day's discs that the filter lets
+  through, and is disabled when it lets none through. A club with several courses that
+  filters to a course whose last batch was a day or more before the newest disc elsewhere
+  cannot use the button to tick that batch; it has to be ticked by hand.
 - "Newest" is a calendar day, not a session of adding: discs added in the morning and more
   added in the evening of the same day are all newest together.
 - That day is the **server's**, in UTC: `createDiscs` stamps `added_at` with
