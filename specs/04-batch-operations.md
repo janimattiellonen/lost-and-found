@@ -24,11 +24,13 @@ single request.
    select-all**; the one shortcut is the next item.
 3. When the admin presses "Valitse uusimmat" (select the newest), above the table, the
    selection is replaced by the newest discs that have a phone number — the ones to text
-   after an evening of adding discs. "Newest" means every disc whose `added_at` falls on
-   the same day as the most recently added disc in the whole list; of those, only the ones
-   shown and with an owner phone number are ticked. The button is disabled when no such
-   disc exists — when the newest day's discs all lack a number, or a filter hides them all,
-   it does not reach back to an earlier day.
+   after an evening of adding discs. "Newest" means every disc whose `added_at` (the date
+   the disc was logged into the list, stamped when it is added through the web app and
+   copied from the sheet for synced ones) falls on the same day as the most recently added
+   disc in the whole list; of those, only the ones shown and with an owner phone number
+   are ticked. The button is disabled when no such disc exists — when the newest day's
+   discs all lack a number, or a filter hides them all, it does not reach back to an
+   earlier day.
 4. When the admin picks an action and presses "Suorita" (run), `window.confirm` states
    what will happen and to how many — e.g. "Poistetaanko 12 kiekkoa? Poistoa ei voi
    peruuttaa."
