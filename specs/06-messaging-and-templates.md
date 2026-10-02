@@ -373,7 +373,10 @@ The tokens are documented to the admin by
   can carry some. Either slip would bump `updated_at` — "edited by hand" — for
   an edit that never happened.
 - The saved value is the trimmed one the server returns, and that is what the
-  composer then shows, grouped by `formatPhoneNumber` like the seeded number.
+  composer then shows, grouped by `formatPhoneNumber` like the seeded number. A
+  number saved unchanged is never posted, so it is handed back as stored,
+  whitespace and all: the composer keeps holding what the disc holds, and the
+  editor reopens on it.
 - "Peruuta" is disabled while a save is in flight: the post would land anyway,
   so a cancel pressed then would close the editor on a number that had in fact
   been saved.
