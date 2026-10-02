@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState, type JSX } from 'react';
 
 import { Link, useOutletContext } from 'react-router';
 
-import { add, isAfter } from 'date-fns';
+import { add, format, isAfter } from 'date-fns';
 
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -27,6 +27,7 @@ import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import OverdueMarker from '~/features/discs/list/OverdueMarker';
+import { newestDiscIdsWithPhoneNumber } from '~/features/discs/list/newestDiscs';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -40,6 +41,7 @@ import {
   SellIcon,
   TextsmsIcon,
 } from '~/ui/icons';
+import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import { dark, font, icon, space } from '~/styles/tokens.stylex';
 
@@ -573,8 +575,24 @@ export default function DiscTable({
     .filter((disc): disc is Row & { externalId: string } => disc.externalId != null)
     .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: !!disc.ownerPhoneNumber }));
 
+  // From the discs on screen, as the bar counts them: the list's filters have
+  // already been applied to the discs this table is given. Today is the
+  // browser's, since that is the admin's day.
+  const newestIds = newestDiscIdsWithPhoneNumber(rows, format(new Date(), 'y-MM-dd'));
+
+  const selectNewest = (): void =>
+    setRowSelection(Object.fromEntries(newestIds.map((externalId) => [externalId, true])));
+
   return (
     <>
+      {isLoggedIn && (
+        <div className="mb-4">
+          <Button variant="outlined" disabled={newestIds.length === 0} onClick={selectNewest}>
+            Valitse uusimmat
+          </Button>
+        </div>
+      )}
+
       <SelectedDiscsActions selected={selectedDiscs} onClear={() => table.resetRowSelection()} onChanged={onChanged} />
 
       <table {...stylex.props(styles.table)}>

@@ -66,7 +66,7 @@ listing it" without claiming what became of it; statistics deliberately ignore i
 - **`additional_info` is never selected** for an anonymous request, rather than selected and dropped.
 - **Club scoping is from `APP_CLUB_ID`**, never from the request.
 - **The course filter has two gates**: the club must have >1 configured `discCourseName` (`getDiscCourseNames`) _and_ the loaded discs must name >1 distinct course. The `Rata` column follows the first gate only.
-- Row selection is keyed on `external_id` (`getRowId`), so a tick survives re-sorting; rows without one cannot be selected. There is deliberately **no select-all** — only a clear-selection checkbox.
+- Row selection is keyed on `external_id` (`getRowId`), so a tick survives re-sorting; rows without one cannot be selected. There is deliberately **no select-all**; the header holds only a clear-selection checkbox. The one shortcut is "Valitse uusimmat" (select the newest) above the table, which ticks the newest day's discs that have a phone number (spec 04).
 - `getDistinctCourses` sorts with the `fi` collator and drops discs with no course, so those appear only under "Kaikki radat".
 
 ## Edge cases & known gaps
