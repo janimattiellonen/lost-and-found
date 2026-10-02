@@ -4,6 +4,7 @@ import { Form, useFetcher } from 'react-router';
 
 import type { ComposerDisc, ComposerMessage } from '~/features/messaging/composerData';
 import { lineBreakToBr, replaceTokensWithValues, toSmsBody } from '~/features/messaging/messageContent';
+import PhoneNumberEditor from '~/features/messaging/PhoneNumberEditor';
 import type { MessageTemplateDTO } from '~/types';
 import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
@@ -61,10 +62,12 @@ export default function MessageComposer({
 
   const defaultTemplate = messageTemplates.find((messageTemplate) => messageTemplate.isDefault === true);
 
-  // Grouped for reading, the way the disc list shows it. The field stays
-  // editable, so what is typed into it is left alone — the sms: link takes the
-  // grouping back out rather than this reformatting as the admin types.
-  const [phoneNumber, setPhoneNumber] = useState<string>(formatPhoneNumber(disc.ownerPhoneNumber));
+  // As stored, and changed only by a save through the editor, so the number the
+  // text goes to is always the one the disc holds. Grouped for reading where it
+  // is shown; the editor gets it ungrouped, so saving it unchanged writes back
+  // what was there.
+  const [phoneNumber, setPhoneNumber] = useState<string>(disc.ownerPhoneNumber ?? '');
+  const [isEditingPhoneNumber, setIsEditingPhoneNumber] = useState(false);
   const [message, setMessage] = useState<string>(defaultTemplate?.content ?? '');
   const [selected, setSelected] = useState<number>(defaultTemplate?.id ?? -1);
   const ok: boolean = fetcher.data?.ok || false;
@@ -110,22 +113,35 @@ export default function MessageComposer({
           Ilmoitettu: {disc.notifiedAt ? formatDate(disc.notifiedAt) : ''}
         </p>
       </Wrapper>
-      <Form method="post">
-        <Wrapper>
-          <H3>Viesti</H3>
+      <Wrapper>
+        <H3>Viesti</H3>
 
-          <Label htmlFor="phone">Puhelinnumero</Label>
-          <input
-            id="phone"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-fg-secondary leading-tight focus:outline-none focus:shadow-outline"
-            type="email"
-            placeholder="Sähköpostiosoite"
-            name="email"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+        {/* Outside the Form below: the editor is a form of its own. */}
+        {isEditingPhoneNumber && disc.externalId ? (
+          <PhoneNumberEditor
+            externalId={disc.externalId}
+            phoneNumber={phoneNumber}
+            onSaved={(saved) => {
+              setPhoneNumber(saved);
+              setIsEditingPhoneNumber(false);
+            }}
+            onCancel={() => setIsEditingPhoneNumber(false)}
           />
-        </Wrapper>
-
+        ) : (
+          <>
+            <Label>Puhelinnumero</Label>
+            <p className="flex items-center gap-4">
+              <span>{formatPhoneNumber(phoneNumber) || 'Ei puhelinnumeroa'}</span>
+              {disc.externalId && (
+                <Button size="small" onClick={() => setIsEditingPhoneNumber(true)}>
+                  Muokkaa puhelinnumeroa
+                </Button>
+              )}
+            </p>
+          </>
+        )}
+      </Wrapper>
+      <Form method="post">
         <Wrapper>
           <Label htmlFor="message-template">Viestipohja</Label>
 
