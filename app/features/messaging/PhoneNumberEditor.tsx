@@ -38,7 +38,11 @@ export default function PhoneNumberEditor({ externalId, phoneNumber, onSaved, on
     event.preventDefault();
 
     // Not for an empty one: that goes to the server, which says it is required.
-    if (phoneNumber !== '' && value.trim() === phoneNumber) {
+    // Both sides trimmed: an imported number can carry stray whitespace, and
+    // saving it as it opened is still no edit.
+    const stored = phoneNumber.trim();
+
+    if (stored !== '' && value.trim() === stored) {
       onSaved(phoneNumber);
 
       return;

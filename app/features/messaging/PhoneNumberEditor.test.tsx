@@ -12,12 +12,12 @@ function answer(status: number, body: unknown) {
   return fetchMock;
 }
 
-function renderEditor() {
+function renderEditor(phoneNumber = '050 123 4567') {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
 
   render(
-    <PhoneNumberEditor externalId={EXTERNAL_ID} phoneNumber="050 123 4567" onSaved={onSaved} onCancel={onCancel} />,
+    <PhoneNumberEditor externalId={EXTERNAL_ID} phoneNumber={phoneNumber} onSaved={onSaved} onCancel={onCancel} />,
   );
 
   return { onSaved, onCancel, field: screen.getByRole('textbox') as HTMLInputElement };
@@ -67,6 +67,18 @@ describe('PhoneNumberEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tallenna' }));
 
     expect(onSaved).toHaveBeenCalledWith('050 123 4567');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // Imported rows can carry stray whitespace around the number: saving it as it
+  // opened is still no edit, and must not bump `updated_at`.
+  it('does not post a stored number with surrounding whitespace saved unchanged', () => {
+    const fetchMock = answer(200, {});
+    const { onSaved } = renderEditor(' 050 123 4567 ');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tallenna' }));
+
+    expect(onSaved).toHaveBeenCalledWith(' 050 123 4567 ');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

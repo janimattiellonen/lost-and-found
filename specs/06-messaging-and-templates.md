@@ -368,8 +368,10 @@ The tokens are documented to the admin by
   here, unlike in the edit form: a number removed while messaging leaves
   nothing to send to, and the edit form is still there for that.
 - The editor opens on the number as stored, not the grouped form shown beside
-  it, and a number saved unchanged is not posted at all. Either slip would bump
-  `updated_at` — "edited by hand" — for an edit that never happened.
+  it, and a number saved unchanged is not posted at all — "unchanged" compared
+  with surrounding whitespace trimmed from both sides, since an imported number
+  can carry some. Either slip would bump `updated_at` — "edited by hand" — for
+  an edit that never happened.
 - The saved value is the trimmed one the server returns, and that is what the
   composer then shows, grouped by `formatPhoneNumber` like the seeded number.
 - "Peruuta" is disabled while a save is in flight: the post would land anyway,
