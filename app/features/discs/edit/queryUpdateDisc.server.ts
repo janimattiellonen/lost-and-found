@@ -55,9 +55,11 @@ export async function queryUpdateDisc(
       can_be_sold_or_donated: values.canBeSoldOrDonated,
       can_be_sold_or_donated_date: values.canBeSoldOrDonatedDate,
       can_be_sold_or_donated_method: values.canBeSoldOrDonatedMethod,
-      // The one trace a hand-edit leaves. Set here and nowhere else in the disc
-      // writes: the row actions do not maintain the column, so it says when this
-      // disc was last edited by hand, not when it last changed at all.
+      // The one trace a hand-edit leaves. Set here and by the message composer's
+      // phone editor (queryUpdateOwnerPhoneNumber), the other hand-edit, and
+      // nowhere else in the disc writes: the row actions do not maintain the
+      // column, so it says when this disc was last edited by hand, not when it
+      // last changed at all.
       updated_at: new Date().toISOString(),
     })
     .eq('external_id', externalId)

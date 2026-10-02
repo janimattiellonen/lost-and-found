@@ -12,6 +12,8 @@ the live database, which is a high-risk tool for a two-character typo.
 
 This feature is one form holding every editable column of one disc, reached from
 the disc list, so a correction costs a click rather than a hand-written `UPDATE`.
+It is the one place for every column but the phone number, which the message
+composer's phone editor (spec 06) can also correct, mid-message.
 
 ## Actors
 
@@ -50,8 +52,10 @@ the disc list, so a correction costs a click rather than a hand-written `UPDATE`
 
 ## Data
 
-Every column below lives on `discs` and is written by this one form. Nothing here
-is new: the feature adds no migration.
+Every column below lives on `discs` and is written by this one form — and
+`owner_phone_number` also by the message composer's phone editor (spec 06),
+which writes that column and `updated_at` and nothing else. Nothing here is new:
+the feature adds no migration.
 
 The disc itself is addressed by `external_id`, the uuid every disc carries —
 including one added through the web app, which has no Google Sheet row number to
