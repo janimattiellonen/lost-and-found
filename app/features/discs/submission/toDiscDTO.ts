@@ -1,4 +1,4 @@
-import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/features/discs/fieldLimits';
+import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/discFieldLimits';
 import type { DiscDTO } from '~/types';
 
 import type { DiscSubmission } from './submitDiscs';
