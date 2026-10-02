@@ -67,7 +67,7 @@ code is about to reach across features, it usually belongs in one of four places
 - **`app/lib/`** — generic plumbing with no domain in it (`api/postJson`, `api/validate`, `api/resourceRoute.server`, `methodEnum`). Any feature may import from here.
 - **`app/ui/`** — presentational components: props in, JSX out, no fetching and no domain logic. Any feature may import from here.
 - **the slice that owns it** — a domain library used by exactly one feature lives inside that feature (the disc text parser sits in `discs/submission/parser/`).
-- **the top level of `app/`, beside `types.ts` and `utils.ts`** — shared domain vocabulary that more than one slice reads: `app/discMethods.ts` (the disposal and return method enums) and `app/discFieldLimits.ts` (the disc column length limits). It is domain knowledge, so not `app/lib/`, and no single slice owns it. Keep it to constants and their types; anything that fetches or renders belongs in a slice.
+- **the top level of `app/`, beside `types.ts` and `utils.ts`** — shared domain vocabulary that more than one slice reads: `app/discMethods.ts` (the disposal and return method enums) and `app/discFieldLimits.ts` (the disc column length limits). It is domain knowledge, so not `app/lib/`, and no single slice owns it. Keep it to constants, their types and pure lookups over them (a type guard, a label for a value); anything that fetches or renders belongs in a slice.
 
 Everything else that would be a `features/a` → `features/b` import means the two
 belong in one slice.
