@@ -27,6 +27,7 @@ import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import OverdueMarker from '~/features/discs/list/OverdueMarker';
+import { hasPhoneNumber, newestDiscIdsWithPhoneNumber } from '~/features/discs/list/newestDiscs';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -40,6 +41,7 @@ import {
   SellIcon,
   TextsmsIcon,
 } from '~/ui/icons';
+import Button from '~/ui/Button';
 import Checkbox from '~/ui/Checkbox';
 import { dark, font, icon, space } from '~/styles/tokens.stylex';
 
@@ -62,6 +64,12 @@ type DiscTableProps = {
    * cannot disagree about whether this club files discs under a course.
    */
   courses?: string[];
+  /**
+   * The day the most recently added disc in the whole list was added, before
+   * any filter — what "Valitse uusimmat" calls newest. Null when no disc has a
+   * usable date.
+   */
+  newestDay?: string | null;
 };
 
 interface Row {
@@ -309,6 +317,7 @@ export default function DiscTable({
   onChanged,
   courses = [],
   pendingRetrievals = null,
+  newestDay = null,
 }: DiscTableProps): JSX.Element | null {
   const showCourse = courses.length > 0;
 
@@ -571,10 +580,27 @@ export default function DiscTable({
     .rows.filter((row) => row.getIsSelected())
     .map((row) => row.original)
     .filter((disc): disc is Row & { externalId: string } => disc.externalId != null)
-    .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: !!disc.ownerPhoneNumber }));
+    .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: hasPhoneNumber(disc) }));
+
+  // The newest day is the whole list's, but the discs ticked are the ones on
+  // screen, as the bar counts them: the list's filters have already been
+  // applied to the discs this table is given. A filter that hides the newest
+  // day leaves nothing to tick rather than making an older day "newest".
+  const newestIds = newestDiscIdsWithPhoneNumber(rows, newestDay);
+
+  const selectNewest = (): void =>
+    setRowSelection(Object.fromEntries(newestIds.map((externalId) => [externalId, true])));
 
   return (
     <>
+      {isLoggedIn && (
+        <div className="mb-4">
+          <Button variant="outlined" disabled={newestIds.length === 0} onClick={selectNewest}>
+            Valitse uusimmat
+          </Button>
+        </div>
+      )}
+
       <SelectedDiscsActions selected={selectedDiscs} onClear={() => table.resetRowSelection()} onChanged={onChanged} />
 
       <table {...stylex.props(styles.table)}>

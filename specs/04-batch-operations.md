@@ -21,11 +21,20 @@ single request.
    `SelectedDiscsActions.tsx`, which reads "N kiekkoa valittu" (N discs selected).
 2. When rows are ticked, the header cell becomes a single checked box,
    "Poista kaikkien kiekkojen valinta" (clear all selection). There is deliberately **no
-   select-all**.
-3. When the admin picks an action and presses "Suorita" (run), `window.confirm` states
+   select-all**; the one shortcut is the next item.
+3. When the admin presses "Valitse uusimmat" (select the newest), above the table, the
+   selection is replaced by the newest discs that have a phone number — the ones to text
+   after an evening of adding discs. "Newest" means every disc whose `added_at` (the date
+   the disc was logged into the list, stamped when it is added through the web app and
+   copied from the sheet for synced ones) falls on the same day as the most recently added
+   disc in the whole list; of those, only the ones shown and with an owner phone number
+   are ticked. The button is disabled when no such disc exists — when the newest day's
+   discs all lack a number, or a filter hides them all, it does not reach back to an
+   earlier day.
+4. When the admin picks an action and presses "Suorita" (run), `window.confirm` states
    what will happen and to how many — e.g. "Poistetaanko 12 kiekkoa? Poistoa ei voi
    peruuttaa."
-4. When the write returns, the bar reports it — "Poistettiin 12 kiekkoa." — the ticks
+5. When the write returns, the bar reports it — "Poistettiin 12 kiekkoa." — the ticks
    clear and the list reloads. The report survives one more render with an empty
    selection so it does not vanish with the ticks.
    - When a disposal's discs were marked but their retrieval errands were not, the same
@@ -34,13 +43,13 @@ single request.
      and the list still reloads, because the write did go through — pressing the action
      again is not the fix, and the notice deliberately sits where the plain report sits
      rather than beside the buttons.
-5. When fewer discs were reached than asked for, the report names the shortfall:
+6. When fewer discs were reached than asked for, the report names the shortfall:
    "Poistettiin 10 kiekkoa. 2 kiekkoa jäi käsittelemättä – kiekkoja ei löytynyt tai niitä
    ei voitu muuttaa."
-6. When more than 20 discs are ticked, the write actions leave the dropdown and a note
+7. When more than 20 discs are ticked, the write actions leave the dropdown and a note
    explains why: "Merkintä ja poisto koskevat enintään 20 kiekkoa kerralla – valitse
    pienempi joukko." The selection itself is not capped.
-7. When some ticked discs have no phone number, "Lähetä sms N henkilölle" (send SMS to N
+8. When some ticked discs have no phone number, "Lähetä sms N henkilölle" (send SMS to N
    people) counts only those that do, and a note says how many fall outside the message.
 
 ## The five batch actions
@@ -107,6 +116,25 @@ report state machine; `SelectedDiscsActions.tsx` renders the bar.
   written and something after that was not; anything else in the body is ignored.
 - `handleRun` re-checks that the chosen action is still in the dropdown — one more tick can
   push the selection past the cap between choosing and pressing.
+- "Valitse uusimmat" is the one selection shortcut, and it is not a select-all in disguise.
+  Select-all was dropped because one click arming an irreversible write on the whole list
+  is the mis-click worth designing out. This button ticks one day's discs with a number,
+  which is the set an admin texts after adding a batch — and messaging writes nothing. The
+  writes behind it still sit behind the 20-disc cap and the `window.confirm`.
+- The newest day and the discs ticked come from two different lists, in
+  `app/features/discs/list/newestDiscs.ts`. `latestAddedDay` finds the day over the whole
+  loaded list, before the disc-name, phone-number and course filters above the table
+  (`DiscListPage` computes it and hands it to `DiscTable`), because the request defines new
+  as "the latest added discs", and the newest day _of a filtered list_ can be weeks old.
+  `newestDiscIdsWithPhoneNumber` then picks that day's discs from the rows the table is
+  showing — after the filters. That matches how the bar counts a selection (only what is on
+  screen), so the button can never tick a disc that is hidden.
+  The day is the first ten characters of `added_at` (`y-MM-dd`), compared as text. A disc
+  with no `added_at` is never "newest", and neither is one dated after the browser's today:
+  the sheet sync stores whatever date was typed. Without that bound, one disc mistyped into
+  a future year would be the newest for ever and the button would tick only it.
+- It **replaces** the selection rather than adding to it, so the count in the bar is the
+  count of discs it found, not that plus whatever was ticked before.
 
 ## Partial failure
 
@@ -153,6 +181,17 @@ reports the shortfall without calling it an error.
 - Nothing tests `handleBatchRequest.server.ts` itself; the validation branches (dedup, cap,
   missing date) are covered only by reading.
 - The confirmation names no discs — the selection is behind the dialog on screen.
+- With a filter on, the button ticks only the newest day's discs that the filter lets
+  through, and is disabled when it lets none through. A club with several courses that
+  filters to a course whose last batch was a day or more before the newest disc elsewhere
+  cannot use the button to tick that batch; it has to be ticked by hand.
+- "Newest" is a calendar day, not a session of adding: discs added in the morning and more
+  added in the evening of the same day are all newest together.
+- That day is the **server's**, in UTC: `createDiscs` stamps `added_at` with
+  `format(new Date(), 'y-MM-dd')` on a server running in UTC. A disc added in Finland
+  between midnight and 02:00 or 03:00 local time is filed under the previous day, so the
+  boundary between two batches falls at UTC midnight, not at Finnish midnight. This predates
+  the button; it only becomes visible through it.
 
 ## Open questions
 
