@@ -9,6 +9,14 @@ export type DatedDisc = {
 };
 
 /**
+ * Whether a disc has a number to text. The one place this is decided, so the
+ * discs "Valitse uusimmat" ticks and the bar's SMS count cannot disagree.
+ */
+export function hasPhoneNumber(disc: Pick<DatedDisc, 'ownerPhoneNumber'>): boolean {
+  return !!disc.ownerPhoneNumber;
+}
+
+/**
  * The day (`y-MM-dd`) the most recent disc in `discs` was added, or null when
  * none carries a usable date. Meant for the whole list, before any filter: a
  * filter narrows which of the newest discs are shown, not which day is newest.
@@ -40,7 +48,7 @@ export function newestDiscIdsWithPhoneNumber(discs: DatedDisc[], newestDay: stri
   }
 
   return discs
-    .filter((disc) => toDay(disc.addedAt) === newestDay && !!disc.ownerPhoneNumber)
+    .filter((disc) => toDay(disc.addedAt) === newestDay && hasPhoneNumber(disc))
     .flatMap((disc) => (disc.externalId ? [disc.externalId] : []));
 }
 

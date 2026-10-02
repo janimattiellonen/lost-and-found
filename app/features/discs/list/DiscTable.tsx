@@ -27,7 +27,7 @@ import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import OverdueMarker from '~/features/discs/list/OverdueMarker';
-import { newestDiscIdsWithPhoneNumber } from '~/features/discs/list/newestDiscs';
+import { hasPhoneNumber, newestDiscIdsWithPhoneNumber } from '~/features/discs/list/newestDiscs';
 import SelectedDiscsActions, { type SelectedDisc } from '~/features/discs/list/SelectedDiscsActions';
 import {
   ArrowDownwardIcon,
@@ -580,7 +580,7 @@ export default function DiscTable({
     .rows.filter((row) => row.getIsSelected())
     .map((row) => row.original)
     .filter((disc): disc is Row & { externalId: string } => disc.externalId != null)
-    .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: !!disc.ownerPhoneNumber }));
+    .map((disc) => ({ externalId: disc.externalId, hasPhoneNumber: hasPhoneNumber(disc) }));
 
   // The newest day is the whole list's, but the discs ticked are the ones on
   // screen, as the bar counts them: the list's filters have already been
