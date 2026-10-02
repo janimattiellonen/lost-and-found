@@ -9,3 +9,17 @@ multiple discs that I want to:
 In these new cases I want to the system to require a confirmation from me, before doing the selected action.
 The confirmation message should state what is been trying to do and on how many discs. The disc data is
 irrelevant in the confirmation text.
+
+
+## Improvements
+
+After I have added several discs, I often send messages to them. Some of the added discs don't have a
+phone number so when I select multiple discs, I have to carefully select only those that have a
+number. I'd like to have a button that selects all new discs that have a phone number.
+
+What can be considered "new" are those, that have the same "added at" date (use day as accuracy) and
+are the latest added discs.
+
+Button label should be "Valitse uusimmat". Place the button above the disc result table.
+
+Create a new branch for this.
