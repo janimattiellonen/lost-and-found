@@ -129,9 +129,12 @@ export default function MessageComposer({
           />
         ) : (
           <>
-            <Label>Puhelinnumero</Label>
+            {/* An <output>, not a <span>: it is labelable, so "Puhelinnumero"
+                names the number for a screen reader even though nothing here
+                can be typed into. */}
+            <Label htmlFor="phone-number">Puhelinnumero</Label>
             <p className="flex items-center gap-4">
-              <span>{formatPhoneNumber(phoneNumber) || 'Ei puhelinnumeroa'}</span>
+              <output id="phone-number">{formatPhoneNumber(phoneNumber) || 'Ei puhelinnumeroa'}</output>
               {disc.externalId && (
                 <Button size="small" onClick={() => setIsEditingPhoneNumber(true)}>
                   Muokkaa puhelinnumeroa
