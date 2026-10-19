@@ -16,10 +16,11 @@ describe('ContactLine', () => {
     expect(link.textContent).toBe('050 123 4567');
   });
 
-  it('strips the spaces from a number that was stored with them', () => {
-    render(<ContactLine phoneNumber="050 123 4567" name={null} />);
+  it('shows a number nobody can text without a link', () => {
+    render(<ContactLine phoneNumber="+35850123?567" name="Matti" />);
 
-    expect(screen.getByRole('link').getAttribute('href')).toBe('sms:0501234567');
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.getByText(/Matti/).textContent).toBe('050 123 ?567 (Matti)');
   });
 
   it('puts the name after the number, in brackets', () => {

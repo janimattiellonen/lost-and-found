@@ -144,7 +144,7 @@ describe('validateDiscEdit', () => {
   });
 
   it('refuses a phone number in no stored form', () => {
-    const result = validateDiscEdit(form({ ownerPhoneNumber: '050 111 22?2' }), COURSES);
+    const result = validateDiscEdit(form({ ownerPhoneNumber: '(050) 111 2222' }), COURSES);
 
     expect(result.errors?.ownerPhoneNumber).toBe(PHONE_NUMBER_FORMAT_ERROR);
   });

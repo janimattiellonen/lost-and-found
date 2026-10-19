@@ -13,8 +13,12 @@ describe('parseOwnerPhoneNumber', () => {
     expect(parseOwnerPhoneNumber('2222')).toEqual({ phoneNumber: '2222' });
   });
 
-  it('refuses a number with unreadable digits', () => {
-    expect(parseOwnerPhoneNumber('050 111 22?2')).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
+  it('keeps a "?" for a digit that could not be read', () => {
+    expect(parseOwnerPhoneNumber('050 111 22?2')).toEqual({ phoneNumber: '+3585011122?2' });
+  });
+
+  it('refuses a number in no stored form', () => {
+    expect(parseOwnerPhoneNumber('(555)111-2222')).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
   });
 
   it.each([

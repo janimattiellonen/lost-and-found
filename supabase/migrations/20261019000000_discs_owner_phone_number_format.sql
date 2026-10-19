@@ -9,7 +9,9 @@
 --
 -- The three forms:
 --   NULL                    no number
---   +358501112222           E.164: "+", country code, the rest, digits only
+--   +358501112222           E.164: "+", country code, the rest, digits only;
+--                           a "?" stands for a digit that could not be read
+--                           off the disc ("+35850111?222"), never the first
 --   2222                    the anonymised tail kept once a disc is closed
 --
 -- Apply ONLY after `npm run normalise:phones -- --dry-run` reports nothing left
@@ -17,7 +19,7 @@
 
 ALTER TABLE public.discs
   ADD CONSTRAINT discs_owner_phone_number_format
-  CHECK (owner_phone_number ~ '^(\+[1-9][0-9]{6,14}|[0-9]{4})$');
+  CHECK (owner_phone_number ~ '^(\+[1-9][0-9?]{6,14}|[0-9]{4})$');
 
 COMMENT ON CONSTRAINT discs_owner_phone_number_format ON public.discs IS
-  'NULL, E.164 (+ and 7-15 digits) or the four-digit anonymised tail. Written by app/phoneNumber.ts normalisePhoneNumber.';
+  'NULL, E.164 (+ and 7-15 digits, "?" for an unreadable one) or the four-digit anonymised tail. Written by app/phoneNumber.ts normalisePhoneNumber.';

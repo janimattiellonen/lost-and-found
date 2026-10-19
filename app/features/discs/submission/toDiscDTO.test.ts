@@ -76,7 +76,7 @@ describe('parseBatch', () => {
 
   it('rejects a phone number in no stored form, naming the row', () => {
     const result = parseBatch(
-      { discs: [{ discName: 'Mako3' }, { discName: 'Mako3', phoneNumber: '050 111 22?2' }] },
+      { discs: [{ discName: 'Mako3' }, { discName: 'Mako3', phoneNumber: '(050) 111 2222' }] },
       COURSES,
     );
 

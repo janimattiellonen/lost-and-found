@@ -38,6 +38,13 @@ describe('MessageComposer', () => {
     expect(screen.getByLabelText('Puhelinnumero').textContent).toBe('050 123 4567');
   });
 
+  it('will not send to a number with a digit missing, and says why', () => {
+    renderComposer('+35850123?567');
+
+    expect(screen.getByRole('button', { name: 'Lähetä tekstiviesti' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText('Tähän numeroon ei voi lähettää viestiä, koska siitä puuttuu numeroita.')).toBeTruthy();
+  });
+
   it('labels the placeholder when the disc has no number', () => {
     renderComposer(undefined);
 

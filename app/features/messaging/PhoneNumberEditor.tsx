@@ -74,7 +74,9 @@ export default function PhoneNumberEditor({ externalId, phoneNumber, onSaved, on
       <Label htmlFor="phone">Puhelinnumero</Label>
       <TextField
         id="phone"
-        type="tel"
+        // Text, not tel: a phone's number pad has no "?", and a digit that
+        // cannot be read off the disc is typed as one.
+        type="text"
         fullWidth
         value={value}
         onChange={(e) => setValue(e.target.value)}

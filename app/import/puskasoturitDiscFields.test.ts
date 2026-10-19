@@ -175,6 +175,6 @@ describe('hasStorablePhoneNumber', () => {
   });
 
   it('turns away a number the database would refuse', () => {
-    expect(hasStorablePhoneNumber({ ...disc, ownerPhoneNumber: '040 111 22?2' })).toBe(false);
+    expect(hasStorablePhoneNumber({ ...disc, ownerPhoneNumber: '(040) 111 2222' })).toBe(false);
   });
 });

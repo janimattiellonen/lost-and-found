@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatPhoneNumber,
+  isTextable,
   normalisePhoneNumber,
   PHONE_NUMBER_FORMAT_ERROR,
   phoneNumberEndsWith,
@@ -44,9 +45,14 @@ describe('normalisePhoneNumber', () => {
     expect(normalisePhoneNumber('   ')).toEqual({ phoneNumber: null });
   });
 
-  it('refuses a number with unreadable digits', () => {
-    expect(normalisePhoneNumber('050 111 22?2')).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
+  it('keeps a "?" in place of a digit that could not be read', () => {
+    expect(normalisePhoneNumber('050 111 ?222')).toEqual({ phoneNumber: '+35850111?222' });
+    expect(normalisePhoneNumber('050 111 22??')).toEqual({ phoneNumber: '+3585011122??' });
+  });
+
+  it('refuses a number whose first digit could not be read, since its country is unknown', () => {
     expect(normalisePhoneNumber('????2222')).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
+    expect(normalisePhoneNumber('+?58501112222')).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
   });
 
   it('refuses brackets and words', () => {
@@ -98,6 +104,10 @@ describe('formatPhoneNumber', () => {
     expect(formatPhoneNumber('+4915111222333')).toBe('+49 151 112 223 33');
   });
 
+  it('groups a number with an unreadable digit like any other', () => {
+    expect(formatPhoneNumber('+35850111?222')).toBe('050 111 ?222');
+  });
+
   it('shows the anonymised tail the way the public list does', () => {
     expect(formatPhoneNumber('2222')).toBe('****2222');
   });
@@ -115,9 +125,28 @@ describe('formatPhoneNumber', () => {
 
   it('shows what normalises back to the same stored number', () => {
     // The edit fields open on the shown form, so it has to survive a save.
-    for (const stored of ['+358501112222', '+3584571112222', '+46701112222', '+372560333', '+15551112222']) {
+    for (const stored of [
+      '+358501112222',
+      '+3584571112222',
+      '+46701112222',
+      '+372560333',
+      '+15551112222',
+      '+35850111?222',
+    ]) {
       expect(normalisePhoneNumber(formatPhoneNumber(stored))).toEqual({ phoneNumber: stored });
     }
+  });
+});
+
+describe('isTextable', () => {
+  it('is true for a whole number', () => {
+    expect(isTextable('+358501112222')).toBe(true);
+  });
+
+  it('is false for a number with an unreadable digit, the anonymised tail, or none', () => {
+    expect(isTextable('+35850111?222')).toBe(false);
+    expect(isTextable('2222')).toBe(false);
+    expect(isTextable(null)).toBe(false);
   });
 });
 
@@ -165,6 +194,12 @@ describe('phoneNumberEndsWith', () => {
   it('works on the four digits an anonymous visitor receives', () => {
     expect(phoneNumberEndsWith('2222', '2222')).toBe(true);
     expect(phoneNumberEndsWith('2222', '3333')).toBe(false);
+  });
+
+  it('lets an unreadable digit match any digit', () => {
+    expect(phoneNumberEndsWith('+35850111?222', '0501112222')).toBe(true);
+    expect(phoneNumberEndsWith('+35850111?222', '0501119222')).toBe(true);
+    expect(phoneNumberEndsWith('+35850111?222', '0501113333')).toBe(false);
   });
 
   it('does not match on digits from the middle', () => {

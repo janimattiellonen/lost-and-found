@@ -7,14 +7,17 @@
  * in the database holds it to them:
  *
  * - NULL, for no number;
- * - E.164 — a "+", the country code and the rest, digits only: "+358501112222";
+ * - E.164 — a "+", the country code and the rest, digits only: "+358501112222".
+ *   A digit the admin could not read off the disc is kept as a "?" in its
+ *   place, "+35850111?222", so the digits that were legible are not lost;
  * - exactly four digits, the anonymised tail the admin keeps once a disc has
  *   been returned, sold or donated: "2222".
  *
  * Here at the top level of app/ because two slices (discs and messaging), the
  * shared ContactLine, the sheet import and two maintenance scripts read it, and
- * no one of them owns it. It imports nothing: the scripts run on plain node, which cannot
- * resolve the `~/` alias, so nothing in their import graph may use it.
+ * no one of them owns it. It imports nothing: the scripts run on plain node,
+ * which cannot resolve the `~/` alias, so nothing in their import graph may use
+ * it.
  */
 
 /** What every refused number is told. The shape is what the admin needs. */
@@ -25,10 +28,13 @@ const ANONYMISED_LENGTH = 4;
 const ANONYMISED = new RegExp(`^\\d{${ANONYMISED_LENGTH}}$`);
 
 /**
- * E.164: at most 15 digits, and a country code never starts with 0. Seven is
- * the floor the submission parser has always used for a number.
+ * The international form: E.164, at most 15 digits, and a country code never
+ * starts with 0. Seven is
+ * the floor the submission parser has always used for a number. A "?" stands
+ * for a digit that could not be read, and counts as one; the first digit, which
+ * says what country the number is in, has to be legible.
  */
-const E164 = /^\+[1-9]\d{6,14}$/;
+const INTERNATIONAL = /^\+[1-9][\d?]{6,14}$/;
 
 /**
  * The same floor for a Finnish number: seven digits as typed domestically,
@@ -67,7 +73,7 @@ export function normalisePhoneNumber(value: string): NormalisedPhoneNumber {
 
   let compact = entered.replace(/[\s-]/g, '');
 
-  if (!/^\+?\d+$/.test(compact)) {
+  if (!/^\+?[\d?]+$/.test(compact)) {
     return { error: PHONE_NUMBER_FORMAT_ERROR };
   }
 
@@ -91,7 +97,18 @@ export function normalisePhoneNumber(value: string): NormalisedPhoneNumber {
     compact.startsWith(`+${FINNISH_COUNTRY_CODE}`) &&
     compact.length - FINNISH_COUNTRY_CODE.length - 1 < MIN_FINNISH_NATIONAL_DIGITS;
 
-  return E164.test(compact) && !isShortFinnish ? { phoneNumber: compact } : { error: PHONE_NUMBER_FORMAT_ERROR };
+  return INTERNATIONAL.test(compact) && !isShortFinnish
+    ? { phoneNumber: compact }
+    : { error: PHONE_NUMBER_FORMAT_ERROR };
+}
+
+/**
+ * Whether a text can be sent to the stored number: a whole one, with no digit
+ * missing. The anonymised tail and a number with a "?" in it are kept for
+ * recognising a disc, not for reaching its owner.
+ */
+export function isTextable(value?: string | null): boolean {
+  return !!value && INTERNATIONAL.test(value) && !value.includes('?');
 }
 
 /**
@@ -114,7 +131,7 @@ export function formatPhoneNumber(value?: string | null): string {
     return `****${value}`;
   }
 
-  if (!E164.test(value)) {
+  if (!INTERNATIONAL.test(value)) {
     return value;
   }
 
@@ -166,13 +183,22 @@ export function phoneSearchDigits(value: string): string {
 /**
  * Whether a stored number ends with what was searched for.
  *
- * Works on the four digits an anonymous visitor receives just as on a whole
- * number, so the public list needs no second rule.
+ * A "?" in the stored number matches any digit, since it is one nobody could
+ * read: "0501112222" finds "+35850111?222". Works on the four digits an
+ * anonymous visitor receives just as on a whole number, so the public list
+ * needs no second rule.
  */
 export function phoneNumberEndsWith(stored: string | null | undefined, search: string): boolean {
   const searched = phoneSearchDigits(search);
+  const storedDigits = (stored ?? '').replace(/[^\d?]/g, '');
 
-  return searched.length > 0 && (stored ?? '').replace(/\D/g, '').endsWith(searched);
+  if (searched.length === 0 || searched.length > storedDigits.length) {
+    return false;
+  }
+
+  const tail = storedDigits.slice(-searched.length);
+
+  return [...searched].every((digit, i) => tail[i] === digit || tail[i] === '?');
 }
 
 /** The operator prefix a Finnish number is grouped after: the 0 and two digits. */
@@ -205,7 +231,7 @@ function groupDomestic(domestic: string): string {
  * it. A readable default for a foreign number, not that country's own style.
  */
 function groupInThrees(digits: string): string {
-  const groups = digits.match(/\d{1,3}/g) ?? [];
+  const groups = digits.match(/[\d?]{1,3}/g) ?? [];
 
   if (groups.length > 1 && groups[groups.length - 1].length === 1) {
     groups[groups.length - 2] += groups.pop();
