@@ -1,7 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
 
 import { color, font, leading } from '~/styles/tokens.stylex';
-import { formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatPhoneNumber } from '~/phoneNumber';
+import { toDiallablePhoneNumber } from '~/utils';
 
 import type { JSX } from 'react';
 

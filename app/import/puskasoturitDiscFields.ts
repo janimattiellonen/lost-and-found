@@ -1,5 +1,9 @@
 import type { DiscDTO } from '~/types';
 
+// Relative and with its extension, not `~/phoneNumber`: the import script runs
+// this module on plain node, which resolves neither the alias nor a bare path.
+import { normalisePhoneNumber } from '../phoneNumber.ts';
+
 /**
  * Turns the free-text columns of the Puskasoturit sheet into the typed columns
  * `discs` grew later (returned_to_owner_date, return_method,
@@ -141,8 +145,17 @@ function orNull(value?: string | null): string | null {
 }
 
 /**
+ * Whether the sheet's phone number can be stored. The database refuses one in
+ * no stored form, so the import script reports and skips such a row rather
+ * than have the whole chunk it is in fail.
+ */
+export function hasStorablePhoneNumber(disc: DiscDTO): boolean {
+  return normalisePhoneNumber(disc.ownerPhoneNumber ?? '').error === undefined;
+}
+
+/**
  * The imported disc as a row of the `discs` table, with the free-text notes
- * also read into the typed columns.
+ * also read into the typed columns, and the phone number in its stored form.
  *
  * The external id is generated here rather than left to a column default, so
  * the app does not depend on one being in place — the same reasoning as in
@@ -157,7 +170,7 @@ export function toDiscRow(disc: DiscDTO): DiscRow {
     disc_colour: orNull(disc.discColour),
     disc_manufacturer: orNull(disc.discManufacturer),
     owner_name: orNull(disc.ownerName),
-    owner_phone_number: orNull(disc.ownerPhoneNumber),
+    owner_phone_number: normalisePhoneNumber(disc.ownerPhoneNumber ?? '').phoneNumber ?? null,
     added_at: disc.addedAt ?? null,
     additional_info: orNull(disc.additionalInfo),
     course: normalizeCourse(disc.course),

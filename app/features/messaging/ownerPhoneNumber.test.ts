@@ -2,14 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { MAX_FIELD_LENGTH } from '~/discFieldLimits';
 import { parseOwnerPhoneNumber } from '~/features/messaging/ownerPhoneNumber';
+import { PHONE_NUMBER_FORMAT_ERROR } from '~/phoneNumber';
 
 describe('parseOwnerPhoneNumber', () => {
-  it('keeps the number as typed, trimmed', () => {
-    expect(parseOwnerPhoneNumber('  050 123 4567 ')).toEqual({ phoneNumber: '050 123 4567' });
+  it('stores the number in its stored form', () => {
+    expect(parseOwnerPhoneNumber('  050 111 2222 ')).toEqual({ phoneNumber: '+358501112222' });
   });
 
-  it('accepts a number with a note, as imported rows have', () => {
-    expect(parseOwnerPhoneNumber('050 123 4567 (äiti)')).toEqual({ phoneNumber: '050 123 4567 (äiti)' });
+  it('keeps the anonymised four-digit tail', () => {
+    expect(parseOwnerPhoneNumber('2222')).toEqual({ phoneNumber: '2222' });
+  });
+
+  it('refuses a number with unreadable digits', () => {
+    expect(parseOwnerPhoneNumber('050 111 22?2')).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
   });
 
   it.each([
@@ -21,8 +26,8 @@ describe('parseOwnerPhoneNumber', () => {
     expect(parseOwnerPhoneNumber(value)).toEqual({ error: 'Puhelinnumero on pakollinen.' });
   });
 
-  it('accepts the longest number the column allows', () => {
-    expect(parseOwnerPhoneNumber('1'.repeat(MAX_FIELD_LENGTH)).error).toBeUndefined();
+  it('refuses the longest value the column allows when it is no phone number', () => {
+    expect(parseOwnerPhoneNumber('1'.repeat(MAX_FIELD_LENGTH))).toEqual({ error: PHONE_NUMBER_FORMAT_ERROR });
   });
 
   it('refuses one character more', () => {

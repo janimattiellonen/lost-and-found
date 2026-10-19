@@ -6,7 +6,8 @@ import type { ComposerDisc, ComposerMessage } from '~/features/messaging/compose
 import { lineBreakToBr, replaceTokensWithValues, toSmsBody } from '~/features/messaging/messageContent';
 import PhoneNumberEditor from '~/features/messaging/PhoneNumberEditor';
 import type { MessageTemplateDTO } from '~/types';
-import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatPhoneNumber } from '~/phoneNumber';
+import { formatDate, toDiallablePhoneNumber } from '~/utils';
 import Button from '~/ui/Button';
 import H2 from '~/ui/H2';
 import H3 from '~/ui/H3';

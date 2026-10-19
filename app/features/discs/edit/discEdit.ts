@@ -1,6 +1,7 @@
 import { isDisposalMethod, isReturnMethod, type DisposalMethodValue, type ReturnMethodValue } from '~/discMethods';
 import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/discFieldLimits';
 import { isIsoDate } from '~/lib/api/validate';
+import { normalisePhoneNumber } from '~/phoneNumber';
 
 /**
  * Every column of one disc the edit form may write, in the shape the form works
@@ -105,6 +106,12 @@ export function validateDiscEdit(form: FormData, allowedCourses: string[]): Disc
     errors.course = `Tuntematon rata "${course}".`;
   }
 
+  const phone = normalisePhoneNumber(text('ownerPhoneNumber'));
+
+  if (phone.error !== undefined) {
+    errors.ownerPhoneNumber ??= phone.error;
+  }
+
   const isReturnedToOwner = checkbox('isReturnedToOwner');
   const canBeSoldOrDonated = checkbox('canBeSoldOrDonated');
 
@@ -172,10 +179,7 @@ export function validateDiscEdit(form: FormData, allowedCourses: string[]): Disc
     discColour: text('discColour'),
     discManufacturer: orNull(text('discManufacturer')),
     ownerName: orNull(text('ownerName')),
-    // Deliberately not format-checked: imported rows hold things like
-    // "050 123 4567 (äiti)", and a pattern would block the admin from saving
-    // the very row they came here to fix.
-    ownerPhoneNumber: orNull(text('ownerPhoneNumber')),
+    ownerPhoneNumber: phone.phoneNumber ?? null,
     course: orNull(course),
     additionalInfo: orNull(text('additionalInfo', MAX_ADDITIONAL_INFO_LENGTH)),
     isReturnedToOwner,

@@ -33,7 +33,7 @@ describe('MessageComposer', () => {
   // The number is read-only text, but "Puhelinnumero" must still name it for a
   // screen reader rather than be a label attached to nothing.
   it('labels the read-only phone number', () => {
-    renderComposer('0501234567');
+    renderComposer('+358501234567');
 
     expect(screen.getByLabelText('Puhelinnumero').textContent).toBe('050 123 4567');
   });

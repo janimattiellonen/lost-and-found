@@ -16,7 +16,7 @@
  * this file's import graph may use the `~/` alias at runtime.
  */
 import { importDiscData } from '../app/import/PuskaSoturitImporter.ts';
-import { toDiscRow, type DiscRow } from '../app/import/puskasoturitDiscFields.ts';
+import { hasStorablePhoneNumber, toDiscRow, type DiscRow } from '../app/import/puskasoturitDiscFields.ts';
 import { createReadConnection, createWriteConnection } from './supabaseClients.ts';
 import { PUSKASOTURIT } from '../app/config/clubs.ts';
 
@@ -132,7 +132,17 @@ async function main(): Promise<void> {
     unreadable.forEach((disc) => console.log(`  id ${disc.internalDiscId}: ${disc.discName}`));
   }
 
-  const rows = newDiscs.filter((disc) => disc.addedAt).map(toDiscRow);
+  // The same treatment for a phone number in none of the stored forms, which
+  // the database would refuse (specs/16-phone-number-format.md).
+  const readable = newDiscs.filter((disc) => disc.addedAt);
+  const unstorablePhone = readable.filter((disc) => !hasStorablePhoneNumber(disc));
+
+  if (unstorablePhone.length > 0) {
+    console.log(`\nSkipped ${unstorablePhone.length} disc(s) whose phone number could not be read:`);
+    unstorablePhone.forEach((disc) => console.log(`  id ${disc.internalDiscId}: ${disc.discName}`));
+  }
+
+  const rows = readable.filter(hasStorablePhoneNumber).map(toDiscRow);
   console.log(`\nNew discs to insert: ${rows.length}`);
 
   if (rows.length === 0) {

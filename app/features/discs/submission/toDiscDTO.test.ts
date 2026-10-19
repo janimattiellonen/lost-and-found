@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseDiscText } from '~/features/discs/submission/parser/parseDiscText';
+import { PHONE_NUMBER_FORMAT_ERROR } from '~/phoneNumber';
 
 import { toSubmission } from './submitDiscs';
 import { MAX_BATCH_SIZE, parseBatch, toDiscDTO, toDiscName } from './toDiscDTO';
@@ -65,6 +66,21 @@ describe('parseBatch', () => {
     expect(parseBatch({ discs: [submission('Mako3 keltainen')] }, COURSES)).toEqual({
       discs: [submission('Mako3 keltainen')],
     });
+  });
+
+  it('stores the phone number in its stored form', () => {
+    const result = parseBatch({ discs: [{ discName: 'Mako3', phoneNumber: '0501112222' }] }, COURSES);
+
+    expect(result).toMatchObject({ discs: [{ phoneNumber: '+358501112222' }] });
+  });
+
+  it('rejects a phone number in no stored form, naming the row', () => {
+    const result = parseBatch(
+      { discs: [{ discName: 'Mako3' }, { discName: 'Mako3', phoneNumber: '050 111 22?2' }] },
+      COURSES,
+    );
+
+    expect(result).toEqual({ error: `Rivi 2: ${PHONE_NUMBER_FORMAT_ERROR}` });
   });
 
   it('trims values and turns blanks into null', () => {
