@@ -20,7 +20,7 @@ lifecycle actions and the club-internal notes.
 1. When the page loads, the client fetches `/discs/data` (`useFetcher`) and shows a spinner until the first payload arrives; a later reload keeps the table on screen at 50% opacity with `aria-busy`.
 2. When the club has an emptying log, "Löytökiekot tarkistettu viimeksi" (last checked) is shown above the filters; the course name is shown only when there is more than one entry.
 3. When a visitor picks a disc name in the "Kiekko" combobox (`DiscSelector`, downshift), the list is filtered to rows whose `discName` is exactly that string.
-4. When a visitor types more than 2 characters into "Puh nro., 4 viimeistä" (phone no., last 4), a 300 ms-debounced filter keeps rows whose `ownerPhoneNumber` _ends with_ the typed digits.
+4. When a visitor types more than 2 characters into "Puh nro., 4 viimeistä" (phone no., last 4), a 300 ms-debounced filter keeps rows whose `ownerPhoneNumber`, without its `+`, _ends with_ the typed digits as `phoneSearchDigits` reads them: from five digits up a leading `0` or `00` is dropped, so "0501112222" finds a disc stored as "+358501112222"; four or fewer are kept whole as a tail (spec 16).
 5. When the club records courses **and** the loaded discs name more than one, a "Rata" (course) radio row appears with "Kaikki radat" (all courses) plus one option per course found in the data.
 6. When a header is clicked, the table re-sorts (TanStack Table); default sort is `addedAt` descending. Column widths are pointer-draggable.
 7. When a disc has been held over three months, a red warning icon sits next to its "Lisätty" (added) date.

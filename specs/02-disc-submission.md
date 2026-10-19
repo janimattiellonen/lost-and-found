@@ -90,6 +90,7 @@ answered with rendered HTML.
   - length caps: 200 chars, except `additionalInfo` at 500.
   - `course` must be one of this club's `getDiscCourseNames`, or absent — a stray value would become a phantom option in the public list's course filter.
   - a row with neither disc name nor plastic is rejected ("kiekolla on oltava nimi tai muovi").
+  - the phone number goes through `normalisePhoneNumber` (`app/phoneNumber.ts`, spec 16) and is stored in E.164 form ("+358501112222"); a number the rule refuses rejects the row with "Anna puhelinnumero muodossa 050 123 4567 tai +46 70 123 4567.". The parser's own pattern above is unchanged — it only finds the number; the server decides whether it is one.
   - errors are Finnish, row-numbered, and returned as HTTP 422.
 - `requireAdminJson` enforces POST-only (405), a live session (401) and a parseable JSON body (400).
 - The client never sends a club id; `handleCreateRequest` reads `APP_CLUB_ID`.

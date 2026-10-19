@@ -62,22 +62,22 @@ including one added through the web app, which has no Google Sheet row number to
 be addressed by. It is the key every other admin disc action uses, and it is
 never edited here.
 
-| Column                          | Type             | Null? | Edited as                                                         |
-| ------------------------------- | ---------------- | ----- | ----------------------------------------------------------------- |
-| `disc_name`                     | text             | no    | one text field, required                                          |
-| `disc_colour`                   | text             | no    | one text field; empty is stored as `''`                           |
-| `disc_manufacturer`             | text             | yes   | text field; empty is stored as `NULL`                             |
-| `owner_name`                    | text             | yes   | text field; empty is stored as `NULL`                             |
-| `owner_phone_number`            | text             | yes   | text field; empty is stored as `NULL`                             |
-| `course`                        | text             | yes   | dropdown of this club's courses, the disc's own, plus "no course" |
-| `additional_info`               | text             | yes   | textarea; club-internal, never publicly shown                     |
-| `is_returned_to_owner`          | boolean          | no    | checkbox                                                          |
-| `returned_to_owner_date`        | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked                 |
-| `return_method`                 | smallint         | yes   | dropdown: 0 `Postitettu`, 1 `Noudettu`, or none                   |
-| `can_be_sold_or_donated`        | boolean          | no    | checkbox                                                          |
-| `can_be_sold_or_donated_date`   | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked                 |
-| `can_be_sold_or_donated_method` | smallint         | yes   | dropdown: 0 `Myydään`, 1 `Lahjoitetaan`, or none                  |
-| `updated_at`                    | timestamptz      | yes   | not shown; set to now on every save                               |
+| Column                          | Type             | Null? | Edited as                                                                  |
+| ------------------------------- | ---------------- | ----- | -------------------------------------------------------------------------- |
+| `disc_name`                     | text             | no    | one text field, required                                                   |
+| `disc_colour`                   | text             | no    | one text field; empty is stored as `''`                                    |
+| `disc_manufacturer`             | text             | yes   | text field; empty is stored as `NULL`                                      |
+| `owner_name`                    | text             | yes   | text field; empty is stored as `NULL`                                      |
+| `owner_phone_number`            | text             | yes   | text field, shown grouped; stored in E.164 form (spec 16); empty is `NULL` |
+| `course`                        | text             | yes   | dropdown of this club's courses, the disc's own, plus "no course"          |
+| `additional_info`               | text             | yes   | textarea; club-internal, never publicly shown                              |
+| `is_returned_to_owner`          | boolean          | no    | checkbox                                                                   |
+| `returned_to_owner_date`        | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked                          |
+| `return_method`                 | smallint         | yes   | dropdown: 0 `Postitettu`, 1 `Noudettu`, or none                            |
+| `can_be_sold_or_donated`        | boolean          | no    | checkbox                                                                   |
+| `can_be_sold_or_donated_date`   | date (`y-MM-dd`) | yes   | date field, required while the checkbox is ticked                          |
+| `can_be_sold_or_donated_method` | smallint         | yes   | dropdown: 0 `Myydään`, 1 `Lahjoitetaan`, or none                           |
+| `updated_at`                    | timestamptz      | yes   | not shown; set to now on every save                                        |
 
 `disc_name` carries the plastic as well, joined the way the Google Sheet has
 always written it — "Destroyer, Star". The form edits the joined string as one
@@ -150,10 +150,16 @@ one prefix.
   looked like before. The two writes are not one transaction: when the errand
   fails the disc is still saved, and the message says so rather than reporting
   a failed save.
-- **The phone number is not format-checked.** Imported rows hold values like
-  "050 123 4567 (äiti)" and "?040...", and a format rule would block an admin
-  from saving the very row they came to fix. The field is trimmed and
-  length-capped and nothing more.
+- **The phone number is format-checked** by `normalisePhoneNumber`
+  (`app/phoneNumber.ts`, spec 16) and stored in E.164 form ("+358501112222"),
+  or as exactly four digits — the anonymised tail the admin keeps for a closed
+  disc.
+  A number the rule refuses — "050 123 45?7", "(999)999-9999" — is not saved,
+  and the field says "Anna puhelinnumero muodossa 050 123 4567 tai +46 70 123
+  4567.". The number was once deliberately not checked, so that a messy
+  imported row could still be saved here; the cleanup in spec 16 left no such
+  rows, and for one fixed by hand the refusal is what guides the fix. The field opens on the number in its shown form (a four-digit tail as
+  its digits), and saving it unchanged leaves it unchanged.
 
 ## Edge cases & known gaps
 

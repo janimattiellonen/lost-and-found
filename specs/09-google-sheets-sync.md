@@ -53,10 +53,16 @@ step used by the script: it normalizes course spellings (`Oiittaa` → `Oittaa`,
 `ÄIjänpelto` → `Äijänpelto`), and mines the free-text notes for
 `returned_to_owner_date`, `return_method` (`noud|nout` → picked up, `postit` →
 by mail) and `can_be_sold_or_donated_method` (`lahjoit` → donated,
-`myyd|muyyd` → sold). It duplicates the `ReturnMethod`/`DisposalMethod` numbers
-instead of importing them so the module stays free of `~/` aliases and runs
-under plain `node`'s TypeScript stripping; `puskasoturitDiscFields.test.ts`
-asserts the two copies still agree.
+`myyd|muyyd` → sold). It also puts the owner's phone number through
+`normalisePhoneNumber` (`app/phoneNumber.ts`, spec 16); a row whose number the
+rule refuses is reported and skipped, as a row with an unreadable date already
+is, because the database's check constraint would refuse it anyway. The sheets
+are no longer edited, so this matters only if the import is ever rerun.
+
+It duplicates the `ReturnMethod`/`DisposalMethod` numbers instead of importing
+them so the module stays free of `~/` aliases and runs under plain `node`'s
+TypeScript stripping; `puskasoturitDiscFields.test.ts` asserts the two copies
+still agree.
 
 ## Matching a sheet row to a disc
 
@@ -137,6 +143,9 @@ DESC` and a NULL would otherwise be read as "the latest" and stall the sync.
 - The wipe-and-reinsert also discards any admin edit made in the app to a
   sheet-imported disc, and mints a new `external_id`, breaking existing SMS
   links and `message_log` references.
+- The disabled sync (`app/models/syncDiscs.server.ts`) does not normalise phone
+  numbers. If it were switched back on, the check constraint on
+  `owner_phone_number` (spec 16) would refuse every messy row it tried to insert.
 - Talin Tallaajat has no course column, so its discs have no `course`; the
   free-text field parsing in `puskasoturitDiscFields.ts` is Puskasoturit-only.
 - Only `parseSheetDate` and the `puskasoturitDiscFields` helpers are unit
