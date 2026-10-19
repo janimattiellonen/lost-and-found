@@ -39,7 +39,11 @@ for that reason instead of every template the club has.
    as `<br/>`, live as it is typed.
 6. "Lähetä tekstiviesti" (send sms) opens
    `sms:<number>&body=<substituted message>` — the OS's own messaging app takes
-   over from there.
+   over from there. For a number that cannot be texted — a "?" for an
+   unreadable digit, or only the anonymised last four (spec 16) — the button is
+   disabled instead, and "Tähän numeroon ei voi lähettää viestiä, koska siitä
+   puuttuu numeroita." (no message can be sent to this number, because digits
+   are missing from it) appears under the number.
 7. "Merkitse viesti lähetetyksi" (mark the message as sent) posts the rendered
    body to the route's action and writes a `message_log` row; the button then
    reads "Lähetetty" and is disabled.
@@ -379,6 +383,12 @@ The tokens are documented to the admin by
   the composer then shows, through `formatPhoneNumber` like the seeded number. A
   number saved unchanged is never posted, so it is handed back as stored: the
   composer keeps holding what the disc holds.
+- The untextable case in scenario 6 is decided by `isTextable`
+  (`app/phoneNumber.ts`), since an `sms:` link to such a number would reach
+  nobody; "Muokkaa puhelinnumeroa" is the way to complete it. A disc with no
+  number at all keeps the button, which opens the phone's message window with
+  no recipient. The editor's field is a text field, not `type="tel"`, because a
+  phone's number pad has no "?".
 - "Peruuta" is disabled while a save is in flight: the post would land anyway,
   so a cancel pressed then would close the editor on a number that had in fact
   been saved.
