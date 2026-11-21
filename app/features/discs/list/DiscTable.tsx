@@ -46,7 +46,7 @@ import Checkbox from '~/ui/Checkbox';
 import { dark, font, icon, space } from '~/styles/tokens.stylex';
 
 import type { DiscDTO } from '~/types';
-import { formatPhoneNumber } from '~/utils';
+import { formatPhoneNumber } from '~/phoneNumber';
 
 type DiscTableProps = {
   discs: DiscDTO[];

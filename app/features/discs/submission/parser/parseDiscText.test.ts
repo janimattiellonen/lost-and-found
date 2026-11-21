@@ -21,6 +21,14 @@ describe('parseDiscText — the examples from the brief', () => {
     });
   });
 
+  it('keeps a "?" for an unreadable digit in the number', () => {
+    expect(fields('Star Destroyer punainen 050 123 ?567 Steve D.')).toMatchObject({
+      discName: 'Destroyer',
+      ownerName: 'Steve D.',
+      phoneNumber: '050123?567',
+    });
+  });
+
   it('parses "Mako3 keltainen"', () => {
     expect(fields('Mako3 keltainen')).toEqual({
       discName: 'Mako3',

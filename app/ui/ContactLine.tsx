@@ -1,7 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 
 import { color, font, leading } from '~/styles/tokens.stylex';
-import { formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatPhoneNumber, isTextable } from '~/phoneNumber';
 
 import type { JSX } from 'react';
 
@@ -20,8 +20,11 @@ type Props = {
  * decision, not an implementation detail — see CHANGELOG.md.
  *
  * The number comes first because it is what gets tapped, and only the digits are
- * inside the anchor; the name sits outside it. With neither value there is no
- * line at all, so a caller can hand over whatever it has without guarding first.
+ * inside the anchor; the name sits outside it. A number nobody can text — one
+ * with an unreadable digit, or the anonymised four-digit tail — is shown as
+ * plain text instead, since a link to it would open a message to nobody. With
+ * neither value there is no line at all, so a caller can hand over whatever it
+ * has without guarding first.
  */
 export default function ContactLine({ phoneNumber, name }: Props): JSX.Element | null {
   if (!phoneNumber && !name) {
@@ -30,11 +33,14 @@ export default function ContactLine({ phoneNumber, name }: Props): JSX.Element |
 
   return (
     <span {...stylex.props(styles.line)}>
-      {phoneNumber && (
-        <a href={`sms:${toDiallablePhoneNumber(phoneNumber)}`} {...stylex.props(styles.link)}>
-          {formatPhoneNumber(phoneNumber)}
-        </a>
-      )}
+      {phoneNumber &&
+        (isTextable(phoneNumber) ? (
+          <a href={`sms:${phoneNumber}`} {...stylex.props(styles.link)}>
+            {formatPhoneNumber(phoneNumber)}
+          </a>
+        ) : (
+          formatPhoneNumber(phoneNumber)
+        ))}
       {name && (phoneNumber ? ` (${name})` : name)}
     </span>
   );

@@ -31,7 +31,7 @@ Sheet as the entry point for discs found by the club itself.
 `app/features/discs/submission/parser/parseDiscText.ts`:
 
 1. **Note** — everything after the **first** `|` is `additionalInfo`, kept verbatim and never tokenized. A later `|` belongs to the note; a blank note is `null`.
-2. **Phone number** — regex `(?:\+|\b0)[\d\s-]{5,}\d`, 7–15 digits, spaces/hyphens removed, leading `+` kept. Requiring a leading `0`/`+` keeps "Mako3" and a weight like "175" out. The match is blanked from the text before tokenizing.
+2. **Phone number** — regex `(?:\+|\b0)[\d?\s-]{5,}[\d?]`, 7–15 digits, spaces/hyphens removed, leading `+` kept. A `?` stands for a digit that could not be read off the disc and counts as one (spec 16). Requiring a leading `0`/`+` keeps "Mako3" and a weight like "175" out. The match is blanked from the text before tokenizing.
 3. **Segmentation** — longest-first n-gram lookup against the dictionary, so "Active Premium" beats "Active" and "Keltainen, musta halo" beats "Keltainen". `normalize` lowercases and drops `,`, `.` and `°`; hyphens and digits are kept ("S-Line", "DD3").
 4. **Finnish genitive makers** — a span that does not match directly is retried through `resolveManufacturer`: suffixes `:n`, `in`, `n` stripped, then a first-word match ("Innovan", "Latitude 64:n", "Westsiden"). Irregulars ("Prodiscuksen", "Thought Spacen") live in `aliases.ts`.
 5. **Unknown-disc phrase** — a "Tuntematon" marker grows outwards over adjacent manufacturer and disc-type words ("kiekko", "draiveri", "väylädraiveri", "midari", "putteri"); the whole phrase becomes the disc name verbatim and the maker inside it is still reported.
@@ -90,6 +90,7 @@ answered with rendered HTML.
   - length caps: 200 chars, except `additionalInfo` at 500.
   - `course` must be one of this club's `getDiscCourseNames`, or absent — a stray value would become a phantom option in the public list's course filter.
   - a row with neither disc name nor plastic is rejected ("kiekolla on oltava nimi tai muovi").
+  - the phone number goes through `normalisePhoneNumber` (`app/phoneNumber.ts`, spec 16) and is stored in E.164 form ("+358501112222"); a number the rule refuses rejects the row with "Anna puhelinnumero muodossa 050 123 4567 tai +46 70 123 4567.". The parser's own pattern above is unchanged — it only finds the number; the server decides whether it is one.
   - errors are Finnish, row-numbered, and returned as HTTP 422.
 - `requireAdminJson` enforces POST-only (405), a live session (401) and a parseable JSON body (400).
 - The client never sends a club id; `handleCreateRequest` reads `APP_CLUB_ID`.

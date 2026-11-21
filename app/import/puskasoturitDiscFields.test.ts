@@ -6,6 +6,7 @@ import type { DiscDTO } from '~/types';
 import {
   DISPOSAL_METHOD_DONATED,
   DISPOSAL_METHOD_SOLD,
+  hasStorablePhoneNumber,
   RETURN_METHOD_BY_MAIL,
   RETURN_METHOD_PICKED_UP,
   normalizeCourse,
@@ -155,5 +156,29 @@ describe('toDiscRow', () => {
 
   it('turns an internal disc id that arrives as sheet text into a number', () => {
     expect(toDiscRow({ ...disc, internalDiscId: '3802' as unknown as number }).internal_disc_id).toBe(3802);
+  });
+
+  it('stores the phone number in its stored form', () => {
+    expect(toDiscRow(disc).owner_phone_number).toBe('+358401234567');
+    expect(toDiscRow({ ...disc, ownerPhoneNumber: ' 2222' }).owner_phone_number).toBe('2222');
+    expect(toDiscRow({ ...disc, ownerPhoneNumber: '' }).owner_phone_number).toBeNull();
+  });
+
+  it('refuses a number the rule refuses rather than storing NULL for it', () => {
+    expect(() => toDiscRow({ ...disc, ownerPhoneNumber: '(040) 111 2222' })).toThrow(/phone number refused/);
+  });
+});
+
+describe('hasStorablePhoneNumber', () => {
+  const disc = { discName: 'Destroyer' } as DiscDTO;
+
+  it('accepts a number, the anonymised tail and no number at all', () => {
+    expect(hasStorablePhoneNumber({ ...disc, ownerPhoneNumber: '040 111 2222' })).toBe(true);
+    expect(hasStorablePhoneNumber({ ...disc, ownerPhoneNumber: '2222' })).toBe(true);
+    expect(hasStorablePhoneNumber({ ...disc, ownerPhoneNumber: undefined })).toBe(true);
+  });
+
+  it('turns away a number the database would refuse', () => {
+    expect(hasStorablePhoneNumber({ ...disc, ownerPhoneNumber: '(040) 111 2222' })).toBe(false);
   });
 });

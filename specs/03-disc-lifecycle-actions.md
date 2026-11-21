@@ -103,7 +103,7 @@ Course is not a state; `setDiscCourse` can run in any state.
    its owner after all. Offered on both clubs.
 6. When an admin opens `/retrieval`, "Noutolista" lists the pending errands newest first
    as phone-sized cards: colour + name, what is to be done with it, an `sms:` link (tapping the number
-   opens a message to the owner, not a call) followed by the owner's name in brackets, and both dates together on the bottom row —
+   opens a message to the owner, not a call; a number that cannot be texted — a "?" for an unreadable digit, or only the anonymised last four — is plain text, spec 16) followed by the owner's name in brackets, and both dates together on the bottom row —
    "Pyydetty" (requested) then "Kirjattu" (entered), as on the answers page.
    "Merkitse noudetuksi" (mark as fetched), behind a confirm, closes the row. Both kinds
    of errand are one list in one order: the second line reads "Postitus" / "Nouto

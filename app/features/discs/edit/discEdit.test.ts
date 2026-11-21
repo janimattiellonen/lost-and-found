@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { fieldNames, validateDiscEdit } from '~/features/discs/edit/discEdit';
+import { PHONE_NUMBER_FORMAT_ERROR } from '~/phoneNumber';
 
 const COURSES = ['Tali', 'Kivikko'];
 
@@ -127,10 +128,24 @@ describe('validateDiscEdit', () => {
     expect(result.errors?.form).toBe('Kiekko ei voi olla sekä palautettu että myytävissä tai lahjoitettavissa.');
   });
 
-  it('leaves a phone number exactly as the club wrote it', () => {
-    const result = validateDiscEdit(form({ ownerPhoneNumber: '050 123 4567 (äiti)' }), COURSES);
+  it('stores the phone number in its stored form', () => {
+    const result = validateDiscEdit(form({ ownerPhoneNumber: '050 111 2222' }), COURSES);
 
     expect(result.errors).toBeUndefined();
-    expect(result.values?.ownerPhoneNumber).toBe('050 123 4567 (äiti)');
+    expect(result.values?.ownerPhoneNumber).toBe('+358501112222');
+  });
+
+  it('keeps the anonymised four-digit tail', () => {
+    expect(validateDiscEdit(form({ ownerPhoneNumber: '2222' }), COURSES).values?.ownerPhoneNumber).toBe('2222');
+  });
+
+  it('stores no number for an empty field', () => {
+    expect(validateDiscEdit(form({ ownerPhoneNumber: '' }), COURSES).values?.ownerPhoneNumber).toBeNull();
+  });
+
+  it('refuses a phone number in no stored form', () => {
+    const result = validateDiscEdit(form({ ownerPhoneNumber: '(050) 111 2222' }), COURSES);
+
+    expect(result.errors?.ownerPhoneNumber).toBe(PHONE_NUMBER_FORMAT_ERROR);
   });
 });

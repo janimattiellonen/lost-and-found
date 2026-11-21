@@ -1,15 +1,16 @@
 /**
  * A Finnish number starts with 0, an international one with +. Both may be
- * written with spaces or hyphens between the groups. Requiring a leading 0 or +
- * is what keeps "Mako3" and a weight like "175" out of the results.
+ * written with spaces or hyphens between the groups, and with a "?" for a digit
+ * that could not be read off the disc. Requiring a leading 0 or + is what keeps
+ * "Mako3" and a weight like "175" out of the results.
  */
-const CANDIDATE = /(?:\+|\b0)[\d\s-]{5,}\d/g;
+const CANDIDATE = /(?:\+|\b0)[\d?\s-]{5,}[\d?]/g;
 
 const MIN_DIGITS = 7;
 const MAX_DIGITS = 15;
 
 export type PhoneMatch = {
-  /** Digits only, keeping a leading "+" for international numbers. */
+  /** Digits and "?" only, keeping a leading "+" for international numbers. */
   value: string;
   start: number;
   end: number;

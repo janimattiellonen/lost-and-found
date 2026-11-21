@@ -3,6 +3,7 @@ import { useState, type FormEvent, type JSX } from 'react';
 import * as stylex from '@stylexjs/stylex';
 
 import { saveOwnerPhoneNumber } from '~/features/messaging/saveOwnerPhoneNumber';
+import { normalisePhoneNumber, toEditablePhoneNumber } from '~/phoneNumber';
 import Button from '~/ui/Button';
 import FieldError from '~/ui/FieldError';
 import Label from '~/ui/Label';
@@ -11,7 +12,7 @@ import { space } from '~/styles/tokens.stylex';
 
 type Props = {
   externalId: string;
-  /** What the field opens with: the number as stored, ungrouped. */
+  /** The number as stored. The field opens on it as it is shown. */
   phoneNumber: string;
   /** Called with the number as stored, once the save went through. */
   onSaved: (phoneNumber: string) => void;
@@ -30,7 +31,7 @@ type Props = {
  * which reads as "edited by hand", for an edit that never happened.
  */
 export default function PhoneNumberEditor({ externalId, phoneNumber, onSaved, onCancel }: Props): JSX.Element {
-  const [value, setValue] = useState<string>(phoneNumber);
+  const [value, setValue] = useState<string>(() => toEditablePhoneNumber(phoneNumber));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,11 +39,9 @@ export default function PhoneNumberEditor({ externalId, phoneNumber, onSaved, on
     event.preventDefault();
 
     // Not for an empty one: that goes to the server, which says it is required.
-    // Both sides trimmed: an imported number can carry stray whitespace, and
-    // saving it as it opened is still no edit.
-    const stored = phoneNumber.trim();
-
-    if (stored !== '' && value.trim() === stored) {
+    // Compared in the stored form, since the field opened on the shown one:
+    // "050 111 2222" saved as it opened is no edit of "+358501112222".
+    if (phoneNumber !== '' && normalisePhoneNumber(value).phoneNumber === phoneNumber) {
       onSaved(phoneNumber);
 
       return;
@@ -75,7 +74,9 @@ export default function PhoneNumberEditor({ externalId, phoneNumber, onSaved, on
       <Label htmlFor="phone">Puhelinnumero</Label>
       <TextField
         id="phone"
-        type="tel"
+        // Text, not tel: a phone's number pad has no "?", and a digit that
+        // cannot be read off the disc is typed as one.
+        type="text"
         fullWidth
         value={value}
         onChange={(e) => setValue(e.target.value)}

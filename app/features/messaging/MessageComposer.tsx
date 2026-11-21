@@ -6,8 +6,10 @@ import type { ComposerDisc, ComposerMessage } from '~/features/messaging/compose
 import { lineBreakToBr, replaceTokensWithValues, toSmsBody } from '~/features/messaging/messageContent';
 import PhoneNumberEditor from '~/features/messaging/PhoneNumberEditor';
 import type { MessageTemplateDTO } from '~/types';
-import { formatDate, formatPhoneNumber, toDiallablePhoneNumber } from '~/utils';
+import { formatPhoneNumber, isTextable } from '~/phoneNumber';
+import { formatDate } from '~/utils';
 import Button from '~/ui/Button';
+import FieldError from '~/ui/FieldError';
 import H2 from '~/ui/H2';
 import H3 from '~/ui/H3';
 import Label from '~/ui/Label';
@@ -15,6 +17,13 @@ import PaperItem from '~/ui/PaperItem';
 import Select, { MenuItem } from '~/ui/Select';
 import TextField from '~/ui/TextField';
 import Wrapper from '~/ui/Wrapper';
+
+/**
+ * Why "Lähetä tekstiviesti" is off: the number has a "?" for a digit nobody
+ * could read, or is only the anonymised last four. "Muokkaa puhelinnumeroa"
+ * beside it is the way out.
+ */
+const UNTEXTABLE_NUMBER = 'Tähän numeroon ei voi lähettää viestiä, koska siitä puuttuu numeroita.';
 
 type Props = {
   disc: ComposerDisc;
@@ -63,11 +72,12 @@ export default function MessageComposer({
   const defaultTemplate = messageTemplates.find((messageTemplate) => messageTemplate.isDefault === true);
 
   // As stored, and changed only by a save through the editor, so the number the
-  // text goes to is always the one the disc holds. Grouped for reading where it
-  // is shown; the editor gets it ungrouped, so saving it unchanged writes back
-  // what was there.
+  // text goes to is always the one the disc holds. Shown, and opened in the
+  // editor, in the form it is read in; the `sms:` link takes it as stored.
   const [phoneNumber, setPhoneNumber] = useState<string>(disc.ownerPhoneNumber ?? '');
   const [isEditingPhoneNumber, setIsEditingPhoneNumber] = useState(false);
+  // Not for no number at all, which still opens the phone's own message window.
+  const cannotText = phoneNumber !== '' && !isTextable(phoneNumber);
   const [message, setMessage] = useState<string>(defaultTemplate?.content ?? '');
   const [selected, setSelected] = useState<number>(defaultTemplate?.id ?? -1);
   const ok: boolean = fetcher.data?.ok || false;
@@ -141,6 +151,7 @@ export default function MessageComposer({
                 </Button>
               )}
             </p>
+            <FieldError>{cannotText && UNTEXTABLE_NUMBER}</FieldError>
           </>
         )}
       </Wrapper>
@@ -192,7 +203,12 @@ export default function MessageComposer({
         </Button>
         <Button
           variant="contained"
-          to={`sms:${toDiallablePhoneNumber(phoneNumber)}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`}
+          disabled={cannotText}
+          to={
+            cannotText
+              ? undefined
+              : `sms:${phoneNumber}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`
+          }
         >
           Lähetä tekstiviesti
         </Button>

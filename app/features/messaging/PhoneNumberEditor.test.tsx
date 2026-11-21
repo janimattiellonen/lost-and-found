@@ -12,7 +12,7 @@ function answer(status: number, body: unknown) {
   return fetchMock;
 }
 
-function renderEditor(phoneNumber = '050 123 4567') {
+function renderEditor(phoneNumber = '+358501234567') {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
 
@@ -32,6 +32,12 @@ describe('PhoneNumberEditor', () => {
     const { field } = renderEditor();
 
     expect(field.value).toBe('050 123 4567');
+  });
+
+  it('opens an anonymised number as its four digits, which save again', () => {
+    const { field } = renderEditor('2222');
+
+    expect(field.value).toBe('2222');
   });
 
   it('saves the typed number to the disc and hands back the stored one', async () => {
@@ -66,19 +72,21 @@ describe('PhoneNumberEditor', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Tallenna' }));
 
-    expect(onSaved).toHaveBeenCalledWith('050 123 4567');
+    expect(onSaved).toHaveBeenCalledWith('+358501234567');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  // Imported rows can carry stray whitespace around the number: saving it as it
-  // opened is still no edit, and must not bump `updated_at`.
-  it('does not post a stored number with surrounding whitespace saved unchanged', () => {
+  // The field opens on the shown form, so "unchanged" is decided in the stored
+  // one: the same number retyped another way is still no edit, and must not
+  // bump `updated_at`.
+  it('does not post the same number retyped in another form', () => {
     const fetchMock = answer(200, {});
-    const { onSaved } = renderEditor(' 050 123 4567 ');
+    const { onSaved, field } = renderEditor();
 
+    fireEvent.change(field, { target: { value: '+358 50 123 4567' } });
     fireEvent.click(screen.getByRole('button', { name: 'Tallenna' }));
 
-    expect(onSaved).toHaveBeenCalledWith(' 050 123 4567 ');
+    expect(onSaved).toHaveBeenCalledWith('+358501234567');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

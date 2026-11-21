@@ -64,7 +64,7 @@ admin's inbox at `/responses`. Background: `docs/getting-a-disc-back-to-its-owne
    of them, so a guess learns nothing.
 9. Admin opens `/responses` ("Omistajien vastaukset") → unhandled answers,
    newest first: disc, choice, method, the phone number as an `sms:` link (tapping it
-   opens a message to the owner, not a call) with the owner's name in brackets after it, the address if there is one, when the answer came in
+   opens a message to the owner, not a call; a number that cannot be texted — a "?" for an unreadable digit, or only the anonymised last four — is plain text, spec 16) with the owner's name in brackets after it, the address if there is one, when the answer came in
    and when the disc itself was registered in the system ("Kiekko kirjattu",
    omitted when the disc has no registration date). "Merkitse käsitellyksi" (mark as handled) asks for
    confirmation, removes the card and **wipes the address**.
@@ -222,6 +222,10 @@ only called from inside those two.
 
 ## Edge cases & known gaps
 
+- The last four digits the page shows come from `owner_link_disc()`, which
+  strips everything but digits before taking them. A number stored with a "?"
+  for an unreadable digit among its last four (spec 16) therefore shows the
+  wrong four — "+3585011122?2" appears as "1222" rather than "22?2".
 - `/kiekko/:token` can never be deleted. Text messages already sent carry it, an
   owner may open one months later, and nothing in the app knows when the last
   one has been followed. It is two lines of redirect, so the cost of keeping it

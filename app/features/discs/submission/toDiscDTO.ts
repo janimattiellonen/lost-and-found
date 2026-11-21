@@ -1,4 +1,5 @@
 import { MAX_ADDITIONAL_INFO_LENGTH, MAX_FIELD_LENGTH } from '~/discFieldLimits';
+import { normalisePhoneNumber } from '~/phoneNumber';
 import type { DiscDTO } from '~/types';
 
 import type { DiscSubmission } from './submitDiscs';
@@ -109,6 +110,17 @@ export function parseBatch(body: unknown, allowedCourses: string[]): { discs: Di
 
       disc[field] = value;
     }
+
+    // The parser only finds the number in the typed line; whether it is one,
+    // and the form it is stored in, is decided here, where the body is not
+    // trusted.
+    const phone = normalisePhoneNumber(disc.phoneNumber ?? '');
+
+    if (phone.error !== undefined) {
+      return { error: `Rivi ${index + 1}: ${phone.error}` };
+    }
+
+    disc.phoneNumber = phone.phoneNumber;
 
     if (disc.course != null && !allowedCourses.includes(disc.course)) {
       return { error: `Rivi ${index + 1}: tuntematon rata "${disc.course}".` };

@@ -39,7 +39,11 @@ for that reason instead of every template the club has.
    as `<br/>`, live as it is typed.
 6. "Lähetä tekstiviesti" (send sms) opens
    `sms:<number>&body=<substituted message>` — the OS's own messaging app takes
-   over from there.
+   over from there. For a number that cannot be texted — a "?" for an
+   unreadable digit, or only the anonymised last four (spec 16) — the button is
+   disabled instead, and "Tähän numeroon ei voi lähettää viestiä, koska siitä
+   puuttuu numeroita." (no message can be sent to this number, because digits
+   are missing from it) appears under the number.
 7. "Merkitse viesti lähetetyksi" (mark the message as sent) posts the rendered
    body to the route's action and writes a `message_log` row; the button then
    reads "Lähetetty" and is disabled.
@@ -247,8 +251,9 @@ The tokens are documented to the admin by
 - **No SMS provider, no API key, no outbound HTTP.** The "send" button is an
   `sms:` URI; the admin's phone or desktop OS sends the actual message.
   The body is percent-encoded whole by `toSmsBody`
-  (`app/features/messaging/messageContent.ts`) and grouping spaces are stripped
-  from the number (`toDiallable`).
+  (`app/features/messaging/messageContent.ts`). The number goes into the URI as
+  stored: `isTextable` only passes a whole `+`-and-digits number, so there are no
+  grouping spaces to strip (spec 16).
 
   **The body must be escaped entirely, not just its newlines.** It used to go
   through a `convertLineBreaks` that replaced `\n` with `%0a` and left every
@@ -362,21 +367,29 @@ The tokens are documented to the admin by
   ("Puhelinnumero on pakollinen.", 422) and caps it at `MAX_FIELD_LENGTH`, 200
   characters ("Puhelinnumero on liian pitkä (enintään 200 merkkiä).", 422) —
   the limit in `app/discFieldLimits.ts` that the submission and edit forms use
-  for the same column. It is **not** format-checked, for the reason spec 14
-  gives: imported rows hold values like "050 123 4567 (äiti)", and a pattern
-  would refuse the very correction the editor is for. It cannot be cleared
+  for the same column. It then goes through `normalisePhoneNumber`
+  (`app/phoneNumber.ts`, spec 16), is stored in E.164 form ("+358501112222")
+  or, for an anonymised number, as its four digits,
+  and a number the rule refuses is a 422 with "Anna puhelinnumero muodossa
+  050 123 4567 tai +46 70 123 4567.". It cannot be cleared
   here, unlike in the edit form: a number removed while messaging leaves
   nothing to send to, and the edit form is still there for that.
-- The editor opens on the number as stored, not the grouped form shown beside
-  it, and a number saved unchanged is not posted at all — "unchanged" compared
-  with surrounding whitespace trimmed from both sides, since an imported number
-  can carry some. Either slip would bump `updated_at` — "edited by hand" — for
-  an edit that never happened.
-- The saved value is the trimmed one the server returns, and that is what the
-  composer then shows, grouped by `formatPhoneNumber` like the seeded number. A
-  number saved unchanged is never posted, so it is handed back as stored,
-  whitespace and all: the composer keeps holding what the disc holds, and the
-  editor reopens on it.
+- The editor opens on the number in the form shown beside it ("050 111 2222"),
+  not the stored one — except an anonymised four-digit tail, shown as
+  "\*\*\*\*2222" but opened as "2222", which is what saves. A number saved
+  unchanged is not posted at all, "unchanged" meaning the field normalises to
+  the stored number. Posting it would bump `updated_at` — "edited by hand" —
+  for an edit that never happened.
+- The saved value is the normalised one the server returns, and that is what
+  the composer then shows, through `formatPhoneNumber` like the seeded number. A
+  number saved unchanged is never posted, so it is handed back as stored: the
+  composer keeps holding what the disc holds.
+- The untextable case in scenario 6 is decided by `isTextable`
+  (`app/phoneNumber.ts`), since an `sms:` link to such a number would reach
+  nobody; "Muokkaa puhelinnumeroa" is the way to complete it. A disc with no
+  number at all keeps the button, which opens the phone's message window with
+  no recipient. The editor's field is a text field, not `type="tel"`, because a
+  phone's number pad has no "?".
 - "Peruuta" is disabled while a save is in flight: the post would land anyway,
   so a cancel pressed then would close the editor on a number that had in fact
   been saved.

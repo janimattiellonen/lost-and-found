@@ -39,9 +39,13 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - A disc marked returned or marked for sale by mistake can be put back on the public list: the edit page carries both marks as checkboxes, and unticking one clears its date and method. Every other way of making those marks is still one-way.
 - Choosing "Noudan kiekon seuran kopilta" on the owner's link page warns that the koppi is emptied only occasionally, and points an owner in a hurry at post or collection instead. Talin Tallaajat only, since theirs is the only koppi discs wait in.
 - The posting instructions on the owner's link page ask for two things they used to leave out: the disc's name in MobilePay's "Viesti" field, and the flat or stairwell number in the address.
+- An owner's phone number is stored in one form, "+358501112222", however it was typed, and shown back the Finnish way, "050 111 2222"; a foreign number keeps its country code, four digits alone are kept as the anonymised end of a closed disc's number, and a "?" is kept in place of a digit that could not be read off the disc.
+- A phone number with a "?" in it, or only its last four digits, can no longer be tapped to start a text, and the message page's "Lähetä tekstiviesti" is disabled for it with a note saying digits are missing.
+- Disc entry, the disc edit page and the message page's phone editor refuse a phone number with brackets, a "?" as its first digit, or neither a 0 nor a + in front, and say what shape to type it in: "Anna puhelinnumero muodossa 050 123 4567 tai +46 70 123 4567."
 
 ### Fixed
 
+- Searching the disc list for a whole phone number finds the disc however the number was written down; "0501234567" used to miss a number stored as "050 123 4567".
 - "Omistajille palautetut kiekot" on the statistics page draws one bar per month of each year. Every bar used to hold that month from every year at once — July read 145 where it was 7 discs in 2024, 91 in 2025 and 45 in 2026 — and January was left out of the chart altogether.
 - The day breakdown under "Omistajille palautetut kiekot" counts the same discs as the month bar that opened it. A disc carrying a readable return date but not marked as returned used to appear in the day chart and nowhere else.
 - A message written for several selected discs at once names the course the disc was found on. It had been left blank there — "on löytynyt radalta" — while the same template filled the course in correctly when the message was opened for a single disc.

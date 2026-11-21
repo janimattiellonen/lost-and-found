@@ -6,24 +6,25 @@ import ContactLine from './ContactLine';
 // The contract worth pinning is the link: tapping the number has to open a
 // message rather than place a call, which is a product decision rather than an
 // implementation detail, and the digits behind the `sms:` scheme have to be
-// stripped of the grouping spaces the number is displayed with.
+// the stored number, not the grouped form it is displayed in.
 describe('ContactLine', () => {
-  it('links the number as a message, not a call, and without its grouping spaces', () => {
-    render(<ContactLine phoneNumber="0501234567" name={null} />);
+  it('links the number as a message, not a call, in its stored international form', () => {
+    render(<ContactLine phoneNumber="+358501234567" name={null} />);
 
     const link = screen.getByRole('link');
-    expect(link.getAttribute('href')).toBe('sms:0501234567');
+    expect(link.getAttribute('href')).toBe('sms:+358501234567');
     expect(link.textContent).toBe('050 123 4567');
   });
 
-  it('strips the spaces from a number that was stored with them', () => {
-    render(<ContactLine phoneNumber="050 123 4567" name={null} />);
+  it('shows a number nobody can text without a link', () => {
+    render(<ContactLine phoneNumber="+35850123?567" name="Matti" />);
 
-    expect(screen.getByRole('link').getAttribute('href')).toBe('sms:0501234567');
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.getByText(/Matti/).textContent).toBe('050 123 ?567 (Matti)');
   });
 
   it('puts the name after the number, in brackets', () => {
-    render(<ContactLine phoneNumber="0501234567" name="Matti" />);
+    render(<ContactLine phoneNumber="+358501234567" name="Matti" />);
 
     expect(screen.getByText(/Matti/).textContent).toBe('050 123 4567 (Matti)');
   });

@@ -1,4 +1,5 @@
 import { MAX_FIELD_LENGTH } from '~/discFieldLimits';
+import { normalisePhoneNumber } from '~/phoneNumber';
 
 /** What the composer's phone editor posts to /message/phone-number. */
 export type OwnerPhoneNumberInput = {
@@ -12,13 +13,12 @@ export type OwnerPhoneNumberResult =
   | { phoneNumber?: undefined; error: string };
 
 /**
- * Reads the number the phone editor posted: trimmed, required, and no longer
- * than the column's limit everywhere else.
+ * Reads the number the phone editor posted: required, no longer than the
+ * column's limit everywhere else, and in the stored form every writer of the
+ * column uses (~/phoneNumber).
  *
- * Deliberately not format-checked, for the edit form's reason: imported rows
- * hold things like "050 123 4567 (äiti)", and a pattern would refuse the very
- * correction the editor is for. Required, unlike in the edit form, because a
- * number cleared while messaging leaves nothing to send to.
+ * Required, unlike in the edit form, because a number cleared while messaging
+ * leaves nothing to send to.
  */
 export function parseOwnerPhoneNumber(value: unknown): OwnerPhoneNumberResult {
   const phoneNumber = typeof value === 'string' ? value.trim() : '';
@@ -31,5 +31,14 @@ export function parseOwnerPhoneNumber(value: unknown): OwnerPhoneNumberResult {
     return { error: `Puhelinnumero on liian pitkä (enintään ${MAX_FIELD_LENGTH} merkkiä).` };
   }
 
-  return { phoneNumber };
+  const normalised = normalisePhoneNumber(phoneNumber);
+
+  if (normalised.error !== undefined) {
+    return { error: normalised.error };
+  }
+
+  // Null only for an empty number, which was turned away above.
+  return normalised.phoneNumber === null
+    ? { error: 'Puhelinnumero on pakollinen.' }
+    : { phoneNumber: normalised.phoneNumber };
 }

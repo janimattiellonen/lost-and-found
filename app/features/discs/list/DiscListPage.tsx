@@ -20,6 +20,7 @@ import DiscListIntro from '~/features/discs/list/DiscListIntro';
 import CourseFilter from '~/features/discs/list/CourseFilter';
 import { latestAddedDay } from '~/features/discs/list/newestDiscs';
 import NumberSearch from '~/ui/NumberSearch';
+import { phoneNumberEndsWith } from '~/phoneNumber';
 import { getDiscCourseNames } from '~/config/courses';
 import type { StoredErrand } from '~/features/discs/retrieval/retrievalErrand';
 
@@ -72,7 +73,7 @@ export default function DiscListPage(): JSX.Element {
     }
 
     if (phoneNumberTerm) {
-      filtered = filtered.filter((disc: DiscDTO) => disc.ownerPhoneNumber?.endsWith(phoneNumberTerm));
+      filtered = filtered.filter((disc: DiscDTO) => phoneNumberEndsWith(disc.ownerPhoneNumber, phoneNumberTerm));
     }
 
     if (courseTerm) {

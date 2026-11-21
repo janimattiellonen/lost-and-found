@@ -20,3 +20,5 @@ node_modules
 .claude/.review-state
 # Agent worktrees: whole checkouts, created and removed by the harness
 .claude/worktrees/
+# Backups the maintenance scripts write before changing data: real phone numbers
+/backups/

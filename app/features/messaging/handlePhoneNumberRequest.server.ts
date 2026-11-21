@@ -9,7 +9,7 @@ import { createSupabaseServerClient } from '~/models/utils';
  * Authorises, validates and saves a phone number posted to
  * /message/phone-number by the composer's phone editor.
  *
- * Answers with the number as written — trimmed — so the composer shows what
+ * Answers with the number as stored — normalised — so the composer shows what
  * the database now holds rather than what was typed.
  */
 export async function handlePhoneNumberRequest(request: Request): Promise<Response> {

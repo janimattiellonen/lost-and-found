@@ -33,9 +33,16 @@ describe('MessageComposer', () => {
   // The number is read-only text, but "Puhelinnumero" must still name it for a
   // screen reader rather than be a label attached to nothing.
   it('labels the read-only phone number', () => {
-    renderComposer('0501234567');
+    renderComposer('+358501234567');
 
     expect(screen.getByLabelText('Puhelinnumero').textContent).toBe('050 123 4567');
+  });
+
+  it('will not send to a number with a digit missing, and says why', () => {
+    renderComposer('+35850123?567');
+
+    expect(screen.getByRole('button', { name: 'Lähetä tekstiviesti' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText('Tähän numeroon ei voi lähettää viestiä, koska siitä puuttuu numeroita.')).toBeTruthy();
   });
 
   it('labels the placeholder when the disc has no number', () => {
