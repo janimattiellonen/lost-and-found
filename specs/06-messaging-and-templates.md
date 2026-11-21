@@ -251,8 +251,9 @@ The tokens are documented to the admin by
 - **No SMS provider, no API key, no outbound HTTP.** The "send" button is an
   `sms:` URI; the admin's phone or desktop OS sends the actual message.
   The body is percent-encoded whole by `toSmsBody`
-  (`app/features/messaging/messageContent.ts`) and grouping spaces are stripped
-  from the number (`toDiallable`).
+  (`app/features/messaging/messageContent.ts`). The number goes into the URI as
+  stored: `isTextable` only passes a whole `+`-and-digits number, so there are no
+  grouping spaces to strip (spec 16).
 
   **The body must be escaped entirely, not just its newlines.** It used to go
   through a `convertLineBreaks` that replaced `\n` with `%0a` and left every
