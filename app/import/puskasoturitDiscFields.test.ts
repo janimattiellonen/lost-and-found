@@ -163,6 +163,10 @@ describe('toDiscRow', () => {
     expect(toDiscRow({ ...disc, ownerPhoneNumber: ' 2222' }).owner_phone_number).toBe('2222');
     expect(toDiscRow({ ...disc, ownerPhoneNumber: '' }).owner_phone_number).toBeNull();
   });
+
+  it('refuses a number the rule refuses rather than storing NULL for it', () => {
+    expect(() => toDiscRow({ ...disc, ownerPhoneNumber: '(040) 111 2222' })).toThrow(/phone number refused/);
+  });
 });
 
 describe('hasStorablePhoneNumber', () => {

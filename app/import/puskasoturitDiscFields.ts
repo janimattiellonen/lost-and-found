@@ -160,8 +160,18 @@ export function hasStorablePhoneNumber(disc: DiscDTO): boolean {
  * The external id is generated here rather than left to a column default, so
  * the app does not depend on one being in place — the same reasoning as in
  * ~/models/syncDiscs.server.
+ *
+ * Throws on a number the rule refuses, so a caller that skips
+ * `hasStorablePhoneNumber` fails loudly instead of losing a legible number to a
+ * silent NULL.
  */
 export function toDiscRow(disc: DiscDTO): DiscRow {
+  const phone = normalisePhoneNumber(disc.ownerPhoneNumber ?? '');
+
+  if (phone.error !== undefined) {
+    throw new Error(`Disc ${disc.internalDiscId} (${disc.discName}): owner phone number refused: ${phone.error}`);
+  }
+
   return {
     external_id: crypto.randomUUID(),
     internal_disc_id: Number(disc.internalDiscId),
@@ -170,7 +180,7 @@ export function toDiscRow(disc: DiscDTO): DiscRow {
     disc_colour: orNull(disc.discColour),
     disc_manufacturer: orNull(disc.discManufacturer),
     owner_name: orNull(disc.ownerName),
-    owner_phone_number: normalisePhoneNumber(disc.ownerPhoneNumber ?? '').phoneNumber ?? null,
+    owner_phone_number: phone.phoneNumber ?? null,
     added_at: disc.addedAt ?? null,
     additional_info: orNull(disc.additionalInfo),
     course: normalizeCourse(disc.course),
