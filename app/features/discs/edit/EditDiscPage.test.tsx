@@ -6,7 +6,7 @@ import type { DiscEditValues } from '~/features/discs/edit/discEdit';
 
 import EditDiscPage from './EditDiscPage';
 
-function renderPage(ownerPhoneNumber: string | null) {
+function renderPage(ownerPhoneNumber: string | null, returnTo = '/') {
   const disc: DiscEditValues = {
     discName: 'Destroyer, Star',
     discColour: 'punainen',
@@ -22,7 +22,9 @@ function renderPage(ownerPhoneNumber: string | null) {
     canBeSoldOrDonatedDate: null,
     canBeSoldOrDonatedMethod: null,
   };
-  const Stub = createRoutesStub([{ path: '/', Component: () => <EditDiscPage disc={disc} courses={[]} /> }]);
+  const Stub = createRoutesStub([
+    { path: '/', Component: () => <EditDiscPage disc={disc} courses={[]} returnTo={returnTo} /> },
+  ]);
 
   render(<Stub initialEntries={['/']} />);
 }
@@ -39,5 +41,20 @@ describe('EditDiscPage phone number field', () => {
     renderPage('2222');
 
     expect((screen.getByLabelText('Puhelinnumero') as HTMLInputElement).value).toBe('2222');
+  });
+});
+
+describe('EditDiscPage "Peru"', () => {
+  // Spec 14: "Peru" goes back to the page that opened the form.
+  it('leads back to the search the admin came from', () => {
+    renderPage('+358501112222', '/admin/discs?phone=0501112222');
+
+    expect(screen.getByRole('link', { name: 'Peru' }).getAttribute('href')).toBe('/admin/discs?phone=0501112222');
+  });
+
+  it('leads to the disc list by default', () => {
+    renderPage('+358501112222');
+
+    expect(screen.getByRole('link', { name: 'Peru' }).getAttribute('href')).toBe('/');
   });
 });

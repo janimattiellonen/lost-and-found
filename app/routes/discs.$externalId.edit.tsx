@@ -15,8 +15,16 @@ export async function action({ params, request }: ActionFunctionArgs) {
 }
 
 export default function EditDiscRoute(): JSX.Element {
-  const { disc, courses } = useLoaderData<typeof loader>();
+  const { disc, courses, returnTo } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
-  return <EditDiscPage disc={disc} courses={courses} errors={actionData?.errors} saved={actionData?.ok === true} />;
+  return (
+    <EditDiscPage
+      disc={disc}
+      courses={courses}
+      returnTo={returnTo}
+      errors={actionData?.errors}
+      saved={actionData?.ok === true}
+    />
+  );
 }
