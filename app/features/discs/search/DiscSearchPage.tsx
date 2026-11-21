@@ -67,9 +67,12 @@ export default function DiscSearchPage({ search, results, truncated, showCourse 
 
   // The address changed without this page asking — the menu link, or the
   // browser's back and forward buttons — so the fields follow it rather than
-  // keep describing a search that is no longer on screen.
+  // keep describing a search that is no longer on screen. It waits for
+  // navigation to settle: while this page's own search is loading, the address
+  // has not caught up with it yet, and a navigation that was interrupted leaves
+  // the address behind it for good, which is the case this catches.
   useEffect(() => {
-    if (location.search === shownSearch.current) {
+    if (navigation.state !== 'idle' || location.search === shownSearch.current) {
       return;
     }
 
@@ -77,7 +80,7 @@ export default function DiscSearchPage({ search, results, truncated, showCourse 
     clearTimeout(pendingSearch.current);
     setPhone(search?.phone ?? '');
     setDiscName(search?.disc ?? '');
-  }, [location.search, search]);
+  }, [location.search, search, navigation.state]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();

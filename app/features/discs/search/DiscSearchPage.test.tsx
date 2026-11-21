@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { createRoutesStub, useLoaderData, useLocation } from 'react-router';
+import { createRoutesStub, Link, useLoaderData, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { readDiscSearch } from './discSearch';
@@ -25,11 +25,14 @@ const returnedDisc: FoundDisc = {
 };
 
 /** The page at an address, with a loader that answers whatever the address asks. */
-function renderAt(address: string, results: (search: string) => Partial<DiscSearchPageData>) {
+function renderAt(
+  address: string,
+  results: (search: string) => Partial<DiscSearchPageData> | Promise<Partial<DiscSearchPageData>>,
+) {
   const Stub = createRoutesStub([
     {
       path: '/admin/discs',
-      loader: ({ request }) => {
+      loader: async ({ request }) => {
         const params = new URL(request.url).searchParams;
         const search = readDiscSearch({ phone: params.get('phone'), disc: params.get('disc') });
 
@@ -38,7 +41,7 @@ function renderAt(address: string, results: (search: string) => Partial<DiscSear
           results: null,
           truncated: false,
           showCourse: false,
-          ...results(params.toString()),
+          ...(await results(params.toString())),
         } satisfies DiscSearchPageData;
       },
       Component: () => {
@@ -48,6 +51,7 @@ function renderAt(address: string, results: (search: string) => Partial<DiscSear
         return (
           <>
             <output data-testid="address">{location.search}</output>
+            <Link to="/admin/discs">Kaikki kiekot -valikossa</Link>
             <DiscSearchPage {...data} />
           </>
         );
@@ -57,6 +61,18 @@ function renderAt(address: string, results: (search: string) => Partial<DiscSear
 
   render(<Stub initialEntries={[address]} />);
 }
+
+/** A loader answer the test releases when it chooses, to look at the page while it waits. */
+function deferred() {
+  let release: () => void = () => {};
+  const promise = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  return { promise, release };
+}
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe('DiscSearchPage', () => {
   it('shows only the fields until something is searched', async () => {
@@ -149,5 +165,109 @@ describe('DiscSearchPage', () => {
     fireEvent.change(field, { target: { value: 'S' } });
 
     await waitFor(() => expect(screen.getByTestId('address').textContent).toBe(''));
+  });
+  it('fetches nothing for a space, a dash or a first letter in an empty field', async () => {
+    const asked: string[] = [];
+
+    renderAt('/admin/discs', (search) => {
+      asked.push(search);
+      return {};
+    });
+
+    const field = await screen.findByLabelText('Kiekko');
+
+    fireEvent.change(field, { target: { value: ' ' } });
+    fireEvent.change(field, { target: { value: '-' } });
+    fireEvent.change(field, { target: { value: 'S' } });
+    await pause(450);
+
+    expect(screen.getByTestId('address').textContent).toBe('');
+    expect(asked).toEqual(['']);
+  });
+
+  it('starts the wait again on every keypress', async () => {
+    const asked: string[] = [];
+
+    renderAt('/admin/discs', (search) => {
+      asked.push(search);
+      return {};
+    });
+
+    const field = await screen.findByLabelText('Kiekko');
+
+    fireEvent.change(field, { target: { value: 'St' } });
+    await pause(200);
+    fireEvent.change(field, { target: { value: 'Sti' } });
+    await pause(200);
+
+    // 400 ms after the first keypress, but only 200 after the last.
+    expect(screen.getByTestId('address').textContent).toBe('');
+
+    await waitFor(() => expect(screen.getByTestId('address').textContent).toBe('?disc=Sti'));
+    expect(asked).not.toContain('disc=St');
+  });
+
+  it('empties the fields when the menu link is followed from a search', async () => {
+    renderAt('/admin/discs?phone=0501112222&disc=Star', () => ({ results: [] }));
+
+    expect(((await screen.findByLabelText('Kiekko')) as HTMLInputElement).value).toBe('Star');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Kaikki kiekot -valikossa' }));
+
+    await waitFor(() => expect((screen.getByLabelText('Kiekko') as HTMLInputElement).value).toBe(''));
+    expect((screen.getByLabelText('Puhelinnumero') as HTMLInputElement).value).toBe('');
+  });
+
+  it('empties the fields when the menu link is followed while a search is still loading', async () => {
+    const slow = deferred();
+
+    renderAt('/admin/discs', async (search) => {
+      if (search === 'disc=ab') {
+        await slow.promise;
+      }
+
+      return {};
+    });
+
+    const field = (await screen.findByLabelText('Kiekko')) as HTMLInputElement;
+
+    fireEvent.change(field, { target: { value: 'ab' } });
+    await pause(450);
+    fireEvent.click(screen.getByRole('link', { name: 'Kaikki kiekot -valikossa' }));
+
+    await waitFor(() => expect(field.value).toBe(''));
+
+    // Typing the same thing again is a search again, not "nothing changed".
+    fireEvent.change(field, { target: { value: 'ab' } });
+    slow.release();
+
+    await waitFor(() => expect(screen.getByTestId('address').textContent).toBe('?disc=ab'));
+  });
+
+  it('dims the results and marks them busy while a search loads', async () => {
+    const slow = deferred();
+
+    renderAt('/admin/discs?disc=Zzz', async (search) => {
+      if (search === 'disc=Zzy') {
+        await slow.promise;
+      }
+
+      return { results: [] };
+    });
+
+    const results = (await screen.findByText('Hakuehdoilla ei löytynyt kiekkoja.')).parentElement!;
+
+    expect(results.getAttribute('aria-busy')).toBe('false');
+
+    fireEvent.change(screen.getByLabelText('Kiekko'), { target: { value: 'Zzy' } });
+    fireEvent.submit(screen.getByLabelText('Kiekko').closest('form')!);
+
+    await waitFor(() => expect(results.getAttribute('aria-busy')).toBe('true'));
+    expect(results.className).toContain('opacity-50');
+
+    slow.release();
+
+    await waitFor(() => expect(results.getAttribute('aria-busy')).toBe('false'));
+    expect(results.className).not.toContain('opacity-50');
   });
 });
