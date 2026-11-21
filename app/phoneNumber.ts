@@ -201,6 +201,33 @@ export function phoneNumberEndsWith(stored: string | null | undefined, search: s
   return [...searched].every((digit, i) => tail[i] === digit || tail[i] === '?');
 }
 
+/**
+ * The same search as a regular expression for PostgreSQL's `~`, for a search
+ * that runs in the database rather than over a list already in the browser —
+ * "Kaikki kiekot", spec 17.
+ *
+ * Two rules, one pattern:
+ *
+ * - the stored number ends with the searched digits, a stored "?" standing for
+ *   any one of them — exactly `phoneNumberEndsWith`;
+ * - when the search is a whole number, one `normalisePhoneNumber` would store,
+ *   a stored anonymised tail matches its last four digits. That is how a closed
+ *   disc, its number cut down to four digits, is found from the whole number an
+ *   owner gives. Only a whole number: a pause halfway through typing "050111"
+ *   must not list every disc stored as "0111".
+ *
+ * Only digits ever reach the pattern, so nothing typed can change its meaning.
+ */
+export function phoneSearchPattern(search: string): string {
+  const digits = phoneSearchDigits(search);
+  const endsWith = [...digits].map((digit) => `[${digit}?]`).join('');
+  const whole = normalisePhoneNumber(search).phoneNumber;
+  const isWholeNumber = whole != null && INTERNATIONAL.test(whole);
+  const tail = isWholeNumber ? `|^${digits.slice(-ANONYMISED_LENGTH)}` : '';
+
+  return `(${endsWith}${tail})$`;
+}
+
 /** The operator prefix a Finnish number is grouped after: the 0 and two digits. */
 const PHONE_PREFIX_LENGTH = 3;
 

@@ -7,6 +7,7 @@ import {
   PHONE_NUMBER_FORMAT_ERROR,
   phoneNumberEndsWith,
   phoneSearchDigits,
+  phoneSearchPattern,
   toEditablePhoneNumber,
 } from '~/phoneNumber';
 
@@ -209,5 +210,63 @@ describe('phoneNumberEndsWith', () => {
   it('matches nothing for a search with no digits, or a disc with no number', () => {
     expect(phoneNumberEndsWith('+358501112222', 'abc')).toBe(false);
     expect(phoneNumberEndsWith(null, '2222')).toBe(false);
+  });
+});
+
+describe('phoneSearchPattern', () => {
+  it('matches the end of a number, a stored "?" standing for any digit', () => {
+    expect(phoneSearchPattern('2222')).toBe('([2?][2?][2?][2?])$');
+  });
+
+  it('also matches a stored four-digit tail when a whole number is searched', () => {
+    expect(phoneSearchPattern('050 111 2222')).toBe('([5?][0?][1?][1?][1?][2?][2?][2?][2?]|^2222)$');
+  });
+
+  // The front page filters in the browser with phoneNumberEndsWith, "Kaikki
+  // kiekot" in the database with the pattern. The same cases go through both,
+  // so the two pages cannot drift apart.
+  describe('agrees with phoneNumberEndsWith on every stored number but a tail', () => {
+    const stored = ['+358501112222', '+35850111?222', '+46701112222', '+358457112222'];
+    const searches = [
+      '0501112222',
+      '050 111 2222',
+      '+358 50 111 2222',
+      '1112222',
+      '2222',
+      '222',
+      '50111',
+      '0046 70 111 2222',
+    ];
+
+    for (const number of stored) {
+      for (const search of searches) {
+        it(`"${search}" against ${number}`, () => {
+          expect(new RegExp(phoneSearchPattern(search)).test(number)).toBe(phoneNumberEndsWith(number, search));
+        });
+      }
+    }
+  });
+
+  it('finds a tail by the whole number it was cut from, Finnish or foreign', () => {
+    expect(new RegExp(phoneSearchPattern('0501112222')).test('2222')).toBe(true);
+    expect(new RegExp(phoneSearchPattern('+46 70 111 2222')).test('2222')).toBe(true);
+    expect(new RegExp(phoneSearchPattern('0501112222')).test('1222')).toBe(false);
+  });
+
+  it('finds a tail by its own digits, or fewer', () => {
+    expect(new RegExp(phoneSearchPattern('2222')).test('2222')).toBe(true);
+    expect(new RegExp(phoneSearchPattern('222')).test('2222')).toBe(true);
+  });
+
+  // A pause halfway through typing must not list every disc whose tail happens
+  // to be the last four digits typed so far.
+  it('does not look for tails while the number is still incomplete', () => {
+    expect(phoneSearchPattern('050111')).toBe('([5?][0?][1?][1?][1?])$');
+    expect(new RegExp(phoneSearchPattern('050111')).test('0111')).toBe(false);
+    expect(new RegExp(phoneSearchPattern('1112222')).test('2222')).toBe(false);
+  });
+
+  it('does not take a whole number for a tail', () => {
+    expect(new RegExp(phoneSearchPattern('0501112222')).test('+358409992222')).toBe(false);
   });
 });

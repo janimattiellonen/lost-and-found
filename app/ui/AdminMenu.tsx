@@ -21,6 +21,8 @@ const links: MenuLink[] = [
   { to: '/notifications', label: 'Ilmoitukset' },
 ];
 
+const allDiscs: MenuLink = { to: '/admin/discs', label: 'Kaikki kiekot' };
+
 // The width at which the links stop being a row in the bar and start being a
 // panel behind the hamburger button. Kept in one place so the bar, the button
 // and the panel cannot disagree about it -- a link reachable in both at the same
@@ -49,8 +51,10 @@ function withCount(label: string, count: number): string {
  * are null when there is nothing to count -- nobody signed in, or a club that
  * keeps no retrieval list -- and the item is then absent rather than empty.
  *
- * Answers come before the errand they may become, and the retrieval list stays
- * last, where it has been.
+ * Answers come before the errand they may become. "Kaikki kiekot", the search
+ * over every disc, comes last of all: it is the one an admin reaches for least
+ * often, and last is a place it can keep whether the retrieval list is there or
+ * not.
  */
 function menuLinks(retrievalCount: number | null, responseCount: number | null): MenuLink[] {
   const responses: MenuLink[] =
@@ -59,7 +63,7 @@ function menuLinks(retrievalCount: number | null, responseCount: number | null):
   const retrieval: MenuLink[] =
     retrievalCount === null ? [] : [{ to: '/retrieval', label: withCount('Noutolista', retrievalCount) }];
 
-  return [...links.slice(0, 2), ...responses, ...links.slice(2), ...retrieval];
+  return [...links.slice(0, 2), ...responses, ...links.slice(2), ...retrieval, allDiscs];
 }
 
 type AdminMenuProps = {
