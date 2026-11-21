@@ -198,8 +198,8 @@ function ResultsTable({ discs, showCourse, returnTo }: ResultsTableProps): JSX.E
           </tr>
         </thead>
         <tbody>
-          {discs.map((disc) => (
-            <tr key={disc.externalId}>
+          {discs.map((disc, index) => (
+            <tr key={disc.externalId} {...stylex.props(index % 2 === 1 && styles.rowEven)}>
               <td {...stylex.props(styles.td, styles.noWrap)}>{formatDate(disc.addedAt)}</td>
               <td {...stylex.props(styles.td)}>{disc.discName}</td>
               <td {...stylex.props(styles.td)}>{disc.discColour}</td>
@@ -253,9 +253,14 @@ const styles = stylex.create({
     borderBottomStyle: 'solid',
     borderBottomColor: color.border,
   },
+  // Every second row shaded, as on the front page, so a disc whose status runs
+  // to several lines still reads as one row.
+  rowEven: { backgroundColor: color.surfaceMuted },
   // A date or a number broken over two lines reads as two values.
   noWrap: { whiteSpace: 'nowrap' },
-  date: { color: color.textMuted, whiteSpace: 'nowrap' },
+  // `textBody`, not the lighter `textMuted`: on a shaded row that grey falls
+  // below the 4.5:1 contrast small text needs.
+  date: { color: color.textBody, whiteSpace: 'nowrap' },
   link: { color: color.accent, textDecoration: 'underline' },
   srOnly: {
     position: 'absolute',

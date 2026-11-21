@@ -75,6 +75,15 @@ shown to them.
     number is shown in full, the way every admin page shows one (spec 16):
     "050 111 2222", a foreign one with its country code, and a four-digit tail
     as "\*\*\*\*2222" so it does not pass for a whole number.
+
+    Every second row is shaded in the grey of the heading row
+    (`color.surfaceMuted`), as the front page's table shades every second row
+    of its own: a disc with several marks takes several lines, and the shading
+    keeps the eye on one disc as it reads across to the edit link. The dates in
+    "Tila" are therefore `color.textBody` rather than the lighter
+    `color.textMuted`, which on a shaded row falls just below the 4.5:1
+    contrast that the web's accessibility guidelines ask of small text.
+
 12. "Tila" lists every mark the disc carries, one per line, each followed by its
     date when one is recorded — "Palautettu omistajalle (Postitettu) 2.10.2026":
     - "Palautettu omistajalle" (returned to its owner), with the return method
