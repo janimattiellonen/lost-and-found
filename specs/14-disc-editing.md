@@ -45,8 +45,11 @@ composer's phone editor (spec 06) can also correct, mid-message.
 8. When the admin unticks either box, the disc comes back to the public list and
    that box's date and method are cleared. This is the only way back: the list's
    row actions are one-way.
-9. When the admin presses "Peru" (cancel), they return to the disc list with
-   nothing written.
+9. When the admin presses "Peru" (cancel), they return to the page that opened
+   the form, with nothing written: the search they came from on "Kaikki kiekot"
+   (all discs, spec 17), or else the disc list. This holds after a save too —
+   the form stays on screen after "Tallenna muutokset", and "Peru" still leads
+   back to where the admin started.
 10. When the disc does not exist, or belongs to another club, the page answers
     404 rather than an empty form.
 
@@ -95,18 +98,39 @@ untouched for the same reason the list's row actions leave them alone.
 
 ## Routes & entry points
 
-| Route                     | Method(s) | Auth            | Purpose                                                       |
-| ------------------------- | --------- | --------------- | ------------------------------------------------------------- |
-| `/discs/:externalId/edit` | GET       | signed-in admin | The form, filled in from the disc                             |
-| `/discs/:externalId/edit` | POST      | signed-in admin | Validates and saves; re-renders with errors or a success note |
+| Route                     | Method(s) | Auth            | Purpose                                                                |
+| ------------------------- | --------- | --------------- | ---------------------------------------------------------------------- |
+| `/discs/:externalId/edit` | GET       | signed-in admin | The form, filled in from the disc; optional `returnTo` query parameter |
+| `/discs/:externalId/edit` | POST      | signed-in admin | Validates and saves; re-renders with errors or a success note          |
 
 The route is `/discs/…`, in the admin namespace beside `/discs/add` and
 `/discs/batch`, and deliberately not `/disc/…`: `/disc/:token` is the public
 owner link sent out in text messages (spec 05), and the two must not sit under
 one prefix.
 
+`returnTo` names the page "Peru" leads to — a path inside this app, such as
+`/admin/discs?phone=0501234567`. The search page (spec 17) adds it to its edit
+links; the disc list does not, because `/` is the default anyway. Both build
+their links with `editDiscPath` in `app/features/discs/edit/returnTo.ts`, beside
+the check that reads the value back. The search page is also how a returned or
+released disc, which the disc list no longer shows, reaches this form. The loader
+reads it from the request's address and hands it to the page. The form posts
+back to its own address, query string included, so the value survives a save
+or a rejected save without being carried in a hidden field.
+
 ## Rules & constraints
 
+- **`returnTo` is accepted only as a path inside this app.** Without this check,
+  a crafted link to the edit page would turn "Peru" into a jump to any site.
+  The value must start with `/`, and is then resolved the way a browser would
+  resolve it; it is kept only if it stays on this app. A prefix check alone is
+  not enough: a browser reads `//host` and `/\host` as another site, and strips
+  tabs and line breaks first, so `/<tab>/host` is one too. Anything refused —
+  or nothing at all — becomes `/`. The check is one pure function,
+  `safeReturnTo` in `app/features/discs/edit/returnTo.ts`, tested. The browser's history ("go
+  back one page") is deliberately not used: an edit page opened in a new tab or
+  from a pasted link has nothing to go back to, and going back would then leave
+  the app or do nothing.
 - **Auth.** `loadEditDiscPage` and `editDiscFromForm` each call `isUserLoggedIn`
   and redirect to `/sign-in` when it is false. Row level security (RLS) — the
   PostgreSQL feature deciding, row by row, whether a role may read or write it —
@@ -214,9 +238,6 @@ one prefix.
   club with no configured courses holding a disc with no course. The form then
   writes `course: null`, which is what the disc already held, so nothing is
   lost; but the column cannot be given a value from this page in that case.
-- The page is reachable only from the public disc list, which shows listed discs
-  only. A returned or released disc can be edited by typing its URL, but has no
-  link pointing at it — so the un-return in scenario 8 needs a uuid in hand.
 
 ## Open questions
 

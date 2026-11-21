@@ -34,7 +34,9 @@ Shared by both screen widths:
    page — "Kiekot" (discs), "Lisää kiekkoja" (add discs), "Vastaukset" (owners'
    answers), "Tyhjennysloki" (emptying log), "Viestipohjat" (message templates),
    "Statistiikka" (statistics), "Ilmoitukset" (notifications), "Noutolista"
-   (retrieval list) — and a "Kirjaudu ulos" (sign out) button.
+   (retrieval list), "Kaikki kiekot" (all discs) — and a "Kirjaudu ulos" (sign
+   out) button. "Kaikki kiekot" is always last, so for a club with no
+   retrieval list it follows "Ilmoitukset".
 2. When a counted item has something waiting, then its label carries the number
    in parentheses — "Vastaukset (3)". At zero the number is left off entirely,
    because "(0)" reads as something to act on. "Vastaukset" is absent when nobody
@@ -109,6 +111,7 @@ its links point at routes owned by other features:
 | Statistiikka   | `/stats`             | [10](10-statistics.md)               |
 | Ilmoitukset    | `/notifications`     | [07](07-notifications.md)            |
 | Noutolista     | `/retrieval`         | [03](03-disc-lifecycle-actions.md)   |
+| Kaikki kiekot  | `/admin/discs`       | [17](17-admin-disc-search.md)        |
 
 ## Rules & constraints
 

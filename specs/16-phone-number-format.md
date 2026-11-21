@@ -324,7 +324,12 @@ those digits (`phoneNumberEndsWith`), a `?` in the stored number matching any
 digit. A `?` typed into the search is ignored like any other non-digit. For an
 anonymous visitor, who receives only the last four digits, this is the same as
 before. An anonymised number is
-found by its four digits, not by the whole number it was cut from.
+found by its four digits, not by the whole number it was cut from — except on
+"Kaikki kiekot" (all discs, spec 17), the admin search over closed discs too,
+where a whole number also finds a disc stored as its last four digits. That
+search runs in the database, so `phoneSearchPattern` writes the same rule, plus
+the tail, as a regular expression; it is tested against `phoneNumberEndsWith`
+case by case.
 
 ### The cleanup — `scripts/normalisePhoneNumbers.ts`
 
