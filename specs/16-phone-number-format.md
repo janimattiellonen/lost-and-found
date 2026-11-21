@@ -207,8 +207,9 @@ No new routes. The rule lives in one file, and every writer calls it:
 
 `formatPhoneNumber` lives here too, beside the rule it shows the result of; its
 three callers are `app/ui/ContactLine.tsx`, `DiscTable.tsx` and
-`MessageComposer.tsx`. `toDiallablePhoneNumber`, which strips spaces for an
-`sms:` link, stays in `app/utils.ts`; on a stored number it changes nothing.
+`MessageComposer.tsx`. An `sms:` link takes the stored
+number as it is: `isTextable` only passes a whole `+`-and-digits number, which
+has no spaces to strip.
 
 `app/phoneNumber.ts` sits at the top level of `app/`, beside `discFieldLimits.ts`,
 because two slices (discs and messaging), the shared `ContactLine`, the sheet

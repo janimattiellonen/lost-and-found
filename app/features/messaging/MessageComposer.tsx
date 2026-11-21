@@ -7,7 +7,7 @@ import { lineBreakToBr, replaceTokensWithValues, toSmsBody } from '~/features/me
 import PhoneNumberEditor from '~/features/messaging/PhoneNumberEditor';
 import type { MessageTemplateDTO } from '~/types';
 import { formatPhoneNumber, isTextable } from '~/phoneNumber';
-import { formatDate, toDiallablePhoneNumber } from '~/utils';
+import { formatDate } from '~/utils';
 import Button from '~/ui/Button';
 import FieldError from '~/ui/FieldError';
 import H2 from '~/ui/H2';
@@ -207,7 +207,7 @@ export default function MessageComposer({
           to={
             cannotText
               ? undefined
-              : `sms:${toDiallablePhoneNumber(phoneNumber)}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`
+              : `sms:${phoneNumber}&body=${toSmsBody(replaceTokensWithValues(message, disc, baseUrl))}`
           }
         >
           Lähetä tekstiviesti

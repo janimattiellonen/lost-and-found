@@ -2,7 +2,6 @@ import * as stylex from '@stylexjs/stylex';
 
 import { color, font, leading } from '~/styles/tokens.stylex';
 import { formatPhoneNumber, isTextable } from '~/phoneNumber';
-import { toDiallablePhoneNumber } from '~/utils';
 
 import type { JSX } from 'react';
 
@@ -36,7 +35,7 @@ export default function ContactLine({ phoneNumber, name }: Props): JSX.Element |
     <span {...stylex.props(styles.line)}>
       {phoneNumber &&
         (isTextable(phoneNumber) ? (
-          <a href={`sms:${toDiallablePhoneNumber(phoneNumber)}`} {...stylex.props(styles.link)}>
+          <a href={`sms:${phoneNumber}`} {...stylex.props(styles.link)}>
             {formatPhoneNumber(phoneNumber)}
           </a>
         ) : (
