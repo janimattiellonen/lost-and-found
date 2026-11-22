@@ -25,6 +25,7 @@ Entries cover the whole project, from the first commit on 2023-07-20. Sections u
 - A second checkbox under "Top 10 kadotettua kiekkomallia", "Näytä vuosien mukaan", puts a second bar under each model split into the years its discs were logged, each part captioned with its year and count.
 - "Valitse uusimmat" above the disc list ticks every disc added on the most recent day that has a phone number, ready to be texted, so discs without a number no longer have to be skipped by hand.
 - "Muokkaa puhelinnumeroa" beside the owner's phone number on the message page opens an editor that saves a corrected number to the disc itself, so a wrong number found halfway through texting a selection is fixed without leaving the owner on screen — replacing the free text field there, whose changes reached only that one message.
+- "Kaikki kiekot", last in the admin menu, searches every disc of the club by phone number or disc name, including the ones already returned, sold, donated or archived, and shows what became of each; a whole phone number also finds a closed disc whose number was cut down to its last four digits, and "Peru" on a disc opened from the results comes back to the same search.
 
 ### Changed
 

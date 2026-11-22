@@ -24,6 +24,7 @@ import RetrievalMethodForm from '~/features/discs/retrieval/RetrievalMethodForm'
 import { retrievalErrandMethod, type StoredErrand } from '~/features/discs/retrieval/retrievalErrand';
 import { markAsReturned } from '~/features/discs/return/markAsReturned';
 import { disposalMethodOptions, returnMethodOptions } from '~/discMethods';
+import { editDiscPath } from '~/features/discs/edit/returnTo';
 import CourseForm from '~/features/discs/list/CourseForm';
 import DateAndMethodForm from '~/features/discs/list/DateAndMethodForm';
 import OverdueMarker from '~/features/discs/list/OverdueMarker';
@@ -440,7 +441,7 @@ export default function DiscTable({
                           than what became of it: a page of its own, since a
                           typo in a name or a number needs a text field. */}
                       <Link
-                        to={`/discs/${row.original.externalId}/edit`}
+                        to={editDiscPath(row.original.externalId)}
                         aria-label={`Muokkaa kiekon ${row.original.discName} tietoja`}
                         title="Muokkaa tietoja"
                         {...stylex.props(styles.rowAction, styles.actionNeutral)}

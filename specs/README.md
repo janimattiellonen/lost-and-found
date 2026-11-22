@@ -23,6 +23,7 @@ per feature, linking to its own spec once written.
 | 14  | [Disc detail editing](14-disc-editing.md)                  | One form per disc holding every editable column: name, colour, owner, phone, course, notes, and both lifecycle marks.        | `features/discs/edit/`, `routes/discs.$externalId.edit.tsx`                        |
 | 15  | [Design system tokens](15-design-system-tokens.md)         | The StyleX token set — palette, semantic colours, spacing, type scale — derived from the Tailwind colours already on screen. | `styles/palette.stylex.ts`, `styles/tokens.stylex.ts`                              |
 | 16  | [Phone number format](16-phone-number-format.md)           | One stored form (E.164) for owners' numbers: the rule every writer uses, the shown form, the cleanup script, the constraint. | `phoneNumber.ts`, `scripts/normalisePhoneNumbers.ts`                               |
+| 17  | [Admin disc search](17-admin-disc-search.md)               | "Kaikki kiekot": search every disc by phone digits and disc name, whatever its status. Empty until searched.                 | `features/discs/search/`, `routes/admin.discs.tsx`                                 |
 
 All paths are relative to `app/`.
 

@@ -22,6 +22,8 @@ type Props = {
   disc: DiscEditValues;
   /** The courses this club files discs under; empty for a single-course club. */
   courses: string[];
+  /** The page that opened the form, which "Peru" goes back to; already checked to be one of ours. */
+  returnTo: string;
   errors?: DiscEditErrors | null;
   /** The save this page's own action just made. */
   saved?: boolean;
@@ -40,7 +42,7 @@ const NONE = '';
  * with defaultValue and left to the browser — the page is remounted per disc,
  * so there is nothing to keep in sync afterwards.
  */
-export default function EditDiscPage({ disc, courses, errors, saved }: Props): JSX.Element {
+export default function EditDiscPage({ disc, courses, returnTo, errors, saved }: Props): JSX.Element {
   const [isReturnedToOwner, setIsReturnedToOwner] = useState(disc.isReturnedToOwner);
   const [canBeSoldOrDonated, setCanBeSoldOrDonated] = useState(disc.canBeSoldOrDonated);
   // Typing after a save makes the "saved" line a lie -- what is on screen is no
@@ -164,7 +166,7 @@ export default function EditDiscPage({ disc, courses, errors, saved }: Props): J
         />
 
         <div className="flex justify-start gap-4">
-          <Button color="error" variant="contained" to="/">
+          <Button color="error" variant="contained" to={returnTo}>
             Peru
           </Button>
 
